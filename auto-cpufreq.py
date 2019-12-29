@@ -8,12 +8,12 @@ import psutil
 
 # ToDo:
 # - only run if driver is Intel pstate
-# - display cpu/load/sensors(?) info
 # - check if debian based
 # - set to install necesasry packages?
 # - even when plugged in go back to powersave depending on load
 # - sort out imports
-# go thru all other ToDo's
+# - add option to enable turbo in powersave
+# - go thru all other ToDo's
 
 p = psutil
 s = subprocess
@@ -57,23 +57,31 @@ def set_performance():
 
 def set_turbo():
     load1m, _, _ = os.getloadavg()
+    cpuload = p.cpu_percent(interval=1)
 
-    print("-" * 20)
-    print("CPU usage:", p.cpu_percent(interval=1), "%")
+    print("CPU usage:", cpuload, "%")
     print("Current load:", load1m)
+    print("-" * 25)
 
     if load1m > 2:
-        print("Load too high, turbo: ON")
+        print("High load, turbo: ON")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         
-        print("High CPU:", p.cpu_percent(interval=1), "%")
         print("High load:", load1m)
+        print("CPU load:", cpuload, "%")
+    elif cpuload > 25:
+        print("High CPU load, turbo: ON")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
     else:
         print("Load optimal, turbo: OFF")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
 
     #print(psutil.cpu_freq())
     #print(psutil.cpu_count())
+
+# - display cpu/load/sensors(?) info
+#def sysload_info():
+#    ....
     
 def autofreq():
     # check battery status
