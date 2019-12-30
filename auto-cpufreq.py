@@ -11,13 +11,12 @@ import distro
 import re
 
 # ToDo:
-# - only run if driver is Intel pstate
-# - check if debian based
-# - set to install necesasry packages?
-# - even when plugged in go back to powersave depending on load
+# - check if debian based + first time setup (install necessary packages)
+# - add option to run as daemon on boot
 # - sort out imports
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
+# - copy cpufreqctl script if it doesn't exist
 
 # global var
 p = psutil
@@ -37,10 +36,10 @@ def avail_gov():
 
     # check current scaling governor
     #get_gov_state = subprocess.getoutput("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
-    get_gov_state = s.getoutput("cpufreqctl --governor")
+    #get_gov_state = s.getoutput("cpufreqctl --governor")
 
-    gov_state = get_gov_state.split()[0]
-    print("\nCurrent scaling_governor: " + gov_state)
+    #gov_state = get_gov_state.split()[0]
+    #print("\nCurrent scaling_governor: " + gov_state)
 
 # root check func
 def root_check():
@@ -58,10 +57,8 @@ def set_powersave():
 
 # set performance
 def set_performance():
-    print("\nSetting: performance")
+    print("Using \"performance\" governor\n")
     s.run("cpufreqctl --governor --set=performance", shell=True)
-    # alternative
-    # echo performance /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
     # enable turbo boost
     set_turbo()
@@ -71,25 +68,26 @@ def set_turbo():
     load1m, _, _ = os.getloadavg()
     cpuload = p.cpu_percent(interval=1)
 
-    print("CPU usage:", cpuload, "%")
-    print("Current load:", load1m)
-    print("-" * 25)
+    print("Total CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
 
     # ToDo: move load and cpuload to sysinfo
     if load1m > 2:
-        print("High load, turbo: ON")
+        print("High load, turbo bost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         
-        print("High load:", load1m)
-        print("CPU load:", cpuload, "%")
+        # print("High load:", load1m)
+        # print("CPU load:", cpuload, "%")
     elif cpuload > 25:
-        print("High CPU load, turbo: ON")
+        print("High CPU load, turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
     else:
-        print("Load optimal, turbo: OFF")
+        print("Load optimal, turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
     
 def autofreq():
+
+    print("\n" + "-" * 18 + " CPU frequency scaling " + "-" * 19 + "\n")
 
     driver_check()
 
@@ -100,45 +98,51 @@ def autofreq():
 
     # auto cpufreq based on battery state
     if bat_state == "Discharging":
+        print("Battery is: discharging")
         set_powersave()
     elif bat_state == "Charging" or "Full":
+        print("Battery is: charging")
         set_performance()
-
+    else:
+        print("Couldn't detrmine battery status. Please report this issue.")
+    
 def sysinfo():
 
-    print("-" * 60 + "\n")
-    #print(psutil.cpu_freq(percpu=True)[0].current)
+    print("\n" + "-" * 20 + " System information " + "-" * 20 + "\n")
     core_usage = p.cpu_freq(percpu=True)
-    
     cpu_brand = cpuinfo.get_cpu_info()['brand']
     cpu_arch = cpuinfo.get_cpu_info()['arch']
     cpu_count = cpuinfo.get_cpu_info()['count']
-    print("Processor:", cpu_brand)
-    print("Cores:", cpu_count)
-    print("Architecture:", cpu_arch)
 
     fdist = distro.linux_distribution()
     dist = " ".join(x for x in fdist)
     print("Linux distro: " + dist)
     print("Linux kernel: " + platform.release())
+    print("Architecture:", cpu_arch)
+
+    print("Processor:", cpu_brand)
+    print("Cores:", cpu_count)
+
+    print("\n" + "-" * 20 + " Current CPU state " + "-" * 21 + "\n")
+    print("CPU frequency for each core:\n")
+    core_num = 0
+    while core_num < cpu_count:
+        print("CPU" + str(core_num) + ": {:.0f}".format(core_usage[core_num].current) + " MHz")
+        core_num += 1
 
     # ToDo: make more generic and not only for thinkpad
     #print(psutil.sensors_fans())
     current_fans = p.sensors_fans()['thinkpad'][0].current
-    print("Current fan speed (RPM):", current_fans)
+    print("\nCPU fan speed:", current_fans), "RPM"
 
-    print("\nCurrent CPU usage for each core: ")
-    core_num = 0
-    while core_num < cpu_count:
-        print("CPU" + str(core_num) + " {:.0f}".format(core_usage[core_num].current) + " MHz")
-        core_num += 1
-
+    # ToDo: add CPU temperature for each core
     # issue: https://github.com/giampaolo/psutil/issues/1650
     #print(psutil.sensors_temperatures()['coretemp'][1].current)
 
 if __name__ == '__main__':
     while True:
         root_check()
+        #avail_gov()
         sysinfo()
         autofreq()
         time.sleep(10)
