@@ -13,33 +13,38 @@ import re
 # ToDo:
 # - check if debian based + first time setup (install necessary packages)
 # - add option to run as daemon on boot
+# - add revert options
 # - sort out imports
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - copy cpufreqctl script if it doesn't exist
+# - clean/refresh screen instead of constant publish
 
 # global var
 p = psutil
 s = subprocess
 tool_run = "python3 auto-cpufreq.py"
 
+# check for necessary driver
 def driver_check():
     driver = s.getoutput("cpufreqctl --driver")
     if driver != "intel_pstate":
-        sys.exit(f"\nError:\nOnly laptops with enabled \"intel_pstate\" (CPU Performance Scaling Driver) are supported.\n")
-        
+        print("\n" + "-" * 23 + " Driver check " + "-" * 23 + "\n")
+        sys.exit("ERROR:\n\n\"intel_pstate\" CPU Performance Scaling Driver is not enabled.\n")  
 
-def avail_gov():
-    # available governors
-    get_avail_gov = s.getoutput("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
-    # ToDo: make check to fail if powersave and performance are not available
+# check for necessary scaling governors
+def gov_check():
+    avail_gov = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
 
-    # check current scaling governor
-    #get_gov_state = subprocess.getoutput("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
-    #get_gov_state = s.getoutput("cpufreqctl --governor")
+    governors=['performance','powersave']
 
-    #gov_state = get_gov_state.split()[0]
-    #print("\nCurrent scaling_governor: " + gov_state)
+    for line in open(avail_gov):
+        for keyword in governors:
+            if keyword in line:
+                pass
+            else:
+                print("\n" + "-" * 9 + " Checking for necessary scaling governors " + "-" * 9 + "\n")
+                sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
 
 # root check func
 def root_check():
@@ -88,8 +93,6 @@ def set_turbo():
 def autofreq():
 
     print("\n" + "-" * 18 + " CPU frequency scaling " + "-" * 19 + "\n")
-
-    driver_check()
 
     # ToDo: make a function and more generic (move to psutil)
     # check battery status
@@ -142,7 +145,8 @@ def sysinfo():
 if __name__ == '__main__':
     while True:
         root_check()
-        #avail_gov()
+        driver_check()
+        gov_check()
         sysinfo()
         autofreq()
         time.sleep(10)
