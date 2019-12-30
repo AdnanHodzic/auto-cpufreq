@@ -20,7 +20,6 @@ import click
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - copy cpufreqctl script if it doesn't exist
-# - add refresh timeout message (how to quit?)
 
 # global var
 p = psutil
@@ -54,6 +53,16 @@ def root_check():
         print("\n" + "-" * 23 + " Root check " + "-" * 24 + "\n")
         sys.exit(f"Must be run as root, i.e: \"sudo {tool_run}\"\n")
         exit(1)
+
+# refresh countdown
+def countdown(s):
+    for remaining in range(s, 0, -1):
+        sys.stdout.write("\r")
+        sys.stdout.write("\"auto-cpufreq\" refresh in:{:2d}".format(remaining))
+        sys.stdout.flush()
+        time.sleep(1)
+
+    sys.stdout.write("\rRefreshing ...                     \n")
 
 # set powersave
 def set_powersave():
@@ -171,7 +180,8 @@ def cli(live, daemon):
                 gov_check()
                 sysinfo()
                 autofreq()
-                time.sleep(10)
+                countdown(15)
+                #time.sleep(1)
                 subprocess.call("clear")
         elif daemon:
             print("daemon ...")
