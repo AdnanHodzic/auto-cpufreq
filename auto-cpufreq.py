@@ -106,10 +106,10 @@ def autofreq():
 
 def sysinfo():
 
-    # ToDo: beautify
-    #print(psutil.cpu_freq(percpu=True))
-
     print("-" * 60 + "\n")
+    #print(psutil.cpu_freq(percpu=True)[0].current)
+    core_usage = p.cpu_freq(percpu=True)
+    
     cpu_brand = cpuinfo.get_cpu_info()['brand']
     cpu_arch = cpuinfo.get_cpu_info()['arch']
     cpu_count = cpuinfo.get_cpu_info()['count']
@@ -126,6 +126,12 @@ def sysinfo():
     #print(psutil.sensors_fans())
     current_fans = p.sensors_fans()['thinkpad'][0].current
     print("Current fan speed (RPM):", current_fans)
+
+    print("\nCurrent CPU usage for each core: ")
+    core_num = 0
+    while core_num < cpu_count:
+        print("CPU" + str(core_num) + " {:.0f}".format(core_usage[core_num].current) + " MHz")
+        core_num += 1
 
     # issue: https://github.com/giampaolo/psutil/issues/1650
     #print(psutil.sensors_temperatures()['coretemp'][1].current)
