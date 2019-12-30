@@ -1,11 +1,14 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import subprocess
 import os
 import sys
 import time
 import psutil
+import cpuinfo
 import platform
+import distro
+import re
 
 # ToDo:
 # - only run if driver is Intel pstate
@@ -25,10 +28,6 @@ def driver_check():
     driver = s.getoutput("cpufreqctl --driver")
     if driver != "intel_pstate":
         sys.exit(f"\nError:\nOnly laptops with enabled \"intel_pstate\" (CPU Performance Scaling Driver) are supported.\n")
-
-        # print distro
-        # print chipset
-        # print laptop
         
 
 def avail_gov():
@@ -68,6 +67,7 @@ def set_performance():
     set_turbo()
 
 def set_turbo():
+    # ToDo: replace with psutil.getloadavg()? (available in 5.6.2)
     load1m, _, _ = os.getloadavg()
     cpuload = p.cpu_percent(interval=1)
 
@@ -75,6 +75,7 @@ def set_turbo():
     print("Current load:", load1m)
     print("-" * 25)
 
+    # ToDo: move load and cpuload to sysinfo
     if load1m > 2:
         print("High load, turbo: ON")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
@@ -87,25 +88,12 @@ def set_turbo():
     else:
         print("Load optimal, turbo: OFF")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-
-    #print(psutil.cpu_freq())
-    #print(psutil.cpu_count())
-
-# - display cpu/load/sensors(?) info
-#def sysload_info():
-    # distro
-    # kernel
-    # number of cores
-    # driver?
-    # chipset
-    # laptop maker/model?
-    # sensors?
     
 def autofreq():
 
     driver_check()
 
-    # ToDo: make a function?
+    # ToDo: make a function and more generic (move to psutil)
     # check battery status
     get_bat_state = s.getoutput("cat /sys/class/power_supply/BAT0/status")
     bat_state = get_bat_state.split()[0]
@@ -116,12 +104,35 @@ def autofreq():
     elif bat_state == "Charging" or "Full":
         set_performance()
 
+def sysinfo():
+
+    # ToDo: beautify
+    #print(psutil.cpu_freq(percpu=True))
+
+    print("-" * 60 + "\n")
+    cpu_brand = cpuinfo.get_cpu_info()['brand']
+    cpu_arch = cpuinfo.get_cpu_info()['arch']
+    cpu_count = cpuinfo.get_cpu_info()['count']
+    print("Processor:", cpu_brand)
+    print("Cores:", cpu_count)
+    print("Architecture:", cpu_arch)
+
+    fdist = distro.linux_distribution()
+    dist = " ".join(x for x in fdist)
+    print("Linux distro: " + dist)
+    print("Linux kernel: " + platform.release())
+
+    # ToDo: make more generic and not only for thinkpad
+    #print(psutil.sensors_fans())
+    current_fans = p.sensors_fans()['thinkpad'][0].current
+    print("Current fan speed (RPM):", current_fans)
+
+    # issue: https://github.com/giampaolo/psutil/issues/1650
+    #print(psutil.sensors_temperatures()['coretemp'][1].current)
+
 if __name__ == '__main__':
     while True:
         root_check()
-
-        #load()
-        #set_powersave()
-
+        sysinfo()
         autofreq()
         time.sleep(10)
