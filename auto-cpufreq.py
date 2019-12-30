@@ -12,13 +12,12 @@ import re
 
 # ToDo:
 # - check if debian based + first time setup (install necessary packages)
-# - add option to run as daemon on boot
-# - add revert options
+# - add option to run as daemon on boot (systemd)
+# - add revert/uninstall options for ^
 # - sort out imports
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - copy cpufreqctl script if it doesn't exist
-# - clean/refresh screen instead of constant publish
 
 # global var
 p = psutil
@@ -80,15 +79,18 @@ def set_turbo():
     if load1m > 2:
         print("High load, turbo bost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        print("\n" + "-" * 60 + "\n")
         
         # print("High load:", load1m)
         # print("CPU load:", cpuload, "%")
     elif cpuload > 25:
         print("High CPU load, turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        print("\n" + "-" * 60 + "\n")
     else:
         print("Load optimal, turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        print("\n" + "-" * 60 + "\n")
     
 def autofreq():
 
@@ -136,7 +138,7 @@ def sysinfo():
     # ToDo: make more generic and not only for thinkpad
     #print(psutil.sensors_fans())
     current_fans = p.sensors_fans()['thinkpad'][0].current
-    print("\nCPU fan speed:", current_fans), "RPM"
+    print("\nCPU fan speed:", current_fans, "RPM")
 
     # ToDo: add CPU temperature for each core
     # issue: https://github.com/giampaolo/psutil/issues/1650
@@ -150,3 +152,4 @@ if __name__ == '__main__':
         sysinfo()
         autofreq()
         time.sleep(10)
+        subprocess.call("clear")
