@@ -9,6 +9,8 @@ import cpuinfo
 import platform
 import distro
 import re
+#from subprocess import call
+import click
 
 # ToDo:
 # - check if debian based + first time setup (install necessary packages)
@@ -18,6 +20,7 @@ import re
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - copy cpufreqctl script if it doesn't exist
+# - add refresh timeout message (how to quit?)
 
 # global var
 p = psutil
@@ -48,7 +51,8 @@ def gov_check():
 # root check func
 def root_check():
     if not os.geteuid() == 0:
-        sys.exit(f"\nMust be run as root, i.e: \"sudo {tool_run}\"\n")
+        print("\n" + "-" * 23 + " Root check " + "-" * 24 + "\n")
+        sys.exit(f"Must be run as root, i.e: \"sudo {tool_run}\"\n")
         exit(1)
 
 # set powersave
@@ -144,12 +148,37 @@ def sysinfo():
     # issue: https://github.com/giampaolo/psutil/issues/1650
     #print(psutil.sensors_temperatures()['coretemp'][1].current)
 
+# cli
+@click.command()
+@click.option("--live", is_flag=True, help="TBU")
+@click.option("--daemon/--remove", default=True, help="TBU")
+
+def cli(live, daemon):
+    # print --help by default if no argument is provided when auto-cpufreq is run
+    if len(sys.argv) == 1:
+        print("\n" + "-" * 22 + " auto-cpufreq " + "-" * 23 + "\n")
+        print("auto-cpufreq - TBU")
+        print("\nExample usage: " + tool_run + "--install user")
+        print("\n-----\n")
+
+        s.call(["python3", "auto-cpufreq.py", "--help"])
+        print("\n" +  "-" * 59 + "\n")
+    else:
+        if live:
+            while True:
+                root_check()
+                driver_check()
+                gov_check()
+                sysinfo()
+                autofreq()
+                time.sleep(10)
+                subprocess.call("clear")
+        elif daemon:
+            print("daemon ...")
+        else:
+            print("remove ...")
+
 if __name__ == '__main__':
-    while True:
-        root_check()
-        driver_check()
-        gov_check()
-        sysinfo()
-        autofreq()
-        time.sleep(10)
-        subprocess.call("clear")
+    # while True:
+        cli()
+ 
