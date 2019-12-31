@@ -19,15 +19,15 @@ import click
 # - sort out imports
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
-# - copy cpufreqctl script if it doesn't exist
-# - write whole output to log, read live data from log
 # - in case of daemon deploy check if it's already running/daemon script exists
-# - put scripts in scripts dir
 
 # global var
 p = psutil
 s = subprocess
 tool_run = "python3 auto-cpufreq.py"
+
+# get turbo boost state
+cur_turbo = s.getoutput("cat /sys/devices/system/cpu/intel_pstate/no_turbo")
 
 def cpufreqctl_deploy():
     if os.path.isfile("/usr/bin/cpufreqctl"):
@@ -104,15 +104,19 @@ def set_performance():
 
 def set_turbo():
     # ToDo: replace with psutil.getloadavg()? (available in 5.6.2)
+    #load1m, _, _ = os.getloadavg()
+    #cpuload = p.cpu_percent(interval=1)
+
+    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
     load1m, _, _ = os.getloadavg()
     cpuload = p.cpu_percent(interval=1)
 
-    print("Total CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    #print("Total CPU usage:", cpuload, "%")
+    #print("Total system load:", load1m, "\n")
 
     # ToDo: move load and cpuload to sysinfo
     if load1m > 2:
-        print("High load, turbo bost: on")
+        print("High load, turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
@@ -127,6 +131,49 @@ def set_turbo():
     else:
         print("Load optimal, turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+
+def mon_turbo():
+
+    print("\n" + "-" * 5 + "\n")
+
+    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
+    load1m, _, _ = os.getloadavg()
+    cpuload = p.cpu_percent(interval=1)
+
+    print("Total CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
+
+    # ToDo: move load and cpuload to sysinfo
+    if load1m > 2:
+        print("High load, would turn turbo boost: on")
+        #s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        if cur_turbo == "0":
+            print("Currently turbo boost is: on")
+        else:
+            print("Currently turbo boost is: off")
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+        
+        # print("High load:", load1m)
+        # print("CPU load:", cpuload, "%")
+    elif cpuload > 25:
+        print("High CPU load, would turn turbo boost: on")
+        if cur_turbo == "0":
+            print("Currently turbo boost is: on")
+        else:
+            print("Currently turbo boost is: off")
+        #s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+    else:
+        print("Load optimal, would turn turbo boost: off")
+        if cur_turbo == "0":
+            print("Currently turbo boost is: on")
+        else:
+            print("Currently turbo boost is: off")
+        #s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
     
@@ -146,6 +193,35 @@ def autofreq():
     elif bat_state == "Charging" or "Full":
         print("Battery is: charging")
         set_performance()
+    else:
+        print("Couldn't detrmine battery status. Please report this issue.")
+
+def mon_autofreq():
+
+    print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
+
+    # get current scaling governor
+    get_cur_gov = s.getoutput("cpufreqctl --governor")
+    gov_state = get_cur_gov.split()[0]
+
+    # ToDo: make a function and more generic (move to psutil)
+    # check battery status
+    get_bat_state = s.getoutput("cat /sys/class/power_supply/BAT0/status")
+    bat_state = get_bat_state.split()[0]
+
+    # auto cpufreq based on battery state
+    if bat_state == "Discharging":
+        print("Battery is: discharging")
+        print("Based on this would set to \"powersave\" governor.\nCurrently using:", gov_state)
+        #s.run("cpufreqctl --governor --set=powersave", shell=True)
+        #cur_gov = s.getoutput("cpufreqctl --governor --set=powersave", shell=True)
+        #print(gov_state)
+        #set_powersave()
+    elif bat_state == "Charging" or "Full":
+        print("Battery is: charging")
+        print("Based on this would set to \"performance\" governor.\nCurrently using:", gov_state)
+        #set_performance()
+        #print(gov_state)
     else:
         print("Couldn't detrmine battery status. Please report this issue.")
     
@@ -174,8 +250,13 @@ def sysinfo():
         core_num += 1
 
     # ToDo: make more generic and not only for thinkpad
-    #current_fans = p.sensors_fans()['thinkpad'][0].current
-    #print("\nCPU fan speed:", current_fans, "RPM")
+    current_fans = p.sensors_fans()['thinkpad'][0].current
+    print("\nCPU fan speed:", current_fans, "RPM")
+
+    #print("\n" + "-" * 10 + "\n")
+    #print("Total CPU usage:", cpuload, "%")
+    #print("Total system load:", load1m)
+    #footer(79)
 
     # ToDo: add CPU temperature for each core
     # issue: https://github.com/giampaolo/psutil/issues/1650
@@ -183,10 +264,11 @@ def sysinfo():
 
 # cli
 @click.command()
+@click.option("--monitor", is_flag=True, help="TBU")
 @click.option("--live", is_flag=True, help="TBU")
 @click.option("--daemon/--remove", default=True, help="TBU")
 
-def cli(live, daemon):
+def cli(monitor, live, daemon):
     # print --help by default if no argument is provided when auto-cpufreq is run
     if len(sys.argv) == 1:
         print("\n" + "-" * 22 + " auto-cpufreq " + "-" * 23 + "\n")
@@ -197,7 +279,20 @@ def cli(live, daemon):
         s.call(["python3", "auto-cpufreq.py", "--help"])
         print("\n" +  "-" * 59 + "\n")
     else:
-        if live:
+        if monitor:
+            while True:
+                #root_check()
+                driver_check()
+                gov_check()
+                cpufreqctl_deploy()
+                sysinfo()
+                mon_autofreq()
+                mon_turbo()
+                #autofreq()
+                countdown(15)
+                #time.sleep(1)
+                subprocess.call("clear")
+        elif live:
             while True:
                 root_check()
                 driver_check()
