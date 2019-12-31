@@ -20,6 +20,7 @@ import click
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - in case of daemon deploy check if it's already running/daemon script exists
+# - add temperature for each core
 
 # global var
 p = psutil
@@ -147,7 +148,7 @@ def mon_turbo():
 
     # ToDo: move load and cpuload to sysinfo
     if load1m > 2:
-        print("High load, would turn turbo boost: on")
+        print("High load, suggesting turbo boost: on")
         #s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
@@ -159,7 +160,7 @@ def mon_turbo():
         # print("High load:", load1m)
         # print("CPU load:", cpuload, "%")
     elif cpuload > 25:
-        print("High CPU load, would turn turbo boost: on")
+        print("High CPU load, suggesting turbo boost: on")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
         else:
@@ -168,7 +169,7 @@ def mon_turbo():
         #print("\n" + "-" * 60 + "\n")
         footer(79)
     else:
-        print("Load optimal, would turn turbo boost: off")
+        print("Load optimal, suggesting turbo boost: off")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
         else:
@@ -212,14 +213,14 @@ def mon_autofreq():
     # auto cpufreq based on battery state
     if bat_state == "Discharging":
         print("Battery is: discharging")
-        print("Based on this would set to \"powersave\" governor.\nCurrently using:", gov_state)
+        print("Suggesting to use \"powersave\" governor\nCurrently using:", gov_state)
         #s.run("cpufreqctl --governor --set=powersave", shell=True)
         #cur_gov = s.getoutput("cpufreqctl --governor --set=powersave", shell=True)
         #print(gov_state)
         #set_powersave()
     elif bat_state == "Charging" or "Full":
         print("Battery is: charging")
-        print("Based on this would set to \"performance\" governor.\nCurrently using:", gov_state)
+        print("Suggesting to use \"performance\" governor\nCurrently using:", gov_state)
         #set_performance()
         #print(gov_state)
     else:
@@ -232,6 +233,7 @@ def sysinfo():
     cpu_brand = cpuinfo.get_cpu_info()['brand']
     cpu_arch = cpuinfo.get_cpu_info()['arch']
     cpu_count = cpuinfo.get_cpu_info()['count']
+    max_cpu_freq = p.cpu_freq().max
 
     fdist = distro.linux_distribution()
     dist = " ".join(x for x in fdist)
@@ -240,6 +242,7 @@ def sysinfo():
     print("Architecture:", cpu_arch)
 
     print("Processor:", cpu_brand)
+    print("CPU max frequency: " + "{:.0f}".format(max_cpu_freq) + " MHz")
     print("Cores:", cpu_count)
 
     print("\n" + "-" * 30 + " Current CPU state " + "-" * 30 + "\n")
