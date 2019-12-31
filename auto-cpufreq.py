@@ -21,17 +21,29 @@ import click
 # - go thru all other ToDo's
 # - copy cpufreqctl script if it doesn't exist
 # - write whole output to log, read live data from log
+# - in case of daemon deploy check if it's already running/daemon script exists
+# - put scripts in scripts dir
 
 # global var
 p = psutil
 s = subprocess
 tool_run = "python3 auto-cpufreq.py"
 
-# deploy auto-cpufreq daemon scrip
+def cpufreqctl_deploy():
+    if os.path.isfile("/usr/bin/cpufreqctl"):
+        pass
+    else:
+        os.system("scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+
+# deploy auto-cpufreq daemon script
 def daemon_deploy():
 
-    # ToDo: add check if file exists, skip
-    os.system('cp daemon-deploy.sh /usr/bin/auto-cpufreq')
+    if os.path.isfile("/usr/bin/auto-cpufreq"):
+        pass
+    else:
+        os.system("cp scripts/daemon-deploy.sh /usr/bin/auto-cpufreq")
+
+    # ToDo: add auto-cpufreq to run on boot
 
 def footer(l):
     print("\n" + "-" * l + "\n")
@@ -190,6 +202,7 @@ def cli(live, daemon):
                 root_check()
                 driver_check()
                 gov_check()
+                cpufreqctl_deploy()
                 sysinfo()
                 autofreq()
                 countdown(15)
@@ -198,13 +211,15 @@ def cli(live, daemon):
         elif daemon:
             while True:
                 print("daemon ...")
-                daemon_deploy()
                 root_check()
                 driver_check()
                 gov_check()
-                sysinfo()
-                autofreq()
-                countdown(15)
+                cpufreqctl_deploy()
+                daemon_deploy()
+                #daemon_run()
+                #sysinfo()
+                #autofreq()
+                #countdown(15)
         else:
             print("remove ...")
 
