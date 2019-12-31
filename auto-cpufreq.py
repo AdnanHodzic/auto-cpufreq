@@ -27,6 +27,12 @@ p = psutil
 s = subprocess
 tool_run = "python3 auto-cpufreq.py"
 
+# deploy auto-cpufreq daemon scrip
+def daemon_deploy():
+
+    # ToDo: add check if file exists, skip
+    os.system('cp daemon-deploy.sh /usr/bin/auto-cpufreq')
+
 def footer(l):
     print("\n" + "-" * l + "\n")
 
@@ -66,7 +72,7 @@ def countdown(s):
         sys.stdout.flush()
         time.sleep(1)
 
-    sys.stdout.write("\rRefreshing ...                     \n")
+    #sys.stdout.write("\rRefreshing ...                     \n")
 
 # set powersave
 def set_powersave():
@@ -190,7 +196,15 @@ def cli(live, daemon):
                 #time.sleep(1)
                 subprocess.call("clear")
         elif daemon:
-            print("daemon ...")
+            while True:
+                print("daemon ...")
+                daemon_deploy()
+                root_check()
+                driver_check()
+                gov_check()
+                sysinfo()
+                autofreq()
+                countdown(15)
         else:
             print("remove ...")
 
