@@ -20,18 +20,22 @@ import click
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - copy cpufreqctl script if it doesn't exist
+# - write whole output to log, read live data from log
 
 # global var
 p = psutil
 s = subprocess
 tool_run = "python3 auto-cpufreq.py"
 
+def footer(l):
+    print("\n" + "-" * l + "\n")
+
 # check for necessary driver
 def driver_check():
     driver = s.getoutput("cpufreqctl --driver")
     if driver != "intel_pstate":
-        print("\n" + "-" * 23 + " Driver check " + "-" * 23 + "\n")
-        sys.exit("ERROR:\n\n\"intel_pstate\" CPU Performance Scaling Driver is not enabled.\n")  
+        print("\n" + "-" * 32 + " Driver check " + "-" * 33 + "\n")
+        sys.exit("ERROR:\n\n\"intel_pstate\" CPU Performance Scaling Driver is not enabled.\n")
 
 # check for necessary scaling governors
 def gov_check():
@@ -44,13 +48,13 @@ def gov_check():
             if keyword in line:
                 pass
             else:
-                print("\n" + "-" * 9 + " Checking for necessary scaling governors " + "-" * 9 + "\n")
+                print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
                 sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
 
 # root check func
 def root_check():
     if not os.geteuid() == 0:
-        print("\n" + "-" * 23 + " Root check " + "-" * 24 + "\n")
+        print("\n" + "-" * 33 + " Root check " + "-" * 34 + "\n")
         sys.exit(f"Must be run as root, i.e: \"sudo {tool_run}\"\n")
         exit(1)
 
@@ -58,7 +62,7 @@ def root_check():
 def countdown(s):
     for remaining in range(s, 0, -1):
         sys.stdout.write("\r")
-        sys.stdout.write("\"auto-cpufreq\" refresh in:{:2d}".format(remaining))
+        sys.stdout.write("\t\t\t\"auto-cpufreq\" refresh in:{:2d}".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
 
@@ -92,22 +96,25 @@ def set_turbo():
     if load1m > 2:
         print("High load, turbo bost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        print("\n" + "-" * 60 + "\n")
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
         
         # print("High load:", load1m)
         # print("CPU load:", cpuload, "%")
     elif cpuload > 25:
         print("High CPU load, turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        print("\n" + "-" * 60 + "\n")
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
     else:
         print("Load optimal, turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        print("\n" + "-" * 60 + "\n")
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
     
 def autofreq():
 
-    print("\n" + "-" * 18 + " CPU frequency scaling " + "-" * 19 + "\n")
+    print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # ToDo: make a function and more generic (move to psutil)
     # check battery status
@@ -126,7 +133,7 @@ def autofreq():
     
 def sysinfo():
 
-    print("\n" + "-" * 20 + " System information " + "-" * 20 + "\n")
+    print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
     core_usage = p.cpu_freq(percpu=True)
     cpu_brand = cpuinfo.get_cpu_info()['brand']
     cpu_arch = cpuinfo.get_cpu_info()['arch']
@@ -141,7 +148,7 @@ def sysinfo():
     print("Processor:", cpu_brand)
     print("Cores:", cpu_count)
 
-    print("\n" + "-" * 20 + " Current CPU state " + "-" * 21 + "\n")
+    print("\n" + "-" * 30 + " Current CPU state " + "-" * 30 + "\n")
     print("CPU frequency for each core:\n")
     core_num = 0
     while core_num < cpu_count:
@@ -149,9 +156,8 @@ def sysinfo():
         core_num += 1
 
     # ToDo: make more generic and not only for thinkpad
-    #print(psutil.sensors_fans())
-    current_fans = p.sensors_fans()['thinkpad'][0].current
-    print("\nCPU fan speed:", current_fans, "RPM")
+    #current_fans = p.sensors_fans()['thinkpad'][0].current
+    #print("\nCPU fan speed:", current_fans, "RPM")
 
     # ToDo: add CPU temperature for each core
     # issue: https://github.com/giampaolo/psutil/issues/1650
