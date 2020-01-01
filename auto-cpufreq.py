@@ -213,48 +213,69 @@ def mon_autofreq():
     # auto cpufreq based on battery state
     if bat_state == "Discharging":
         print("Battery is: discharging")
-        print("Suggesting to use \"powersave\" governor\nCurrently using:", gov_state)
+        print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
         #s.run("cpufreqctl --governor --set=powersave", shell=True)
         #cur_gov = s.getoutput("cpufreqctl --governor --set=powersave", shell=True)
         #print(gov_state)
         #set_powersave()
     elif bat_state == "Charging" or "Full":
         print("Battery is: charging")
-        print("Suggesting to use \"performance\" governor\nCurrently using:", gov_state)
+        print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
         #set_performance()
         #print(gov_state)
     else:
         print("Couldn't detrmine battery status. Please report this issue.")
     
 def sysinfo():
+    # added as a temp fix for issue: https://github.com/giampaolo/psutil/issues/1650
+    import warnings
+    warnings.filterwarnings("ignore")
 
     print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
-    core_usage = p.cpu_freq(percpu=True)
+
     cpu_brand = cpuinfo.get_cpu_info()['brand']
     cpu_arch = cpuinfo.get_cpu_info()['arch']
     cpu_count = cpuinfo.get_cpu_info()['count']
-    max_cpu_freq = p.cpu_freq().max
 
     fdist = distro.linux_distribution()
     dist = " ".join(x for x in fdist)
     print("Linux distro: " + dist)
     print("Linux kernel: " + platform.release())
     print("Architecture:", cpu_arch)
-
     print("Processor:", cpu_brand)
+
+    max_cpu_freq = p.cpu_freq().max
     print("CPU max frequency: " + "{:.0f}".format(max_cpu_freq) + " MHz")
     print("Cores:", cpu_count)
 
     print("\n" + "-" * 30 + " Current CPU state " + "-" * 30 + "\n")
     print("CPU frequency for each core:\n")
+
+    # ToDo: make global var
     core_num = 0
+    core_usage = p.cpu_freq(percpu=True)
+
     while core_num < cpu_count:
         print("CPU" + str(core_num) + ": {:.0f}".format(core_usage[core_num].current) + " MHz")
         core_num += 1
 
+    # Todo: make gloabl var
+    core_num = 0
+    # get number of core temp sensors
+    core_temp_num = p.cpu_count(logical=False)
+    core_temp = p.sensors_temperatures()
+    print("\nTemperature for each physical core:\n")
+
+    while core_num < core_temp_num:
+        print("CPU" + str(core_num) + " temp: {:.0f}".format(core_temp['coretemp'][core_num].current) + "°C")
+        #print(p.sensors_temperatures()['coretemp'][0].current)
+
+        #print(psutil.sensors_temperatures()['coretemp'][0].current)
+        core_num += 1
+
     # ToDo: make more generic and not only for thinkpad
-    current_fans = p.sensors_fans()['thinkpad'][0].current
-    print("\nCPU fan speed:", current_fans, "RPM")
+    #current_fans = p.sensors_fans()['thinkpad'][0].current
+    #print("\nCPU fan speed:", current_fans, "RPM")
 
     #print("\n" + "-" * 10 + "\n")
     #print("Total CPU usage:", cpuload, "%")
@@ -262,7 +283,7 @@ def sysinfo():
     #footer(79)
 
     # ToDo: add CPU temperature for each core
-    # issue: https://github.com/giampaolo/psutil/issues/1650
+    # issue: 
     #print(psutil.sensors_temperatures()['coretemp'][1].current)
 
 # cli
