@@ -5,10 +5,10 @@ import os
 import sys
 import time
 import psutil
-import cpuinfo
+#import cpuinfo
 import platform
-import distro
-import re
+#import distro
+#import re
 #from subprocess import call
 import click
 
@@ -22,6 +22,9 @@ import click
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
 # - make shortcut for platform
+# - add boost options on cpu temperature?
+# - if switch to psutil load (add percentage as well)
+# - add print which mode is auto-cpufreq running in
 
 # global var
 p = psutil
@@ -106,9 +109,12 @@ def set_powersave():
     print("Setting turbo: off")
     s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
 
+    # enable turbo boost
+    set_turbo_powersave()
+
 # set performance
 def set_performance():
-    print("Using \"performance\" governor")
+    print("Setting to use \"performance\" governor")
     s.run("cpufreqctl --governor --set=performance", shell=True)
 
     # enable turbo boost
@@ -126,17 +132,42 @@ def set_turbo():
     print("Total system load:", load1m, "\n")
 
     if load1m > 1:
-        print("High load, turbo boost: on")
+        print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
-        
     elif cpuload > 20:
-        print("High CPU load, turbo boost: on")
+        print("High CPU load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
     else:
-        print("Load optimal, turbo boost: off")
+        print("Load optimal, setting turbo boost: off")
+        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+
+# set turbo when in powersave
+def set_turbo_powersave():
+
+    print("\n" + "-" * 5 + "\n")
+
+    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
+    load1m, _, _ = os.getloadavg()
+
+    print("Total CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
+
+    if load1m > 4:
+        print("High load, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        footer(79)
+    elif cpuload > 50:
+        print("High CPU load, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+    else:
+        print("Load optimal, setting turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
@@ -153,7 +184,7 @@ def mon_turbo():
     print("Total system load:", load1m, "\n")
 
     if load1m > 2:
-        print("High load, suggesting turbo boost: on")
+        print("High load, suggesting to set turbo boost: on")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
         else:
@@ -161,14 +192,14 @@ def mon_turbo():
         footer(79)
         
     elif cpuload > 25:
-        print("High CPU load, suggesting turbo boost: on")
+        print("High CPU load, suggesting to set turbo boost: on")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
         footer(79)
     else:
-        print("Load optimal, suggesting turbo boost: off")
+        print("Load optimal, suggesting to set turbo boost: off")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
         else:
@@ -178,6 +209,9 @@ def mon_turbo():
 # set cpufreq
 def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
+
+    # get battery state
+    bat_state = p.sensors_battery().power_plugged
 
     # determine which governor should be used
     if bat_state == True:
@@ -192,6 +226,9 @@ def set_autofreq():
 # make cpufreq suggestions
 def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
+
+    # get battery state
+    bat_state = p.sensors_battery().power_plugged
 
     # determine which governor should be used
     if bat_state == True:
