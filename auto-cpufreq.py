@@ -15,11 +15,13 @@ import click
 # ToDo:
 # - check if debian based + first time setup (install necessary packages)
 # - add option to run as daemon on boot (systemd)
+# - in case of daemon deploy check if it's already running/daemon script exists
+# - add option to disable bluetooth (only in daemon mode)
 # - add revert/uninstall options for ^
 # - sort out imports
 # - add option to enable turbo in powersave
 # - go thru all other ToDo's
-# - in case of daemon deploy check if it's already running/daemon script exists
+# - make shortcut for platform
 
 # global var
 p = psutil
@@ -36,8 +38,7 @@ gov_state = get_cur_gov.split()[0]
 # get battery state
 bat_state = p.sensors_battery().power_plugged
 
-# ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
-load1m, _, _ = os.getloadavg()
+# get CPU utilization as a percentage
 cpuload = p.cpu_percent(interval=1)
 
 def cpufreqctl_deploy():
@@ -107,7 +108,7 @@ def set_powersave():
 
 # set performance
 def set_performance():
-    print("Using \"performance\" governor\n")
+    print("Using \"performance\" governor")
     s.run("cpufreqctl --governor --set=performance", shell=True)
 
     # enable turbo boost
@@ -116,15 +117,20 @@ def set_performance():
 # set turbo
 def set_turbo():
 
+    print("\n" + "-" * 5 + "\n")
+
+    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
+    load1m, _, _ = os.getloadavg()
+
     print("Total CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > 2:
+    if load1m > 1:
         print("High load, turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
         
-    elif cpuload > 25:
+    elif cpuload > 20:
         print("High CPU load, turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
@@ -139,6 +145,9 @@ def set_turbo():
 def mon_turbo():
 
     print("\n" + "-" * 5 + "\n")
+
+    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
+    load1m, _, _ = os.getloadavg()
 
     print("Total CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
@@ -203,18 +212,29 @@ def sysinfo():
     print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
 
     # get info about linux distro
-    fdist = distro.linux_distribution()
+    # ToDo: use or get rid of
+    #fdist = distro.linux_distribution()
+    fdist = platform.linux_distribution()
     dist = " ".join(x for x in fdist)
     print("Linux distro: " + dist)
     print("Linux kernel: " + platform.release())
 
-    # get cpu info brand/architecture/cores count
-    cpu_brand = cpuinfo.get_cpu_info()['brand']
-    cpu_arch = cpuinfo.get_cpu_info()['arch']
-    cpu_count = cpuinfo.get_cpu_info()['count']
+    # get cpu architecture
+    cpu_arch = platform.processor()
+
+    # get number of cores/logical CPU's
+    cpu_count = p.cpu_count()
 
     print("Architecture:", cpu_arch)
-    print("Processor:", cpu_brand)
+
+    # get processor
+    with open("/proc/cpuinfo", "r")  as f:
+        line = f.readline()
+        while line:
+            if "model name" in line:
+                print("Processor:" + line.split(':')[1].rstrip())
+                break
+            line = f.readline()
 
     # print cpu max frequency
     max_cpu_freq = p.cpu_freq().max
@@ -222,7 +242,6 @@ def sysinfo():
     print("Cores:", cpu_count)
 
     print("\n" + "-" * 30 + " Current CPU state " + "-" * 30 + "\n")
-
 
     # get current cpu frequency per core
     core_usage = p.cpu_freq(percpu=True)
@@ -250,6 +269,16 @@ def sysinfo():
     # print current fan speed
     current_fans = p.sensors_fans()['thinkpad'][0].current
     print("\nCPU fan speed:", current_fans, "RPM")
+
+def get_processor_info():
+    if platform.system() == "Windows":
+        return platform.processor()
+    elif platform.system() == "Darwin":
+        return subprocess.check_output(['/usr/sbin/sysctl', "-n", "machdep.cpu.brand_string"]).strip()
+    elif platform.system() == "Linux":
+        command = "cat /proc/cpuinfo"
+        return subprocess.check_output(command, shell=True).strip()
+    return ""
 
 
 # cli
@@ -279,18 +308,20 @@ def cli(monitor, live, daemon):
                 mon_autofreq()
                 mon_turbo()
                 #autofreq()
-                countdown(15)
+                countdown(10)
                 #time.sleep(1)
                 subprocess.call("clear")
         elif live:
             while True:
                 root_check()
+                get_processor_info()
                 driver_check()
                 gov_check()
                 cpufreqctl_deploy()
                 sysinfo()
                 set_autofreq()
-                countdown(15)
+                #set_turbo()
+                countdown(10)
                 #time.sleep(1)
                 subprocess.call("clear")
         elif daemon:
