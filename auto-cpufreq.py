@@ -11,7 +11,7 @@ import platform
 import click
 
 # ToDo:
-# - add potential throttling fix (set max frequency if load too high?)
+# - add deploy of cpufreqctl script in every mode
 
 # - fill out every TBU (cli + auto-cpufreq.service file)
 # - add readme + list need to install all necessary packages
@@ -38,17 +38,21 @@ cpuload = p.cpu_percent(interval=1)
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 
+# deploy cpufreqctl script
+def cpufreqctl():
+    # deploy cpufreqctl script (if missing)
+    if os.path.isfile("/usr/bin/cpufreqctl"):
+        pass
+    else:
+        os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+
 # deploy auto-cpufreq daemon
 def deploy():
 
     print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
 
-    # deploy cpufreqctl script (if missing)
-    if os.path.isfile("/usr/bin/cpufreqctl"):
-        pass
-    else:
-        print("* Addding missing \"cpufreqctl\" script")
-        os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+    # deploy cpufreqctl script func call
+    cpufreqctl()
 
     # delete /var/log/auto-cpufreq.log if it exists (make sure file gets updated accordingly)
     if os.path.exists(auto_cpufreq_log_file):
@@ -373,7 +377,7 @@ def sysinfo():
 
     # ToDo: make more generic and not only for thinkpad
     # print current fan speed
-    #current_fans = p.sensors_fans()['thinkpad'][0].current
+    #current_fans = p.sensors_fans()['lenovo'][0].current
     #print("\nCPU fan speed:", current_fans, "RPM")
 
 def read_log():
@@ -418,6 +422,7 @@ def cli(monitor, live, daemon, log):
                 log_check()
                 #driver_check()
                 gov_check()
+                cpufreqctl()
                 sysinfo()
                 mon_autofreq()
                 mon_turbo()
@@ -427,8 +432,9 @@ def cli(monitor, live, daemon, log):
             while True:
                 log_check()
                 root_check()
-                driver_check()
+                #driver_check()
                 gov_check()
+                cpufreqctl()
                 sysinfo()
                 set_autofreq()
                 countdown(10)
@@ -438,7 +444,7 @@ def cli(monitor, live, daemon, log):
         elif daemon:
                 log_check()
                 root_check()
-                driver_check()
+                #driver_check()
                 gov_check()
                 deploy()
         elif remove:
