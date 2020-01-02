@@ -135,7 +135,9 @@ def driver_check():
     driver = s.getoutput("cpufreqctl --driver")
     if driver != "intel_pstate":
         print("\n" + "-" * 32 + " Driver check " + "-" * 33 + "\n")
-        sys.exit("ERROR:\n\n\"intel_pstate\" CPU Performance Scaling Driver is not enabled.\n")
+        print("ERROR:\n\n\"intel_pstate\" CPU Performance Scaling Driver is not enabled.\n")
+        footer(79)
+        sys.exit()
 
 # check for necessary scaling governors
 def gov_check():
@@ -414,7 +416,7 @@ def cli(monitor, live, daemon, log):
         if monitor:
             while True:
                 log_check()
-                driver_check()
+                #driver_check()
                 gov_check()
                 sysinfo()
                 mon_autofreq()
