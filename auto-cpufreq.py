@@ -88,7 +88,7 @@ def deploy():
     s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
 
     print("auto-cpufreq daemon started and will automatically start at boot time.")
-    print("\nTo disable and remove auto-cpufreq daemon, run:\nautocpu-freq --remove")
+    print("\nTo disable and remove auto-cpufreq daemon, run:\nauto-cpufreq --remove")
 
     print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
     footer(79)
@@ -379,7 +379,7 @@ def log_check():
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
         print("ERROR: prevention from running multiple instances.")
         print("\nIt seems like auto-cpufreq daemon is already running in background.\n\nTo view live log run:\nauto-cpufreq --log")
-        print("\nTo disable and remove auto-cpufreq daemon, run:\nautocpu-freq --remove")
+        print("\nTo disable and remove auto-cpufreq daemon, run:\nauto-cpufreq --remove")
         footer(79)
         sys.exit()
 
