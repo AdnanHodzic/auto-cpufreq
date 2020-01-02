@@ -17,8 +17,8 @@ import click
 # ToDo:
 
 # - add parameter to read logs if daemon is set
-# - add option to disable bluetooth (only in daemon mode)
 # - add uninstall options for daemon
+# - add potential throttling fix (set max frequency if load too high?)
 
 # - sort out imports
 # - go thru all other ToDo's
@@ -57,6 +57,23 @@ def deploy():
         print("\n* Addding missing \"cpufreqctl\" script")
         os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
+    # delete /var/log/auto-cpufreq.log if it exists (make sure file gets updated accordingly)
+    if os.path.exists("/var/log/auto-cpufreq.log"):
+        os.remove("/var/log/auto-cpufreq.log")
+
+    print("\n* Turn off bluetooth on boot")
+    btconf="/etc/bluetooth/main.conf"
+    try:
+        orig_set = "AutoEnable=true"
+        change_set = "AutoEnable=false"
+        with open(btconf, "r+") as f:
+            content = f.read()
+            f.seek(0)
+            f.truncate()
+            f.write(content.replace(orig_set, change_set))
+    except:
+        print("\nERROR:\nWas unable to turn off bluetooth on boot")
+
     print("\n* Deploy auto-cpufreq as system wide accessible binary")
     os.system("cp auto-cpufreq.py /usr/bin/auto-cpufreq")
 
@@ -69,7 +86,6 @@ def deploy():
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
 
-    # ToDo: disable bluetooth on boot
 
     # ToDo: add nice message as multiline
     print("auto-cpufreq daemon started and running in background.")
@@ -120,11 +136,11 @@ def countdown(s):
 
 # set powersave
 def set_powersave():
-    print("\nSetting: powersave")
+    print("Setting to use: powersave")
     s.run("cpufreqctl --governor --set=powersave", shell=True)
     
-    print("Setting turbo boost: off")
-    s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+    #print("Setting turbo boost: off")
+    #s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
 
     # enable turbo boost
     set_turbo_powersave()
@@ -140,12 +156,12 @@ def set_performance():
 # set turbo
 def set_turbo():
 
-    print("\n" + "-" * 5 + "\n")
+    #print("\n" + "-" * 5 + "\n")
 
     # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
     load1m, _, _ = os.getloadavg()
 
-    print("Total CPU usage:", cpuload, "%")
+    print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
     if load1m > 1:
@@ -166,12 +182,12 @@ def set_turbo():
 # set turbo when in powersave
 def set_turbo_powersave():
 
-    print("\n" + "-" * 5 + "\n")
+    #print("\n" + "-" * 5 + "\n")
 
     # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
     load1m, _, _ = os.getloadavg()
 
-    print("Total CPU usage:", cpuload, "%")
+    print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
     if load1m > 4:
@@ -290,12 +306,13 @@ def sysinfo():
                 break
             line = f.readline()
 
-    # print cpu max frequency
-    max_cpu_freq = p.cpu_freq().max
-    print("CPU max frequency: " + "{:.0f}".format(max_cpu_freq) + " MHz")
     print("Cores:", cpu_count)
 
-    print("\n" + "-" * 30 + " Current CPU state " + "-" * 30 + "\n")
+    print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
+
+    # print cpu max frequency
+    max_cpu_freq = p.cpu_freq().max
+    print("CPU max frequency: " + "\n{:.0f}".format(max_cpu_freq) + " MHz\n")
 
     # get current cpu frequency per core
     core_usage = p.cpu_freq(percpu=True)
