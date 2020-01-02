@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# 
+# ToDo: add description
 
 import subprocess
 import os
@@ -13,20 +15,20 @@ import platform
 import click
 
 # ToDo:
-# - check if debian based + first time setup (install necessary packages)
-# - add option to run as daemon on boot (systemd)
-# - in case of daemon deploy check if it's already running/daemon script exists
-# - add option to disable bluetooth (only in daemon mode)
-# - add revert/uninstall options for ^
-# - sort out imports
-# - add option to enable turbo in powersave
-# - go thru all other ToDo's
-# - make shortcut for platform
-# - add boost options on cpu temperature?
-# - if switch to psutil load (add percentage as well)
-# - add print which mode is auto-cpufreq running in
 
-# global var
+# - add nice message at the end of deploy + add print for each action
+# - add parameter to read logs if daemon is set
+# - add option to disable bluetooth (only in daemon mode)
+# - add uninstall options for daemon
+
+# - sort out imports
+# - make shortcut for platform
+# - go thru all other ToDo's
+
+# - fill out every TBU (cli + auto-cpufreq.service file)
+# - add readme + list need to install all necessary packages
+
+# global vars
 p = psutil
 s = subprocess
 tool_run = "python3 auto-cpufreq.py"
@@ -44,21 +46,32 @@ bat_state = p.sensors_battery().power_plugged
 # get CPU utilization as a percentage
 cpuload = p.cpu_percent(interval=1)
 
-def cpufreqctl_deploy():
+def deploy():
+
+    # deploy cpufreqctl script (if missing)
     if os.path.isfile("/usr/bin/cpufreqctl"):
         pass
     else:
-        os.system("scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+        os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
-# deploy auto-cpufreq daemon script
-def daemon_deploy():
+    # deploy auto-cpufreq binary
+    os.system("cp auto-cpufreq.py /usr/bin/auto-cpufreq")
 
-    if os.path.isfile("/usr/bin/auto-cpufreq"):
-        pass
-    else:
-        os.system("cp scripts/daemon-deploy.sh /usr/bin/auto-cpufreq")
+    # deploy auto-cpufreq daemon script
+    os.system("cp scripts/auto-cpufreq-daemon.sh /usr/bin/auto-cpufreq-daemon")
 
-    # ToDo: add auto-cpufreq to run on boot
+    # create auto-cpufreq systemd unit file
+    os.system("cp scripts/auto-cpufreq.service /lib/systemd/system/auto-cpufreq.service")
+
+    s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
+
+    # ToDo: disable bluetooth on boot
+
+    # ToDo: add nice message as multiline
+    print("auto-cpufreq daemon started and running in background.")
+    print("Logs are available in: /var/log/auto-cpufreq.log")
+    print("View live logs by running i.e: \ntail -n 50 -f /var/log/auto-cpufreq.log")
+
 
 def footer(l):
     print("\n" + "-" * l + "\n")
@@ -106,7 +119,7 @@ def set_powersave():
     print("\nSetting: powersave")
     s.run("cpufreqctl --governor --set=powersave", shell=True)
     
-    print("Setting turbo: off")
+    print("Setting turbo boost: off")
     s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
 
     # enable turbo boost
@@ -307,17 +320,6 @@ def sysinfo():
     current_fans = p.sensors_fans()['thinkpad'][0].current
     print("\nCPU fan speed:", current_fans, "RPM")
 
-def get_processor_info():
-    if platform.system() == "Windows":
-        return platform.processor()
-    elif platform.system() == "Darwin":
-        return subprocess.check_output(['/usr/sbin/sysctl', "-n", "machdep.cpu.brand_string"]).strip()
-    elif platform.system() == "Linux":
-        command = "cat /proc/cpuinfo"
-        return subprocess.check_output(command, shell=True).strip()
-    return ""
-
-
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="TBU")
@@ -340,39 +342,26 @@ def cli(monitor, live, daemon):
                 #root_check()
                 driver_check()
                 gov_check()
-                cpufreqctl_deploy()
                 sysinfo()
                 mon_autofreq()
                 mon_turbo()
-                #autofreq()
                 countdown(10)
-                #time.sleep(1)
                 subprocess.call("clear")
         elif live:
             while True:
                 root_check()
-                get_processor_info()
                 driver_check()
                 gov_check()
-                cpufreqctl_deploy()
                 sysinfo()
                 set_autofreq()
-                #set_turbo()
                 countdown(10)
-                #time.sleep(1)
                 subprocess.call("clear")
         elif daemon:
-            while True:
-                print("daemon ...")
+            #while True:
                 root_check()
                 driver_check()
                 gov_check()
-                cpufreqctl_deploy()
-                daemon_deploy()
-                #daemon_run()
-                #sysinfo()
-                #set_autofreq()
-                #countdown(15)
+                deploy()
         else:
             print("remove ...")
 
