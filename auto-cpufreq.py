@@ -11,10 +11,8 @@ import platform
 import click
 
 # ToDo:
-# - add deploy of cpufreqctl script in every mode
-
-# - fill out every TBU (cli + auto-cpufreq.service file)
-# - add readme + list need to install all necessary packages
+# - re-enable CPU fan speed display and make more generic and not only for thinkpad
+# - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
 # global vars
 p = psutil
@@ -32,11 +30,11 @@ gov_state = get_cur_gov.split()[0]
 # get battery state
 bat_state = p.sensors_battery().power_plugged
 
-# get CPU utilization as a percentage
-cpuload = p.cpu_percent(interval=1)
-
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
+
+# driver check
+driver = s.getoutput("cpufreqctl --driver")
 
 # deploy cpufreqctl script
 def cpufreqctl():
@@ -45,6 +43,9 @@ def cpufreqctl():
         pass
     else:
         os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+
+def footer(l):
+    print("\n" + "-" * l + "\n")
 
 # deploy auto-cpufreq daemon
 def deploy():
@@ -92,7 +93,7 @@ def deploy():
     print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
     footer(79)
 
-# deploy auto-cpufreq daemon
+# remove auto-cpufreq daemon
 def remove():
 
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
@@ -130,19 +131,6 @@ def remove():
 
     footer(79)
 
-
-def footer(l):
-    print("\n" + "-" * l + "\n")
-
-# check for necessary driver
-def driver_check():
-    driver = s.getoutput("cpufreqctl --driver")
-    if driver != "intel_pstate":
-        print("\n" + "-" * 32 + " Driver check " + "-" * 33 + "\n")
-        print("ERROR:\n\n\"intel_pstate\" CPU Performance Scaling Driver is not enabled.\n")
-        footer(79)
-        sys.exit()
-
 # check for necessary scaling governors
 def gov_check():
     avail_gov = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
@@ -172,64 +160,20 @@ def countdown(s):
         sys.stdout.flush()
         time.sleep(1)
 
-    #sys.stdout.write("\rRefreshing ...                     \n")
-
-# set powersave
+# set powersave and enable turbo
 def set_powersave():
     print("Setting to use: powersave")
     s.run("cpufreqctl --governor --set=powersave", shell=True)
-    
-    #print("Setting turbo boost: off")
-    #s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
 
-    # enable turbo boost
-    set_turbo_powersave()
-
-# set performance
-def set_performance():
-    print("Setting to use \"performance\" governor")
-    s.run("cpufreqctl --governor --set=performance", shell=True)
-
-    # enable turbo boost
-    set_turbo()
-
-# set turbo
-def set_turbo():
-
-    #print("\n" + "-" * 5 + "\n")
-
-    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
+    # get system/CPU load
     load1m, _, _ = os.getloadavg()
+    # get CPU utilization as a percentage
+    cpuload = p.cpu_percent(interval=1)
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > 1:
-        print("High load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        footer(79)
-    elif cpuload > 20:
-        print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
-        footer(79)
-    else:
-        print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
-        footer(79)
-
-# set turbo when in powersave
-def set_turbo_powersave():
-
-    #print("\n" + "-" * 5 + "\n")
-
-    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
-    load1m, _, _ = os.getloadavg()
-
-    print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
-
+    # conditions for setting turbo in powersave
     if load1m > 4:
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
@@ -245,15 +189,15 @@ def set_turbo_powersave():
         #print("\n" + "-" * 60 + "\n")
         footer(79)
 
-# make turbo suggestions
-def mon_turbo():
+# make turbo suggestions in powersave
+def mon_powersave():
 
-    print("\n" + "-" * 5 + "\n")
-
-    # ToDo: duplicate + replace with psutil.getloadavg()? (available in 5.6.2)
+    # get system/CPU load
     load1m, _, _ = os.getloadavg()
+    # get CPU utilization as a percentage
+    cpuload = p.cpu_percent(interval=1)
 
-    print("Total CPU usage:", cpuload, "%")
+    print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
     if load1m > 2:
@@ -279,7 +223,44 @@ def mon_turbo():
             print("Currently turbo boost is: off")
         footer(79)
 
-# set cpufreq
+# set performance and enable turbo
+def set_performance():
+    print("Setting to use \"performance\" governor")
+    s.run("cpufreqctl --governor --set=performance", shell=True)
+
+    # get system/CPU load
+    load1m, _, _ = os.getloadavg()
+    # get CPU utilization as a percentage
+    cpuload = p.cpu_percent(interval=1)
+
+    print("\nTotal CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
+
+    print("Setting turbo boost: on")
+    s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+    footer(79)
+
+# make turbo suggestions in performance
+def mon_performance():
+
+    # get system/CPU load
+    load1m, _, _ = os.getloadavg()
+    # get CPU utilization as a percentage
+    cpuload = p.cpu_percent(interval=1)
+
+    print("\nTotal CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
+
+    if cur_turbo == "0":
+        print("Currently turbo boost is: on")
+        print("Suggesting to set turbo boost: on")
+    else:
+        print("Currently turbo boost is: off")
+        print("Suggesting to set turbo boost: on")
+
+        footer(79)
+
+# set cpufreq based if device is charging
 def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
@@ -307,14 +288,17 @@ def mon_autofreq():
     if bat_state == True:
         print("Battery is: charging")
         print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
+        mon_performance()
     elif bat_state == False:
         print("Battery is: discharging")
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
+        mon_powersave()
     else:
         print("Couldn't detrmine battery status. Please report this issue.")
-
     
+# get system information
 def sysinfo():
+    
     # added as a temp fix for issue: https://github.com/giampaolo/psutil/issues/1650
     import warnings
     warnings.filterwarnings("ignore")
@@ -327,6 +311,7 @@ def sysinfo():
     dist = " ".join(x for x in fdist)
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
+    print("Driver: " + driver)
 
     # get cpu architecture
     cpu_arch = pl.processor()
@@ -375,9 +360,8 @@ def sysinfo():
         print("CPU" + str(core_num) + " temp: {:.0f}".format(core_temp['coretemp'][core_num].current) + "°C")
         core_num += 1
 
-    # ToDo: make more generic and not only for thinkpad
-    # print current fan speed
-    #current_fans = p.sensors_fans()['lenovo'][0].current
+    # print current fan speed | temporarily commented
+    #current_fans = p.sensors_fans()['thinkpad'][0].current
     #print("\nCPU fan speed:", current_fans, "RPM")
 
 def read_log():
@@ -387,7 +371,7 @@ def read_log():
         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-        print("ERROR:\n\nauto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq --daemon\" first")
+        print("ERROR:\n\nauto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq.py --daemon\" first")
     footer(79)
         
 def log_check():
@@ -401,17 +385,17 @@ def log_check():
 
 # cli
 @click.command()
-@click.option("--monitor", is_flag=True, help="TBU")
-@click.option("--live", is_flag=True, help="TBU")
-@click.option("--daemon/--remove", default=True, help="TBU")
-@click.option("--log", is_flag=True, help="TBU")
+@click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
+@click.option("--live", is_flag=True, help="Monitor and make suggested CPU optimizations")
+@click.option("--daemon/--remove", default=True, help="Automatically make suggested CPU optimizations")
+@click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
 
 def cli(monitor, live, daemon, log):
     # print --help by default if no argument is provided when auto-cpufreq is run
     if len(sys.argv) == 1:
         print("\n" + "-" * 22 + " auto-cpufreq " + "-" * 23 + "\n")
-        print("auto-cpufreq - TBU")
-        print("\nExample usage: " + tool_run + " --install user")
+        print("Automatic CPU speed & power optimizer for Linux")
+        print("\nExample usage:\npython3 " + tool_run + " --monitor")
         print("\n-----\n")
 
         s.call(["python3", "auto-cpufreq.py", "--help"])
@@ -420,31 +404,28 @@ def cli(monitor, live, daemon, log):
         if monitor:
             while True:
                 log_check()
-                #driver_check()
+                root_check()
                 gov_check()
                 cpufreqctl()
                 sysinfo()
                 mon_autofreq()
-                mon_turbo()
-                countdown(10)
+                countdown(5)
                 subprocess.call("clear")
         elif live:
             while True:
                 log_check()
                 root_check()
-                #driver_check()
                 gov_check()
                 cpufreqctl()
                 sysinfo()
                 set_autofreq()
-                countdown(10)
+                countdown(5)
                 subprocess.call("clear")
         elif log:
                 read_log()
         elif daemon:
                 log_check()
                 root_check()
-                #driver_check()
                 gov_check()
                 deploy()
         elif remove:
@@ -454,4 +435,3 @@ def cli(monitor, live, daemon, log):
 if __name__ == '__main__':
     # while True:
         cli()
- 
