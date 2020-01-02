@@ -7,28 +7,18 @@ import os
 import sys
 import time
 import psutil
-#import cpuinfo
 import platform
-#import distro
-#import re
-#from subprocess import call
 import click
 
 # ToDo:
-
-# - add uninstall options for daemon
-# - if live is run check if log exists, if yes instruct further options (how to see or delete)
 # - add potential throttling fix (set max frequency if load too high?)
-
-# - sort out imports
-# - go thru all other ToDo's
-# - make shortcut for platform
 
 # - fill out every TBU (cli + auto-cpufreq.service file)
 # - add readme + list need to install all necessary packages
 
 # global vars
 p = psutil
+pl = platform
 s = subprocess
 tool_run = sys.argv[0]
 
@@ -83,6 +73,9 @@ def deploy():
     print("\n* Deploy auto-cpufreq daemon deploy script")
     os.system("cp scripts/auto-cpufreq-daemon.sh /usr/bin/auto-cpufreq-daemon")
 
+    print("\n* Deploy auto-cpufreq daemon removal script")
+    os.system("cp scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
+
     print("\n* Deploy auto-cpufreq systemd unit file")
     os.system("cp scripts/auto-cpufreq.service /lib/systemd/system/auto-cpufreq.service")
 
@@ -94,6 +87,45 @@ def deploy():
 
     print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
     footer(79)
+
+# deploy auto-cpufreq daemon
+def remove():
+
+    print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
+
+    # delete /var/log/auto-cpufreq.log if it exists
+    os.remove(auto_cpufreq_log_file)
+
+    print("* Turn on bluetooth on boot")
+    btconf="/etc/bluetooth/main.conf"
+    try:
+        orig_set = "AutoEnable=true"
+        change_set = "AutoEnable=false"
+        with open(btconf, "r+") as f:
+            content = f.read()
+            f.seek(0)
+            f.truncate()
+            f.write(content.replace(change_set, orig_set))
+    except:
+        print("\nERROR:\nWas unable to turn off bluetooth on boot")
+
+    print("\n* Remove auto-cpufreq daemon deploy script")
+    os.remove("/usr/bin/auto-cpufreq-daemon")
+
+    # run auto-cpufreq daemon deploy script
+    s.call("/usr/bin/auto-cpufreq-remove", shell=True)
+
+    if os.path.isfile("/usr/bin/cpufreqctl"):
+        print("\n* Remove auto-cpufreq systemd unit file")
+        os.remove("/lib/systemd/system/auto-cpufreq.service")
+
+    print("\n* Remove auto-cpufreq binary")
+    os.remove("/usr/bin/auto-cpufreq")
+
+    print("\nauto-cpufreq daemon removed")
+
+    footer(79)
+
 
 def footer(l):
     print("\n" + "-" * l + "\n")
@@ -283,16 +315,15 @@ def sysinfo():
 
     print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
 
+    import distro
     # get info about linux distro
-    # ToDo: use or get rid of
-    #fdist = distro.linux_distribution()
-    fdist = platform.linux_distribution()
+    fdist = distro.linux_distribution()
     dist = " ".join(x for x in fdist)
     print("Linux distro: " + dist)
-    print("Linux kernel: " + platform.release())
+    print("Linux kernel: " + pl.release())
 
     # get cpu architecture
-    cpu_arch = platform.processor()
+    cpu_arch = pl.processor()
 
     # get number of cores/logical CPU's
     cpu_count = p.cpu_count()
@@ -344,16 +375,23 @@ def sysinfo():
     print("\nCPU fan speed:", current_fans, "RPM")
 
 def read_log():
-    # ToDo: check if daemon is set/log exists
-
     # deploy cpufreqctl script (if missing)
     if os.path.isfile(auto_cpufreq_log_file):
         # read /var/log/auto-cpufreq.log
         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-        print("ERROR:\n\nauto-cpufreq log is missing.\nMake sure to run \"python3 auto-cpufreq --daemon\" first\n")
+        print("ERROR:\n\nauto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq --daemon\" first")
+    footer(79)
         
+def log_check():
+    if os.path.isfile(auto_cpufreq_log_file):
+        print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
+        print("ERROR: prevention from running multiple instances.")
+        print("\nIt seems like auto-cpufreq daemon is already running in background.\n\nTo view live log run:\nauto-cpufreq --log")
+        print("\nTo disable and remove auto-cpufreq daemon, run:\nautocpu-freq --remove")
+        footer(79)
+        sys.exit()
 
 # cli
 @click.command()
@@ -375,7 +413,7 @@ def cli(monitor, live, daemon, log):
     else:
         if monitor:
             while True:
-                #root_check()
+                log_check()
                 driver_check()
                 gov_check()
                 sysinfo()
@@ -385,6 +423,7 @@ def cli(monitor, live, daemon, log):
                 subprocess.call("clear")
         elif live:
             while True:
+                log_check()
                 root_check()
                 driver_check()
                 gov_check()
@@ -395,10 +434,14 @@ def cli(monitor, live, daemon, log):
         elif log:
                 read_log()
         elif daemon:
+                log_check()
                 root_check()
                 driver_check()
                 gov_check()
                 deploy()
+        elif remove:
+                root_check()
+                remove()
 
 if __name__ == '__main__':
     # while True:
