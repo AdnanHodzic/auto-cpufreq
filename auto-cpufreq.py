@@ -373,8 +373,8 @@ def sysinfo():
 
     # ToDo: make more generic and not only for thinkpad
     # print current fan speed
-    current_fans = p.sensors_fans()['thinkpad'][0].current
-    print("\nCPU fan speed:", current_fans, "RPM")
+    #current_fans = p.sensors_fans()['thinkpad'][0].current
+    #print("\nCPU fan speed:", current_fans, "RPM")
 
 def read_log():
     # deploy cpufreqctl script (if missing)
