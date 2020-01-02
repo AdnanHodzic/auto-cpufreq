@@ -16,14 +16,13 @@ import click
 
 # ToDo:
 
-# - add nice message at the end of deploy + add print for each action
 # - add parameter to read logs if daemon is set
 # - add option to disable bluetooth (only in daemon mode)
 # - add uninstall options for daemon
 
 # - sort out imports
-# - make shortcut for platform
 # - go thru all other ToDo's
+# - make shortcut for platform
 
 # - fill out every TBU (cli + auto-cpufreq.service file)
 # - add readme + list need to install all necessary packages
@@ -46,23 +45,28 @@ bat_state = p.sensors_battery().power_plugged
 # get CPU utilization as a percentage
 cpuload = p.cpu_percent(interval=1)
 
+# deploy auto-cpufreq daemon
 def deploy():
+
+    print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
 
     # deploy cpufreqctl script (if missing)
     if os.path.isfile("/usr/bin/cpufreqctl"):
         pass
     else:
+        print("\n* Addding missing \"cpufreqctl\" script")
         os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
-    # deploy auto-cpufreq binary
+    print("\n* Deploy auto-cpufreq as system wide accessible binary")
     os.system("cp auto-cpufreq.py /usr/bin/auto-cpufreq")
 
-    # deploy auto-cpufreq daemon script
+    print("\n* Deploy auto-cpufreq daemon deploy script")
     os.system("cp scripts/auto-cpufreq-daemon.sh /usr/bin/auto-cpufreq-daemon")
 
-    # create auto-cpufreq systemd unit file
+    print("\n* Deploy auto-cpufreq systemd unit file")
     os.system("cp scripts/auto-cpufreq.service /lib/systemd/system/auto-cpufreq.service")
 
+    # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
 
     # ToDo: disable bluetooth on boot
