@@ -16,8 +16,8 @@ import click
 
 # ToDo:
 
-# - add parameter to read logs if daemon is set
 # - add uninstall options for daemon
+# - if live is run check if log exists, if yes instruct further options (how to see or delete)
 # - add potential throttling fix (set max frequency if load too high?)
 
 # - sort out imports
@@ -30,7 +30,7 @@ import click
 # global vars
 p = psutil
 s = subprocess
-tool_run = "python3 auto-cpufreq.py"
+tool_run = sys.argv[0]
 
 # get turbo boost state
 cur_turbo = s.getoutput("cat /sys/devices/system/cpu/intel_pstate/no_turbo")
@@ -45,6 +45,9 @@ bat_state = p.sensors_battery().power_plugged
 # get CPU utilization as a percentage
 cpuload = p.cpu_percent(interval=1)
 
+# auto-cpufreq log file
+auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
+
 # deploy auto-cpufreq daemon
 def deploy():
 
@@ -54,14 +57,14 @@ def deploy():
     if os.path.isfile("/usr/bin/cpufreqctl"):
         pass
     else:
-        print("\n* Addding missing \"cpufreqctl\" script")
+        print("* Addding missing \"cpufreqctl\" script")
         os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
     # delete /var/log/auto-cpufreq.log if it exists (make sure file gets updated accordingly)
-    if os.path.exists("/var/log/auto-cpufreq.log"):
-        os.remove("/var/log/auto-cpufreq.log")
+    if os.path.exists(auto_cpufreq_log_file):
+        os.remove(auto_cpufreq_log_file)
 
-    print("\n* Turn off bluetooth on boot")
+    print("* Turn off bluetooth on boot")
     btconf="/etc/bluetooth/main.conf"
     try:
         orig_set = "AutoEnable=true"
@@ -86,12 +89,11 @@ def deploy():
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
 
+    print("auto-cpufreq daemon started and will automatically start at boot time.")
+    print("\nTo disable and remove auto-cpufreq daemon, run:\nautocpu-freq --remove")
 
-    # ToDo: add nice message as multiline
-    print("auto-cpufreq daemon started and running in background.")
-    print("Logs are available in: /var/log/auto-cpufreq.log")
-    print("View live logs by running i.e: \ntail -n 50 -f /var/log/auto-cpufreq.log")
-
+    print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
+    footer(79)
 
 def footer(l):
     print("\n" + "-" * l + "\n")
@@ -107,7 +109,7 @@ def driver_check():
 def gov_check():
     avail_gov = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
 
-    governors=['performance','powersave']
+    governors=["performance","powersave"]
 
     for line in open(avail_gov):
         for keyword in governors:
@@ -121,7 +123,7 @@ def gov_check():
 def root_check():
     if not os.geteuid() == 0:
         print("\n" + "-" * 33 + " Root check " + "-" * 34 + "\n")
-        sys.exit(f"Must be run as root, i.e: \"sudo {tool_run}\"\n")
+        sys.exit("ERROR:\n\nMust be run root for this functionality to work, i.e: \nsudo " + tool_run + "\n")
         exit(1)
 
 # refresh countdown
@@ -341,18 +343,31 @@ def sysinfo():
     current_fans = p.sensors_fans()['thinkpad'][0].current
     print("\nCPU fan speed:", current_fans, "RPM")
 
+def read_log():
+    # ToDo: check if daemon is set/log exists
+
+    # deploy cpufreqctl script (if missing)
+    if os.path.isfile(auto_cpufreq_log_file):
+        # read /var/log/auto-cpufreq.log
+        s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
+    else:
+        print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
+        print("ERROR:\n\nauto-cpufreq log is missing.\nMake sure to run \"python3 auto-cpufreq --daemon\" first\n")
+        
+
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="TBU")
 @click.option("--live", is_flag=True, help="TBU")
 @click.option("--daemon/--remove", default=True, help="TBU")
+@click.option("--log", is_flag=True, help="TBU")
 
-def cli(monitor, live, daemon):
+def cli(monitor, live, daemon, log):
     # print --help by default if no argument is provided when auto-cpufreq is run
     if len(sys.argv) == 1:
         print("\n" + "-" * 22 + " auto-cpufreq " + "-" * 23 + "\n")
         print("auto-cpufreq - TBU")
-        print("\nExample usage: " + tool_run + "--install user")
+        print("\nExample usage: " + tool_run + " --install user")
         print("\n-----\n")
 
         s.call(["python3", "auto-cpufreq.py", "--help"])
@@ -377,14 +392,13 @@ def cli(monitor, live, daemon):
                 set_autofreq()
                 countdown(10)
                 subprocess.call("clear")
+        elif log:
+                read_log()
         elif daemon:
-            #while True:
                 root_check()
                 driver_check()
                 gov_check()
                 deploy()
-        else:
-            print("remove ...")
 
 if __name__ == '__main__':
     # while True:
