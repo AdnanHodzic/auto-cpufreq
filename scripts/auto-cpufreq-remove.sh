@@ -11,8 +11,6 @@ then
 	exit 1
 fi
 
-logs_file="/var/log/auto-cpufreq.log"
-
 echo -e "\n* Disabling auto-cpufreq systemd service at boot"
 systemctl disable auto-cpufreq
 

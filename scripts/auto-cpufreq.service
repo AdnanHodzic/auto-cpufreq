@@ -1,11 +1,13 @@
 [Unit]
-Description=auto-cpufreq - TBU description
+Description=auto-cpufreq - Automatic CPU speed & power optimizer for Linux
 After=network.target network-online.target
 
 [Service]
 Type=simple
 User=root
-ExecStart=/bin/bash /usr/bin/auto-cpufreq-daemon
+#ExecStart=/bin/bash /usr/bin/auto-cpufreq-daemon
+# ToDo: new script which just starts auto-cpufreq (no systemd)
+ExecStart=/usr/bin/python3 /usr/bin/auto-cpufreq --live
 
 [Install]
 WantedBy=multi-user.target

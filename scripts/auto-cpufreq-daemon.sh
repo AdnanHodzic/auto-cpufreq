@@ -25,7 +25,7 @@ systemctl start auto-cpufreq
 echo -e "\n* Enabling auto-cpufreq systemd service at boot"
 systemctl enable auto-cpufreq
 
-echo -e "\n* Starting auto-cpufreq systemd service"
-/usr/bin/python3 /usr/bin/auto-cpufreq --live > $logs_file 2>&1 &
+echo -e "\n* Running auto-cpufreq binary"
+#/usr/bin/python3 /usr/bin/auto-cpufreq --live > $logs_file 2>&1 &
 
 echo -e "\n------\n"

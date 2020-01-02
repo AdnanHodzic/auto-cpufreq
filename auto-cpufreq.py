@@ -88,7 +88,7 @@ def deploy():
     s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
 
     print("auto-cpufreq daemon started and will automatically start at boot time.")
-    print("\nTo disable and remove auto-cpufreq daemon, run:\nauto-cpufreq --remove")
+    print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
 
     print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
     footer(79)
@@ -99,6 +99,9 @@ def remove():
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
     # delete /var/log/auto-cpufreq.log if it exists
+    #if os.path.exists(auto_cpufreq_log_file):
+    #    os.remove(auto_cpufreq_log_file)
+    # delete /var/log/auto-cpufreq.log file
     os.remove(auto_cpufreq_log_file)
 
     print("* Turn on bluetooth on boot")
@@ -120,7 +123,7 @@ def remove():
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-remove", shell=True)
 
-    if os.path.isfile("/usr/bin/cpufreqctl"):
+    if os.path.isfile("/lib/systemd/system/auto-cpufreq.service"):
         print("\n* Remove auto-cpufreq systemd unit file")
         os.remove("/lib/systemd/system/auto-cpufreq.service")
 
@@ -237,7 +240,7 @@ def set_performance():
     print("Total system load:", load1m, "\n")
 
     print("Setting turbo boost: on")
-    s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+    s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
     footer(79)
 
 # make turbo suggestions in performance
@@ -258,7 +261,7 @@ def mon_performance():
         print("Currently turbo boost is: off")
         print("Suggesting to set turbo boost: on")
 
-        footer(79)
+    footer(79)
 
 # set cpufreq based if device is charging
 def set_autofreq():
@@ -379,7 +382,7 @@ def log_check():
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
         print("ERROR: prevention from running multiple instances.")
         print("\nIt seems like auto-cpufreq daemon is already running in background.\n\nTo view live log run:\nauto-cpufreq --log")
-        print("\nTo disable and remove auto-cpufreq daemon, run:\nauto-cpufreq --remove")
+        print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
         footer(79)
         sys.exit()
 
