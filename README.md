@@ -2,7 +2,7 @@
 
 Automatic CPU speed & power optimizer for Linux based on active monitoring of laptop's battery state, CPU usage and system load. 
 
-### Why do I need auto-cpufreq?
+## Why do I need auto-cpufreq?
 
 One of the problems with Linux today on laptops is that CPU will run in unoptimized manner which will negatively reflect on battery life. For example, CPU will run using "performance" governor with turbo boost enabled regardless if it's plugged in to power or not.
 
@@ -12,7 +12,7 @@ Using tools like [TLP](https://github.com/linrunner/TLP) will help in this situa
 
 With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save bettery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
 
-### Features
+## Features
 
 * Monitoring 
   * Basic system information
@@ -26,9 +26,9 @@ With that said, I needed a simple tool which would automatically make "cpufreq" 
   * System load
 * Automatic CPU & power optimization (temporary and persistent)
 
-### How to run auto-cpufreq?
+## How to run auto-cpufreq?
 
-##### Get auto-cpufreq source code
+#### Get auto-cpufreq source code
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq.git`
 
@@ -54,7 +54,7 @@ auto-cpufreq can be run by simply running the `auto-cpufreq.py` and following on
 
 `sudo python3 auto-cpufreq.py`
 
-### auto-cpufreq modes and options
+## auto-cpufreq modes and options
 
 #### Monitor
 
@@ -68,13 +68,15 @@ No changes are made to the system, and is solely made for demonstration purposes
 
 Necessary changes are temporarily made to the system, this mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
 
-#### Install - auto-cpufreq daemon (systemd) service
+#### Install - auto-cpufreq daemon
+
+Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started by a systemd service. Changes are made automatically and live log is made for monitoring purposes.
 
 `sudo python3 auto-cpufreq.py --install`
 
-#### Remove - auto-cpufreq daemon (systemd) service
+#### Remove - auto-cpufreq daemon
 
-auto-cpufreq daemon and all persistent changes can be removed by running:
+auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
 
 `sudo autocpu-freq --remove`
 or
@@ -87,8 +89,6 @@ If daemon has been setup live log of CPU/system load monitoring and optimizaiton
 `auto-cpufreq --log`
 or `sudo python3 auto-cpufreq.py --log`
 
-Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started by a systemd service. Changes are made automatically and live log is made for monitoring purposes.
-
-# Discussion:
+## Discussion:
 
 * Blogpost: [auto-cpufreq - Automatic CPU speed & power optimizer for Linux](http://foolcontrol.org/?p=3124)
