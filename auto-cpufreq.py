@@ -394,7 +394,7 @@ def cli(monitor, live, daemon, install, log):
                 cpufreqctl()
                 sysinfo()
                 set_autofreq()
-                countdown(5)
+                countdown(10)
                 subprocess.call("clear")
         elif monitor:
             while True:
@@ -404,7 +404,7 @@ def cli(monitor, live, daemon, install, log):
                 cpufreqctl()
                 sysinfo()
                 mon_autofreq()
-                countdown(5)
+                countdown(10)
                 subprocess.call("clear")
         elif live:
             while True:
@@ -414,7 +414,7 @@ def cli(monitor, live, daemon, install, log):
                 cpufreqctl()
                 sysinfo()
                 set_autofreq()
-                countdown(5)
+                countdown(10)
                 subprocess.call("clear")
         elif log:
                 read_log()
