@@ -68,13 +68,11 @@ No changes are made to the system, and is solely made for demonstration purposes
 
 Necessary changes are temporarily made to the system, this mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
 
-#### Daemon
+#### Install - auto-cpufreq daemon (systemd) service
 
-`sudo python3 auto-cpufreq.py --daemon`
+`sudo python3 auto-cpufreq.py --install`
 
-Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started by a systemd service. Changes are made automatically and live log is made for monitoring purposes.
-
-#### Daemon removal
+#### Remove - auto-cpufreq daemon (systemd) service
 
 auto-cpufreq daemon and all persistent changes can be removed by running:
 
@@ -87,3 +85,10 @@ or
 If daemon has been setup live log of CPU/system load monitoring and optimizaiton can be seen by running:
 
 `auto-cpufreq --log`
+or `sudo python3 auto-cpufreq.py --log`
+
+Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started by a systemd service. Changes are made automatically and live log is made for monitoring purposes.
+
+# Discussion:
+
+* Blogpost: [auto-cpufreq - Automatic CPU speed & power optimizer for Linux](http://foolcontrol.org/?p=3124)
