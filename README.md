@@ -4,6 +4,10 @@ Automatic CPU speed & power optimizer for Linux based on active monitoring of la
 
 ## Why do I need auto-cpufreq?
 
+[Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
+
+[![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg"")
+
 One of the problems with Linux today on laptops is that CPU will run in unoptimized manner which will negatively reflect on battery life. For example, CPU will run using "performance" governor with turbo boost enabled regardless if it's plugged in to power or not.
 
 Issue can be mitigated by using tools like [indicator-cpufreq](https://itsfoss.com/cpufreq-ubuntu/) or [cpufreq](https://github.com/konkor/cpufreq), but these still require maual action from your side which can be daunting and cumbersome.
@@ -13,10 +17,6 @@ Using tools like [TLP](https://github.com/linrunner/TLP) will help in this situa
 With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save bettery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
 
 ## Features
-
-[Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
-
-[![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg"")
 
 * Monitoring 
   * Basic system information
