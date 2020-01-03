@@ -5,7 +5,7 @@ After=network.target network-online.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /usr/bin/auto-cpufreq --live
+ExecStart=/usr/bin/python3 /usr/bin/auto-cpufreq --daemon
 StandardOutput=file:/var/log/auto-cpufreq.log
 [Install]
 WantedBy=multi-user.target
