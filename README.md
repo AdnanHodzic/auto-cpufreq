@@ -14,6 +14,10 @@ With that said, I needed a simple tool which would automatically make "cpufreq" 
 
 ## Features
 
+[Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
+
+[![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg"")
+
 * Monitoring 
   * Basic system information
   * CPU frequency
