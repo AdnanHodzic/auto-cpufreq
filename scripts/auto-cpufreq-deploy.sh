@@ -11,7 +11,7 @@ then
 	exit 1
 fi
 
-logs_file="/var/log/auto-cpufreq.log"
+#touch /var/log/auto-cpufreq.log
 
 echo -e "\n* Reloading systemd manager configuration"
 systemctl daemon-reload
@@ -22,10 +22,10 @@ systemctl stop auto-cpufreq
 echo -e "\n* Starting auto-cpufreq systemd service"
 systemctl start auto-cpufreq
 
-echo -e "\n* Enabling auto-cpufreq systemd service at boot"
-systemctl enable auto-cpufreq
+#echo -e "\n* Enabling auto-cpufreq systemd service at boot"
+#systemctl enable auto-cpufreq
 
-echo -e "\n* Running auto-cpufreq binary"
+#echo -e "\n* Running auto-cpufreq binary"
 #/usr/bin/python3 /usr/bin/auto-cpufreq --live > $logs_file 2>&1 &
 
 echo -e "\n------\n"

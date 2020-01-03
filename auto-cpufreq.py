@@ -76,7 +76,10 @@ def deploy():
     os.system("cp auto-cpufreq.py /usr/bin/auto-cpufreq")
 
     print("\n* Deploy auto-cpufreq daemon deploy script")
-    os.system("cp scripts/auto-cpufreq-daemon.sh /usr/bin/auto-cpufreq-daemon")
+    os.system("cp scripts/auto-cpufreq-deploy.sh /usr/bin/auto-cpufreq-deploy")
+
+    #print("\n* Deploy auto-cpufreq daemon run script")
+    #os.system("cp scripts/auto-cpufreq-run.sh /usr/bin/auto-cpufreq-run")
 
     print("\n* Deploy auto-cpufreq daemon removal script")
     os.system("cp scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
@@ -85,13 +88,13 @@ def deploy():
     os.system("cp scripts/auto-cpufreq.service /lib/systemd/system/auto-cpufreq.service")
 
     # run auto-cpufreq daemon deploy script
-    s.call("/usr/bin/auto-cpufreq-daemon", shell=True)
+    s.call("/usr/bin/auto-cpufreq-deploy", shell=True)
 
-    print("auto-cpufreq daemon started and will automatically start at boot time.")
-    print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
+    #print("auto-cpufreq daemon started and will automatically start at boot time.")
+    #print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
 
-    print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
-    footer(79)
+    #print("\nTo view live auto-cpufreq daemon logs, run:\nauto-cpufreq --log")
+    #footer(79)
 
 # remove auto-cpufreq daemon
 def remove():
@@ -102,7 +105,8 @@ def remove():
     #if os.path.exists(auto_cpufreq_log_file):
     #    os.remove(auto_cpufreq_log_file)
     # delete /var/log/auto-cpufreq.log file
-    os.remove(auto_cpufreq_log_file)
+    #print("\n* Delete log file")
+    #os.remove(auto_cpufreq_log_file)
 
     print("* Turn on bluetooth on boot")
     btconf="/etc/bluetooth/main.conf"
@@ -115,20 +119,35 @@ def remove():
             f.truncate()
             f.write(content.replace(change_set, orig_set))
     except:
-        print("\nERROR:\nWas unable to turn off bluetooth on boot")
+        print("\nERROR:\nWas unable to turn on bluetooth on boot")
 
-    print("\n* Remove auto-cpufreq daemon deploy script")
-    os.remove("/usr/bin/auto-cpufreq-daemon")
+    #f os.path("/usr/bin/auto-cpufreq-deploy"):
+    ##   print("\n* Remove auto-cpufreq daemon deploy script")
+    #    os.remove("/usr/bin/auto-cpufreq-deploy")
+
+    #if os.path("/usr/bin/auto-cpufreq-run"):
+    #    print("\n* Remove auto-cpufreq daemon run script")
+    #    os.remove("/usr/bin/auto-cpufreq-run")
 
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-remove", shell=True)
 
-    if os.path.isfile("/lib/systemd/system/auto-cpufreq.service"):
-        print("\n* Remove auto-cpufreq systemd unit file")
-        os.remove("/lib/systemd/system/auto-cpufreq.service")
+    #if os.path("/usr/bin/auto-cpufreq-remove"):
+    #    print("\n* Remove auto-cpufreq-remove script")
+    #    os.remove("/usr/bin/auto-cpufreq-remove")
 
-    print("\n* Remove auto-cpufreq binary")
-    os.remove("/usr/bin/auto-cpufreq")
+    #if os.path.isfile("/lib/systemd/system/auto-cpufreq.service"):
+    #    print("\n* Remove auto-cpufreq systemd unit file")
+    #    os.remove("/lib/systemd/system/auto-cpufreq.service")
+
+    #if os.path("/usr/bin/auto-cpufreq"):
+    #    print("\n* Remove auto-cpufreq binary")
+    #    os.remove("/usr/bin/auto-cpufreq")
+
+    # delete /var/log/auto-cpufreq.log if it exists
+    #if os.path.exists(auto_cpufreq_log_file):
+    #    print("\n* Delete log file")
+    #    os.remove(auto_cpufreq_log_file)
 
     print("\nauto-cpufreq daemon removed")
 
@@ -157,11 +176,16 @@ def root_check():
 
 # refresh countdown
 def countdown(s):
+    # Fix for wrong log output and "TERM environment variable not set"
+    os.environ['TERM'] = 'xterm'
+    
     for remaining in range(s, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("\t\t\t\"auto-cpufreq\" refresh in:{:2d}".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
+
+    #sys.stdout.write("\rComplete!            \n")
 
 # set powersave and enable turbo
 def set_powersave():
@@ -368,6 +392,7 @@ def sysinfo():
     #print("\nCPU fan speed:", current_fans, "RPM")
 
 def read_log():
+
     # deploy cpufreqctl script (if missing)
     if os.path.isfile(auto_cpufreq_log_file):
         # read /var/log/auto-cpufreq.log
@@ -385,6 +410,10 @@ def log_check():
         print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
         footer(79)
         sys.exit()
+
+def trunk():
+    with open(auto_cpufreq_log_file, 'w'):
+        pass
 
 # cli
 @click.command()
@@ -416,7 +445,7 @@ def cli(monitor, live, daemon, log):
                 subprocess.call("clear")
         elif live:
             while True:
-                log_check()
+                #log_check()
                 root_check()
                 gov_check()
                 cpufreqctl()
