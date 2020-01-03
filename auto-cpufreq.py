@@ -36,10 +36,6 @@ auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 # daemon deployment marker
 daemon_marker = "/etc/opt/auto-cpufreq"
 
-
-# driver check
-driver = s.getoutput("cpufreqctl --driver")
-
 # deploy cpufreqctl script
 def cpufreqctl():
     # deploy cpufreqctl script (if missing)
@@ -291,6 +287,9 @@ def sysinfo():
     dist = " ".join(x for x in fdist)
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
+
+    # driver check
+    driver = s.getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
 
     # get cpu architecture
