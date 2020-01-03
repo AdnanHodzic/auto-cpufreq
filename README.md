@@ -1,6 +1,6 @@
 # auto-cpufreq
 
-Automatic CPU speed & power optimizer for Linux based on active monitoring of laptop's battery state, CPU usage and system load. 
+Automatic CPU speed & power optimizer for Linux based on active monitoring of laptop's battery state, CPU usage and system load. Ultimately allowing you to improve battery life without making any compromises.
 
 ## Why do I need auto-cpufreq?
 
