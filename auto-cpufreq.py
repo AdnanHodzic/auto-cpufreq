@@ -376,11 +376,6 @@ def running_check():
         footer(79)
         sys.exit()
 
-def marker_create(f):
-    f = open(f, "w")
-    f.write("auto-cpufreq daemon intsall marker")
-    f.close()
-
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
