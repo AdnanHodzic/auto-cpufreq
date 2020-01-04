@@ -358,7 +358,8 @@ def running_check():
         except psutil.NoSuchProcess:
             pass
         else:
-            if pinfo['name'] == 'python3' and '/usr/bin/auto-cpufreq' in pinfo['cmdline'] and '--daemon' in pinfo['cmdline']:
+            if pinfo['name'] == 'python3' and \
+            '/usr/bin/auto-cpufreq' in pinfo['cmdline'] and '--daemon' in pinfo['cmdline']:
                 daemon_marker = True
 
     if daemon_marker:
@@ -367,8 +368,10 @@ def running_check():
         print("\nIt seems like auto-cpufreq daemon is already running.\n")
         print("\nIf you want to use [--live|--monitor] disable or remove auto-cpufreq daemon.")
         print("\nTo view live log run:\n\tauto-cpufreq --log")
-        print("\nTo stop and disable auto-cpufreq daemon, run:\n\tsudo systemctl stop auto-cpufreq\n\tsudo systemctl disable auto-cpufreq")
-        print("\nTo enable and start auto-cpufreq daemon, run:\n\tsudo systemctl enable auto-cpufreq\n\tsudo systemctl start auto-cpufreq")
+        print("\nTo stop and disable auto-cpufreq daemon, run:")
+        print("\n\tsudo systemctl stop auto-cpufreq\n\tsudo systemctl disable auto-cpufreq")
+        print("\nTo enable and start auto-cpufreq daemon, run:")
+        print("\n\tsudo systemctl enable auto-cpufreq\n\tsudo systemctl start auto-cpufreq")
         print("\nTo remove auto-cpufreq daemon, run:\n\tsudo auto-cpufreq --remove")
         footer(79)
         sys.exit()
