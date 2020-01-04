@@ -212,6 +212,30 @@ def set_performance():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
+    # get system/CPU load
+    load1m, _, _ = os.getloadavg()
+    # get CPU utilization as a percentage
+    cpuload = p.cpu_percent(interval=1)
+
+    print("\nTotal CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
+
+    # conditions for setting turbo in powersave
+    if load1m > 2:
+        print("High load, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        footer(79)
+    elif cpuload > 20:
+        print("High CPU load, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+    else:
+        print("Load optimal, setting turbo boost: off")
+        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
+
     print("Setting turbo boost: on")
     s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
     footer(79)
