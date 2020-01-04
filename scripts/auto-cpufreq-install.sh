@@ -11,6 +11,9 @@ then
 	exit 1
 fi
 
+# this is needed on SELinux enabled systems (see also ConditionPathExists in .service)
+touch /var/log/auto-cpufreq.log
+
 echo -e "\n* Reloading systemd manager configuration"
 systemctl daemon-reload
 

@@ -1,6 +1,7 @@
 [Unit]
 Description=auto-cpufreq - Automatic CPU speed & power optimizer for Linux
 After=network.target network-online.target
+ConditionPathExists=/var/log/auto-cpufreq.log
 
 [Service]
 Type=simple
