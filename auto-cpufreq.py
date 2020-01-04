@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-# 
-# ToDo: add description
+#
+# auto-cpufreq - Automatic CPU speed & power optimizer for Linux
+#
+# Blog post: http://foolcontrol.org/?p=3124
 
 import subprocess
 import os
