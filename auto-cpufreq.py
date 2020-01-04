@@ -33,9 +33,6 @@ bat_state = p.sensors_battery().power_plugged
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 
-# daemon deployment marker
-daemon_marker = "/etc/opt/auto-cpufreq"
-
 # deploy cpufreqctl script
 def cpufreqctl():
     # deploy cpufreqctl script (if missing)
@@ -353,12 +350,26 @@ def read_log():
         print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq.py --install\" first")
     footer(79)
 
-def marker_check():
-    if os.path.isfile(daemon_marker):
+def running_check():
+    daemon_marker = False
+    for proc in psutil.process_iter():
+        try:
+            pinfo = proc.as_dict(attrs=['pid', 'name', 'cmdline'])
+        except psutil.NoSuchProcess:
+            pass
+        else:
+            if pinfo['name'] == 'python3' and '/usr/bin/auto-cpufreq' in pinfo['cmdline'] and '--daemon' in pinfo['cmdline']:
+                daemon_marker = True
+
+    if daemon_marker:
         print("\n" + "-" * 25 + " detected auto-cpufreq daemon" + "-" * 25 + "\n")
         print("ERROR: prevention from running multiple instances")
-        print("\nIt seems like auto-cpufreq daemon is already running.\n\nTo view live log run:\nauto-cpufreq --log")
-        print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
+        print("\nIt seems like auto-cpufreq daemon is already running.\n")
+        print("\nIf you want to use [--live|--monitor] disable or remove auto-cpufreq daemon.")
+        print("\nTo view live log run:\n\tauto-cpufreq --log")
+        print("\nTo stop and disable auto-cpufreq daemon, run:\n\tsudo systemctl stop auto-cpufreq\n\tsudo systemctl disable auto-cpufreq")
+        print("\nTo enable and start auto-cpufreq daemon, run:\n\tsudo systemctl enable auto-cpufreq\n\tsudo systemctl start auto-cpufreq")
+        print("\nTo remove auto-cpufreq daemon, run:\n\tsudo auto-cpufreq --remove")
         footer(79)
         sys.exit()
 
@@ -397,7 +408,7 @@ def cli(monitor, live, daemon, install, log):
                 subprocess.call("clear")
         elif monitor:
             while True:
-                marker_check()
+                running_check()
                 root_check()
                 gov_check()
                 cpufreqctl()
@@ -407,7 +418,7 @@ def cli(monitor, live, daemon, install, log):
                 subprocess.call("clear")
         elif live:
             while True:
-                marker_check()
+                running_check()
                 root_check()
                 gov_check()
                 cpufreqctl()
@@ -418,11 +429,10 @@ def cli(monitor, live, daemon, install, log):
         elif log:
                 read_log()
         elif install:
-                marker_check()
+                running_check()
                 root_check()
                 gov_check()
                 deploy()
-                marker_create(daemon_marker)
         elif remove:
                 root_check()
                 remove()
