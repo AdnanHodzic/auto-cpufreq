@@ -352,10 +352,10 @@ def read_log():
 
 def running_check():
     daemon_marker = False
-    for proc in psutil.process_iter():
+    for proc in p.process_iter():
         try:
             pinfo = proc.as_dict(attrs=['pid', 'name', 'cmdline'])
-        except psutil.NoSuchProcess:
+        except p.NoSuchProcess:
             pass
         else:
             if pinfo['name'] == 'python3' and \
