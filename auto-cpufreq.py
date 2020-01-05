@@ -164,6 +164,42 @@ def set_powersave():
         #print("\n" + "-" * 60 + "\n")
         footer(79)
 
+    # ToDo: function to create swapfile based on available ram
+    # 
+    # detect if curent swapfile exists, if yes abort or proceed:
+    # sudo swapoff /swapfile
+    # sudo rm /swapfile
+    # 
+    # make swap file based on available ram
+    # fallocate -l 10g /swapfile
+    #
+    # (security) hardening
+    # sudo chmod 0600 /swapfile
+    #
+    # format swap file as swap space
+    #sudo mkswap /swapfile
+    #
+    # activate new space file/space:
+    #sudo swapon /swapfile
+    #
+    # # add permanently (/etc/fstab)
+    # echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+    # 
+    # apt-get install uswsusp
+
+    # get battery capacity
+    bat_cap = p.sensors_battery().percent
+    #print("Battery capacity: " + "{:.0f}".format(bat_cap))
+
+    # ToDo: in future option if system suspened longer then XY hours
+    # switch from suspend to hibernate
+
+    # hibernate if battery capacity less then:
+    if bat_cap < 10:
+        print("Battery low, hibernating ....")
+        s.run("/usr/sbin/s2disk", shell=True)
+        footer(79)
+
 # make turbo suggestions in powersave
 def mon_powersave():
 
