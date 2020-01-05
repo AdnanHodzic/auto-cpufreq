@@ -35,7 +35,4 @@ rm /usr/bin/auto-cpufreq
 echo -e "\n* Removing auto-cpufreq log file"
 rm /var/log/auto-cpufreq.log
 
-echo -e "\n* Removing auto-cpufreq daemon install marker"
-rm /etc/opt/auto-cpufreq
-
 echo -e "\n-------------------------------------------------------------------------------\n"
