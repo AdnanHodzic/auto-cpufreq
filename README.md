@@ -91,7 +91,7 @@ Since daemon is running as a systemd service, its status can be seen by running:
 
 auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
 
-`sudo autocpu-freq --remove`
+`sudo auto-cpufreq --remove`
 or
 `sudo python3 auto-cpufreq.py --remove`
 
