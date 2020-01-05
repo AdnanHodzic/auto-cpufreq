@@ -93,7 +93,7 @@ auto-cpufreq daemon and its systemd service, along with all its persistent chang
 
 `sudo autocpu-freq --remove`
 or
-`sudo python3 autocpu-freq.py --remove`
+`sudo python3 auto-cpufreq.py --remove`
 
 #### Log
 
