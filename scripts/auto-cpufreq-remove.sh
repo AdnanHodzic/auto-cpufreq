@@ -18,7 +18,7 @@ echo -e "\n* Disabling auto-cpufreq daemon (systemd) at boot"
 systemctl disable auto-cpufreq
 
 echo -e "\n* Removing auto-cpufreq daemon (systemd) unit file"
-rm /lib/systemd/system/auto-cpufreq.service
+rm /usr/lib/systemd/system/auto-cpufreq.service
 
 echo -e "\n* Reloading systemd manager configuration"
 systemctl daemon-reload
