@@ -15,7 +15,7 @@ Issue can be mitigated by using tools like [indicator-cpufreq](https://itsfoss.c
 
 Using tools like [TLP](https://github.com/linrunner/TLP) will help in this situation with extending battery life (which is something I did for numerous years now), but it also might come with its own set of problems, like losing turbo boost.
 
-With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save bettery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
+With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save battery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
 
 Please note: this tool doesn't conflict and [works great in tandem with TLP](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd4y36k/).
 
