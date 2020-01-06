@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION='20'
-cpucount=`cat /proc/cpuinfo|grep processor|wc -l`
+cpucount=`nproc`
 FLROOT=/sys/devices/system/cpu
 DRIVER=auto
 VERBOSE=0
