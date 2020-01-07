@@ -47,6 +47,9 @@ All requirements can be installed by running:
 
 `sudo apt install python3 python3-distro python3-psutil python3-click -y`
 
+Since APT packages may contain older version of necessary Python packages, please make sure to have latest version by running:
+`sudo pip3 install --upgrade psutil click distro`
+
 ##### Requirements installation for all other Linux distributions
 
 If you have python3 and pip3 installed simply run:
@@ -54,6 +57,12 @@ If you have python3 and pip3 installed simply run:
 `sudo pip3 install psutil click distro`
 
 Note: libraries must be installed using root user as tool will be run as root.
+
+##### Running auto-cpufreq on AMD CPU and/or desktop/servers's
+
+Please note when this tool was made it was solely targeting Intel CPU's running on laptops. Support for both AMD CPU is [currently being worked on](https://github.com/AdnanHodzic/auto-cpufreq/issues/17). 
+
+While there are plans to [extend support for desktop/servers](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd5nodm/) in near future. 
 
 #### Run auto-cpufreq
 
