@@ -35,6 +35,10 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 ## How to run auto-cpufreq?
 
+#### Arch Linux
+
+[AUR package is available](https://aur.archlinux.org/packages/auto-cpufreq-git/) for install. After which `auto-cpufreq` will be available as a binary and you can skip to [auto-cpufreq: modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for further reference.
+
 #### Get auto-cpufreq source code
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq.git`
