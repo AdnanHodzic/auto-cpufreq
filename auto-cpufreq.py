@@ -289,7 +289,7 @@ def sysinfo():
     print("Driver: " + driver)
 
     # get cpu architecture
-    cpu_arch = pl.processor()
+    cpu_arch = pl.machine()
 
     # get number of cores/logical CPU's
     cpu_count = p.cpu_count()
