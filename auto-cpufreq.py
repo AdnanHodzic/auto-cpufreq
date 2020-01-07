@@ -76,9 +76,6 @@ def deploy():
     print("\n* Deploy auto-cpufreq remove script")
     os.system("cp scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
 
-    print("\n* Deploy auto-cpufreq systemd unit file")
-    os.system("cp scripts/auto-cpufreq.service /usr/lib/systemd/system/auto-cpufreq.service")
-
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
 
