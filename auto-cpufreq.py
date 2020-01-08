@@ -11,6 +11,7 @@ import time
 import psutil
 import platform
 import click
+import power
 
 # ToDo:
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
@@ -30,7 +31,9 @@ get_cur_gov = s.getoutput("cpufreqctl --governor")
 gov_state = get_cur_gov.split()[0]
 
 # get battery state
-bat_state = p.sensors_battery().power_plugged
+bat_state = power.PowerManagement().get_providing_power_source_type()
+
+
 
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
@@ -237,20 +240,16 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # get battery state
-    bat_state = p.sensors_battery().power_plugged
+    bat_state = power.PowerManagement().get_providing_power_source_type()
 
     # determine which governor should be used
-    if bat_state == True:
+    if bat_state == power.POWER_TYPE_AC:
         print("Battery is: charging")
         set_performance()
-    elif bat_state == False:
+    elif bat_state == power.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         set_powersave()
-    # temp fix for https://github.com/giampaolo/psutil/issues/1658
-    elif bat_state == None:
-        print("Couldn't determine battery status. Supposing battery is: charging")
-        set_performance()
-    else:
+    else: 
         print("Couldn't determine battery status. Please report this issue.")
 
 # make cpufreq suggestions
@@ -258,22 +257,17 @@ def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # get battery state
-    bat_state = p.sensors_battery().power_plugged
+    bat_state = power.PowerManagement().get_providing_power_source_type()
 
     # determine which governor should be used
-    if bat_state == True:
+    if bat_state == power.POWER_TYPE_AC:
         print("Battery is: charging")
         print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
         mon_performance()
-    elif bat_state == False:
+    elif bat_state == power.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
         mon_powersave()
-    # temp fix for https://github.com/giampaolo/psutil/issues/1658
-    elif bat_state == None:
-        print("Couldn't determine battery status. Supposing battery is: charging")
-        print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
-        mon_performance()
     else:
         print("Couldn't determine battery status. Please report this issue.")
     
