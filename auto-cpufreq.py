@@ -249,6 +249,7 @@ def set_autofreq():
     # temp fix for https://github.com/giampaolo/psutil/issues/1658
     elif bat_state == None:
         print("Couldn't determine battery status. Supposing battery is: charging")
+        set_performance()
     else:
         print("Couldn't determine battery status. Please report this issue.")
 
