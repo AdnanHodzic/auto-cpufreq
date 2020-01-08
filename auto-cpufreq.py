@@ -33,8 +33,6 @@ gov_state = get_cur_gov.split()[0]
 # get battery state
 bat_state = power.PowerManagement().get_providing_power_source_type()
 
-
-
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 
