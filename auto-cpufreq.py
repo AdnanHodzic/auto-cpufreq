@@ -246,8 +246,11 @@ def set_autofreq():
     elif bat_state == False:
         print("Battery is: discharging")
         set_powersave()
+    # temp fix for https://github.com/giampaolo/psutil/issues/1658
+    elif bat_state == None:
+        print("Couldn't determine battery status. Supposing battery is: charging")
     else:
-        print("Couldn't detrmine battery status. Please report this issue.")
+        print("Couldn't determine battery status. Please report this issue.")
 
 # make cpufreq suggestions
 def mon_autofreq():
@@ -265,8 +268,13 @@ def mon_autofreq():
         print("Battery is: discharging")
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
         mon_powersave()
+    # temp fix for https://github.com/giampaolo/psutil/issues/1658
+    elif bat_state == None:
+        print("Couldn't determine battery status. Supposing battery is: charging")
+        print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
+        mon_performance()
     else:
-        print("Couldn't detrmine battery status. Please report this issue.")
+        print("Couldn't determine battery status. Please report this issue.")
     
 # get system information
 def sysinfo():
