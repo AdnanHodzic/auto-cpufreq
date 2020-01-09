@@ -259,7 +259,7 @@ def set_autofreq():
         print("Battery is: discharging")
         set_powersave()
     else:
-        print("Couldn't detrmine battery status. Please report this issue.")
+        print("Couldn't determine battery status. Please report this issue.")
 
 # make cpufreq suggestions
 def mon_autofreq():
@@ -278,7 +278,7 @@ def mon_autofreq():
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
         mon_powersave()
     else:
-        print("Couldn't detrmine battery status. Please report this issue.")
+        print("Couldn't determine battery status. Please report this issue.")
     
 # get system information
 def sysinfo():
