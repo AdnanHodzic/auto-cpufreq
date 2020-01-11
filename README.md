@@ -49,10 +49,18 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 All requirements can be installed by running:
 
-`sudo apt install python3 python3-distro python3-psutil python3-click -y`
+`sudo apt install python3-dev python3-pip python3-distro python3-psutil python3-click -y`
 
 Since APT packages may contain older version of necessary Python packages, please make sure to have latest version by running:
 `sudo pip3 install --upgrade psutil click distro`
+
+##### Requirements installation for Redhat/Fedora and its derivatives
+
+Necessary pre-requisites can be installed by running:
+
+`sudo yum install python-devel`
+
+After which you need to[ need to install rest of the requirements](https://github.com/AdnanHodzic/auto-cpufreq#requirements-installation-for-all-other-linux-distributions) as stated below.
 
 ##### Requirements installation for all other Linux distributions
 
