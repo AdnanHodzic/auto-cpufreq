@@ -145,7 +145,7 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > cpus and load1m < cpus * 2:
+    if load1m > 1 and load1m < cpus * 2:
         print("Setting to use: \"powersave\" governor")
         s.run("cpufreqctl --governor --set=powersave", shell=True)
 
