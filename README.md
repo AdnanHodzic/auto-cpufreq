@@ -49,10 +49,10 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 All requirements can be installed by running:
 
-`sudo apt install python3-dev python3-pip python3-distro python3-psutil python3-click -y`
+`sudo apt install python3-dev python3-pip python3-distro python3-psutil python3-click python3-power -y`
 
 Since APT packages may contain older version of necessary Python packages, please make sure to have latest version by running:
-`sudo pip3 install --upgrade psutil click distro`
+`sudo pip3 install --upgrade psutil click distro power`
 
 ##### Requirements installation for Redhat/Fedora and its derivatives
 
@@ -66,7 +66,7 @@ After which you need to[ need to install rest of the requirements](https://githu
 
 If you have python3 and pip3 installed simply run:
 
-`sudo pip3 install psutil click distro`
+`sudo pip3 install psutil click distro power`
 
 Note: libraries must be installed using root user as tool will be run as root.
 
