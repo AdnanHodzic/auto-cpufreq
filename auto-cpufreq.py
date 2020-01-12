@@ -160,7 +160,7 @@ def set_powersave():
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
-    elif load1m > cpus / 6 and load1m < cpus * (2 / 3):
+    elif load1m > cpus / 7 and load1m < cpus * (2 / 3):
         print("Setting to use: \"powersave\" governor")
         s.run("cpufreqctl --governor --set=powersave", shell=True)
 
