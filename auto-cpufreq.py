@@ -437,7 +437,7 @@ def cli(monitor, live, daemon, install, log):
                 sysinfo()
                 set_autofreq()
                 countdown(5)
-                subprocess.call("clear")
+                s.call("clear")
         elif monitor:
             while True:
                 running_check()
@@ -447,7 +447,7 @@ def cli(monitor, live, daemon, install, log):
                 sysinfo()
                 mon_autofreq()
                 countdown(5)
-                subprocess.call("clear")
+                s.call("clear")
         elif live:
             while True:
                 running_check()
@@ -457,7 +457,7 @@ def cli(monitor, live, daemon, install, log):
                 sysinfo()
                 set_autofreq()
                 countdown(5)
-                subprocess.call("clear")
+                s.call("clear")
         elif log:
                 read_log()
         elif install:
