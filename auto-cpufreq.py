@@ -159,7 +159,7 @@ def set_powersave():
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
-    elif cpuload > 40 and cpuload <= 70:
+    elif cpuload > 40 and cpuload <= 65:
         print("Setting to use: \"powersave\" governor")
         s.run("cpufreqctl --governor --set=powersave", shell=True)
 
@@ -167,7 +167,7 @@ def set_powersave():
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
-    elif cpuload > 70:
+    elif cpuload > 65:
         print("Setting to use: \"performance\" governor")
         s.run("cpufreqctl --governor --set=performance", shell=True)
 
