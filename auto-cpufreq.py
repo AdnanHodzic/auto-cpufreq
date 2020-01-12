@@ -210,7 +210,7 @@ def set_performance():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    # conditions for setting turbo in performance
+    # conditions for setting turbo in performance for future using
     if load1m > 1:
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
@@ -221,8 +221,8 @@ def set_performance():
         #print("\n" + "-" * 60 + "\n")
         footer(79)
     else:
-        print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        print("Load optimal, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
 
