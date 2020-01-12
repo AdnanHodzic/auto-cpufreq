@@ -136,9 +136,6 @@ def countdown(s):
 
 # set powersave and enable turbo
 def set_powersave():
-    print("Setting to use: powersave")
-    s.run("cpufreqctl --governor --set=powersave", shell=True)
-
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
@@ -148,16 +145,40 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > cpus:
+    if load1m > cpus and load1m < cpus * 2:
+        print("Setting to use: \"powersave\" governor")
+        s.run("cpufreqctl --governor --set=powersave", shell=True)
+
+        print("Medium load, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        footer(79)
+    elif load1m >= cpus * 2:
+        print("Setting to use: \"performance\" governor")
+        s.run("cpufreqctl --governor --set=performance", shell=True)
+
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
-    elif cpuload > 50:
+    elif cpuload > 40 and cpuload <= 70:
+        print("Setting to use: \"powersave\" governor")
+        s.run("cpufreqctl --governor --set=powersave", shell=True)
+
         print("High CPU load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
+    elif cpuload > 70:
+        print("Setting to use: \"performance\" governor")
+        s.run("cpufreqctl --governor --set=performance", shell=True)
+
+        print("Very high CPU load, setting turbo boost: on")
+        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        #print("\n" + "-" * 60 + "\n")
+        footer(79)
     else:
+        print("Setting to use: \"powersave\" governor")
+        s.run("cpufreqctl --governor --set=powersave", shell=True)
+
         print("Load optimal, setting turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
@@ -165,7 +186,6 @@ def set_powersave():
 
 # make turbo suggestions in powersave
 def mon_powersave():
-
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
@@ -199,9 +219,6 @@ def mon_powersave():
 
 # set performance and enable turbo
 def set_performance():
-    print("Setting to use \"performance\" governor")
-    s.run("cpufreqctl --governor --set=performance", shell=True)
-
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
@@ -211,16 +228,25 @@ def set_performance():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in performance for future using
-    if load1m > 1:
+    if load1m >= 0.70:
+        print("Setting to use \"performance\" governor")
+        s.run("cpufreqctl --governor --set=performance", shell=True)
+        
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
     elif cpuload > 20:
+        print("Setting to use \"performance\" governor")
+        s.run("cpufreqctl --governor --set=performance", shell=True)
+
         print("High CPU load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
         footer(79)
     else:
+        print("Setting to use: \"powersave\" governor")
+        s.run("cpufreqctl --governor --set=powersave", shell=True)
+
         print("Load optimal, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         #print("\n" + "-" * 60 + "\n")
