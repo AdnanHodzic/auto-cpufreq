@@ -227,7 +227,7 @@ def set_performance():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    # conditions for setting turbo in performance for future using
+    # conditions for setting turbo in performance
     if load1m >= 0.70:
         print("Setting to use \"performance\" governor")
         s.run("cpufreqctl --governor --set=performance", shell=True)
