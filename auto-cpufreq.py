@@ -22,6 +22,7 @@ p = psutil
 pl = platform
 s = subprocess
 tool_run = sys.argv[0]
+cpus = os.cpu_count()
 
 # get turbo boost state
 cur_turbo = s.getoutput("cat /sys/devices/system/cpu/intel_pstate/no_turbo")
@@ -147,7 +148,7 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > 4:
+    if load1m > cpus:
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
