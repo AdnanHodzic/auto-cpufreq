@@ -228,14 +228,14 @@ def set_performance():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in performance
-    if load1m >= cpus / 7:
+    if load1m >= cpus / 5:
         print("Setting to use \"performance\" governor")
         s.run("cpufreqctl --governor --set=performance", shell=True)
         
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
-    elif cpuload > 20:
+    elif cpuload > 30:
         print("Setting to use \"performance\" governor")
         s.run("cpufreqctl --governor --set=performance", shell=True)
 
