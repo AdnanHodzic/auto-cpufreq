@@ -145,29 +145,14 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m >= cpus * (3 / 5):
-        print("Setting to use: \"performance\" governor")
-        s.run("cpufreqctl --governor --set=performance", shell=True)
-
-        print("Very high load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        footer(79)
-    elif cpuload > 65:
-        print("Setting to use: \"performance\" governor")
-        s.run("cpufreqctl --governor --set=performance", shell=True)
-
-        print("Very high CPU load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
-        footer(79)
-    elif load1m > cpus / 7 and load1m < cpus * (3 / 5):
+    if load1m > cpus / 7:
         print("Setting to use: \"powersave\" governor")
         s.run("cpufreqctl --governor --set=powersave", shell=True)
 
         print("High load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
         footer(79)
-    elif cpuload > 25 and cpuload <= 60:
+    elif cpuload > 25:
         print("Setting to use: \"powersave\" governor")
         s.run("cpufreqctl --governor --set=powersave", shell=True)
 
@@ -194,7 +179,7 @@ def mon_powersave():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > 2:
+    if load1m > cpus / 7:
         print("High load, suggesting to set turbo boost: on")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
