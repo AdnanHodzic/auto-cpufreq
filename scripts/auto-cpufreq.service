@@ -7,6 +7,6 @@ ConditionPathExists=/var/log/auto-cpufreq.log
 Type=simple
 User=root
 ExecStart=/usr/bin/python3 /usr/bin/auto-cpufreq --daemon
-StandardOutput=append:/var/log/auto-cpufreq.log
+StandardOutput=file:/var/log/auto-cpufreq.log
 [Install]
 WantedBy=multi-user.target
