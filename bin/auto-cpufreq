@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+#
+# auto-cpufreq - Automatic CPU speed & power optimizer for Linux
+#
+# Blog post: http://foolcontrol.org/?p=3124
 
 import sys
 sys.path.append('../')
-from app_source.core import * 
+from source.core import * 
 
 # cli
 @click.command()
@@ -20,7 +24,7 @@ def main(monitor, live, daemon, install, log):
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
-        s.call(["python3", "auto-cpufreq", "--help"])
+        s.call(["python3", "bin/auto-cpufreq", "--help"])
         footer(79)
     else:
         if daemon:
