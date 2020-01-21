@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 #
-# auto-cpufreq - Automatic CPU speed & power optimizer for Linux
-#
-# Blog post: http://foolcontrol.org/?p=3124
+# auto-cpufreq - core functionality
 
 import subprocess
 import os
@@ -383,66 +381,3 @@ def running_check():
         print("\nTo view live log run:\n\tauto-cpufreq --log")
         footer(79)
         sys.exit()
-
-# cli
-@click.command()
-@click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
-@click.option("--live", is_flag=True, help="Monitor and make suggested CPU optimizations")
-@click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
-@click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
-@click.option("--daemon", is_flag=True, hidden=True)
-
-def cli(monitor, live, daemon, install, log):
-    # print --help by default if no argument is provided when auto-cpufreq is run
-    if len(sys.argv) == 1:
-        print("\n" + "-" * 22 + " auto-cpufreq " + "-" * 23 + "\n")
-        print("Automatic CPU speed & power optimizer for Linux")
-        print("\nExample usage:\npython3 " + tool_run + " --monitor")
-        print("\n-----\n")
-
-        s.call(["python3", "auto-cpufreq.py", "--help"])
-        print("\n" +  "-" * 59 + "\n")
-    else:
-        if daemon:
-            while True:
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                set_autofreq()
-                countdown(5)
-                subprocess.call("clear")
-        elif monitor:
-            while True:
-                running_check()
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                mon_autofreq()
-                countdown(5)
-                subprocess.call("clear")
-        elif live:
-            while True:
-                running_check()
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                set_autofreq()
-                countdown(5)
-                subprocess.call("clear")
-        elif log:
-                read_log()
-        elif install:
-                running_check()
-                root_check()
-                gov_check()
-                deploy()
-        elif remove:
-                root_check()
-                remove()
-
-if __name__ == '__main__':
-    # while True:
-        cli()
