@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+import sys
+sys.path.append('../')
+from app_source.core import * 
+
+# cli
+@click.command()
+@click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
+@click.option("--live", is_flag=True, help="Monitor and make suggested CPU optimizations")
+@click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
+@click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
+@click.option("--daemon", is_flag=True, hidden=True)
+
+def main(monitor, live, daemon, install, log):
+    # print --help by default if no argument is provided when auto-cpufreq is run
+    if len(sys.argv) == 1:
+        print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
+        print("Automatic CPU speed & power optimizer for Linux")
+        print("\nExample usage:\nauto-cpufreq --monitor")
+        print("\n-----\n")
+
+        s.call(["python3", "auto-cpufreq", "--help"])
+        footer(79)
+    else:
+        if daemon:
+            while True:
+                root_check()
+                gov_check()
+                cpufreqctl()
+                sysinfo()
+                set_autofreq()
+                countdown(5)
+                subprocess.call("clear")
+        elif monitor:
+            while True:
+                running_check()
+                root_check()
+                gov_check()
+                cpufreqctl()
+                sysinfo()
+                mon_autofreq()
+                countdown(5)
+                subprocess.call("clear")
+        elif live:
+            while True:
+                running_check()
+                root_check()
+                gov_check()
+                cpufreqctl()
+                sysinfo()
+                set_autofreq()
+                countdown(5)
+                subprocess.call("clear")
+        elif log:
+                read_log()
+        elif install:
+                running_check()
+                root_check()
+                gov_check()
+                deploy()
+        elif remove:
+                root_check()
+                remove()
+
+if __name__ == '__main__':
+    # while True:
+        main()
