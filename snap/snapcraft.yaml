@@ -26,6 +26,16 @@ parts:
     #  - distro
     #  - power
 
+  deploy-cpufrectl:
+    plugin: dump
+    source: scripts
+    organize:
+      cpufreqctl.sh: usr/bin/cpufreqctl
+    # organize:
+    #   auto-cpufreq-install.sh: usr/bin/auto-cpufreq-install
+    # organize:
+    #   auto-cpufreq-remove.sh: usr/bin/auto-cpufreq-remove
+
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq

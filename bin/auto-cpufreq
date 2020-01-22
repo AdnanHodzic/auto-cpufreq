@@ -24,7 +24,9 @@ def main(monitor, live, daemon, install, log):
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
-        s.call(["python3", "bin/auto-cpufreq", "--help"])
+        # ToDo: add option what to run depending on the env
+        s.call(["python3", "auto-cpufreq", "--help"])
+        #s.call([tool_run, " --help"])
         footer(79)
     else:
         if daemon:
