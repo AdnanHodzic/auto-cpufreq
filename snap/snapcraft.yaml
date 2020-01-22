@@ -31,10 +31,6 @@ parts:
     source: scripts
     organize:
       cpufreqctl.sh: usr/bin/cpufreqctl
-    # organize:
-    #   auto-cpufreq-install.sh: usr/bin/auto-cpufreq-install
-    # organize:
-    #   auto-cpufreq-remove.sh: usr/bin/auto-cpufreq-remove
 
 apps:
   auto-cpufreq:
@@ -42,3 +38,4 @@ apps:
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
+      PKG_MARKER: SNAP
