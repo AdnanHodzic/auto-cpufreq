@@ -4,6 +4,7 @@
 #
 # Blog post: http://foolcontrol.org/?p=3124
 
+# core import
 import sys
 sys.path.append('../')
 from source.core import * 

@@ -37,11 +37,15 @@ auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 
 # deploy cpufreqctl script
 def cpufreqctl():
-    # deploy cpufreqctl script (if missing)
-    if os.path.isfile("/usr/bin/cpufreqctl"):
+    # detect if running on a SNAP
+    if os.getenv('PKG_MARKER') == "SNAP":
         pass
     else:
-        os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+        # deploy cpufreqctl script (if missing)
+        if os.path.isfile("/usr/bin/cpufreqctl"):
+            pass
+        else:
+            os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
 def footer(l):
     print("\n" + "-" * l + "\n")
