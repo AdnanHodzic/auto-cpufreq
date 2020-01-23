@@ -26,7 +26,10 @@ def main(monitor, live, daemon, install, log):
         print("\n-----\n")
 
         # ToDo: add option what to run depending on the env
-        s.call(["python3", "auto-cpufreq", "--help"])
+        if os.getenv('PKG_MARKER') == "SNAP":
+            s.call(["auto-cpufreq", "--help"])
+        else:
+            s.call(["python3", "auto-cpufreq", "--help"])
         #s.call([tool_run, " --help"])
         footer(79)
     else:
