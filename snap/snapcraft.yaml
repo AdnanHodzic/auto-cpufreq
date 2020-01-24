@@ -32,6 +32,13 @@ parts:
     organize:
       cpufreqctl.sh: usr/bin/cpufreqctl
 
+# ToDo: remove scripts/daemon
+  # deploy-demon:
+  #   plugin: dump
+  #   source: scripts
+  #   organize:
+  #     daemon.sh: usr/bin/daemon
+
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq
@@ -39,3 +46,11 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
+  auto-cpufreq-service:
+    command: bin/auto-cpufreq --daemon 2>&1 | tee -a /var/log/auto-cpufreq.log
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PKG_MARKER: SNAP
+    daemon: simple
+    

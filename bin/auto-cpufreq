@@ -36,6 +36,9 @@ def main(monitor, live, daemon, install, log):
         if daemon:
             while True:
                 root_check()
+                # this is needed on SELinux enabled systems (see also ConditionPathExists in .service)
+                #create_log()
+                # ToDo: unless daemon invoked from snap fail
                 gov_check()
                 cpufreqctl()
                 sysinfo()
@@ -63,6 +66,7 @@ def main(monitor, live, daemon, install, log):
                 countdown(5)
                 subprocess.call("clear")
         elif log:
+                # ToDo: fail if log is missing or empty (on)
                 read_log()
         elif install:
                 running_check()

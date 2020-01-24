@@ -365,6 +365,10 @@ def read_log():
         print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq.py --install\" first")
     footer(79)
 
+# create log func
+def creat_log():
+    open("/var/log/auto-cpufreq.log", "a").close()
+
 def running_check():
     daemon_marker = False
     for proc in p.process_iter():
