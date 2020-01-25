@@ -36,9 +36,6 @@ def main(monitor, live, daemon, install, log):
         if daemon:
             while True:
                 root_check()
-                # this is needed on SELinux enabled systems (see also ConditionPathExists in .service)
-                #create_log()
-                # ToDo: unless daemon invoked from snap fail
                 gov_check()
                 cpufreqctl()
                 sysinfo()

@@ -72,13 +72,13 @@ def deploy():
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
     print("\n* Deploy auto-cpufreq as system wide accessible binary")
-    os.system("cp auto-cpufreq.py /usr/bin/auto-cpufreq")
+    os.system("cp auto-cpufreq /usr/bin/auto-cpufreq")
 
     print("\n* Deploy auto-cpufreq install script")
-    os.system("cp scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
+    os.system("cp ../scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    os.system("cp scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
+    os.system("cp ../scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
 
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
@@ -103,6 +103,9 @@ def remove():
 
     # run auto-cpufreq daemon install script
     s.call("/usr/bin/auto-cpufreq-remove", shell=True)
+
+    # remove auto-cpufreq-remove
+    os.remove("/usr/bin/auto-cpufreq-remove")
 
 # check for necessary scaling governors
 def gov_check():
@@ -364,10 +367,6 @@ def read_log():
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
         print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq.py --install\" first")
     footer(79)
-
-# create log func
-def creat_log():
-    open("/var/log/auto-cpufreq.log", "a").close()
 
 def running_check():
     daemon_marker = False
