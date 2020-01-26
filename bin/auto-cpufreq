@@ -25,12 +25,7 @@ def main(monitor, live, daemon, install, log):
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
-        # ToDo: add option what to run depending on the env
-        if os.getenv('PKG_MARKER') == "SNAP":
-            s.call(["auto-cpufreq", "--help"])
-        else:
-            s.call(["python3", "auto-cpufreq", "--help"])
-        #s.call([tool_run, " --help"])
+        s.call(["auto-cpufreq", "--help"])
         footer(79)
     else:
         if daemon:
