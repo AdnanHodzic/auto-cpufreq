@@ -21,7 +21,6 @@ import signal
 p = psutil
 pl = platform
 s = subprocess
-tool_run = sys.argv[0]
 cpus = os.cpu_count()
 
 # get turbo boost state
@@ -73,13 +72,8 @@ def deploy():
     except:
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
-    #print("\n* Deploy auto-cpufreq as system wide accessible binary")
-    #os.system("cp auto-cpufreq /usr/bin/auto-cpufreq")
-
     # create log file
     create_file(auto_cpufreq_log_file)
-
-    # sudo python3 setup.py install --record files.txt
 
     print("\n* Deploy auto-cpufreq install script")
     os.system("cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
@@ -135,7 +129,8 @@ def gov_check():
 def root_check():
     if not os.geteuid() == 0:
         print("\n" + "-" * 33 + " Root check " + "-" * 34 + "\n")
-        sys.exit("ERROR:\n\nMust be run root for this functionality to work, i.e: \nsudo " + tool_run + "\n")
+        print("ERROR:\n\nMust be run root for this functionality to work, i.e: \nsudo auto-cpufreq")
+        footer(79)
         exit(1)
 
 # refresh countdown
@@ -384,7 +379,7 @@ def read_log():
         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq.py --install\" first")
+        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
     footer(79)
 
 def running_check():
