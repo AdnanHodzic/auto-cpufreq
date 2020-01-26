@@ -11,11 +11,8 @@ then
 	exit 1
 fi
 
-# this is needed on SELinux enabled systems (see also ConditionPathExists in .service)
-touch /var/log/auto-cpufreq.log
-
 echo -e "\n* Deploy auto-cpufreq systemd unit file"
-cp ../scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
+cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
 
 echo -e "\n* Reloading systemd manager configuration"
 systemctl daemon-reload

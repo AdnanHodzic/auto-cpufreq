@@ -2,6 +2,7 @@
 #
 # auto-cpufreq - core functionality
 
+# ToDo: re-order in a single line?
 import subprocess
 import os
 import sys
@@ -10,6 +11,7 @@ import psutil
 import platform
 import click
 import power
+import signal
 
 # ToDo:
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
@@ -45,7 +47,7 @@ def cpufreqctl():
         if os.path.isfile("/usr/bin/cpufreqctl"):
             pass
         else:
-            os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+            os.system("cp /usr/local/share/auto-cpufreq/scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
 def footer(l):
     print("\n" + "-" * l + "\n")
@@ -71,14 +73,19 @@ def deploy():
     except:
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
-    print("\n* Deploy auto-cpufreq as system wide accessible binary")
-    os.system("cp auto-cpufreq /usr/bin/auto-cpufreq")
+    #print("\n* Deploy auto-cpufreq as system wide accessible binary")
+    #os.system("cp auto-cpufreq /usr/bin/auto-cpufreq")
+
+    # create log file
+    create_file(auto_cpufreq_log_file)
+
+    # sudo python3 setup.py install --record files.txt
 
     print("\n* Deploy auto-cpufreq install script")
-    os.system("cp ../scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
+    os.system("cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    os.system("cp ../scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
+    os.system("cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
 
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
@@ -106,6 +113,9 @@ def remove():
 
     # remove auto-cpufreq-remove
     os.remove("/usr/bin/auto-cpufreq-remove")
+
+    # delete log file
+    delete_file(auto_cpufreq_log_file)
 
 # check for necessary scaling governors
 def gov_check():
@@ -358,6 +368,15 @@ def sysinfo():
     #current_fans = p.sensors_fans()['thinkpad'][0].current
     #print("\nCPU fan speed:", current_fans, "RPM")
 
+# create file func
+def create_file(file):
+    open(file, 'a').close()
+
+# delete file func
+def delete_file(file):
+    if os.path.exists(file):
+        os.remove(file)
+
 # read log func
 def read_log():
     if os.path.isfile(auto_cpufreq_log_file):
@@ -388,3 +407,10 @@ def running_check():
         print("\nTo view live log run:\n\tauto-cpufreq --log")
         footer(79)
         sys.exit()
+
+# kill process func
+def kill_process(pstring):
+    for line in os.popen("ps ef | grep \"" + pstring + "\" | grep -v grep"):
+        fields = line.split()
+        pid = fields[0]
+        os.kill(int(pid), signal.SIGKILL)
