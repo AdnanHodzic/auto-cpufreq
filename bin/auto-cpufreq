@@ -29,14 +29,27 @@ def main(monitor, live, daemon, install, log):
         footer(79)
     else:
         if daemon:
-            while True:
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                set_autofreq()
-                countdown(5)
-                subprocess.call("clear")
+            if os.getenv("PKG_MARKER") == "SNAP" and os.getenv("DAEMON") == "ENABLED":
+                while True:
+                    root_check()
+                    gov_check()
+                    cpufreqctl()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(5)
+                    subprocess.call("clear")
+            elif os.getenv("PKG_MARKER") != "SNAP":
+                while True:
+                    root_check()
+                    gov_check()
+                    cpufreqctl()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(5)
+                    subprocess.call("clear")
+            else:
+                sys.exit("Daemon non ENABLED")
+                exit(1)
         elif monitor:
             while True:
                 running_check()
@@ -61,11 +74,29 @@ def main(monitor, live, daemon, install, log):
                 # ToDo: fail if log is missing or empty (on)
                 read_log()
         elif install:
-                running_check()
-                root_check()
-                gov_check()
-                deploy()
+                if os.getenv('PKG_MARKER') == "SNAP":
+                    os.environ["DAEMON"] = "ENABLED"
+                    print(os.environ["DAEMON"])
+                    running_check()
+                    root_check()
+                    gov_check()
+                    # ToDo: 
+                    # implement option to restart snap service?
+                else:
+                    running_check()
+                    root_check()
+                    gov_check()
+                    deploy()
+        # ToDo: add remove for snap
         elif remove:
+            if os.getenv('PKG_MARKER') == "SNAP":
+                root_check()
+                # ToDo: remove if not needed?
+                #kill_process("auto-cpufreq --daemon")
+                # ToDo:
+                # implement option to stop and restart snap service?
+
+            else:
                 root_check()
                 remove()
 

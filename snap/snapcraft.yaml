@@ -17,27 +17,12 @@ parts:
     plugin: python
     python-version: python3
     source: .
-    #stage-packages:
-    #  - python3-pip
-    #  - python3-dev
-    #python-packages:
-    #  - psutil
-    #  - click
-    #  - distro
-    #  - power
 
   deploy-cpufrectl:
     plugin: dump
     source: scripts
     organize:
       cpufreqctl.sh: usr/bin/cpufreqctl
-
-# ToDo: remove scripts/daemon
-  # deploy-demon:
-  #   plugin: dump
-  #   source: scripts
-  #   organize:
-  #     daemon.sh: usr/bin/daemon
 
 apps:
   auto-cpufreq:
@@ -46,11 +31,13 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
+      DAEMON: DISABLED
   auto-cpufreq-service:
     command: bin/auto-cpufreq --daemon 2>&1 | tee -a /var/log/auto-cpufreq.log
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
+      DAEMON: DISABLED
     daemon: simple
     
