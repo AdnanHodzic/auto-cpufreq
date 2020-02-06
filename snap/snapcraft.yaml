@@ -37,6 +37,6 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
-      DAEMON: ENABLED
+      DAEMON: DISABLED
     daemon: simple
     

@@ -402,10 +402,3 @@ def running_check():
         print("\nTo view live log run:\n\tauto-cpufreq --log")
         footer(79)
         sys.exit()
-
-# kill process func
-def kill_process(pstring):
-    for line in os.popen("ps ef | grep \"" + pstring + "\" | grep -v grep"):
-        fields = line.split()
-        pid = fields[0]
-        os.kill(int(pid), signal.SIGKILL)
