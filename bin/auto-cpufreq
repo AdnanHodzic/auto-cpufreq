@@ -76,7 +76,6 @@ def main(monitor, live, daemon, install, log):
         elif install:
                 if os.getenv('PKG_MARKER') == "SNAP":
                     os.environ["DAEMON"] = "ENABLED"
-                    print(os.environ["DAEMON"])
                     running_check()
                     root_check()
                     gov_check()
