@@ -29,7 +29,8 @@ def main(monitor, live, daemon, install, log):
         footer(79)
     else:
         if daemon:
-            if os.getenv("PKG_MARKER") == "SNAP" and os.getenv("DAEMON") == "ENABLED":
+            #if os.getenv("PKG_MARKER") == "SNAP" and os.getenv("DAEMON") == "ENABLED":
+            if os.getenv("PKG_MARKER") == "SNAP":
                 while True:
                     root_check()
                     gov_check()
@@ -75,25 +76,21 @@ def main(monitor, live, daemon, install, log):
                 read_log()
         elif install:
                 if os.getenv('PKG_MARKER') == "SNAP":
-                    os.environ["DAEMON"] = "ENABLED"
                     running_check()
                     root_check()
                     gov_check()
-                    # ToDo: 
-                    # implement option to restart snap service?
+                    #os.environ["DAEMON"] = "ENABLED"
+                    s.run("snapctl start --enable auto-cpufreq", shell=True)
                 else:
                     running_check()
                     root_check()
                     gov_check()
                     deploy()
-        # ToDo: add remove for snap
         elif remove:
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
-                # ToDo: remove if not needed?
-                #kill_process("auto-cpufreq --daemon")
-                # ToDo:
-                # implement option to stop and restart snap service?
+                #s.run("snapctl stop --disable auto-cpufreq", shell=True)
+                s.run("snapctl stop --disable auto-cpufreq", shell=True)
 
             else:
                 root_check()
