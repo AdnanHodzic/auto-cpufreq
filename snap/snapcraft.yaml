@@ -31,13 +31,12 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
-      DAEMON: DISABLED
-  auto-cpufreq-service:
+  service:
     command: bin/auto-cpufreq --daemon 2>&1 | tee -a /var/log/auto-cpufreq.log
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
-      DAEMON: DISABLED
+      DAEMON: ENABLED
     daemon: simple
     
