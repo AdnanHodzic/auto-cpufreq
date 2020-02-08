@@ -388,23 +388,29 @@ def read_log():
         print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
     footer(79)
 
-def running_check():
-    daemon_marker = False
-    for proc in p.process_iter():
+# check if program (argument) is running
+def is_running(program, argument):
+    # iterate over all process id's found by psutil
+    for pid in psutil.pids(): 
         try:
-            pinfo = proc.as_dict(attrs=['pid', 'name', 'cmdline'])
-        except p.NoSuchProcess:
-            pass
-        else:
-            if pinfo['name'] == 'python3' and \
-            '/usr/bin/auto-cpufreq' in pinfo['cmdline'] and '--daemon' in pinfo['cmdline']:
-                daemon_marker = True
+            # requests the process information corresponding to each process id
+            p = psutil.Process(pid) 
+            # check if value of program-variable that was used to call the function matches the name field of the plutil.Process(pid) output 
+            if program in p.name(): 
+                # check output of p.name(), output name of program
+                # p.cmdline() - echo the exact command line via which p was called.
+                for arg in p.cmdline():
+                    if argument in str(arg):  
+                        return True
+                    else:
+                        pass
+            else:
+                pass
+        except:
+            continue
 
-    if daemon_marker:
-        print("\n" + "-" * 25 + " detected auto-cpufreq daemon" + "-" * 25 + "\n")
-        print("ERROR: prevention from running multiple instances")
-        print("\nIt seems like auto-cpufreq daemon is already running.\n")
-        print("----")
-        print("\nTo view live log run:\n\tauto-cpufreq --log")
-        footer(79)
-        sys.exit()
+# check if auto-cpufreq --daemon is running
+def running_daemon():
+    if is_running('auto-cpufreq', '--daemon'):
+        deploy_complete_msg()
+        exit(1)
