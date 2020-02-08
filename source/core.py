@@ -36,6 +36,9 @@ bat_state = power.PowerManagement().get_providing_power_source_type()
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 
+# daemon check
+dcheck = subprocess.getoutput("snapctl get daemon")
+
 # deploy cpufreqctl script
 def cpufreqctl():
     # detect if running on a SNAP
@@ -48,8 +51,15 @@ def cpufreqctl():
         else:
             os.system("cp /usr/local/share/auto-cpufreq/scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
 
+# print footer func
 def footer(l):
     print("\n" + "-" * l + "\n")
+
+def deploy_complete_msg():
+    print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
+    print("To view live log, run:\nauto-cpufreq --log")
+    print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
+    footer(79)
 
 # deploy auto-cpufreq daemon
 def deploy():
@@ -165,12 +175,10 @@ def set_powersave():
     elif cpuload > 50:
         print("High CPU load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
         footer(79)
 
 # make turbo suggestions in powersave
@@ -228,12 +236,10 @@ def set_performance():
     elif cpuload > 20:
         print("High CPU load, setting turbo boost: on")
         s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
         s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
         footer(79)
 
 # make turbo suggestions in performance
