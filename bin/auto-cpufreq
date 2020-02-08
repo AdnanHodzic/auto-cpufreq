@@ -96,9 +96,12 @@ def main(monitor, live, daemon, install, log):
                 root_check()
                 s.run("snapctl set daemon=disabled", shell=True)
                 s.run("snapctl stop --disable auto-cpufreq", shell=True)
+                delete_file(auto_cpufreq_log_file)
+                remove_complete_msg()
             else:
                 root_check()
                 remove()
+                remove_complete_msg()
 
 if __name__ == '__main__':
     # while True:
