@@ -25,10 +25,3 @@ systemctl start auto-cpufreq
 
 echo -e "\n* Enabling auto-cpufreq daemon (systemd) service at boot"
 systemctl enable auto-cpufreq
-
-echo -e "\n------------------ auto-cpufreq daemon installed and running -----------------\n"
-
-echo -e "To view live log, run:\nauto-cpufreq --log"
-echo -e "\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove"
-
-echo -e "\n-------------------------------------------------------------------------------\n"
