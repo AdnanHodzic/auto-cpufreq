@@ -57,7 +57,7 @@ def main(monitor, live, daemon, install, log):
         elif monitor:
             while True:
                 root_check()
-                running_daemon() # doesn't work on snap
+                running_daemon()
                 gov_check()
                 cpufreqctl()
                 sysinfo()
@@ -67,7 +67,7 @@ def main(monitor, live, daemon, install, log):
         elif live:
             while True:
                 root_check()
-                running_daemon() # doesn't work on snap
+                running_daemon()
                 gov_check()
                 cpufreqctl()
                 sysinfo()
@@ -80,14 +80,14 @@ def main(monitor, live, daemon, install, log):
         elif install:
                 if os.getenv('PKG_MARKER') == "SNAP":
                     root_check()
-                    running_daemon() # doesn't work on snap
+                    running_daemon()
                     gov_check()
                     s.run("snapctl set daemon=enabled", shell=True)
                     s.run("snapctl start --enable auto-cpufreq", shell=True)
                     deploy_complete_msg()
                 else:
                     root_check()
-                    running_daemon() # doesn't work on snap
+                    running_daemon()
                     gov_check()
                     deploy()
                     deploy_complete_msg()
