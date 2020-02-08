@@ -25,5 +25,3 @@ systemctl daemon-reload
 
 echo -e "reset failed"
 systemctl reset-failed
-
-echo -e "\n-------------------------------------------------------------------------------\n"

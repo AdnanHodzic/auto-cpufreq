@@ -24,7 +24,12 @@ s = subprocess
 cpus = os.cpu_count()
 
 # get turbo boost state
-cur_turbo = s.getoutput("cat /sys/devices/system/cpu/intel_pstate/no_turbo")
+turbo_loc = "/sys/devices/system/cpu/intel_pstate/no_turbo"
+cur_turbo = s.getoutput("cat " + turbo_loc)
+ 
+ # govs/script loc
+avail_gov_loc = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+scripts_dir = "/usr/local/share/auto-cpufreq/scripts/"
 
 # get current scaling governor
 get_cur_gov = s.getoutput("cpufreqctl --governor")
@@ -37,7 +42,7 @@ bat_state = power.PowerManagement().get_providing_power_source_type()
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 
 # daemon check
-dcheck = subprocess.getoutput("snapctl get daemon")
+dcheck = s.getoutput("snapctl get daemon")
 
 # deploy cpufreqctl script
 def cpufreqctl():
@@ -49,7 +54,7 @@ def cpufreqctl():
         if os.path.isfile("/usr/bin/cpufreqctl"):
             pass
         else:
-            os.system("cp /usr/local/share/auto-cpufreq/scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+            os.system("cp " + scripts_dir + "cpufreqctl.sh /usr/bin/cpufreqctl")
 
 # print footer func
 def footer(l):
@@ -59,6 +64,11 @@ def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
     print("To view live log, run:\nauto-cpufreq --log")
     print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
+    footer(79)
+
+def remove_complete_msg():
+    print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
+    print("auto-cpufreq successfully removed.")
     footer(79)
 
 # deploy auto-cpufreq daemon
@@ -86,10 +96,10 @@ def deploy():
     create_file(auto_cpufreq_log_file)
 
     print("\n* Deploy auto-cpufreq install script")
-    os.system("cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
+    os.system("cp " + scripts_dir + "/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    os.system("cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
+    os.system("cp " + scripts_dir + "/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
 
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
@@ -123,7 +133,7 @@ def remove():
 
 # check for necessary scaling governors
 def gov_check():
-    avail_gov = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+    avail_gov = avail_gov_loc
 
     governors=["performance","powersave"]
 
@@ -170,15 +180,15 @@ def set_powersave():
     # conditions for setting turbo in powersave
     if load1m > cpus:
         print("High load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     elif cpuload > 50:
         print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 1 > " + turbo_loc, shell=True)
         footer(79)
 
 # make turbo suggestions in powersave
@@ -231,15 +241,15 @@ def set_performance():
     # conditions for setting turbo in performance
     if load1m > 1:
         print("High load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     elif cpuload > 20:
         print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 1 > "  + turbo_loc, shell=True)
         footer(79)
 
 # make turbo suggestions in performance
@@ -391,12 +401,12 @@ def read_log():
 # check if program (argument) is running
 def is_running(program, argument):
     # iterate over all process id's found by psutil
-    for pid in psutil.pids(): 
+    for pid in psutil.pids():
         try:
             # requests the process information corresponding to each process id
-            p = psutil.Process(pid) 
+            p = psutil.Process(pid)
             # check if value of program-variable that was used to call the function matches the name field of the plutil.Process(pid) output 
-            if program in p.name(): 
+            if program in p.name():
                 # check output of p.name(), output name of program
                 # p.cmdline() - echo the exact command line via which p was called.
                 for arg in p.cmdline():
