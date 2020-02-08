@@ -414,3 +414,6 @@ def running_daemon():
     if is_running('auto-cpufreq', '--daemon'):
         deploy_complete_msg()
         exit(1)
+    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+        deploy_complete_msg()
+        exit(1)
