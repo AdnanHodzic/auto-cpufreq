@@ -33,52 +33,74 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
   * System load
 * Automatic CPU & power optimization (temporary and persistent)
 
-## Installing auto-cpufreq
+## How to run auto-cpufreq?
 
-### From source code
-
-Get source code, run installer and follow on screen instructions:
-
-```
-git clone https://github.com/AdnanHodzic/auto-cpufreq.git
-cd auto-cpufreq && sudo sudo ./auto-cpufreq-installer
-```
-
-### Arch Linux
+#### Arch Linux
 
 [AUR package is available](https://aur.archlinux.org/packages/auto-cpufreq-git/) for install. After which `auto-cpufreq` will be available as a binary and you can skip to [auto-cpufreq: modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for further reference.
 
-## How to run auto-cpufreq
+#### Get auto-cpufreq source code
 
-auto-cpufreq can be run by simply running the `auto-cpufreq` and following on screen instructions, i.e:
+`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`
 
-`sudo auto-cpufreq`
+#### Install requirements
 
-#### Running auto-cpufreq on AMD CPU and/or desktop/servers's
+##### Requirements installation for Debian/Ubuntu and their derivatives
+
+All requirements can be installed by running:
+
+`sudo apt install python3-dev python3-pip python3-distro python3-psutil python3-click python3-power -y`
+
+Since APT packages may contain older version of necessary Python packages, please make sure to have latest version by running:
+`sudo pip3 install --upgrade psutil click distro power`
+
+##### Requirements installation for Redhat/Fedora and its derivatives
+
+Necessary pre-requisites can be installed by running:
+
+`sudo yum install python-devel`
+
+After which you need to[ need to install rest of the requirements](https://github.com/AdnanHodzic/auto-cpufreq#requirements-installation-for-all-other-linux-distributions) as stated below.
+
+##### Requirements installation for all other Linux distributions
+
+If you have python3 and pip3 installed simply run:
+
+`sudo pip3 install psutil click distro power`
+
+Note: libraries must be installed using root user as tool will be run as root.
+
+##### Running auto-cpufreq on AMD CPU and/or desktop/servers's
 
 Please note when this tool was made it was solely targeting Intel CPU's running on laptops. Support for both AMD CPU is [currently being worked on](https://github.com/AdnanHodzic/auto-cpufreq/issues/17). 
 
 While there are plans to [extend support for desktop/servers](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd5nodm/) in near future. 
 
+#### Run auto-cpufreq
+
+auto-cpufreq can be run by simply running the `auto-cpufreq.py` and following on screen instructions, i.e:
+
+`sudo python3 auto-cpufreq.py`
+
 ## auto-cpufreq modes and options
 
-### Monitor
+#### Monitor
 
-`sudo auto-cpufreq --monitor`
+`sudo python3 auto-cpufreq.py --monitor`
 
 No changes are made to the system, and is solely made for demonstration purposes what auto-cpufreq could do differently for your system.
 
-### Live
+#### Live
 
-`sudo auto-cpufreq --live`
+`sudo python3 auto-cpufreq.py --live`
 
 Necessary changes are temporarily made to the system which are lost with system reboot. This mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
 
-### Install - auto-cpufreq daemon
+#### Install - auto-cpufreq daemon
 
 Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live log is made for monitoring purposes.
 
-`sudo auto-cpufreq --install`
+`sudo python3 auto-cpufreq.py --install`
 
 After daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its logs can be viewed by running: `auto-cpufreq --log`
 
@@ -86,17 +108,20 @@ Since daemon is running as a systemd service, its status can be seen by running:
 
 `systemctl status auto-cpufreq`
 
-### Remove - auto-cpufreq daemon
+#### Remove - auto-cpufreq daemon
 
 auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
 
 `sudo auto-cpufreq --remove`
+or
+`sudo python3 auto-cpufreq.py --remove`
 
-### Log
+#### Log
 
 If daemon has been instaled, live log of CPU/system load monitoring and optimizaiton can be seen by running:
 
 `auto-cpufreq --log`
+or `sudo python3 auto-cpufreq.py --log`
 
 ## Discussion:
 
