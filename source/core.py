@@ -318,9 +318,25 @@ def sysinfo():
     print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
 
     import distro
-    # get info about linux distro
-    fdist = distro.linux_distribution()
-    dist = " ".join(x for x in fdist)
+
+    # get distro information in snap env.
+    if os.getenv("PKG_MARKER") == "SNAP":
+        searchfile = open("/var/lib/snapd/hostfs/etc/os-release", "r")
+        for line in searchfile:
+            if line.startswith('NAME='):
+                distro = line[5:line.find('$')].strip("\"")
+                continue
+            elif line.startswith('VERSION='):
+                version = line[8:line.find('$')].strip("\"")
+                continue
+
+            dist = distro + " " + version
+        searchfile.close()
+    else:
+        # get distro information
+        fdist = distro.linux_distribution()
+        dist = " ".join(x for x in fdist)
+
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
