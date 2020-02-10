@@ -321,7 +321,7 @@ def sysinfo():
 
     # get distro information in snap env.
     if os.getenv("PKG_MARKER") == "SNAP":
-        searchfile = open("/usr/lib/os-release", "r")
+        searchfile = open("/var/lib/snapd/hostfs/etc/os-release", "r")
         for line in searchfile:
             if line.startswith('NAME='):
                 distro = line[5:line.find('$')].strip("\"")
