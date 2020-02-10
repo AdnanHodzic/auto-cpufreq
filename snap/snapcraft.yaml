@@ -9,7 +9,7 @@ description: |
   any compromises.
 
 grade: stable
-confinement: classic
+confinement: strict
 
 parts:
   auto-cpufreq:
@@ -30,6 +30,11 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
+    plugs:
+      - cpu-control
+      - system-observe
+      - hardware-observe
+      - system-files
   service:
     command: bin/auto-cpufreq --daemon 2>&1 | tee -a /var/log/auto-cpufreq.log
     environment:
