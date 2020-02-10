@@ -26,17 +26,23 @@ parts:
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq
-    environment:
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-      PKG_MARKER: SNAP
     plugs:
       - cpu-control
       - system-observe
       - hardware-observe
       - system-files
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PKG_MARKER: SNAP
+      
   service:
     command: bin/auto-cpufreq --daemon 2>&1 | tee -a /var/log/auto-cpufreq.log
+    plugs:
+      - cpu-control
+      - system-observe
+      - hardware-observe
+      - system-files
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
