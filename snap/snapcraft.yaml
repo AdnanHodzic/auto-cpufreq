@@ -30,7 +30,6 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - system-files
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
@@ -42,7 +41,6 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - system-files
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
