@@ -36,7 +36,7 @@ apps:
       PKG_MARKER: SNAP
       
   service:
-    command: bin/auto-cpufreq --daemon 2>&1 | tee -a /var/log/auto-cpufreq.log
+    command: bin/auto-cpufreq --daemon 2>&1 | tee -a $SNAP_DATA/auto-cpufreq.log
     plugs:
       - cpu-control
       - system-observe
