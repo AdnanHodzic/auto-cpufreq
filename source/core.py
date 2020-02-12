@@ -40,6 +40,7 @@ bat_state = power.PowerManagement().get_providing_power_source_type()
 
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
+auto_cpufreq_log_file_snap = "/var/snap/auto-cpufreq/current/auto-cpufreq.log"
 
 # daemon check
 dcheck = s.getoutput("snapctl get daemon")
@@ -406,8 +407,9 @@ def delete_file(file):
 
 # read log func
 def read_log():
-    if os.path.isfile(auto_cpufreq_log_file):
-        # read /var/log/auto-cpufreq.log
+    if os.getenv("PKG_MARKER") == "SNAP":
+         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file_snap])
+    elif os.path.isfile(auto_cpufreq_log_file):
         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
