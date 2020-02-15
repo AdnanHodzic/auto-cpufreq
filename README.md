@@ -35,6 +35,10 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 ## Installing auto-cpufreq
 
+### From Snap store
+
+To be updated ...
+
 ### From source code
 
 Get source code, run installer and follow on screen instructions:
@@ -43,6 +47,8 @@ Get source code, run installer and follow on screen instructions:
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo sudo ./auto-cpufreq-installer
 ```
+
+In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
 ### Arch Linux
 
