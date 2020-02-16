@@ -7,7 +7,7 @@ release="$(lsb_release -rs)"
 codename="$(lsb_release -cs)"
 
 separator(){
-sep="\n-------------------------------------------------------------------"
+sep="\n-------------------------------------------------------------------------------"
 echo -e $sep
 }
 
@@ -52,7 +52,7 @@ then
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
     separator
-    echo -e "\ninstalling auto-cpufreq\n"
+    echo -e "\ninstalling auto-cpufreq tool\n"
     install
     separator
     complete_msg
@@ -73,7 +73,7 @@ then
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
     separator
-    echo -e "\ninstalling auto-cpufreq\n"
+    echo -e "\ninstalling auto-cpufreq tool\n"
     install
     separator
     complete_msg
@@ -106,11 +106,34 @@ fi
 }
 
 tool_remove(){
-cat files.txt | xargs sudo rm -rf && rm -f files.txt
-sudo rm -rf /usr/local/share/auto-cpufreq/
+
+# remove daemon if installed/running
+tool_proc="auto-cpufreq"
+tool_proc_rm="auto-cpufreq --remove"
+
+if pgrep -x $tool_proc > /dev/null
+then
+    eval pkill $tool_proc
+    eval $tool_proc_rm
+fi
+
+# remove auto-cpufreq and all its supporting files
+files="files.txt"
+share_dir="/usr/local/share/auto-cpufreq/"
+srv_install="/usr/bin/auto-cpufreq-install"
+srv_remove="/usr/bin/auto-cpufreq-remove"
+log_file="/var/log/auto-cpufreq.log"
+
+[ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
+[ -f $share_dir ] && rm -rf $share_dir
+
+# files cleanup
+[ -f $srv_install ] && rm $srv_install
+[ -f $srv_remove ] && rm $srv_remove
+[ -f $log_file ] && rm $log_file
 
 separator
-echo -e "\nauto-cpufreq successfully removed.\n"
+echo -e "\nauto-cpufreq tool and all its supporting files successfully removed.\n"
 }
 
 ask_operation(){
