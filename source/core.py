@@ -22,6 +22,7 @@ p = psutil
 pl = platform
 s = subprocess
 cpus = os.cpu_count()
+pw = power
 
 # get turbo boost state
 turbo_loc = "/sys/devices/system/cpu/intel_pstate/no_turbo"
@@ -36,7 +37,7 @@ get_cur_gov = s.getoutput("cpufreqctl --governor")
 gov_state = get_cur_gov.split()[0]
 
 # get battery state
-bat_state = power.PowerManagement().get_providing_power_source_type()
+bat_state = pw.PowerManagement().get_providing_power_source_type()
 
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
@@ -179,11 +180,11 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > cpus:
+    if load1m > cpus / 7:
         print("High load, setting turbo boost: on")
         s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
-    elif cpuload > 50:
+    elif cpuload > 25:
         print("High CPU load, setting turbo boost: on")
         s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
@@ -203,7 +204,7 @@ def mon_powersave():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > 2:
+    if load1m > cpus / 7:
         print("High load, suggesting to set turbo boost: on")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
@@ -240,7 +241,7 @@ def set_performance():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in performance
-    if load1m > 1:
+    if load1m >= cpus / 5:
         print("High load, setting turbo boost: on")
         s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
@@ -278,36 +279,36 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # get battery state
-    bat_state = power.PowerManagement().get_providing_power_source_type()
+    bat_state = pw.PowerManagement().get_providing_power_source_type()
 
     # determine which governor should be used
-    if bat_state == power.POWER_TYPE_AC:
+    if bat_state == pw.POWER_TYPE_AC:
         print("Battery is: charging")
         set_performance()
-    elif bat_state == power.POWER_TYPE_BATTERY:
+    elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         set_powersave()
     else: 
-        print("Couldn't determine battery status. Please report this issue.")
+        print("Couldn't determine the battery status. Please report this issue.")
 
 # make cpufreq suggestions
 def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # get battery state
-    bat_state = power.PowerManagement().get_providing_power_source_type()
+    bat_state = pw.PowerManagement().get_providing_power_source_type()
 
     # determine which governor should be used
-    if bat_state == power.POWER_TYPE_AC:
+    if bat_state == pw.POWER_TYPE_AC:
         print("Battery is: charging")
         print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
         mon_performance()
-    elif bat_state == power.POWER_TYPE_BATTERY:
+    elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
         mon_powersave()
     else:
-        print("Couldn't determine battery status. Please report this issue.")
+        print("Couldn't determine the battery status. Please report this issue.")
     
 # get system information
 def sysinfo():
