@@ -107,23 +107,28 @@ fi
 
 tool_remove(){
 
-# remove daemon if installed/running
-tool_proc="auto-cpufreq"
-tool_proc_rm="auto-cpufreq --remove"
-
-if pgrep -x $tool_proc > /dev/null
-then
-    eval pkill $tool_proc
-    eval $tool_proc_rm
-fi
-
-# remove auto-cpufreq and all its supporting files
 files="files.txt"
 share_dir="/usr/local/share/auto-cpufreq/"
 srv_install="/usr/bin/auto-cpufreq-install"
 srv_remove="/usr/bin/auto-cpufreq-remove"
 log_file="/var/log/auto-cpufreq.log"
+tool_proc_rm="auto-cpufreq --remove"
 
+# stop any running auto-cpufreq argument (daemon/live/monitor)
+tool_arg_pids=( $(pgrep -f "auto-cpufreq --") )
+for pid in "${tool_arg_pids[@]}"; do
+  if [[ $tool_arg_pids != $$ ]]; then
+    kill "$tool_arg_pids"
+  fi
+done
+
+# run uninstall in case of installed daemon
+if [ -f $srv_remove ]
+then
+    eval $tool_proc_rm
+fi
+
+# remove auto-cpufreq and all its supporting files
 [ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
 [ -f $share_dir ] && rm -rf $share_dir
 
