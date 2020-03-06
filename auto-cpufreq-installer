@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# auto-cpufreq install tool
+# auto-cpufreq-installer:
+# auto-cpufreq source code based installer
 
 distro="$(lsb_release -is)"
 release="$(lsb_release -rs)"
@@ -93,7 +94,7 @@ else
     echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
     echo -e "\n-----"
     echo -e "\nAfter which tool is installed, for full list of options run:"
-   echo -e "auto-cpufreq"
+    echo -e "auto-cpufreq"
     separator
     echo -e "\nConsider creating a feature request to add support for your distro:"
     echo -e "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"
