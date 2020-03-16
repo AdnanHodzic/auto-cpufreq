@@ -37,7 +37,9 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 ### From Snap store
 
-To be updated ...
+auto-cpufreq snap package is created and is ready in [snap store](https://snapcraft.io/store). However it's still unreleased to public due to changes which first need to be [made as part of snapd 2.4.4](https://github.com/snapcore/snapd/pull/8127).
+
+Hence, please stay tuned for auto-cpufreq snap package release.
 
 ### From source code
 
