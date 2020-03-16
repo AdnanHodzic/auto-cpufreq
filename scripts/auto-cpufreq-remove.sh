@@ -25,14 +25,3 @@ systemctl daemon-reload
 
 echo -e "reset failed"
 systemctl reset-failed
-
-echo -e "\n* Removing auto-cpufreq daemon install script"
-rm /usr/bin/auto-cpufreq-install
-
-echo -e "\n* Removing auto-cpufreq binary"
-rm /usr/bin/auto-cpufreq
-
-echo -e "\n* Removing auto-cpufreq log file"
-rm /var/log/auto-cpufreq.log
-
-echo -e "\n-------------------------------------------------------------------------------\n"
