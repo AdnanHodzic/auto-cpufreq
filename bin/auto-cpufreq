@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+#
+# auto-cpufreq - Automatic CPU speed & power optimizer for Linux
+#
+# Blog post: http://foolcontrol.org/?p=3124
+
+# core import
+import sys
+sys.path.append('../')
+from source.core import * 
+
+# ToD: replace every s.call with s.run
+
+# cli
+@click.command()
+@click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
+@click.option("--live", is_flag=True, help="Monitor and make suggested CPU optimizations")
+@click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
+@click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
+@click.option("--daemon", is_flag=True, hidden=True)
+
+def main(monitor, live, daemon, install, log):
+    # print --help by default if no argument is provided when auto-cpufreq is run
+    if len(sys.argv) == 1:
+        print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
+        print("Automatic CPU speed & power optimizer for Linux")
+        print("\nExample usage:\nauto-cpufreq --monitor")
+        print("\n-----\n")
+
+        s.call(["auto-cpufreq", "--help"])
+        footer(79)
+    else:
+        if daemon:
+            if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+                while True:
+                    root_check()
+                    gov_check()
+                    cpufreqctl()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(5)
+                    subprocess.call("clear")
+            elif os.getenv("PKG_MARKER") != "SNAP":
+                while True:
+                    root_check()
+                    gov_check()
+                    cpufreqctl()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(5)
+                    subprocess.call("clear")
+            else:
+                print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
+                print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
+                footer(79)
+                exit(1)
+        elif monitor:
+            while True:
+                root_check()
+                running_daemon()
+                gov_check()
+                cpufreqctl()
+                sysinfo()
+                mon_autofreq()
+                countdown(5)
+                subprocess.call("clear")
+        elif live:
+            while True:
+                root_check()
+                running_daemon()
+                gov_check()
+                cpufreqctl()
+                sysinfo()
+                set_autofreq()
+                countdown(5)
+                subprocess.call("clear")
+        elif log:
+                # ToDo: fail if log is missing or empty (on)
+                read_log()
+        elif install:
+                if os.getenv('PKG_MARKER') == "SNAP":
+                    root_check()
+                    running_daemon()
+                    gov_check()
+                    s.run("snapctl set daemon=enabled", shell=True)
+                    s.run("snapctl start --enable auto-cpufreq", shell=True)
+                    deploy_complete_msg()
+                else:
+                    root_check()
+                    running_daemon()
+                    gov_check()
+                    deploy()
+                    deploy_complete_msg()
+        elif remove:
+            if os.getenv('PKG_MARKER') == "SNAP":
+                root_check()
+                s.run("snapctl set daemon=disabled", shell=True)
+                s.run("snapctl stop --disable auto-cpufreq", shell=True)
+                delete_file(auto_cpufreq_log_file)
+                remove_complete_msg()
+            else:
+                root_check()
+                remove()
+                remove_complete_msg()
+
+if __name__ == '__main__':
+    # while True:
+        main()

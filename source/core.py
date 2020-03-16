@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 #
-# auto-cpufreq - Automatic CPU speed & power optimizer for Linux
-#
-# Blog post: http://foolcontrol.org/?p=3124
+# auto-cpufreq - core functionality
 
+# ToDo: re-order in a single line?
 import subprocess
 import os
 import sys
@@ -12,6 +11,7 @@ import psutil
 import platform
 import click
 import power
+import signal
 
 # ToDo:
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
@@ -21,32 +21,57 @@ import power
 p = psutil
 pl = platform
 s = subprocess
-tool_run = sys.argv[0]
 cpus = os.cpu_count()
+pw = power
 
 # get turbo boost state
-cur_turbo = s.getoutput("cat /sys/devices/system/cpu/intel_pstate/no_turbo")
+turbo_loc = "/sys/devices/system/cpu/intel_pstate/no_turbo"
+cur_turbo = s.getoutput("cat " + turbo_loc)
+ 
+ # govs/script loc
+avail_gov_loc = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+scripts_dir = "/usr/local/share/auto-cpufreq/scripts/"
 
 # get current scaling governor
 get_cur_gov = s.getoutput("cpufreqctl --governor")
 gov_state = get_cur_gov.split()[0]
 
 # get battery state
-bat_state = power.PowerManagement().get_providing_power_source_type()
+bat_state = pw.PowerManagement().get_providing_power_source_type()
 
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
+auto_cpufreq_log_file_snap = "/var/snap/auto-cpufreq/current/auto-cpufreq.log"
+
+# daemon check
+dcheck = s.getoutput("snapctl get daemon")
 
 # deploy cpufreqctl script
 def cpufreqctl():
-    # deploy cpufreqctl script (if missing)
-    if os.path.isfile("/usr/bin/cpufreqctl"):
+    # detect if running on a SNAP
+    if os.getenv('PKG_MARKER') == "SNAP":
         pass
     else:
-        os.system("cp scripts/cpufreqctl.sh /usr/bin/cpufreqctl")
+        # deploy cpufreqctl script (if missing)
+        if os.path.isfile("/usr/bin/cpufreqctl"):
+            pass
+        else:
+            os.system("cp " + scripts_dir + "cpufreqctl.sh /usr/bin/cpufreqctl")
 
+# print footer func
 def footer(l):
     print("\n" + "-" * l + "\n")
+
+def deploy_complete_msg():
+    print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
+    print("To view live log, run:\nauto-cpufreq --log")
+    print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
+    footer(79)
+
+def remove_complete_msg():
+    print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
+    print("auto-cpufreq successfully removed.")
+    footer(79)
 
 # deploy auto-cpufreq daemon
 def deploy():
@@ -69,14 +94,14 @@ def deploy():
     except:
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
-    print("\n* Deploy auto-cpufreq as system wide accessible binary")
-    os.system("cp auto-cpufreq.py /usr/bin/auto-cpufreq")
+    # create log file
+    create_file(auto_cpufreq_log_file)
 
     print("\n* Deploy auto-cpufreq install script")
-    os.system("cp scripts/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
+    os.system("cp " + scripts_dir + "/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    os.system("cp scripts/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
+    os.system("cp " + scripts_dir + "/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
 
     # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
@@ -102,9 +127,15 @@ def remove():
     # run auto-cpufreq daemon install script
     s.call("/usr/bin/auto-cpufreq-remove", shell=True)
 
+    # remove auto-cpufreq-remove
+    os.remove("/usr/bin/auto-cpufreq-remove")
+
+    # delete log file
+    delete_file(auto_cpufreq_log_file)
+
 # check for necessary scaling governors
 def gov_check():
-    avail_gov = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+    avail_gov = avail_gov_loc
 
     governors=["performance","powersave"]
 
@@ -120,7 +151,8 @@ def gov_check():
 def root_check():
     if not os.geteuid() == 0:
         print("\n" + "-" * 33 + " Root check " + "-" * 34 + "\n")
-        sys.exit("ERROR:\n\nMust be run root for this functionality to work, i.e: \nsudo " + tool_run + "\n")
+        print("ERROR:\n\nMust be run root for this functionality to work, i.e: \nsudo auto-cpufreq")
+        footer(79)
         exit(1)
 
 # refresh countdown
@@ -148,19 +180,17 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > cpus:
+    if load1m > cpus / 7:
         print("High load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
-    elif cpuload > 50:
+    elif cpuload > 25:
         print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
+        s.run("echo 1 > " + turbo_loc, shell=True)
         footer(79)
 
 # make turbo suggestions in powersave
@@ -174,7 +204,7 @@ def mon_powersave():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > 2:
+    if load1m > cpus / 7:
         print("High load, suggesting to set turbo boost: on")
         if cur_turbo == "0":
             print("Currently turbo boost is: on")
@@ -211,19 +241,17 @@ def set_performance():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in performance
-    if load1m > 1:
+    if load1m >= cpus / 5:
         print("High load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     elif cpuload > 20:
         print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
+        s.run("echo 0 > " + turbo_loc, shell=True)
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo", shell=True)
-        #print("\n" + "-" * 60 + "\n")
+        s.run("echo 1 > "  + turbo_loc, shell=True)
         footer(79)
 
 # make turbo suggestions in performance
@@ -251,36 +279,36 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # get battery state
-    bat_state = power.PowerManagement().get_providing_power_source_type()
+    bat_state = pw.PowerManagement().get_providing_power_source_type()
 
     # determine which governor should be used
-    if bat_state == power.POWER_TYPE_AC:
+    if bat_state == pw.POWER_TYPE_AC:
         print("Battery is: charging")
         set_performance()
-    elif bat_state == power.POWER_TYPE_BATTERY:
+    elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         set_powersave()
     else: 
-        print("Couldn't determine battery status. Please report this issue.")
+        print("Couldn't determine the battery status. Please report this issue.")
 
 # make cpufreq suggestions
 def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # get battery state
-    bat_state = power.PowerManagement().get_providing_power_source_type()
+    bat_state = pw.PowerManagement().get_providing_power_source_type()
 
     # determine which governor should be used
-    if bat_state == power.POWER_TYPE_AC:
+    if bat_state == pw.POWER_TYPE_AC:
         print("Battery is: charging")
         print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
         mon_performance()
-    elif bat_state == power.POWER_TYPE_BATTERY:
+    elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
         mon_powersave()
     else:
-        print("Couldn't determine battery status. Please report this issue.")
+        print("Couldn't determine the battery status. Please report this issue.")
     
 # get system information
 def sysinfo():
@@ -292,9 +320,25 @@ def sysinfo():
     print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
 
     import distro
-    # get info about linux distro
-    fdist = distro.linux_distribution()
-    dist = " ".join(x for x in fdist)
+
+    # get distro information in snap env.
+    if os.getenv("PKG_MARKER") == "SNAP":
+        searchfile = open("/var/lib/snapd/hostfs/etc/os-release", "r")
+        for line in searchfile:
+            if line.startswith('NAME='):
+                distro = line[5:line.find('$')].strip("\"")
+                continue
+            elif line.startswith('VERSION='):
+                version = line[8:line.find('$')].strip("\"")
+                continue
+
+            dist = distro + " " + version
+        searchfile.close()
+    else:
+        # get distro information
+        fdist = distro.linux_distribution()
+        dist = " ".join(x for x in fdist)
+
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
@@ -353,96 +397,52 @@ def sysinfo():
     #current_fans = p.sensors_fans()['thinkpad'][0].current
     #print("\nCPU fan speed:", current_fans, "RPM")
 
+# create file func
+def create_file(file):
+    open(file, 'a').close()
+
+# delete file func
+def delete_file(file):
+    if os.path.exists(file):
+        os.remove(file)
+
 # read log func
 def read_log():
-    if os.path.isfile(auto_cpufreq_log_file):
-        # read /var/log/auto-cpufreq.log
+    if os.getenv("PKG_MARKER") == "SNAP":
+         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file_snap])
+    elif os.path.isfile(auto_cpufreq_log_file):
         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"python3 auto-cpufreq.py --install\" first")
+        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
     footer(79)
 
-def running_check():
-    daemon_marker = False
-    for proc in p.process_iter():
+# check if program (argument) is running
+def is_running(program, argument):
+    # iterate over all process id's found by psutil
+    for pid in psutil.pids():
         try:
-            pinfo = proc.as_dict(attrs=['pid', 'name', 'cmdline'])
-        except p.NoSuchProcess:
-            pass
-        else:
-            if pinfo['name'] == 'python3' and \
-            '/usr/bin/auto-cpufreq' in pinfo['cmdline'] and '--daemon' in pinfo['cmdline']:
-                daemon_marker = True
+            # requests the process information corresponding to each process id
+            p = psutil.Process(pid)
+            # check if value of program-variable that was used to call the function matches the name field of the plutil.Process(pid) output 
+            if program in p.name():
+                # check output of p.name(), output name of program
+                # p.cmdline() - echo the exact command line via which p was called.
+                for arg in p.cmdline():
+                    if argument in str(arg):  
+                        return True
+                    else:
+                        pass
+            else:
+                pass
+        except:
+            continue
 
-    if daemon_marker:
-        print("\n" + "-" * 25 + " detected auto-cpufreq daemon" + "-" * 25 + "\n")
-        print("ERROR: prevention from running multiple instances")
-        print("\nIt seems like auto-cpufreq daemon is already running.\n")
-        print("----")
-        print("\nTo view live log run:\n\tauto-cpufreq --log")
-        footer(79)
-        sys.exit()
-
-# cli
-@click.command()
-@click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
-@click.option("--live", is_flag=True, help="Monitor and make suggested CPU optimizations")
-@click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
-@click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
-@click.option("--daemon", is_flag=True, hidden=True)
-
-def cli(monitor, live, daemon, install, log):
-    # print --help by default if no argument is provided when auto-cpufreq is run
-    if len(sys.argv) == 1:
-        print("\n" + "-" * 22 + " auto-cpufreq " + "-" * 23 + "\n")
-        print("Automatic CPU speed & power optimizer for Linux")
-        print("\nExample usage:\npython3 " + tool_run + " --monitor")
-        print("\n-----\n")
-
-        s.call(["python3", "auto-cpufreq.py", "--help"])
-        print("\n" +  "-" * 59 + "\n")
-    else:
-        if daemon:
-            while True:
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                set_autofreq()
-                countdown(5)
-                subprocess.call("clear")
-        elif monitor:
-            while True:
-                running_check()
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                mon_autofreq()
-                countdown(5)
-                subprocess.call("clear")
-        elif live:
-            while True:
-                running_check()
-                root_check()
-                gov_check()
-                cpufreqctl()
-                sysinfo()
-                set_autofreq()
-                countdown(5)
-                subprocess.call("clear")
-        elif log:
-                read_log()
-        elif install:
-                running_check()
-                root_check()
-                gov_check()
-                deploy()
-        elif remove:
-                root_check()
-                remove()
-
-if __name__ == '__main__':
-    # while True:
-        cli()
+# check if auto-cpufreq --daemon is running
+def running_daemon():
+    if is_running('auto-cpufreq', '--daemon'):
+        deploy_complete_msg()
+        exit(1)
+    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+        deploy_complete_msg()
+        exit(1)

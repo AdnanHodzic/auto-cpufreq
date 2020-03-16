@@ -1,0 +1,48 @@
+name: auto-cpufreq
+base: core18
+version: '1.0'
+summary: Automatic CPU speed & power optimizer for Linux
+description: |
+  Automatic CPU speed & power optimizer for Linux based on active
+  monitoring of laptop's battery state, CPU usage and system load.
+  Ultimately allowing you to improve battery life without making
+  any compromises.
+
+grade: stable
+confinement: strict
+
+parts:
+  auto-cpufreq:
+    plugin: python
+    python-version: python3
+    source: .
+
+  deploy-cpufrectl:
+    plugin: dump
+    source: scripts
+    organize:
+      cpufreqctl.sh: usr/bin/cpufreqctl
+
+apps:
+  auto-cpufreq:
+    command: bin/auto-cpufreq
+    plugs:
+      - cpu-control
+      - system-observe
+      - hardware-observe
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PKG_MARKER: SNAP
+      
+  service:
+    command: bin/auto-cpufreq --daemon 2>&1 | tee -a $SNAP_DATA/auto-cpufreq.log
+    plugs:
+      - cpu-control
+      - system-observe
+      - hardware-observe
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PKG_MARKER: SNAP
+    daemon: simple

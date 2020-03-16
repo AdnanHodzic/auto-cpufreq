@@ -11,11 +11,8 @@ then
 	exit 1
 fi
 
-# this is needed on SELinux enabled systems (see also ConditionPathExists in .service)
-touch /var/log/auto-cpufreq.log
-
 echo -e "\n* Deploy auto-cpufreq systemd unit file"
-cp scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
+cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
 
 echo -e "\n* Reloading systemd manager configuration"
 systemctl daemon-reload
@@ -28,10 +25,3 @@ systemctl start auto-cpufreq
 
 echo -e "\n* Enabling auto-cpufreq daemon (systemd) service at boot"
 systemctl enable auto-cpufreq
-
-echo -e "\n------------------ auto-cpufreq daemon installed and running -----------------\n"
-
-echo -e "To view live log, run:\nauto-cpufreq --log"
-echo -e "\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove"
-
-echo -e "\n-------------------------------------------------------------------------------\n"
