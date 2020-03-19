@@ -17,8 +17,7 @@ Using tools like [TLP](https://github.com/linrunner/TLP) will help in this situa
 
 With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save battery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
 
-Please note: this tool doesn't conflict and [works great in tandem with TLP](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd4y36k/) if you follow these settings in TLP:
-Please add `CPU_ENERGY_PERF_POLICY_ON_AC=default` and `CPU_ENERGY_PERF_POLICY_ON_BAT=default` lines into `/etc/tlp.conf` then run `sudo tlp start`.
+Please note: this tool doesn't conflict and [works great in tandem with TLP](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd4y36k/) if you follow these settings in TLP: add `CPU_ENERGY_PERF_POLICY_ON_AC=default` and `CPU_ENERGY_PERF_POLICY_ON_BAT=default` lines into `/etc/tlp.conf` then run `sudo tlp start`.
 
 
 
