@@ -20,7 +20,6 @@ With that said, I needed a simple tool which would automatically make "cpufreq" 
 Please note: this tool doesn't conflict and [works great in tandem with TLP](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd4y36k/) if you follow these settings in TLP: add `CPU_ENERGY_PERF_POLICY_ON_AC=default` and `CPU_ENERGY_PERF_POLICY_ON_BAT=default` lines into `/etc/tlp.conf` then run `sudo tlp start`.
 
 
-
 ## Features
 
 * Monitoring 
