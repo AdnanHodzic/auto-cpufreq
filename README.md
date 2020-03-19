@@ -35,19 +35,23 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 ## Installing auto-cpufreq
 
-### From Snap store
+### Snap store
 
-auto-cpufreq snap package is created and is ready in [snap store](https://snapcraft.io/store). However it's still unreleased to public due to changes which first need to be [made as part of snapd 2.4.4](https://github.com/snapcore/snapd/pull/8127).
+auto-cpufreq is available on [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
 
-Hence, please stay tuned for auto-cpufreq snap package release.
+```
+sudo snap install auto-cpufreq
+```
 
-### From source code
+**Please note:** once [snapd](https://snapcraft.io/docs/installing-snapd) is installed, your `snap version` version must be >= 2.4.4 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127). Currently, this version is only available on Ubuntu 20.04.
+
+### auto-cpufreq-installer
 
 Get source code, run installer and follow on screen instructions:
 
 ```
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
-cd auto-cpufreq && sudo sudo ./auto-cpufreq-installer
+cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
