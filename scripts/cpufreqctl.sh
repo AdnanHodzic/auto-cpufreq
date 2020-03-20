@@ -50,6 +50,7 @@ function help () {
   echo ""
   echo "  --driver        Current processor driver"
   echo "  --governor      Scaling governor's options"
+  echo "  --epp           Current energy_performance_preference values for each CPU"
   echo "  --frequency     Frequency options"
   echo "  --on            Turn on --core=NUMBER"
   echo "  --off           Turn off --core=NUMBER"
@@ -235,6 +236,42 @@ function set_frequency_max () {
   fi
 }
 
+function get_energy_performance_preference () {
+  if [ -z $CORE ]
+  then
+    i=0
+    ag=''
+    while [ $i -ne $cpucount ]
+    do
+      if [ $i = 0 ]
+      then
+        ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference`
+      else
+        ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/energy_performance_preference`
+      fi
+      i=`expr $i + 1`
+    done
+    echo $ag
+  else
+    cat /sys/devices/system/cpu/cpu$CORE/cpufreq/energy_performance_preference
+  fi
+}
+
+function set_energy_performance_preference () {
+  if [ -z $CORE ]
+  then
+    i=0
+    while [ $i -ne $cpucount ]
+    do
+      FLNM="$FLROOT/cpu"$i"/cpufreq/energy_performance_preference"
+      echo $VALUE > $FLNM
+      i=`expr $i + 1`
+    done
+  else
+    echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/energy_performance_preference
+  fi
+}
+
 if [ -z $OPTION ] # No options
 then
   info
@@ -269,6 +306,23 @@ then
   else
     verbose "Setting CPU"$CORE" governors to "$VALUE
     set_governor
+  fi
+  exit
+fi
+if [ $OPTION = "--epp" ]
+then
+  if [ ! -z $AVAILABLE ]
+  then
+    cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+    exit
+  fi
+  if [ -z $VALUE ]
+  then
+    verbose "Getting CPU"$CORE" EPPs"
+    get_energy_performance_preference
+  else
+    verbose "Setting CPU"$CORE" EPPs to "$VALUE
+    set_energy_performance_preference
   fi
   exit
 fi

@@ -170,6 +170,7 @@ def countdown(s):
 def set_powersave():
     print("Setting to use: powersave")
     s.run("cpufreqctl --governor --set=powersave", shell=True)
+    s.run("cpufreqctl --epp --set=balance_power", shell=True) 
 
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
@@ -231,6 +232,7 @@ def mon_powersave():
 def set_performance():
     print("Setting to use \"performance\" governor")
     s.run("cpufreqctl --governor --set=performance", shell=True)
+    s.run("cpufreqctl --epp --set=balance_performance", shell=True)
 
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
