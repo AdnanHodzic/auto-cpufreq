@@ -50,7 +50,7 @@ function help () {
   echo ""
   echo "  --driver        Current processor driver"
   echo "  --governor      Scaling governor's options"
-  echo "  --epp           Current energy_performance_preference values for each CPU"
+  echo "  --epp           Governor's energy_performance_preference options"
   echo "  --frequency     Frequency options"
   echo "  --on            Turn on --core=NUMBER"
   echo "  --off           Turn off --core=NUMBER"
