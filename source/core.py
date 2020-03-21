@@ -54,9 +54,24 @@ def cpufreqctl():
     else:
         # deploy cpufreqctl script (if missing)
         if os.path.isfile("/usr/bin/cpufreqctl"):
-            pass
+            os.system("cp /usr/bin/cpufreqctl /usr/bin/cpufreqctl.auto-cpufreq.bak")
+            os.system("cp " + scripts_dir + "cpufreqctl.sh /usr/bin/cpufreqctl")
         else:
             os.system("cp " + scripts_dir + "cpufreqctl.sh /usr/bin/cpufreqctl")
+
+# restore original cpufreqctl script
+def cpufreqctl_restore():
+    # detect if running on a SNAP
+    if os.getenv('PKG_MARKER') == "SNAP":
+        pass
+    else:
+        # restore original cpufreqctl script
+        if os.path.isfile("/usr/bin/cpufreqctl.auto-cpufreq.bak"):
+            os.system("cp /usr/bin/cpufreqctl.auto-cpufreq.bak /usr/bin/cpufreqctl")
+            os.remove("/usr/bin/cpufreqctl.auto-cpufreq.bak")
+        # ToDo: implement mechanism to make sure cpufreqctl (auto-cpufreq) file is
+        # restored if overwritten by system. But during tool removal to also remove it
+        # in def cpufreqctl
 
 # print footer func
 def footer(l):
@@ -133,6 +148,9 @@ def remove():
     # delete log file
     delete_file(auto_cpufreq_log_file)
 
+    # restore original cpufrectl script
+    cpufreqctl_restore()
+
 # check for necessary scaling governors
 def gov_check():
     avail_gov = avail_gov_loc
@@ -170,6 +188,7 @@ def countdown(s):
 def set_powersave():
     print("Setting to use: powersave")
     s.run("cpufreqctl --governor --set=powersave", shell=True)
+    s.run("cpufreqctl --epp --set=balance_power", shell=True) 
 
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
@@ -231,6 +250,7 @@ def mon_powersave():
 def set_performance():
     print("Setting to use \"performance\" governor")
     s.run("cpufreqctl --governor --set=performance", shell=True)
+    s.run("cpufreqctl --epp --set=balance_performance", shell=True)
 
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
