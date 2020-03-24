@@ -1,6 +1,6 @@
 name: auto-cpufreq
 base: core18
-version: '1.0'
+version: '1.1.1'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
   Automatic CPU speed & power optimizer for Linux based on active
