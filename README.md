@@ -43,7 +43,7 @@ auto-cpufreq is available on [snap store](https://snapcraft.io/auto-cpufreq), or
 sudo snap install auto-cpufreq
 ```
 
-**Please note:** once [snapd](https://snapcraft.io/docs/installing-snapd) is installed, your `snap version` version must be >= 2.4.4 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127). Currently, this version is only available on Ubuntu 20.04.
+**Please note:** once [snapd](https://snapcraft.io/docs/installing-snapd) is installed, your `snap version` version must be >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127). Currently, this version is only available on Ubuntu 20.04.
 
 ### auto-cpufreq-installer
 
