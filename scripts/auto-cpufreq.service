@@ -6,7 +6,7 @@ ConditionPathExists=/var/log/auto-cpufreq.log
 [Service]
 Type=simple
 User=root
-ExecStart=auto-cpufreq --daemon
+ExecStart=/usr/local/bin/auto-cpufreq --daemon
 StandardOutput=append:/var/log/auto-cpufreq.log
 [Install]
 WantedBy=multi-user.target
