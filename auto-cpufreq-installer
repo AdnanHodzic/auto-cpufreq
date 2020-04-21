@@ -25,7 +25,7 @@ fi
 
 # python packages install
 pip_pkg_install(){
-pip3 install psutil click distro power
+pip3 install psutil click distro power setuptools
 }
 
 complete_msg(){
