@@ -422,7 +422,7 @@ def sysinfo():
         if "coretemp" in core_temp:
             temp = core_temp['coretemp'][core_num].current
         else:
-            temp = "UNAVAILABLE"
+            temp = core_temp['acpitz'][0].current
 
         print(f"CPU{core_num} temp: {temp:.0f}°C")
         core_num += 1
