@@ -89,14 +89,13 @@ def remove_complete_msg():
 
 # deploy auto-cpufreq daemon
 def deploy():
-
     print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
 
     # deploy cpufreqctl script func call
     cpufreqctl()
 
     print("* Turn off bluetooth on boot")
-    btconf="/etc/bluetooth/main.conf"
+    btconf = "/etc/bluetooth/main.conf"
     try:
         orig_set = "AutoEnable=true"
         change_set = "AutoEnable=false"
@@ -123,11 +122,10 @@ def deploy():
 
 # remove auto-cpufreq daemon
 def remove():
-
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
     print("* Turn on bluetooth on boot")
-    btconf="/etc/bluetooth/main.conf"
+    btconf = "/etc/bluetooth/main.conf"
     try:
         orig_set = "AutoEnable=true"
         change_set = "AutoEnable=false"
@@ -156,7 +154,7 @@ def remove():
 def gov_check():
     avail_gov = avail_gov_loc
 
-    governors=["performance","powersave"]
+    governors = ["performance", "powersave"]
 
     for line in open(avail_gov):
         for keyword in governors:
@@ -180,7 +178,7 @@ def root_check():
 def countdown(s):
     # Fix for wrong log output and "TERM environment variable not set"
     os.environ['TERM'] = 'xterm'
-    
+
     for remaining in range(s, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("\t\t\t\"auto-cpufreq\" refresh in:{:2d}".format(remaining))
@@ -221,7 +219,6 @@ def set_powersave():
 
 # make turbo suggestions in powersave
 def mon_powersave():
-
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
@@ -237,7 +234,7 @@ def mon_powersave():
         else:
             print("Currently turbo boost is: off")
         footer(79)
-        
+
     elif cpuload > 25:
         print("High CPU load, suggesting to set turbo boost: on")
         if cur_turbo == "0":
@@ -281,13 +278,12 @@ def set_performance():
         footer(79)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > "  + turbo_loc, shell=True)
+        s.run("echo 1 > " + turbo_loc, shell=True)
         footer(79)
 
 
 # make turbo suggestions in performance
 def mon_performance():
-
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
@@ -320,7 +316,7 @@ def set_autofreq():
     elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
         set_powersave()
-    else: 
+    else:
         print("Couldn't determine the battery status. Please report this issue.")
 
 
@@ -346,7 +342,6 @@ def mon_autofreq():
 
 # get system information
 def sysinfo():
-    
     # added as a temp fix for issue: https://github.com/giampaolo/psutil/issues/1650
     import warnings
     warnings.filterwarnings("ignore")
@@ -427,16 +422,14 @@ def sysinfo():
         if "coretemp" in core_temp:
             temp = core_temp['coretemp'][core_num].current
         else:
-            # FIXME: if coretemp doesnt exist, show acpiz
-            print(core_temp)
-            temp = core_temp['acpitz'].current
+            temp = "UNAVAILABLE"
 
         print(f"CPU{core_num} temp: {temp:.0f}°C")
         core_num += 1
 
     # print current fan speed | temporarily commented
-    #current_fans = p.sensors_fans()['thinkpad'][0].current
-    #print("\nCPU fan speed:", current_fans, "RPM")
+    # current_fans = p.sensors_fans()['thinkpad'][0].current
+    # print("\nCPU fan speed:", current_fans, "RPM")
 
 
 # create file func
@@ -453,7 +446,7 @@ def delete_file(file):
 # read log func
 def read_log():
     if os.getenv("PKG_MARKER") == "SNAP":
-         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file_snap])
+        s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file_snap])
     elif os.path.isfile(auto_cpufreq_log_file):
         s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
     else:
