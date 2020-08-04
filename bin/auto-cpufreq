@@ -6,8 +6,12 @@
 
 # core import
 import sys
+from subprocess import call
+
 sys.path.append('../')
-from source.core import * 
+from source.core import *
+import click
+
 
 # ToD: replace every s.call with s.run
 
@@ -18,7 +22,6 @@ from source.core import *
 @click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
 @click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
 @click.option("--daemon", is_flag=True, hidden=True)
-
 def main(monitor, live, daemon, install, log):
     # print --help by default if no argument is provided when auto-cpufreq is run
     if len(sys.argv) == 1:
@@ -39,7 +42,7 @@ def main(monitor, live, daemon, install, log):
                     sysinfo()
                     set_autofreq()
                     countdown(5)
-                    subprocess.call("clear")
+                    call("clear")
             elif os.getenv("PKG_MARKER") != "SNAP":
                 while True:
                     root_check()
@@ -48,7 +51,7 @@ def main(monitor, live, daemon, install, log):
                     sysinfo()
                     set_autofreq()
                     countdown(5)
-                    subprocess.call("clear")
+                    call("clear")
             else:
                 print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
                 print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
@@ -63,7 +66,7 @@ def main(monitor, live, daemon, install, log):
                 sysinfo()
                 mon_autofreq()
                 countdown(5)
-                subprocess.call("clear")
+                call("clear")
         elif live:
             while True:
                 root_check()
@@ -73,7 +76,7 @@ def main(monitor, live, daemon, install, log):
                 sysinfo()
                 set_autofreq()
                 countdown(5)
-                subprocess.call("clear")
+                call("clear")
         elif log:
                 # ToDo: fail if log is missing or empty (on)
                 read_log()
