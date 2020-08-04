@@ -354,11 +354,11 @@ def mon_autofreq():
     # determine which governor should be used
     if bat_state == pw.POWER_TYPE_AC:
         print("Battery is: charging")
-        print("Suggesting use of \"performance\" governor\nCurrently using:", get_current_gov())
+        print(f"Suggesting use of \"{get_avail_performance()}\" governor\nCurrently using:", get_current_gov())
         mon_performance()
     elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
-        print("Suggesting use of \"powersave\" governor\nCurrently using:", get_current_gov())
+        print(f"Suggesting use of \"{get_avail_powersave()}\" governor\nCurrently using:", get_current_gov())
         mon_powersave()
     else:
         print("Couldn't determine the battery status. Please report this issue.")
