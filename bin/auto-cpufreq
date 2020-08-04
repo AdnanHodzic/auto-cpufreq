@@ -78,22 +78,22 @@ def main(monitor, live, daemon, install, log):
                 countdown(5)
                 call("clear")
         elif log:
-                # ToDo: fail if log is missing or empty (on)
-                read_log()
+            # ToDo: fail if log is missing or empty (on)
+            read_log()
         elif install:
-                if os.getenv('PKG_MARKER') == "SNAP":
-                    root_check()
-                    running_daemon()
-                    gov_check()
-                    s.run("snapctl set daemon=enabled", shell=True)
-                    s.run("snapctl start --enable auto-cpufreq", shell=True)
-                    deploy_complete_msg()
-                else:
-                    root_check()
-                    running_daemon()
-                    gov_check()
-                    deploy()
-                    deploy_complete_msg()
+            if os.getenv('PKG_MARKER') == "SNAP":
+                root_check()
+                running_daemon()
+                gov_check()
+                s.run("snapctl set daemon=enabled", shell=True)
+                s.run("snapctl start --enable auto-cpufreq", shell=True)
+                deploy_complete_msg()
+            else:
+                root_check()
+                running_daemon()
+                gov_check()
+                deploy_daemon()
+                deploy_complete_msg()
         elif remove:
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
@@ -106,6 +106,6 @@ def main(monitor, live, daemon, install, log):
                 remove()
                 remove_complete_msg()
 
+
 if __name__ == '__main__':
-    # while True:
-        main()
+    main()
