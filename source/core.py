@@ -183,11 +183,11 @@ def remove():
     cpufreqctl_restore()
 
 
-# check for necessary scaling governors
 def gov_check():
-    if get_current_gov() not in ALL_GOVERNORS:
-        print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
-        sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
+    for gov in get_avail_gov():
+        if gov not in ALL_GOVERNORS:
+            print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
+            sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
 
 
 # root check func
