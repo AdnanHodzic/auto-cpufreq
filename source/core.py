@@ -57,7 +57,7 @@ def get_avail_performance():
 
 
 def get_current_gov():
-    return s.getoutput("cpufreqctl --governor").strip().split()[0]
+    return s.getoutput("cpufreqctl --governor").strip().split(" ")[0]
 
 
 def get_bat_state():
@@ -83,7 +83,7 @@ def cpufreqctl():
     else:
         # deploy cpufreqctl script (if missing)
         if os.path.isfile("/usr/bin/cpufreqctl"):
-            shutil.copy("/usr/bin/cpufreqct", "/usr/bin/cpufreqctl.auto-cpufreq.bak")
+            shutil.copy("/usr/bin/cpufreqctl", "/usr/bin/cpufreqctl.auto-cpufreq.bak")
             shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl")
         else:
             shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl")
@@ -185,13 +185,9 @@ def remove():
 
 # check for necessary scaling governors
 def gov_check():
-    for gov in get_current_gov():
-        for keyword in ALL_GOVERNORS:
-            if keyword in gov:
-                pass
-            else:
-                print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
-                sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
+    if get_current_gov() not in ALL_GOVERNORS:
+        print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
+        sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
 
 
 # root check func
