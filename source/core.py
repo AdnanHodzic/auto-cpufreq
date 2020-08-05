@@ -216,8 +216,8 @@ def countdown(s):
 
 # set powersave and enable turbo
 def set_powersave():
-    print("Setting to use: \"powersave\" governor")
-    s.run("cpufreqctl --governor --set=powersave", shell=True)
+    print(f"Setting to use: \"{get_avail_powersave()}\" governor")
+    s.run(f"cpufreqctl --governor --set={get_avail_powersave()}", shell=True)
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
         s.run("cpufreqctl --epp --set=balance_power", shell=True)
         print("Setting to use: \"balance_power\" EPP")
@@ -280,9 +280,9 @@ def mon_powersave():
 
 # set performance and enable turbo
 def set_performance():
-    print("Setting to use \"performance\" governor")
-    s.run("cpufreqctl --governor --set=performance", shell=True)
-    if (os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference")):
+    print(f"Setting to use: \"{get_avail_performance()}\" governor")
+    s.run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
+    if os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"):
         s.run("cpufreqctl --epp --set=balance_performance", shell=True)
         print("Setting to use: \"balance_performance\" EPP")
 
