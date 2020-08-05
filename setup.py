@@ -22,7 +22,7 @@ setup(
     install_requires=read('requirements.txt'),
     include_package_data=True,
     zip_safe=True,
-    licence='GPLv3',
+    license='GPLv3',
     keywords='linux cpu speed power frequency turbo optimzier auto cpufreq',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
