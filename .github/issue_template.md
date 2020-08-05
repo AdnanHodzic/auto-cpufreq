@@ -7,7 +7,6 @@ Paste here error output
 ### System information:
 ```text
 Paste here output of inxi -F  
-
 ```
 ---
 
