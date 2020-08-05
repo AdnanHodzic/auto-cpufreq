@@ -42,13 +42,10 @@ def turbo(value: bool = None):
         return None
 
     if value is not None:
-        if inverse:
-            value = not value
+        value = value and inverse
         f.write_text(str(int(value)) + "\n")
 
-    value = bool(int(f.read_text().strip()))
-    if inverse:
-        value = not value
+    value = bool(int(f.read_text().strip())) and inverse
 
     return value
 
