@@ -15,6 +15,10 @@ parts:
   auto-cpufreq:
     plugin: python
     python-version: python3
+    build-packages:
+       - gcc
+       - python3-dev
+       - python3-wheel
     source: .
 
   deploy-cpufrectl:
@@ -34,7 +38,7 @@ apps:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
-      
+
   service:
     command: bin/auto-cpufreq --daemon 2>&1 | tee -a $SNAP_DATA/auto-cpufreq.log
     plugs:
