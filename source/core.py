@@ -7,8 +7,6 @@ import platform as pl
 import subprocess as s
 import sys
 import time
-
-import power as pw
 import psutil as p
 
 # ToDo:
@@ -29,15 +27,22 @@ scripts_dir = "/usr/local/share/auto-cpufreq/scripts/"
 get_cur_gov = s.getoutput("cpufreqctl --governor")
 gov_state = get_cur_gov.split()[0]
 
-# get battery state
-bat_state = pw.PowerManagement().get_providing_power_source_type()
-
 # auto-cpufreq log file
 auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
 auto_cpufreq_log_file_snap = "/var/snap/auto-cpufreq/current/auto-cpufreq.log"
 
 # daemon check
 dcheck = s.getoutput("snapctl get daemon")
+
+
+def charging():
+    bat_info = p.sensors_battery()
+    if bat_info is None:
+        state = True
+    else:
+        state = bat_info["plugged"]
+
+    return state
 
 
 # deploy cpufreqctl script
@@ -306,39 +311,28 @@ def mon_performance():
 def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
-    # get battery state
-    bat_state = pw.PowerManagement().get_providing_power_source_type()
-
     # determine which governor should be used
-    if bat_state == pw.POWER_TYPE_AC:
+    if charging():
         print("Battery is: charging")
         set_performance()
-    elif bat_state == pw.POWER_TYPE_BATTERY:
+    elif charging():
         print("Battery is: discharging")
         set_powersave()
-    else:
-        print("Couldn't determine the battery status. Please report this issue.")
 
 
 # make cpufreq suggestions
 def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
-    # get battery state
-    bat_state = pw.PowerManagement().get_providing_power_source_type()
-
     # determine which governor should be used
-    if bat_state == pw.POWER_TYPE_AC:
+    if charging():
         print("Battery is: charging")
         print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
-        mon_performance()
-    elif bat_state == pw.POWER_TYPE_BATTERY:
+    elif charging():
         print("Battery is: discharging")
         print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
-        mon_powersave()
-    else:
-        print("Couldn't determine the battery status. Please report this issue.")
 
+    mon_powersave()
 
 # get system information
 def sysinfo():
