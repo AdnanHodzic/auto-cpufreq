@@ -20,7 +20,7 @@ import psutil as p
 SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 
 # from the highest performance to the lowest
-ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "powersave")
+ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "userspace", "powersave")
 CPUS = os.cpu_count()
 
 
@@ -29,6 +29,9 @@ def turbo(value: str = None):
     Get and set turbo mode
     """
     f = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
+    if not f.exists():
+        return None
+
     if value is not None:
         f.write_text(value.strip() + "\n")
 
@@ -145,10 +148,10 @@ def deploy_daemon():
     auto_cpufreq_log_file.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
-    shutil.copy(SCRIPTS_DIR / "/auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    shutil.copytree(SCRIPTS_DIR / "/auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
 
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
 
