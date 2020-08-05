@@ -349,17 +349,20 @@ def mon_performance():
     footer()
 
 
-# set cpufreq based if device is charging
 def set_autofreq():
+    """
+    set cpufreq governor based if device is charging
+    """
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
     if charging():
         print("Battery is: charging")
+        set_performance()
     else:
         print("Battery is: discharging")
+        set_powersave()
 
-    set_powersave()
 
 def mon_autofreq():
     """
