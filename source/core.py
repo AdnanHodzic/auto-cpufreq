@@ -10,7 +10,6 @@ import sys
 import time
 from pathlib import Path
 
-import power as pw
 import psutil as p
 
 # ToDo:
@@ -54,6 +53,19 @@ def turbo(value: bool = None):
     return value
 
 
+def charging():
+    """
+    get charge state: is battery charging or discharging
+    """
+    bat_info = p.sensors_battery()
+    if bat_info is None:
+        state = True
+    else:
+        state = bat_info.power_plugged
+
+    return state
+
+
 def get_avail_gov():
     f = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
     return f.read_text().strip().split(" ")
@@ -77,10 +89,6 @@ def get_avail_performance():
 
 def get_current_gov():
     return s.getoutput("cpufreqctl --governor").strip().split(" ")[0]
-
-
-def get_bat_state():
-    return pw.PowerManagement().get_providing_power_source_type()
 
 
 # auto-cpufreq log file
@@ -341,46 +349,43 @@ def mon_performance():
     footer()
 
 
-# set cpufreq based if device is charging
 def set_autofreq():
+    """
+    set cpufreq governor based if device is charging
+    """
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
-    # get battery state
-    bat_state = pw.PowerManagement().get_providing_power_source_type()
-
     # determine which governor should be used
-    if bat_state == pw.POWER_TYPE_AC:
+    if charging():
         print("Battery is: charging")
         set_performance()
-    elif bat_state == pw.POWER_TYPE_BATTERY:
+    else:
         print("Battery is: discharging")
         set_powersave()
-    else:
-        print("Couldn't determine the battery status. Please report this issue.")
 
 
-# make cpufreq suggestions
 def mon_autofreq():
+    """
+    make cpufreq suggestions
+    :return:
+    """
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
-    # get battery state
-    bat_state = pw.PowerManagement().get_providing_power_source_type()
-
     # determine which governor should be used
-    if bat_state == pw.POWER_TYPE_AC:
+    if charging():
         print("Battery is: charging")
         print(f"Suggesting use of \"{get_avail_performance()}\" governor\nCurrently using:", get_current_gov())
         mon_performance()
-    elif bat_state == pw.POWER_TYPE_BATTERY:
+    else:
         print("Battery is: discharging")
         print(f"Suggesting use of \"{get_avail_powersave()}\" governor\nCurrently using:", get_current_gov())
         mon_powersave()
-    else:
-        print("Couldn't determine the battery status. Please report this issue.")
 
 
-# get system information
 def sysinfo():
+    """
+    get system information
+    """
     # added as a temp fix for issue: https://github.com/giampaolo/psutil/issues/1650
     import warnings
     warnings.filterwarnings("ignore")

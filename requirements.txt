@@ -1,4 +1,3 @@
 psutil
 click
 distro
-power
