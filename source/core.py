@@ -331,7 +331,7 @@ def mon_performance():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if turbo() == "0":
+    if turbo():
         print("Currently turbo boost is: on")
         print("Suggesting to set turbo boost: on")
     else:
