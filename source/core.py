@@ -306,13 +306,13 @@ def set_performance():
 
     if load1m >= CPUS / 5:
         print("High load, setting turbo boost: on")
-        turbo("0")
+        turbo(True)
     elif cpuload > 20:
         print("High CPU load, setting turbo boost: on")
-        turbo("0")
+        turbo(True)
     else:
         print("Load optimal, setting turbo boost: off")
-        turbo("1")
+        turbo(False)
 
     footer()
 
