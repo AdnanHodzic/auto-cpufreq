@@ -33,7 +33,7 @@ def main(monitor, live, daemon, install, log, debug):
         s.call(["auto-cpufreq", "--help"])
         footer()
     else:
-        # Important: order does mutter
+        # Important: order does matter
         if daemon:
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 while True:
