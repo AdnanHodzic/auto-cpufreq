@@ -22,8 +22,8 @@ import click
 @click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
 @click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(monitor, live, daemon, install, log):
-    # print --help by default if no argument is provided when auto-cpufreq is run
+@click.option("--debug", is_flag=True, help="Show debug information in order help users to report bugs")
+def main(monitor, live, daemon, install, log, debug):
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -31,8 +31,9 @@ def main(monitor, live, daemon, install, log):
         print("\n-----\n")
 
         s.call(["auto-cpufreq", "--help"])
-        footer(79)
+        footer()
     else:
+        # Important: order does mutter
         if daemon:
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 while True:
@@ -55,7 +56,7 @@ def main(monitor, live, daemon, install, log):
             else:
                 print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
                 print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
-                footer(79)
+                footer()
                 exit(1)
         elif monitor:
             while True:
@@ -80,6 +81,10 @@ def main(monitor, live, daemon, install, log):
         elif log:
             # ToDo: fail if log is missing or empty (on)
             read_log()
+        elif debug:
+            footer()
+            print(get_sys_info())
+            footer()
         elif install:
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
@@ -99,7 +104,7 @@ def main(monitor, live, daemon, install, log):
                 root_check()
                 s.run("snapctl set daemon=disabled", shell=True)
                 s.run("snapctl stop --disable auto-cpufreq", shell=True)
-                delete_file(auto_cpufreq_log_file)
+                auto_cpufreq_log_file.unlink(missing_ok=True)
                 remove_complete_msg()
             else:
                 root_check()

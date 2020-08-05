@@ -4,11 +4,13 @@
 
 import os
 import platform as pl
+import re
 import shutil
 import subprocess as s
 import sys
 import time
 from pathlib import Path
+from subprocess import getoutput
 
 import psutil as p
 
@@ -51,6 +53,24 @@ def turbo(value: bool = None):
         value = not value
 
     return value
+
+
+def get_sys_info():
+    """
+    Return sys info of inxi command with injected governors information
+    """
+    govs = " ".join(get_avail_gov())
+    govs = f"Governors: {govs}"
+    if shutil.which("inxi") is not None:
+        sys_info = getoutput("inxi -Fz")
+        p = re.compile(pattern=r".*(CPU:\s+).+", flags=re.MULTILINE)
+        indent = " " * len(p.search(sys_info).group(1))
+        sys_info = p.sub(f"CPU:{indent[4:]}{govs}", sys_info)
+    else:
+        sys_info = ("Warning: inxi is not installed.\n"
+                    f"{govs}")
+
+    return sys_info
 
 
 def charging():
