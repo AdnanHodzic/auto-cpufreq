@@ -4,9 +4,11 @@
 
 import os
 import platform as pl
+import shutil
 import subprocess as s
 import sys
 import time
+from pathlib import Path
 
 import power as pw
 import psutil as p
@@ -15,47 +17,101 @@ import psutil as p
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
-cpus = os.cpu_count()
+SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 
-# get turbo boost state
-turbo_loc = "/sys/devices/system/cpu/intel_pstate/no_turbo"
-cur_turbo = s.getoutput("cat " + turbo_loc)
+# from the highest performance to the lowest
+ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "userspace", "powersave")
+CPUS = os.cpu_count()
 
-# govs/script loc
-avail_gov_loc = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
-scripts_dir = "/usr/local/share/auto-cpufreq/scripts/"
 
-# get current scaling governor
-get_cur_gov = s.getoutput("cpufreqctl --governor")
-gov_state = get_cur_gov.split()[0]
+def turbo(value: bool = None):
+    """
+    Get and set turbo mode
+    """
+    p_state = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
+    cpufreq = Path("/sys/devices/system/cpu/cpufreq/boost")
 
-# get battery state
-bat_state = pw.PowerManagement().get_providing_power_source_type()
+    if p_state.exists():
+        inverse = True
+        f = p_state
+    elif cpufreq.exists():
+        f = cpufreq
+        inverse = False
+    else:
+        print("Error: cpu boost is not available")
+        return None
+
+    if value is not None:
+        if inverse:
+            value = not value
+
+        f.write_text(str(int(value)) + "\n")
+
+    value = bool(int(f.read_text().strip()))
+    if inverse:
+        value = not value
+
+    return value
+
+
+def get_avail_gov():
+    f = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
+    return f.read_text().strip().split(" ")
+
+
+def get_avail_powersave():
+    """
+    Iterate over ALL_GOVERNORS in reverse order: from powersave to performance
+    :return:
+    """
+    for g in ALL_GOVERNORS[::-1]:
+        if g in get_avail_gov():
+            return g
+
+
+def get_avail_performance():
+    for g in ALL_GOVERNORS:
+        if g in get_avail_gov():
+            return g
+
+
+def get_current_gov():
+    return s.getoutput("cpufreqctl --governor").strip().split(" ")[0]
+
+
+def get_bat_state():
+    return pw.PowerManagement().get_providing_power_source_type()
+
 
 # auto-cpufreq log file
-auto_cpufreq_log_file = "/var/log/auto-cpufreq.log"
-auto_cpufreq_log_file_snap = "/var/snap/auto-cpufreq/current/auto-cpufreq.log"
+auto_cpufreq_log_file = Path("/var/log/auto-cpufreq.log")
+auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
 
 # daemon check
 dcheck = s.getoutput("snapctl get daemon")
 
 
-# deploy cpufreqctl script
 def cpufreqctl():
+    """
+    deploy cpufreqctl script
+    """
+
     # detect if running on a SNAP
     if os.getenv('PKG_MARKER') == "SNAP":
         pass
     else:
         # deploy cpufreqctl script (if missing)
         if os.path.isfile("/usr/bin/cpufreqctl"):
-            os.system("cp /usr/bin/cpufreqctl /usr/bin/cpufreqctl.auto-cpufreq.bak")
-            os.system("cp " + scripts_dir + "cpufreqctl.sh /usr/bin/cpufreqctl")
+            shutil.copy("/usr/bin/cpufreqctl", "/usr/bin/cpufreqctl.auto-cpufreq.bak")
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl")
         else:
-            os.system("cp " + scripts_dir + "cpufreqctl.sh /usr/bin/cpufreqctl")
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl")
 
 
-# restore original cpufreqctl script
 def cpufreqctl_restore():
+    """
+    restore original cpufreqctl script
+    """
     # detect if running on a SNAP
     if os.getenv('PKG_MARKER') == "SNAP":
         pass
@@ -69,8 +125,7 @@ def cpufreqctl_restore():
         # in def cpufreqctl
 
 
-# print footer func
-def footer(l):
+def footer(l=79):
     print("\n" + "-" * l + "\n")
 
 
@@ -78,28 +133,27 @@ def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
     print("To view live log, run:\nauto-cpufreq --log")
     print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
-    footer(79)
+    footer()
 
 
 def remove_complete_msg():
     print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
     print("auto-cpufreq successfully removed.")
-    footer(79)
+    footer()
 
 
-# deploy auto-cpufreq daemon
-def deploy():
+def deploy_daemon():
     print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
 
     # deploy cpufreqctl script func call
     cpufreqctl()
 
     print("* Turn off bluetooth on boot")
-    btconf = "/etc/bluetooth/main.conf"
+    btconf = Path("/etc/bluetooth/main.conf")
     try:
         orig_set = "AutoEnable=true"
         change_set = "AutoEnable=false"
-        with open(btconf, "r+") as f:
+        with btconf.open(mode="r+") as f:
             content = f.read()
             f.seek(0)
             f.truncate()
@@ -107,16 +161,14 @@ def deploy():
     except:
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
-    # create log file
-    create_file(auto_cpufreq_log_file)
+    auto_cpufreq_log_file.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
-    os.system("cp " + scripts_dir + "/auto-cpufreq-install.sh /usr/bin/auto-cpufreq-install")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    os.system("cp " + scripts_dir + "/auto-cpufreq-remove.sh /usr/bin/auto-cpufreq-remove")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
 
-    # run auto-cpufreq daemon deploy script
     s.call("/usr/bin/auto-cpufreq-install", shell=True)
 
 
@@ -144,25 +196,17 @@ def remove():
     os.remove("/usr/bin/auto-cpufreq-remove")
 
     # delete log file
-    delete_file(auto_cpufreq_log_file)
+    auto_cpufreq_log_file.unlink(missing_ok=True)
 
     # restore original cpufrectl script
     cpufreqctl_restore()
 
 
-# check for necessary scaling governors
 def gov_check():
-    avail_gov = avail_gov_loc
-
-    governors = ["performance", "powersave"]
-
-    for line in open(avail_gov):
-        for keyword in governors:
-            if keyword in line:
-                pass
-            else:
-                print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
-                sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
+    for gov in get_avail_gov():
+        if gov not in ALL_GOVERNORS:
+            print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
+            sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
 
 
 # root check func
@@ -170,7 +214,7 @@ def root_check():
     if not os.geteuid() == 0:
         print("\n" + "-" * 33 + " Root check " + "-" * 34 + "\n")
         print("ERROR:\n\nMust be run root for this functionality to work, i.e: \nsudo auto-cpufreq")
-        footer(79)
+        footer()
         exit(1)
 
 
@@ -188,9 +232,9 @@ def countdown(s):
 
 # set powersave and enable turbo
 def set_powersave():
-    print("Setting to use: \"powersave\" governor")
-    s.run("cpufreqctl --governor --set=powersave", shell=True)
-    if os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"):
+    print(f"Setting to use: \"{get_avail_powersave()}\" governor")
+    s.run(f"cpufreqctl --governor --set={get_avail_powersave()}", shell=True)
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
         s.run("cpufreqctl --epp --set=balance_power", shell=True)
         print("Setting to use: \"balance_power\" EPP")
 
@@ -203,18 +247,17 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > cpus / 7:
+    if load1m > CPUS / 7:
         print("High load, setting turbo boost: on")
-        s.run("echo 0 > " + turbo_loc, shell=True)
-        footer(79)
+        turbo(True)
     elif cpuload > 25:
         print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > " + turbo_loc, shell=True)
-        footer(79)
+        turbo(True)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > " + turbo_loc, shell=True)
-        footer(79)
+        turbo(False)
+
+    footer()
 
 
 # make turbo suggestions in powersave
@@ -227,59 +270,55 @@ def mon_powersave():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > cpus / 7:
+    if load1m > CPUS / 7:
         print("High load, suggesting to set turbo boost: on")
-        if cur_turbo == "0":
+        if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
-        footer(79)
+        footer()
 
     elif cpuload > 25:
         print("High CPU load, suggesting to set turbo boost: on")
-        if cur_turbo == "0":
+        if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
-        footer(79)
+        footer()
     else:
         print("Load optimal, suggesting to set turbo boost: off")
-        if cur_turbo == "0":
+        if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
-        footer(79)
+        footer()
 
 
 # set performance and enable turbo
 def set_performance():
-    print("Setting to use \"performance\" governor")
-    s.run("cpufreqctl --governor --set=performance", shell=True)
-    if (os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference")):
+    print(f"Setting to use: \"{get_avail_performance()}\" governor")
+    s.run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
+    if os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"):
         s.run("cpufreqctl --epp --set=balance_performance", shell=True)
         print("Setting to use: \"balance_performance\" EPP")
 
-    # get system/CPU load
     load1m, _, _ = os.getloadavg()
-    # get CPU utilization as a percentage
     cpuload = p.cpu_percent(interval=1)
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    # conditions for setting turbo in performance
-    if load1m >= cpus / 5:
+    if load1m >= CPUS / 5:
         print("High load, setting turbo boost: on")
-        s.run("echo 0 > " + turbo_loc, shell=True)
-        footer(79)
+        turbo(True)
     elif cpuload > 20:
         print("High CPU load, setting turbo boost: on")
-        s.run("echo 0 > " + turbo_loc, shell=True)
-        footer(79)
+        turbo(True)
     else:
         print("Load optimal, setting turbo boost: off")
-        s.run("echo 1 > " + turbo_loc, shell=True)
-        footer(79)
+        turbo(False)
+
+    footer()
 
 
 # make turbo suggestions in performance
@@ -292,14 +331,14 @@ def mon_performance():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if cur_turbo == "0":
+    if turbo():
         print("Currently turbo boost is: on")
         print("Suggesting to set turbo boost: on")
     else:
         print("Currently turbo boost is: off")
         print("Suggesting to set turbo boost: on")
 
-    footer(79)
+    footer()
 
 
 # set cpufreq based if device is charging
@@ -330,11 +369,11 @@ def mon_autofreq():
     # determine which governor should be used
     if bat_state == pw.POWER_TYPE_AC:
         print("Battery is: charging")
-        print("Suggesting use of \"performance\" governor\nCurrently using:", gov_state)
+        print(f"Suggesting use of \"{get_avail_performance()}\" governor\nCurrently using:", get_current_gov())
         mon_performance()
     elif bat_state == pw.POWER_TYPE_BATTERY:
         print("Battery is: discharging")
-        print("Suggesting use of \"powersave\" governor\nCurrently using:", gov_state)
+        print(f"Suggesting use of \"{get_avail_powersave()}\" governor\nCurrently using:", get_current_gov())
         mon_powersave()
     else:
         print("Couldn't determine the battery status. Please report this issue.")
@@ -363,7 +402,7 @@ def sysinfo():
                 version = line[8:line.find('$')].strip("\"")
                 continue
 
-            dist = distro + " " + version
+            dist = f"{distro} {version}"
         searchfile.close()
     else:
         # get distro information
@@ -377,10 +416,7 @@ def sysinfo():
     driver = s.getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
 
-    # get cpu architecture
     cpu_arch = pl.machine()
-
-    # get number of cores/logical CPU's
     cpu_count = p.cpu_count()
 
     print("Architecture:", cpu_arch)
@@ -400,10 +436,8 @@ def sysinfo():
     print(f"CPU max frequency: {p.cpu_freq().max:.0f}MHz")
     print(f"CPU min frequency: {p.cpu_freq().min:.0f}MHz")
 
-    # get current cpu frequency per core
     core_usage = p.cpu_freq(percpu=True)
 
-    # print current cpu frequency per core
     print("CPU frequency for each core:\n")
     core_num = 0
     while core_num < cpu_count:
@@ -415,7 +449,6 @@ def sysinfo():
     # get hardware temperatures
     core_temp = p.sensors_temperatures()
 
-    # print temperature for each physical core
     print("\nTemperature for each physical core:\n")
     core_num = 0
     while core_num < core_temp_num:
@@ -432,27 +465,16 @@ def sysinfo():
     # print("\nCPU fan speed:", current_fans, "RPM")
 
 
-# create file func
-def create_file(file):
-    open(file, 'a').close()
-
-
-# delete file func
-def delete_file(file):
-    if os.path.exists(file):
-        os.remove(file)
-
-
 # read log func
 def read_log():
     if os.getenv("PKG_MARKER") == "SNAP":
-        s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file_snap])
+        s.call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file_snap)])
     elif os.path.isfile(auto_cpufreq_log_file):
-        s.call(["tail", "-n 50", "-f", auto_cpufreq_log_file])
+        s.call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file)])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
         print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
-    footer(79)
+    footer()
 
 
 # check if program (argument) is running
@@ -462,17 +484,14 @@ def is_running(program, argument):
         try:
             # requests the process information corresponding to each process id
             proc = p.Process(pid)
-            # check if value of program-variable that was used to call the function matches the name field of the plutil.Process(pid) output 
+            # check if value of program-variable that was used to call the function
+            # matches the name field of the plutil.Process(pid) output
             if program in proc.name():
                 # check output of p.name(), output name of program
                 # p.cmdline() - echo the exact command line via which p was called.
                 for arg in proc.cmdline():
                     if argument in str(arg):
                         return True
-                    else:
-                        pass
-            else:
-                pass
         except:
             continue
 
