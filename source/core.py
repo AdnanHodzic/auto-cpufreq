@@ -24,18 +24,33 @@ ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "usersp
 CPUS = os.cpu_count()
 
 
-def turbo(value: str = None):
+def turbo(value: bool = None):
     """
     Get and set turbo mode
     """
-    f = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
-    if not f.exists():
+    p_state = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
+    cpufreq = Path("/sys/devices/system/cpu/cpufreq/boost")
+
+    if p_state.exists():
+        inverse = True
+        f = p_state
+    elif cpufreq.exists():
+        f = cpufreq
+        inverse = False
+    else:
+        print("Error: cpu boost is not available")
         return None
 
     if value is not None:
-        f.write_text(value.strip() + "\n")
+        if inverse:
+            value = not value
+        f.write_text(str(int(value)) + "\n")
 
-    return f.read_text().strip()
+    value = bool(int(f.read_text().strip()))
+    if inverse:
+        value = not value
+
+    return value
 
 
 def get_avail_gov():
@@ -233,13 +248,13 @@ def set_powersave():
     # conditions for setting turbo in powersave
     if load1m > CPUS / 7:
         print("High load, setting turbo boost: on")
-        turbo("0")
+        turbo(True)
     elif cpuload > 25:
         print("High CPU load, setting turbo boost: on")
-        turbo("0")
+        turbo(True)
     else:
         print("Load optimal, setting turbo boost: off")
-        turbo("1")
+        turbo(False)
 
     footer()
 
@@ -256,7 +271,7 @@ def mon_powersave():
 
     if load1m > CPUS / 7:
         print("High load, suggesting to set turbo boost: on")
-        if turbo() == "0":
+        if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
@@ -264,14 +279,14 @@ def mon_powersave():
 
     elif cpuload > 25:
         print("High CPU load, suggesting to set turbo boost: on")
-        if turbo() == "0":
+        if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
         footer()
     else:
         print("Load optimal, suggesting to set turbo boost: off")
-        if turbo() == "0":
+        if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
