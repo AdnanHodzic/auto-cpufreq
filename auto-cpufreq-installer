@@ -3,8 +3,8 @@
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
 
-SCRIP_PATH=$(readlink -f "$0")
-SCRIPT_DIR=$(dirname "${SCRIP_PATH}")
+SCRIPT_PATH=$(readlink -f "$0")
+SCRIPT_DIR=$(dirname "${SCRIPT_PATH}")
 cd "${SCRIPT_DIR}"
 
 distro="$(lsb_release -is)"
