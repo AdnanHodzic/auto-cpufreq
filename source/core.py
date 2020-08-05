@@ -40,7 +40,7 @@ def charging():
     if bat_info is None:
         state = True
     else:
-        state = bat_info["plugged"]
+        state = bat_info.power_plugged
 
     return state
 
