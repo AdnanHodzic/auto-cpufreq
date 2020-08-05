@@ -12,9 +12,9 @@ Paste here output of inxi -F
 
 How to install inxi:
 ```shell script
-sudo apt install inxi       [On Debian/Ubuntu/Linux Mint]
-sudo yum install inxi       [On CentOs/RHEL/Fedora]
-sudo dnf install inxi       [On Fedora 22+]
-sudo pacman -S inxi         [On Arch]
+sudo apt install inxi       # [On Debian/Ubuntu/Linux Mint]
+sudo yum install inxi       # [On CentOs/RHEL/Fedora]
+sudo dnf install inxi       # [On Fedora 22+]
+sudo pacman -S inxi         # [On Arch]
 ```
 ---
