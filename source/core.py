@@ -79,12 +79,12 @@ def get_sys_info():
         # insert governors after "CPU:"
         p = re.compile(pattern=r"(.*)(CPU:)(\s+)(.+)", flags=f)
         indent = " " * len(p.search(sys_info).group(3))
-        sys_info = p.sub(fr"\1\2{indent}Governors: {govs}\4", sys_info)
+        sys_info = p.sub(fr"\1\2{indent}Governors: {govs} \4", sys_info)
 
         # insert psutil sensors after Sensors:
         p = re.compile(pattern=r"(.*)(Sensors:)(\s+)(.+)", flags=f)
         indent = " " * len(p.search(sys_info).group(3))
-        sys_info = p.sub(fr"\1\2{indent}\n{sensors}\4", sys_info)
+        sys_info = p.sub(fr"\1\2{indent}\n{sensors} \4", sys_info)
     else:
         sys_info = ("Warning: inxi is not installed.\n"
                     f"Governors: {govs}\n"
