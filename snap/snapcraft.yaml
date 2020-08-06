@@ -21,6 +21,7 @@ parts:
        - python3-wheel
     stage-packages:
       - inxi
+      - lm-sensors
     source: .
 
   deploy-cpufrectl:
