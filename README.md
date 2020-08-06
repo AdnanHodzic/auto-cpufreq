@@ -19,6 +19,10 @@ With that said, I needed a simple tool which would automatically make "cpufreq" 
 
 Please note: this tool doesn't conflict and [works great in tandem with TLP](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd4y36k/).
 
+#### Supported architectures and devices
+
+Currently supported devices must have an Intel or AMD CPU's. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible. 
+
 ## Features
 
 * Monitoring 
@@ -43,7 +47,7 @@ auto-cpufreq is available on [snap store](https://snapcraft.io/auto-cpufreq), or
 sudo snap install auto-cpufreq
 ```
 
-**Please note:** once [snapd](https://snapcraft.io/docs/installing-snapd) is installed, your `snap version` version must be >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127). Currently, this version is only available on Ubuntu 20.04.
+**Please note:** once [snapd](https://snapcraft.io/docs/installing-snapd) is installed, your `snap version` version must be >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
 
 ### auto-cpufreq-installer
 
@@ -65,12 +69,6 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 auto-cpufreq can be run by simply running the `auto-cpufreq` and following on screen instructions, i.e:
 
 `sudo auto-cpufreq`
-
-#### Running auto-cpufreq on AMD CPU and/or desktop/servers's
-
-Please note when this tool was made it was solely targeting Intel CPU's running on laptops. Support for both AMD CPU is [currently being worked on](https://github.com/AdnanHodzic/auto-cpufreq/issues/17). 
-
-While there are plans to [extend support for desktop/servers](https://www.reddit.com/r/linux/comments/ejxx9f/github_autocpufreq_automatic_cpu_speed_power/fd5nodm/) in near future. 
 
 ## auto-cpufreq modes and options
 
