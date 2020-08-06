@@ -244,7 +244,8 @@ def remove():
     os.remove("/usr/bin/auto-cpufreq-remove")
 
     # delete log file
-    auto_cpufreq_log_file.unlink(missing_ok=True)
+    if auto_cpufreq_log_file.exists():
+        auto_cpufreq_log_file.unlink(missing_ok=True)
 
     # restore original cpufrectl script
     cpufreqctl_restore()
