@@ -479,8 +479,13 @@ def sysinfo():
     while core_num < core_temp_num:
         if "coretemp" in core_temp:
             temp = core_temp['coretemp'][core_num].current
-        else:
+        elif "k10temp" in core_temp:
+            # https://www.kernel.org/doc/Documentation/hwmon/k10temp
+            temp = core_temp['k10temp'].current
+        elif "acpitz" in core_temp:
             temp = core_temp['acpitz'][0].current
+        else:
+            temp = float("nan")
 
         print(f"CPU{core_num} temp: {temp:.0f}°C")
         core_num += 1
