@@ -443,7 +443,7 @@ def sysinfo():
 
     core_usage = p.cpu_freq(percpu=True)
 
-    print("CPU frequency for each core:\n")
+    print("\nCPU frequency for each core:\n")
     core_num = 0
     while core_num < cpu_count:
         print(f"CPU{core_num}: {core_usage[core_num].current:.0f} MHz")
