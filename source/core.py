@@ -60,15 +60,20 @@ def get_sys_info():
     Return sys info of inxi command with injected governors information
     """
     govs = " ".join(get_avail_gov())
-    govs = f"Governors: {govs}"
     if shutil.which("inxi") is not None:
         sys_info = getoutput("inxi -Fzc0")
-        p = re.compile(pattern=r".*(CPU:\s+).+", flags=re.MULTILINE)
-        indent = " " * len(p.search(sys_info).group(1))
-        sys_info = p.sub(f"CPU:{indent[4:]}{govs}", sys_info)
+        f = re.MULTILINE | re.DOTALL
+
+        # remove errors at the beginning that could occur in the snap container
+        sys_info = re.fullmatch(r"(.*)(System:.*)", sys_info, flags=f).group(2)
+
+        # insert governors after "CPU:"
+        p = re.compile(pattern=r"(.*)(CPU:)(\s+)(.+)", flags=f)
+        indent = " " * len(p.search(sys_info).group(3))
+        sys_info = p.sub(fr"\1\2{indent}Governors: {govs}\4", sys_info)
     else:
         sys_info = ("Warning: inxi is not installed.\n"
-                    f"{govs}")
+                    f"Governors: {govs}\n")
 
     return sys_info
 
