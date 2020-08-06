@@ -8,11 +8,14 @@ import re
 import shutil
 import sys
 import time
+import warnings
 from pathlib import Path
 from pprint import pformat
 from subprocess import getoutput, call, run
 
 import psutil
+
+warnings.filterwarnings("ignore")
 
 # ToDo:
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
@@ -423,10 +426,6 @@ def sysinfo():
     """
     get system information
     """
-    # added as a temp fix for issue: https://github.com/giampaolo/psutil/issues/1650
-    import warnings
-    warnings.filterwarnings("ignore")
-
     print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
 
     import distro
