@@ -423,7 +423,7 @@ def sysinfo():
             with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
                 for line in searchfile:
                     if line.startswith('NAME='):
-                        distro = line[5:line.find('$')].strip("\"")
+                        dist = line[5:line.find('$')].strip("\"")
                         continue
                     elif line.startswith('VERSION='):
                         version = line[8:line.find('$')].strip("\"")
@@ -431,7 +431,7 @@ def sysinfo():
         except PermissionError:
             pass
 
-        dist = f"{distro} {version}"
+        dist = f"{dist} {version}"
     else:
         # get distro information
         fdist = distro.linux_distribution()
