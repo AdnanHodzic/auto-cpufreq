@@ -6,14 +6,12 @@
 
 # core import
 import sys
-from subprocess import call
+from subprocess import call, run
 
 sys.path.append('../')
 from source.core import *
 import click
 
-
-# ToD: replace every s.call with s.run
 
 # cli
 @click.command()
@@ -30,7 +28,7 @@ def main(monitor, live, daemon, install, log, debug):
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
-        s.call(["auto-cpufreq", "--help"])
+        run(["auto-cpufreq", "--help"])
         footer()
     else:
         # Important: order does matter
@@ -43,7 +41,7 @@ def main(monitor, live, daemon, install, log, debug):
                     sysinfo()
                     set_autofreq()
                     countdown(5)
-                    call("clear")
+                    run("clear")
             elif os.getenv("PKG_MARKER") != "SNAP":
                 while True:
                     root_check()
@@ -52,7 +50,7 @@ def main(monitor, live, daemon, install, log, debug):
                     sysinfo()
                     set_autofreq()
                     countdown(5)
-                    call("clear")
+                    run("clear")
             else:
                 print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
                 print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
@@ -67,7 +65,7 @@ def main(monitor, live, daemon, install, log, debug):
                 sysinfo()
                 mon_autofreq()
                 countdown(5)
-                call("clear")
+                run("clear")
         elif live:
             while True:
                 root_check()
@@ -77,7 +75,7 @@ def main(monitor, live, daemon, install, log, debug):
                 sysinfo()
                 set_autofreq()
                 countdown(5)
-                call("clear")
+                run("clear")
         elif log:
             # ToDo: fail if log is missing or empty (on)
             read_log()
@@ -90,8 +88,8 @@ def main(monitor, live, daemon, install, log, debug):
                 root_check()
                 running_daemon()
                 gov_check()
-                s.run("snapctl set daemon=enabled", shell=True)
-                s.run("snapctl start --enable auto-cpufreq", shell=True)
+                run("snapctl set daemon=enabled", shell=True)
+                run("snapctl start --enable auto-cpufreq", shell=True)
                 deploy_complete_msg()
             else:
                 root_check()
@@ -102,8 +100,8 @@ def main(monitor, live, daemon, install, log, debug):
         elif remove:
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
-                s.run("snapctl set daemon=disabled", shell=True)
-                s.run("snapctl stop --disable auto-cpufreq", shell=True)
+                run("snapctl set daemon=disabled", shell=True)
+                run("snapctl stop --disable auto-cpufreq", shell=True)
                 auto_cpufreq_log_file.unlink(missing_ok=True)
                 remove_complete_msg()
             else:
