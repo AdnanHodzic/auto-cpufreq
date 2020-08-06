@@ -538,8 +538,8 @@ def is_running(program, argument):
             # check if value of program-variable that was used to call the function
             # matches the name field of the plutil.Process(pid) output
             if program in proc.name():
-                # check output of psutil.name(), output name of program
-                # psutil.cmdline() - echo the exact command line via which p was called.
+                # check output of p.name(), output name of program
+                # p.cmdline() - echo the exact command line via which p was called.
                 for arg in proc.cmdline():
                     if argument in str(arg):
                         return True
