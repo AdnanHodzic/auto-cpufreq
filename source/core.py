@@ -6,13 +6,13 @@ import os
 import platform as pl
 import re
 import shutil
-import subprocess as s
 import sys
 import time
 from pathlib import Path
-from subprocess import getoutput
+from pprint import pformat
+from subprocess import getoutput, call, run
 
-import psutil as p
+import psutil
 
 # ToDo:
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
@@ -60,6 +60,12 @@ def get_sys_info():
     Return sys info of inxi command with injected governors information
     """
     govs = " ".join(get_avail_gov())
+    sensors = {"temperatures:": psutil.sensors_temperatures(),
+               "battery": psutil.sensors_battery(),
+               "fans": psutil.sensors_fans()}
+
+    sensors = pformat(sensors)
+
     if shutil.which("inxi") is not None:
         sys_info = getoutput("inxi -Fzc0")
         f = re.MULTILINE | re.DOTALL
@@ -71,9 +77,15 @@ def get_sys_info():
         p = re.compile(pattern=r"(.*)(CPU:)(\s+)(.+)", flags=f)
         indent = " " * len(p.search(sys_info).group(3))
         sys_info = p.sub(fr"\1\2{indent}Governors: {govs}\4", sys_info)
+
+        # insert psutil sensors after Sensors:
+        p = re.compile(pattern=r"(.*)(Sensors:)(\s+)(.+)", flags=f)
+        indent = " " * len(p.search(sys_info).group(3))
+        sys_info = p.sub(fr"\1\2{indent}\n{sensors}\4", sys_info)
     else:
         sys_info = ("Warning: inxi is not installed.\n"
-                    f"Governors: {govs}\n")
+                    f"Governors: {govs}\n"
+                    f"Sensors: {sensors}\n")
 
     return sys_info
 
@@ -82,7 +94,7 @@ def charging():
     """
     get charge state: is battery charging or discharging
     """
-    bat_info = p.sensors_battery()
+    bat_info = psutil.sensors_battery()
     if bat_info is None:
         state = True
     else:
@@ -113,7 +125,7 @@ def get_avail_performance():
 
 
 def get_current_gov():
-    return s.getoutput("cpufreqctl --governor").strip().split(" ")[0]
+    return getoutput("cpufreqctl --governor").strip().split(" ")[0]
 
 
 # auto-cpufreq log file
@@ -121,7 +133,7 @@ auto_cpufreq_log_file = Path("/var/log/auto-cpufreq.log")
 auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
 
 # daemon check
-dcheck = s.getoutput("snapctl get daemon")
+dcheck = getoutput("snapctl get daemon")
 
 
 def cpufreqctl():
@@ -202,7 +214,7 @@ def deploy_daemon():
     print("\n* Deploy auto-cpufreq remove script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
 
-    s.call("/usr/bin/auto-cpufreq-install", shell=True)
+    call("/usr/bin/auto-cpufreq-install", shell=True)
 
 
 # remove auto-cpufreq daemon
@@ -223,7 +235,7 @@ def remove():
         print("\nERROR:\nWas unable to turn on bluetooth on boot")
 
     # run auto-cpufreq daemon install script
-    s.call("/usr/bin/auto-cpufreq-remove", shell=True)
+    call("/usr/bin/auto-cpufreq-remove", shell=True)
 
     # remove auto-cpufreq-remove
     os.remove("/usr/bin/auto-cpufreq-remove")
@@ -266,15 +278,15 @@ def countdown(s):
 # set powersave and enable turbo
 def set_powersave():
     print(f"Setting to use: \"{get_avail_powersave()}\" governor")
-    s.run(f"cpufreqctl --governor --set={get_avail_powersave()}", shell=True)
+    run(f"cpufreqctl --governor --set={get_avail_powersave()}", shell=True)
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
-        s.run("cpufreqctl --epp --set=balance_power", shell=True)
+        run("cpufreqctl --epp --set=balance_power", shell=True)
         print("Setting to use: \"balance_power\" EPP")
 
         # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
-    cpuload = p.cpu_percent(interval=1)
+    cpuload = psutil.cpu_percent(interval=1)
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
@@ -298,7 +310,7 @@ def mon_powersave():
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
-    cpuload = p.cpu_percent(interval=1)
+    cpuload = psutil.cpu_percent(interval=1)
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
@@ -330,13 +342,13 @@ def mon_powersave():
 # set performance and enable turbo
 def set_performance():
     print(f"Setting to use: \"{get_avail_performance()}\" governor")
-    s.run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
+    run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
     if os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"):
-        s.run("cpufreqctl --epp --set=balance_performance", shell=True)
+        run("cpufreqctl --epp --set=balance_performance", shell=True)
         print("Setting to use: \"balance_performance\" EPP")
 
     load1m, _, _ = os.getloadavg()
-    cpuload = p.cpu_percent(interval=1)
+    cpuload = psutil.cpu_percent(interval=1)
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
@@ -359,7 +371,7 @@ def mon_performance():
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
     # get CPU utilization as a percentage
-    cpuload = p.cpu_percent(interval=1)
+    cpuload = psutil.cpu_percent(interval=1)
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
@@ -446,11 +458,11 @@ def sysinfo():
     print("Linux kernel: " + pl.release())
 
     # driver check
-    driver = s.getoutput("cpufreqctl --driver")
+    driver = getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
 
     cpu_arch = pl.machine()
-    cpu_count = p.cpu_count()
+    cpu_count = psutil.cpu_count()
 
     print("Architecture:", cpu_arch)
 
@@ -466,10 +478,10 @@ def sysinfo():
     print("Cores:", cpu_count)
 
     print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
-    print(f"CPU max frequency: {p.cpu_freq().max:.0f}MHz")
-    print(f"CPU min frequency: {p.cpu_freq().min:.0f}MHz")
+    print(f"CPU max frequency: {psutil.cpu_freq().max:.0f}MHz")
+    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f}MHz")
 
-    core_usage = p.cpu_freq(percpu=True)
+    core_usage = psutil.cpu_freq(percpu=True)
 
     print("\nCPU frequency for each core:\n")
     core_num = 0
@@ -478,9 +490,9 @@ def sysinfo():
         core_num += 1
 
     # get number of core temp sensors
-    core_temp_num = p.cpu_count(logical=False)
+    core_temp_num = psutil.cpu_count(logical=False)
     # get hardware temperatures
-    core_temp = p.sensors_temperatures()
+    core_temp = psutil.sensors_temperatures()
 
     print("\nTemperature for each physical core:\n")
     core_num = 0
@@ -501,16 +513,16 @@ def sysinfo():
         core_num += 1
 
     # print current fan speed | temporarily commented
-    # current_fans = p.sensors_fans()['thinkpad'][0].current
+    # current_fans = psutil.sensors_fans()['thinkpad'][0].current
     # print("\nCPU fan speed:", current_fans, "RPM")
 
 
 # read log func
 def read_log():
     if os.getenv("PKG_MARKER") == "SNAP":
-        s.call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file_snap)])
+        call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file_snap)])
     elif os.path.isfile(auto_cpufreq_log_file):
-        s.call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file)])
+        call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file)])
     else:
         print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
         print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
@@ -520,15 +532,15 @@ def read_log():
 # check if program (argument) is running
 def is_running(program, argument):
     # iterate over all process id's found by psutil
-    for pid in p.pids():
+    for pid in psutil.pids():
         try:
             # requests the process information corresponding to each process id
-            proc = p.Process(pid)
+            proc = psutil.Process(pid)
             # check if value of program-variable that was used to call the function
             # matches the name field of the plutil.Process(pid) output
             if program in proc.name():
-                # check output of p.name(), output name of program
-                # p.cmdline() - echo the exact command line via which p was called.
+                # check output of psutil.name(), output name of program
+                # psutil.cmdline() - echo the exact command line via which p was called.
                 for arg in proc.cmdline():
                     if argument in str(arg):
                         return True
