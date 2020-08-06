@@ -62,7 +62,7 @@ def get_sys_info():
     govs = " ".join(get_avail_gov())
     govs = f"Governors: {govs}"
     if shutil.which("inxi") is not None:
-        sys_info = getoutput("inxi -Fz")
+        sys_info = getoutput("inxi -Fzc0")
         p = re.compile(pattern=r".*(CPU:\s+).+", flags=re.MULTILINE)
         indent = " " * len(p.search(sys_info).group(1))
         sys_info = p.sub(f"CPU:{indent[4:]}{govs}", sys_info)
