@@ -245,7 +245,7 @@ def remove():
 
     # delete log file
     if auto_cpufreq_log_file.exists():
-        auto_cpufreq_log_file.unlink(missing_ok=True)
+        auto_cpufreq_log_file.unlink()
 
     # restore original cpufrectl script
     cpufreqctl_restore()
