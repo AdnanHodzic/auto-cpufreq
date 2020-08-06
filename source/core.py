@@ -414,21 +414,24 @@ def sysinfo():
 
     import distro
 
-    dist = "UNKNOWN"
+    dist = "UNKNOWN distro"
+    version = "UNKNOWN version"
+
     # get distro information in snap env.
     if os.getenv("PKG_MARKER") == "SNAP":
-        searchfile = open("/var/lib/snapd/hostfs/etc/os-release", "r")
-        version = ""
-        for line in searchfile:
-            if line.startswith('NAME='):
-                distro = line[5:line.find('$')].strip("\"")
-                continue
-            elif line.startswith('VERSION='):
-                version = line[8:line.find('$')].strip("\"")
-                continue
+        try:
+            with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
+                for line in searchfile:
+                    if line.startswith('NAME='):
+                        distro = line[5:line.find('$')].strip("\"")
+                        continue
+                    elif line.startswith('VERSION='):
+                        version = line[8:line.find('$')].strip("\"")
+                        continue
+        except PermissionError:
+            pass
 
-            dist = f"{distro} {version}"
-        searchfile.close()
+        dist = f"{distro} {version}"
     else:
         # get distro information
         fdist = distro.linux_distribution()
