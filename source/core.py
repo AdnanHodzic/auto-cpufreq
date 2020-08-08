@@ -43,13 +43,17 @@ def turbo(value: bool = None):
         inverse = False
     else:
         print("Error: cpu boost is not available")
-        return None
+        return False
 
     if value is not None:
         if inverse:
             value = not value
 
-        f.write_text(str(int(value)) + "\n")
+        try:
+            f.write_text(str(int(value)) + "\n")
+        except PermissionError:
+            print("Error: cpu boost is not available")
+            return False
 
     value = bool(int(f.read_text().strip()))
     if inverse:
