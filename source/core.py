@@ -42,7 +42,7 @@ def turbo(value: bool = None):
         f = cpufreq
         inverse = False
     else:
-        print("Error: cpu boost is not available")
+        print("Warning: CPU turbo is not available")
         return False
 
     if value is not None:
@@ -52,7 +52,7 @@ def turbo(value: bool = None):
         try:
             f.write_text(str(int(value)) + "\n")
         except PermissionError:
-            print("Error: cpu boost is not available")
+            print("Warning: Changing CPU turbo is not supported. Skipping.")
             return False
 
     value = bool(int(f.read_text().strip()))
