@@ -8,6 +8,7 @@ description: |
   Ultimately allowing you to improve battery life without making
   any compromises.
 
+license: LGPL-3.0
 grade: stable
 confinement: strict
 
