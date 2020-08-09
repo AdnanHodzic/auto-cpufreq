@@ -21,7 +21,7 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 #### Supported architectures and devices
 
-Currently supported devices must have an Intel or AMD CPU's. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible. 
+Supported devices must have an Intel, AMD or ARM CPU's. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible. 
 
 ## Features
 
@@ -47,7 +47,10 @@ auto-cpufreq is available on [snap store](https://snapcraft.io/auto-cpufreq), or
 sudo snap install auto-cpufreq
 ```
 
-**Please note:** once [snapd](https://snapcraft.io/docs/installing-snapd) is installed, your `snap version` version must be >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
+**Please note:** 
+* Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` version is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
+
+* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130). Due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after snap installation. Or using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) which doesn't have this issue.
 
 ### auto-cpufreq-installer
 
