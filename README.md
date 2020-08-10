@@ -67,6 +67,24 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 [AUR package is available](https://aur.archlinux.org/packages/auto-cpufreq-git/) for install. After which `auto-cpufreq` will be available as a binary and you can skip to [auto-cpufreq: modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for further reference.
 
+### Install - auto-cpufreq daemon
+
+Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live log is made for monitoring purposes.
+
+`sudo auto-cpufreq --install`
+
+After daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its logs can be viewed by running: `auto-cpufreq --log`
+
+Since daemon is running as a systemd service, its status can be seen by running:
+
+`systemctl status auto-cpufreq`
+
+### Remove - auto-cpufreq daemon
+
+auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
+
+`sudo auto-cpufreq --remove`
+
 ## How to run auto-cpufreq
 
 auto-cpufreq can be run by simply running the `auto-cpufreq` and following on screen instructions, i.e:
@@ -86,24 +104,6 @@ No changes are made to the system, and is solely made for demonstration purposes
 `sudo auto-cpufreq --live`
 
 Necessary changes are temporarily made to the system which are lost with system reboot. This mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
-
-### Install - auto-cpufreq daemon
-
-Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live log is made for monitoring purposes.
-
-`sudo auto-cpufreq --install`
-
-After daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its logs can be viewed by running: `auto-cpufreq --log`
-
-Since daemon is running as a systemd service, its status can be seen by running:
-
-`systemctl status auto-cpufreq`
-
-### Remove - auto-cpufreq daemon
-
-auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
-
-`sudo auto-cpufreq --remove`
 
 ### Log
 
