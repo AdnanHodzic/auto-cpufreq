@@ -65,7 +65,11 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 ### AUR package (Arch/Manjaro Linux)
 
-[AUR package is available](https://aur.archlinux.org/packages/auto-cpufreq-git/) for install. After which `auto-cpufreq` will be available as a binary and you need to enable the systemd service, i.e: `systemctl start auto-cpufreq`, reference [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91)). Skip to [auto-cpufreq: Install - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq#install---auto-cpufreq-daemon) for more information.
+[AUR package is available](https://aur.archlinux.org/packages/auto-cpufreq-git/) for install. After which `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options).
+
+**Please note:** If you want to install auto-cpufreq daemon, do not run `auto-cpufeq --install` otherwise you'll run into an issue: [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91), [#96](https://github.com/AdnanHodzic/auto-cpufreq/issues/96).
+
+Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl status auto-cpufreq` to see the status of service, and `systemctl enable auto-cpufreq` for service to persist running accross reboots. 
 
 ## How to run auto-cpufreq
 
