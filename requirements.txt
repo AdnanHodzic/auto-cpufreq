@@ -1,5 +1,4 @@
 setuptools
-power
 psutil
 click
 distro
