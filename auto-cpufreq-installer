@@ -29,7 +29,7 @@ fi
 
 # python packages install
 pip_pkg_install(){
-pip3 install psutil click distro power setuptools
+python3 -m pip install -r requirements.txt
 }
 
 complete_msg(){
