@@ -303,7 +303,7 @@ def set_powersave():
     if load1m > CPUS / 7:
         print("High load, setting turbo boost: on")
         turbo(True)
-    elif cpuload > 25:
+    elif cpuload > 100 / CPUS:
         print("High CPU load, setting turbo boost: on")
         turbo(True)
     else:
@@ -331,7 +331,7 @@ def mon_powersave():
             print("Currently turbo boost is: off")
         footer()
 
-    elif cpuload > 25:
+    elif cpuload > 100 / CPUS:
         print("High CPU load, suggesting to set turbo boost: on")
         if turbo():
             print("Currently turbo boost is: on")
