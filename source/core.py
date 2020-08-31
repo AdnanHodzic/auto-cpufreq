@@ -9,6 +9,7 @@ import shutil
 import sys
 import time
 import warnings
+from math import isclose
 from pathlib import Path
 from pprint import pformat
 from subprocess import getoutput, call, run
@@ -303,7 +304,7 @@ def set_powersave():
     if load1m > CPUS / 7:
         print("High load, setting turbo boost: on")
         turbo(True)
-    elif cpuload > 25:
+    elif psutil.cpu_percent(percpu=False) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True)), 100):
         print("High CPU load, setting turbo boost: on")
         turbo(True)
     else:
@@ -331,7 +332,7 @@ def mon_powersave():
             print("Currently turbo boost is: off")
         footer()
 
-    elif cpuload > 25:
+    elif psutil.cpu_percent(percpu=False) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True)), 100):
         print("High CPU load, suggesting to set turbo boost: on")
         if turbo():
             print("Currently turbo boost is: on")
@@ -364,7 +365,7 @@ def set_performance():
     if load1m >= CPUS / 5:
         print("High load, setting turbo boost: on")
         turbo(True)
-    elif cpuload > 20:
+    elif psutil.cpu_percent(percpu=False) >= 15.0 or isclose(max(psutil.cpu_percent(percpu=True)), 100):
         print("High CPU load, setting turbo boost: on")
         turbo(True)
     else:
