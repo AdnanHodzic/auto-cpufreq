@@ -132,6 +132,3 @@ dmypy.json
 # vim
 *.swp
 *.swo
-
-# snap
-*.snap
