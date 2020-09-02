@@ -1,5 +1,5 @@
 name: auto-cpufreq
-base: core18
+base: core20
 version: '1.2.2'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
@@ -15,7 +15,6 @@ confinement: strict
 parts:
   auto-cpufreq:
     plugin: python
-    python-version: python3
     build-packages:
        - gcc
        - python3-dev
