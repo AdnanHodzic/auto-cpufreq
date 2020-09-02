@@ -1,6 +1,6 @@
 name: auto-cpufreq
 base: core20
-version: '1.2.2'
+version: '1.2.3'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
   Automatic CPU speed & power optimizer for Linux based on active
@@ -24,11 +24,12 @@ parts:
       - lm-sensors
     source: .
 
-  deploy-cpufrectl:
+  deploy-scripts:
     plugin: dump
     source: scripts
     organize:
       cpufreqctl.sh: usr/bin/cpufreqctl
+      snapdaemon.sh: usr/bin/snapdaemon
 
 apps:
   auto-cpufreq:
@@ -43,7 +44,7 @@ apps:
       PKG_MARKER: SNAP
 
   service:
-    command: bin/auto-cpufreq --daemon 2>&1 | tee -a $SNAP_DATA/auto-cpufreq.log
+    command: usr/bin/snapdaemon
     plugs:
       - cpu-control
       - system-observe
