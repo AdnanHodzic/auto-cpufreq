@@ -301,10 +301,10 @@ def set_powersave():
     print("Total system load:", load1m, "\n")
 
     # conditions for setting turbo in powersave
-    if load1m > CPUS / 7:
+    if load1m > (15*CPUS)/100: 
         print("High load, setting turbo boost: on")
         turbo(True)
-    elif psutil.cpu_percent(percpu=False) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True)), 100):
+    elif psutil.cpu_percent(percpu=False, interval=0.01) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
         print("High CPU load, setting turbo boost: on")
         turbo(True)
     else:
@@ -324,15 +324,14 @@ def mon_powersave():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m > CPUS / 7:
+    if load1m > (15*CPUS)/100:
         print("High load, suggesting to set turbo boost: on")
         if turbo():
             print("Currently turbo boost is: on")
         else:
             print("Currently turbo boost is: off")
         footer()
-
-    elif psutil.cpu_percent(percpu=False) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True)), 100):
+    elif psutil.cpu_percent(percpu=False, interval=0.01) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
         print("High CPU load, suggesting to set turbo boost: on")
         if turbo():
             print("Currently turbo boost is: on")
@@ -362,10 +361,10 @@ def set_performance():
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
-    if load1m >= CPUS / 5:
+    if load1m >= (10*CPUS)/100:
         print("High load, setting turbo boost: on")
         turbo(True)
-    elif psutil.cpu_percent(percpu=False) >= 15.0 or isclose(max(psutil.cpu_percent(percpu=True)), 100):
+    elif psutil.cpu_percent(percpu=False, interval=0.01) >= 15.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
         print("High CPU load, setting turbo boost: on")
         turbo(True)
     else:
