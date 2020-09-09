@@ -1,6 +1,6 @@
 name: auto-cpufreq
 base: core20
-version: '1.2.4'
+version: '1.2.5'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
   Automatic CPU speed & power optimizer for Linux based on active
@@ -15,10 +15,12 @@ confinement: strict
 parts:
   auto-cpufreq:
     plugin: python
+    python-packages:
+       - setuptools
+       - wheel
     build-packages:
        - gcc
        - python3-dev
-       - python3-wheel
     stage-packages:
       - inxi
       - lm-sensors
