@@ -427,12 +427,7 @@ def mon_autofreq():
         mon_powersave()
 
 
-def sysinfo():
-    """
-    get system information
-    """
-    print("\n" + "-" * 29 + " System information " + "-" * 30 + "\n")
-
+def distro_info():
     import distro
 
     dist = "UNKNOWN distro"
@@ -461,9 +456,20 @@ def sysinfo():
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
-    # driver check
+def driver_check():
     driver = getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
+
+def sysinfo():
+    """
+    get system information
+    """
+    
+    # call/get distro_info
+    distro_info()
+
+    # call/get driver_check
+    driver_check()
 
     cpu_arch = pl.machine()
     cpu_count = psutil.cpu_count()

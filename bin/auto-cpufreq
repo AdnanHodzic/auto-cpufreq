@@ -81,6 +81,12 @@ def main(monitor, live, daemon, install, log, debug):
             read_log()
         elif debug:
             footer()
+            distro_info()
+            driver_check()
+            if os.getenv('PKG_MARKER') == "SNAP":
+                print("Snap package: yes")
+            else:
+                print("Snap package: no")
             print(get_sys_info())
             footer()
         elif install:
