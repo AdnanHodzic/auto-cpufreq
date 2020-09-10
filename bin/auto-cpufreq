@@ -37,6 +37,7 @@ def main(monitor, live, daemon, install, log, debug):
                     root_check()
                     gov_check()
                     cpufreqctl()
+                    distro_info()
                     sysinfo()
                     set_autofreq()
                     countdown(5)
@@ -46,6 +47,7 @@ def main(monitor, live, daemon, install, log, debug):
                     root_check()
                     gov_check()
                     cpufreqctl()
+                    distro_info()
                     sysinfo()
                     set_autofreq()
                     countdown(5)
@@ -58,9 +60,12 @@ def main(monitor, live, daemon, install, log, debug):
         elif monitor:
             while True:
                 root_check()
+                footer()
                 running_daemon()
                 gov_check()
                 cpufreqctl()
+                distro_info()
+                print("")
                 sysinfo()
                 mon_autofreq()
                 countdown(5)
@@ -68,9 +73,12 @@ def main(monitor, live, daemon, install, log, debug):
         elif live:
             while True:
                 root_check()
+                footer()
                 running_daemon()
                 gov_check()
                 cpufreqctl()
+                distro_info()
+                print("")
                 sysinfo()
                 set_autofreq()
                 countdown(5)
@@ -79,14 +87,17 @@ def main(monitor, live, daemon, install, log, debug):
             # ToDo: fail if log is missing or empty (on)
             read_log()
         elif debug:
+            root_check()
             footer()
             distro_info()
-            driver_check()
             if os.getenv('PKG_MARKER') == "SNAP":
                 print("Snap package: yes")
             else:
                 print("Snap package: no")
+            print("")
             python_info()
+            print("")
+            sysinfo()
             footer()
         elif install:
             if os.getenv('PKG_MARKER') == "SNAP":

@@ -403,7 +403,6 @@ def python_info():
 
 
 def distro_info():
-
     dist = "UNKNOWN distro"
     version = "UNKNOWN version"
 
@@ -430,27 +429,12 @@ def distro_info():
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
-def driver_check():
-    driver = getoutput("cpufreqctl --driver")
-    print("Driver: " + driver)
-
 def sysinfo():
     """
     get system information
     """
-    
-    # call/get distro_info
-    distro_info()
 
-    # call/get driver_check
-    driver_check()
-
-    cpu_arch = pl.machine()
-    cpu_count = psutil.cpu_count()
-
-    print("Architecture:", cpu_arch)
-
-    # get processor
+    # processor_info
     with open("/proc/cpuinfo", "r")  as f:
         line = f.readline()
         while line:
@@ -459,7 +443,18 @@ def sysinfo():
                 break
             line = f.readline()
 
+    # get cores count
+    cpu_count = psutil.cpu_count()
     print("Cores:", cpu_count)
+
+    # get architecture
+    cpu_arch = pl.machine()
+    print("Architecture:", cpu_arch)
+
+    # get driver
+    driver = getoutput("cpufreqctl --driver")
+    print("Driver: " + driver)
+
 
     print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
     print(f"CPU max frequency: {psutil.cpu_freq().max:.0f}MHz")
