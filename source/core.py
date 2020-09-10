@@ -15,6 +15,8 @@ from pprint import pformat
 from subprocess import getoutput, call, run
 
 import psutil
+import distro
+import click
 
 warnings.filterwarnings("ignore")
 
@@ -61,42 +63,6 @@ def turbo(value: bool = None):
         value = not value
 
     return value
-
-
-def get_sys_info():
-    """
-    Return sys info of inxi command with injected governors information
-    """
-    govs = " ".join(get_avail_gov())
-    sensors = {"temperatures:": psutil.sensors_temperatures(),
-               "battery": psutil.sensors_battery(),
-               "fans": psutil.sensors_fans()}
-
-    sensors = pformat(sensors)
-
-    if shutil.which("inxi") is not None:
-        sys_info = getoutput("inxi -Fzc0")
-        f = re.MULTILINE | re.DOTALL
-
-        # remove errors at the beginning that could occur in the snap container
-        sys_info = re.fullmatch(r"(.*)(System:.*)", sys_info, flags=f).group(2)
-
-        # insert governors after "CPU:"
-        p = re.compile(pattern=r"(.*)(CPU:)(\s+)(.+)", flags=f)
-        indent = " " * len(p.search(sys_info).group(3))
-        sys_info = p.sub(fr"\1\2{indent}Governors: {govs} \4", sys_info)
-
-        # insert psutil sensors after Sensors:
-        p = re.compile(pattern=r"(.*)(Sensors:)(\s+)(.+)", flags=f)
-        indent = " " * len(p.search(sys_info).group(3))
-        sys_info = p.sub(fr"\1\2{indent}\n{sensors} \4", sys_info)
-    else:
-        sys_info = ("Warning: inxi is not installed.\n"
-                    f"Governors: {govs}\n"
-                    f"Sensors: {sensors}\n")
-
-    return sys_info
-
 
 def charging():
     """
@@ -426,9 +392,17 @@ def mon_autofreq():
         print(f"Suggesting use of \"{get_avail_powersave()}\" governor\nCurrently using:", get_current_gov())
         mon_powersave()
 
+def python_info():
+    print("Python:", pl.python_version())
+    print("psutil package:", psutil.__version__)
+    print("platform package:", pl.__version__)
+    print("click package:", click.__version__)
+    # workaround: Module 'distro' has no '__version__' member () (https://github.com/nir0s/distro/issues/265)
+    #print("distro:", distro.__version__)
+    run("echo \"distro package\" $(pip3 show distro | sed -n -e 's/^.*Version: //p')", shell=True)
+
 
 def distro_info():
-    import distro
 
     dist = "UNKNOWN distro"
     version = "UNKNOWN version"

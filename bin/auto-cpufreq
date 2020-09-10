@@ -10,7 +10,6 @@ from subprocess import call, run
 
 sys.path.append('../')
 from source.core import *
-import click
 
 
 # cli
@@ -87,7 +86,7 @@ def main(monitor, live, daemon, install, log, debug):
                 print("Snap package: yes")
             else:
                 print("Snap package: no")
-            print(get_sys_info())
+            python_info()
             footer()
         elif install:
             if os.getenv('PKG_MARKER') == "SNAP":

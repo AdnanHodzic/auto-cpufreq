@@ -21,9 +21,6 @@ parts:
     build-packages:
        - gcc
        - python3-dev
-    stage-packages:
-      - inxi
-      - lm-sensors
     source: .
 
   deploy-scripts:
