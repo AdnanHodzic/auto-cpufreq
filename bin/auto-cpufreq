@@ -35,6 +35,7 @@ def main(monitor, live, daemon, install, log, debug):
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 while True:
                     root_check()
+                    footer()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -90,9 +91,11 @@ def main(monitor, live, daemon, install, log, debug):
             root_check()
             footer()
             distro_info()
+            print("")
             if os.getenv('PKG_MARKER') == "SNAP":
                 print("Snap package: yes")
             else:
+                app_version()
                 print("Snap package: no")
             print("")
             python_info()

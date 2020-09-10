@@ -12,7 +12,7 @@ import warnings
 from math import isclose
 from pathlib import Path
 from pprint import pformat
-from subprocess import getoutput, call, run
+from subprocess import getoutput, call, run, check_output
 
 import psutil
 import distro
@@ -30,6 +30,9 @@ SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "userspace", "powersave")
 CPUS = os.cpu_count()
 
+# ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
+def app_version():
+    print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
 
 def turbo(value: bool = None):
     """
