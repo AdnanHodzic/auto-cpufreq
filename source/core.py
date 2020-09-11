@@ -220,6 +220,12 @@ def deploy_daemon():
 
 # remove auto-cpufreq daemon
 def remove():
+
+    # check if auto-cpufreq is installed
+    if not os.path.exists("/usr/bin/auto-cpufreq-remove"):
+        print("\nauto-cpufreq daemon is not installed.\n")
+        sys.exit(1)
+        
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
     print("* Turn on bluetooth on boot")
