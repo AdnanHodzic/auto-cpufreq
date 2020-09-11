@@ -30,10 +30,17 @@ SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "userspace", "powersave")
 CPUS = os.cpu_count()
 
+# get system/CPU load
+load1m, _, _ = os.getloadavg()
+
+# get CPU utilization as a percentage
+cpuload = psutil.cpu_percent(interval=1)
+
 # ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
 def app_version():
     print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
 
+# set/change state of turbo
 def turbo(value: bool = None):
     """
     Get and set turbo mode
@@ -66,6 +73,14 @@ def turbo(value: bool = None):
         value = not value
 
     return value
+
+ # display current state of turbo
+def get_turbo():
+   
+    if turbo():
+        print("Currently turbo boost is: on")
+    else:
+        print("Currently turbo boost is: off")
 
 def charging():
     """
@@ -252,6 +267,10 @@ def countdown(s):
         sys.stdout.flush()
         time.sleep(1)
 
+# get cpu usage + system load for (last minute)
+def display_load():
+    print("\nTotal CPU usage:", cpuload, "%")
+    print("Total system load:", load1m, "\n")
 
 # set powersave and enable turbo
 def set_powersave():
@@ -261,13 +280,8 @@ def set_powersave():
         run("cpufreqctl --epp --set=balance_power", shell=True)
         print("Setting to use: \"balance_power\" EPP")
 
-        # get system/CPU load
-    load1m, _, _ = os.getloadavg()
-    # get CPU utilization as a percentage
-    cpuload = psutil.cpu_percent(interval=1)
-
-    print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    # cpu usage/system load
+    display_load()
 
     # conditions for setting turbo in powersave
     if load1m > (15*CPUS)/100: 
@@ -285,34 +299,21 @@ def set_powersave():
 
 # make turbo suggestions in powersave
 def mon_powersave():
-    # get system/CPU load
-    load1m, _, _ = os.getloadavg()
-    # get CPU utilization as a percentage
-    cpuload = psutil.cpu_percent(interval=1)
 
-    print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    # cpu usage/system load
+    display_load()
 
     if load1m > (15*CPUS)/100:
         print("High load, suggesting to set turbo boost: on")
-        if turbo():
-            print("Currently turbo boost is: on")
-        else:
-            print("Currently turbo boost is: off")
+        get_turbo()
         footer()
     elif psutil.cpu_percent(percpu=False, interval=0.01) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
         print("High CPU load, suggesting to set turbo boost: on")
-        if turbo():
-            print("Currently turbo boost is: on")
-        else:
-            print("Currently turbo boost is: off")
+        get_turbo()
         footer()
     else:
         print("Load optimal, suggesting to set turbo boost: off")
-        if turbo():
-            print("Currently turbo boost is: on")
-        else:
-            print("Currently turbo boost is: off")
+        get_turbo()
         footer()
 
 
@@ -324,11 +325,8 @@ def set_performance():
         run("cpufreqctl --epp --set=balance_performance", shell=True)
         print("Setting to use: \"balance_performance\" EPP")
 
-    load1m, _, _ = os.getloadavg()
-    cpuload = psutil.cpu_percent(interval=1)
-
-    print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    # cpu usage/system load
+    display_load()
 
     if load1m >= (10*CPUS)/100:
         print("High load, setting turbo boost: on")
@@ -345,13 +343,9 @@ def set_performance():
 
 # make turbo suggestions in performance
 def mon_performance():
-    # get system/CPU load
-    load1m, _, _ = os.getloadavg()
-    # get CPU utilization as a percentage
-    cpuload = psutil.cpu_percent(interval=1)
 
-    print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    # cpu usage/system load
+    display_load()
 
     if turbo():
         print("Currently turbo boost is: on")

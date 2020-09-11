@@ -101,6 +101,8 @@ def main(monitor, live, daemon, install, log, debug):
             python_info()
             print("")
             sysinfo()
+            display_load()
+            get_turbo()
             footer()
         elif install:
             if os.getenv('PKG_MARKER') == "SNAP":
