@@ -47,6 +47,12 @@ dcheck = getoutput("snapctl get daemon")
 def app_version():
     print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
 
+def app_res_use():
+    p = psutil.Process()
+    print("auto-cpufreq system resource consumption:")
+    print("cpu usage:", p.cpu_percent(), "%")
+    print("memory use:", round(p.memory_percent(),2), "%")
+
 # set/change state of turbo
 def turbo(value: bool = None):
     """
@@ -163,6 +169,11 @@ def cpufreqctl_restore():
 def footer(l=79):
     print("\n" + "-" * l + "\n")
 
+def daemon_not_found():
+    print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
+    print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
+    footer()
+    sys.exit()
 
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
@@ -363,10 +374,10 @@ def set_autofreq():
 
     # determine which governor should be used
     if charging():
-        print("Battery is: charging")
+        print("Battery is: charging\n")
         set_performance()
     else:
-        print("Battery is: discharging")
+        print("Battery is: discharging\n")
         set_powersave()
 
 
@@ -379,12 +390,12 @@ def mon_autofreq():
 
     # determine which governor should be used
     if charging():
-        print("Battery is: charging")
+        print("Battery is: charging\n")
         get_current_gov()
         print(f"Suggesting use of \"{get_avail_performance()}\" governor")
         mon_performance()
     else:
-        print("Battery is: discharging")
+        print("Battery is: discharging\n")
         get_current_gov()
         print(f"Suggesting use of \"{get_avail_powersave()}\" governor")
         mon_powersave()
@@ -495,14 +506,24 @@ def sysinfo():
 
 # read log func
 def read_log():
+
+    def no_log_msg():
+        print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
+        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
+
+    # read log (snap)
     if os.getenv("PKG_MARKER") == "SNAP":
-        call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file_snap)])
+        if os.path.isfile(auto_cpufreq_log_file_snap):
+            call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file_snap)])
+        else:
+            no_log_msg()
+    # read log (non snap)
     elif os.path.isfile(auto_cpufreq_log_file):
         call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file)])
     else:
-        print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
+        no_log_msg()
     footer()
+    sys.exit()
 
 
 # check if program (argument) is running

@@ -54,10 +54,7 @@ def main(monitor, live, daemon, install, log, debug):
                     countdown(5)
                     run("clear")
             else:
-                print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
-                print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
-                footer()
-                exit(1)
+                daemon_not_found()
         elif monitor:
             while True:
                 root_check()
@@ -99,6 +96,13 @@ def main(monitor, live, daemon, install, log, debug):
                 print("Snap package: no")
             print("")
             python_info()
+            print("")
+            if charging():
+                print("Battery is: charging")
+            else:
+                print("Battery is: discharging")
+            print("")
+            app_res_use()
             print("")
             sysinfo()
             display_load()
