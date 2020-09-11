@@ -14,9 +14,9 @@ from source.core import *
 
 # cli
 @click.command()
-@click.option("--monitor", is_flag=True, help="Monitor and suggest CPU optimizations")
-@click.option("--live", is_flag=True, help="Monitor and make suggested CPU optimizations")
-@click.option("--install/--remove", default=True, help="Install/remove daemon for automatic CPU optimizations")
+@click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
+@click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
+@click.option("--install/--remove", default=True, help="Install/remove daemon for (permanent) automatic CPU optimizations")
 @click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
 @click.option("--daemon", is_flag=True, hidden=True)
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
