@@ -36,6 +36,13 @@ load1m, _, _ = os.getloadavg()
 # get CPU utilization as a percentage
 cpuload = psutil.cpu_percent(interval=1)
 
+# auto-cpufreq log file
+auto_cpufreq_log_file = Path("/var/log/auto-cpufreq.log")
+auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
+
+# daemon check
+dcheck = getoutput("snapctl get daemon")
+
 # ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
 def app_version():
     print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
@@ -117,16 +124,7 @@ def get_avail_performance():
 
 
 def get_current_gov():
-    return getoutput("cpufreqctl --governor").strip().split(" ")[0]
-
-
-# auto-cpufreq log file
-auto_cpufreq_log_file = Path("/var/log/auto-cpufreq.log")
-auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
-
-# daemon check
-dcheck = getoutput("snapctl get daemon")
-
+    return print("Currently using:", getoutput("cpufreqctl --governor").strip().split(" ")[0], "governor")
 
 def cpufreqctl():
     """
@@ -382,11 +380,13 @@ def mon_autofreq():
     # determine which governor should be used
     if charging():
         print("Battery is: charging")
-        print(f"Suggesting use of \"{get_avail_performance()}\" governor\nCurrently using:", get_current_gov())
+        get_current_gov()
+        print(f"Suggesting use of \"{get_avail_performance()}\" governor")
         mon_performance()
     else:
         print("Battery is: discharging")
-        print(f"Suggesting use of \"{get_avail_powersave()}\" governor\nCurrently using:", get_current_gov())
+        get_current_gov()
+        print(f"Suggesting use of \"{get_avail_powersave()}\" governor")
         mon_powersave()
 
 def python_info():

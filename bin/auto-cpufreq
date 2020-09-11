@@ -102,6 +102,7 @@ def main(monitor, live, daemon, install, log, debug):
             print("")
             sysinfo()
             display_load()
+            get_current_gov()
             get_turbo()
             footer()
         elif install:
