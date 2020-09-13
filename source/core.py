@@ -44,8 +44,12 @@ auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.l
 dcheck = getoutput("snapctl get daemon")
 
 # ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
+# also come up with same kind of solution for AUR
 def app_version():
-    print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
+    try:
+        print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
+    except:
+        pass
 
 def app_res_use():
     p = psutil.Process()
