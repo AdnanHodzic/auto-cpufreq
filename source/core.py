@@ -498,6 +498,18 @@ def sysinfo():
     # get hardware temperatures
     core_temp = psutil.sensors_temperatures()
 
+    print("\nCPU usage per each core:\n")
+    usage_per_core = psutil.cpu_percent(interval=1, percpu=True)
+
+    for core_num in range(len(usage_per_core)):
+        print(f"CPU{core_num}: {usage_per_core[core_num]} %")
+        core_num += 1
+
+    # get number of core temp sensors
+    core_temp_num = psutil.cpu_count(logical=False)
+    # get hardware temperatures
+    core_temp = psutil.sensors_temperatures()
+
     print("\nTemperature for each physical core:\n")
     core_num = 0
     while core_num < core_temp_num:
