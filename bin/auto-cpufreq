@@ -92,7 +92,8 @@ def main(monitor, live, daemon, install, log, debug):
             if os.getenv('PKG_MARKER') == "SNAP":
                 print("Snap package: yes")
             else:
-                app_version()
+            # temp disabled (Issue: #111)
+            #    app_version()
                 print("Snap package: no")
             print("")
             python_info()
