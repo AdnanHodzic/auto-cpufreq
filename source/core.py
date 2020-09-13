@@ -173,9 +173,12 @@ def cpufreqctl_restore():
 def footer(l=79):
     print("\n" + "-" * l + "\n")
 
+
 def daemon_not_found():
     print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
-    sys.exit("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
+    print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
+    footer()
+
 
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
