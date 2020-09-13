@@ -27,8 +27,8 @@ Supported devices must have an Intel, AMD or ARM CPU's. This tool was developed 
 
 * Monitoring 
   * Basic system information
-  * CPU frequency
-  * CPU temperatures
+  * CPU frequency (system total & per core)
+  * CPU usage (system total & per core)
   * Battery state
   * System load
 * CPU frequency scaling, governor and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on

@@ -482,8 +482,8 @@ def sysinfo():
 
 
     print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
-    print(f"CPU max frequency: {psutil.cpu_freq().max:.0f}MHz")
-    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f}MHz")
+    print(f"CPU max frequency: {psutil.cpu_freq().max:.0f} MHz")
+    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f} MHz")
 
     core_usage = psutil.cpu_freq(percpu=True)
 
@@ -491,6 +491,18 @@ def sysinfo():
     core_num = 0
     while core_num < cpu_count:
         print(f"CPU{core_num}: {core_usage[core_num].current:.0f} MHz")
+        core_num += 1
+
+    # get number of core temp sensors
+    core_temp_num = psutil.cpu_count(logical=False)
+    # get hardware temperatures
+    core_temp = psutil.sensors_temperatures()
+
+    print("\nCPU usage per each core:\n")
+    usage_per_core = psutil.cpu_percent(interval=1, percpu=True)
+
+    for core_num in range(len(usage_per_core)):
+        print(f"CPU{core_num}: {usage_per_core[core_num]} %")
         core_num += 1
 
     # get number of core temp sensors
