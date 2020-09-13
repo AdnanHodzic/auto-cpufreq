@@ -44,8 +44,12 @@ auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.l
 dcheck = getoutput("snapctl get daemon")
 
 # ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
+# also come up with same kind of solution for AUR
 def app_version():
-    print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
+    try:
+        print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
+    except:
+        pass
 
 def app_res_use():
     p = psutil.Process()
@@ -171,9 +175,7 @@ def footer(l=79):
 
 def daemon_not_found():
     print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
-    print("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
-    footer()
-    sys.exit()
+    sys.exit("ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install")
 
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
@@ -284,6 +286,12 @@ def countdown(s):
 
 # get cpu usage + system load for (last minute)
 def display_load():
+
+    # get system/CPU load
+    load1m, _, _ = os.getloadavg()
+    # get CPU utilization as a percentage
+    cpuload = psutil.cpu_percent(interval=1)
+
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
@@ -510,12 +518,12 @@ def sysinfo():
     # print("\nCPU fan speed:", current_fans, "RPM")
 
 
+def no_log_msg():
+    print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
+    print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
+
 # read log func
 def read_log():
-
-    def no_log_msg():
-        print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-        print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
 
     # read log (snap)
     if os.getenv("PKG_MARKER") == "SNAP":
@@ -529,7 +537,6 @@ def read_log():
     else:
         no_log_msg()
     footer()
-    sys.exit()
 
 
 # check if program (argument) is running
