@@ -143,7 +143,8 @@ fi
 [ -f $log_file ] && rm $log_file
 
 separator
-echo -e "\nauto-cpufreq tool and all its supporting files successfully removed.\n"
+echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
+separator
 }
 
 ask_operation(){
