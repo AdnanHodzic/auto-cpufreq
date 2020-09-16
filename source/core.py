@@ -469,7 +469,9 @@ def sysinfo():
             line = f.readline()
 
     # get cores count
-    cpu_count = psutil.cpu_count()
+    cpu_count = psutil.cpu_count(logical=True)
+    phys_cpu_count = psutil.cpu_count(logical=False)
+    threads_per_core = cpu_count // phys_cpu_count
     print("Cores:", cpu_count)
 
     # get architecture
@@ -480,53 +482,37 @@ def sysinfo():
     driver = getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
 
-
     print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
     print(f"CPU max frequency: {psutil.cpu_freq().max:.0f} MHz")
-    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f} MHz")
+    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f} MHz\n")
 
-    core_usage = psutil.cpu_freq(percpu=True)
-
-    print("\nCPU frequency for each core:\n")
-    core_num = 0
-    while core_num < cpu_count:
-        print(f"CPU{core_num}: {core_usage[core_num].current:.0f} MHz")
-        core_num += 1
-
-    # get number of core temp sensors
-    core_temp_num = psutil.cpu_count(logical=False)
     # get hardware temperatures
-    core_temp = psutil.sensors_temperatures()
+    core_temp = psutil.sensors_temperatures()    
+    temp_per_core = [float("nan")] * cpu_count
+    try:
+        if "coretemp" in core_temp:
+            # list labels in 'coretemp'
+            core_temp_labels = [temp.label for temp in core_temp['coretemp']]
+            for core_num in range(phys_cpu_count):
+                # get correct index in core_temp
+                core_temp_index = core_temp_labels.index(f'Core {core_num}')
+                for thread in range(threads_per_core):
+                    temp_per_core[core_num * threads_per_core + thread] = core_temp['coretemp'][core_temp_index].current
+        elif "k10temp" in core_temp:
+            # https://www.kernel.org/doc/Documentation/hwmon/k10temp
+            temp_per_core = [core_temp['k10temp'][0].current] * cpu_count
+        elif "acpitz" in core_temp:
+            temp_per_core = [core_temp['acpitz'][0].current] * cpu_count
+    except:
+        pass
 
-    print("\nCPU usage per each core:\n")
+    # get usage and freq info for all cores
     usage_per_core = psutil.cpu_percent(interval=1, percpu=True)
+    freq_per_core = [freq_obj.current for freq_obj in psutil.cpu_freq(percpu=True)]
 
-    for core_num in range(len(usage_per_core)):
-        print(f"CPU{core_num}: {usage_per_core[core_num]} %")
-        core_num += 1
-
-    # get number of core temp sensors
-    core_temp_num = psutil.cpu_count(logical=False)
-    # get hardware temperatures
-    core_temp = psutil.sensors_temperatures()
-
-    print("\nTemperature for each physical core:\n")
-    core_num = 0
-    while core_num < core_temp_num:
-        temp = float("nan")
-        try:
-            if "coretemp" in core_temp:
-                temp = core_temp['coretemp'][core_num].current
-            elif "k10temp" in core_temp:
-                # https://www.kernel.org/doc/Documentation/hwmon/k10temp
-                temp = core_temp['k10temp'][0].current
-            elif "acpitz" in core_temp:
-                temp = core_temp['acpitz'][0].current
-        except:
-            pass
-
-        print(f"CPU{core_num} temp: {temp:.0f}°C")
-        core_num += 1
+    print('Core\t Usage     Frequency    Temperature')
+    for (num, usage, freq, temp) in zip(range(cpu_count), usage_per_core, freq_per_core, temp_per_core):
+        print(f"CPU{num}:\t{usage:>5.1f}%    {freq:>5.0f} MHz    {temp:>3.0f} °C")
 
     # print current fan speed | temporarily commented
     # current_fans = psutil.sensors_fans()['thinkpad'][0].current
