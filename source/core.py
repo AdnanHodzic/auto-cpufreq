@@ -471,7 +471,6 @@ def sysinfo():
     # get cores count
     cpu_count = psutil.cpu_count(logical=True)
     phys_cpu_count = psutil.cpu_count(logical=False)
-    cpu_count = psutil.cpu_count(logical=True)
     threads_per_core = cpu_count // phys_cpu_count
     print("Cores:", cpu_count)
 
