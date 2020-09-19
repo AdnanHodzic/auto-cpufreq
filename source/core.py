@@ -459,8 +459,9 @@ def sysinfo():
     get system information
     """
 
-    # processor_info, looks for first match of "model name"
-    print(getoutput('egrep "model name" /proc/cpuinfo -m 1'))
+    # processor_info
+    model_name = getoutput('egrep "model name" /proc/cpuinfo -m 1').split(':')[-1].strip()
+    print(f'Procesor: {model_name}')
 
     # get cores count
     cpu_count = psutil.cpu_count(logical=True)
