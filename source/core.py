@@ -475,9 +475,16 @@ def sysinfo():
     driver = getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
 
+    # get usage and freq info of cpus
+    usage_per_cpu = psutil.cpu_percent(interval=1, percpu=True)
+    freq_per_cpu = psutil.cpu_freq(percpu=True)
+
+    # max and min freqs, psutil reports wrong max/min freqs whith offline cores with percpu=False
+    max_freq = max([freq.max for freq in freq_per_cpu])
+    min_freq = min([freq.min for freq in freq_per_cpu])
     print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
-    print(f"CPU max frequency: {psutil.cpu_freq().max:.0f} MHz")
-    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f} MHz\n")
+    print(f"CPU max frequency: {max_freq:.0f} MHz")
+    print(f"CPU min frequency: {min_freq:.0f} MHz\n")
 
     # get coreid's of online cpus by parsing /proc/cpuinfo
     coreid_info = getoutput("egrep 'processor|core id' /proc/cpuinfo").split("\n")
@@ -510,16 +517,13 @@ def sysinfo():
     except:
         pass
 
-    # get usage and freq info of cpus
-    usage_per_cpu = psutil.cpu_percent(interval=1, percpu=True)
-    freq_per_cpu = [freq_obj.current for freq_obj in psutil.cpu_freq(percpu=True)]
-
     print("Core\t Usage     Frequency    Temperature")
     for (cpu, usage, freq, temp) in zip(cpu_core, usage_per_cpu, freq_per_cpu, temp_per_cpu):
-        print(f"CPU{cpu}:\t{usage:>5.1f}%    {freq:>5.0f} MHz    {temp:>3.0f} °C")
+        print(f"CPU{cpu}:\t{usage:>5.1f}%    {freq.current:>5.0f} MHz    {temp:>3.0f} °C")
 
     if offline_cpus:
         print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
+
     # print current fan speed | temporarily commented
     # current_fans = psutil.sensors_fans()['thinkpad'][0].current
     # print("\nCPU fan speed:", current_fans, "RPM")
