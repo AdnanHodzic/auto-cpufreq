@@ -520,9 +520,9 @@ def sysinfo():
     except:
         pass
 
-    print("Core\t Usage     Frequency    Temperature")
+    print("\t Usage  Temperature  Frequency")
     for (cpu, usage, freq, temp) in zip(cpu_core, usage_per_cpu, freq_per_cpu, temp_per_cpu):
-        print(f"CPU{cpu}:\t{usage:>5.1f}%    {freq:>5.0f} MHz    {temp:>3.0f} °C")
+        print(f"CPU{cpu}:\t{usage:>5.1f}%    {temp:>3.0f} °C    {freq:>5.0f} MHz")
 
     if offline_cpus:
         print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
