@@ -468,19 +468,12 @@ def sysinfo():
     """
 
     # processor_info
-    with open("/proc/cpuinfo", "r")  as f:
-        line = f.readline()
-        while line:
-            if "model name" in line:
-                print("Processor:" + line.split(':')[1].rstrip())
-                break
-            line = f.readline()
+    model_name = getoutput("egrep 'model name' /proc/cpuinfo -m 1").split(":")[-1]
+    print(f"Procesor:{model_name}")
 
-    # get cores count
-    cpu_count = psutil.cpu_count(logical=True)
-    phys_cpu_count = psutil.cpu_count(logical=False)
-    threads_per_core = cpu_count // phys_cpu_count
-    print("Cores:", cpu_count)
+    # get core count
+    total_cpu_count = int(getoutput("nproc --all"))
+    print("Cores:", total_cpu_count)
 
     # get architecture
     cpu_arch = pl.machine()
@@ -490,37 +483,57 @@ def sysinfo():
     driver = getoutput("cpufreqctl --driver")
     print("Driver: " + driver)
 
-    print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
-    print(f"CPU max frequency: {psutil.cpu_freq().max:.0f} MHz")
-    print(f"CPU min frequency: {psutil.cpu_freq().min:.0f} MHz\n")
+    # get usage and freq info of cpus
+    usage_per_cpu = psutil.cpu_percent(interval=1, percpu=True)
+    # psutil current freq not used, gives wrong values with offline cpu's
+    minmax_freq_per_cpu = psutil.cpu_freq(percpu=True)
 
-    # get hardware temperatures
-    core_temp = psutil.sensors_temperatures()    
-    temp_per_core = [float("nan")] * cpu_count
+    # max and min freqs, psutil reports wrong max/min freqs whith offline cores with percpu=False
+    max_freq = max([freq.max for freq in minmax_freq_per_cpu])
+    min_freq = min([freq.min for freq in minmax_freq_per_cpu])
+    print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
+    print(f"CPU max frequency: {max_freq:.0f} MHz")
+    print(f"CPU min frequency: {min_freq:.0f} MHz\n")
+
+    # get coreid's and frequencies of online cpus by parsing /proc/cpuinfo
+    coreid_info = getoutput("egrep 'processor|cpu MHz|core id' /proc/cpuinfo").split("\n")
+    cpu_core = dict()
+    freq_per_cpu = []
+    for i in range(0, len(coreid_info), 3):
+        freq_per_cpu.append(float(coreid_info[i + 1].split(':')[-1]))
+        cpu = int(coreid_info[i].split(':')[-1])
+        core = int(coreid_info[i + 2].split(':')[-1])
+        cpu_core[cpu] = core
+
+    online_cpu_count = len(cpu_core)
+    offline_cpus = [str(cpu) for cpu in range(total_cpu_count) if cpu not in cpu_core]
+
+    # temperatures
+    core_temp = psutil.sensors_temperatures()
+    temp_per_cpu = [float("nan")] * online_cpu_count
     try:
         if "coretemp" in core_temp:
             # list labels in 'coretemp'
-            core_temp_labels = [temp.label for temp in core_temp['coretemp']]
-            for core_num in range(phys_cpu_count):
+            core_temp_labels = [temp.label for temp in core_temp["coretemp"]]
+            for i, cpu in enumerate(cpu_core):
                 # get correct index in core_temp
-                core_temp_index = core_temp_labels.index(f'Core {core_num}')
-                for thread in range(threads_per_core):
-                    temp_per_core[core_num * threads_per_core + thread] = core_temp['coretemp'][core_temp_index].current
+                core = cpu_core[cpu]
+                cpu_temp_index = core_temp_labels.index(f"Core {core}")
+                temp_per_cpu[i] = core_temp["coretemp"][cpu_temp_index].current
         elif "k10temp" in core_temp:
             # https://www.kernel.org/doc/Documentation/hwmon/k10temp
-            temp_per_core = [core_temp['k10temp'][0].current] * cpu_count
+            temp_per_cpu = [core_temp["k10temp"][0].current] * online_cpu_count
         elif "acpitz" in core_temp:
-            temp_per_core = [core_temp['acpitz'][0].current] * cpu_count
+            temp_per_cpu = [core_temp["acpitz"][0].current] * online_cpu_count
     except:
         pass
 
-    # get usage and freq info for all cores
-    usage_per_core = psutil.cpu_percent(interval=1, percpu=True)
-    freq_per_core = [freq_obj.current for freq_obj in psutil.cpu_freq(percpu=True)]
+    print("\t Usage  Temperature  Frequency")
+    for (cpu, usage, freq, temp) in zip(cpu_core, usage_per_cpu, freq_per_cpu, temp_per_cpu):
+        print(f"CPU{cpu}:\t{usage:>5.1f}%    {temp:>3.0f} °C    {freq:>5.0f} MHz")
 
-    print('Core\t Usage     Frequency    Temperature')
-    for (num, usage, freq, temp) in zip(range(cpu_count), usage_per_core, freq_per_core, temp_per_core):
-        print(f"CPU{num}:\t{usage:>5.1f}%    {freq:>5.0f} MHz    {temp:>3.0f} °C")
+    if offline_cpus:
+        print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
 
     # print current fan speed | temporarily commented
     # current_fans = psutil.sensors_fans()['thinkpad'][0].current
