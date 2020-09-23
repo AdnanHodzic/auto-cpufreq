@@ -488,9 +488,10 @@ def sysinfo():
     # psutil current freq not used, gives wrong values with offline cpu's
     minmax_freq_per_cpu = psutil.cpu_freq(percpu=True)
 
-    # max and min freqs, psutil reports wrong max/min freqs whith offline cores with percpu=False
+    # max and min freqs, psutil reports wrong max/min freqs whith offline cores with percpu=False #119
     max_freq = max([freq.max for freq in minmax_freq_per_cpu])
     min_freq = min([freq.min for freq in minmax_freq_per_cpu])
+    
     print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
     print(f"CPU max frequency: {max_freq:.0f} MHz")
     print(f"CPU min frequency: {min_freq:.0f} MHz\n")
