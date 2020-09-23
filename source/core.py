@@ -36,6 +36,10 @@ load1m, _, _ = os.getloadavg()
 # get CPU utilization as a percentage
 cpuload = psutil.cpu_percent(interval=1)
 
+# powersave/performance system load thresholds
+powersave_load_threshold = (75*CPUS)/100
+performance_load_threshold = (50*CPUS)/100
+
 # auto-cpufreq log file
 auto_cpufreq_log_file = Path("/var/log/auto-cpufreq.log")
 auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
@@ -310,11 +314,11 @@ def set_powersave():
     display_load()
 
     # conditions for setting turbo in powersave
-    if load1m > (15*CPUS)/100: 
-        print("High load, setting turbo boost: on")
-        turbo(True)
-    elif psutil.cpu_percent(percpu=False, interval=0.01) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
+    if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
         print("High CPU load, setting turbo boost: on")
+        turbo(True)
+    elif load1m > powersave_load_threshold:
+        print("High system load, setting turbo boost: on")
         turbo(True)
     else:
         print("Load optimal, setting turbo boost: off")
@@ -329,12 +333,12 @@ def mon_powersave():
     # cpu usage/system load
     display_load()
 
-    if load1m > (15*CPUS)/100:
-        print("High load, suggesting to set turbo boost: on")
+    if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
+        print("High CPU load, suggesting to set turbo boost: on")
         get_turbo()
         footer()
-    elif psutil.cpu_percent(percpu=False, interval=0.01) >= 25.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
-        print("High CPU load, suggesting to set turbo boost: on")
+    elif load1m > powersave_load_threshold:
+        print("High system load, suggesting to set turbo boost: on")
         get_turbo()
         footer()
     else:
@@ -354,11 +358,11 @@ def set_performance():
     # cpu usage/system load
     display_load()
 
-    if load1m >= (10*CPUS)/100:
-        print("High load, setting turbo boost: on")
-        turbo(True)
-    elif psutil.cpu_percent(percpu=False, interval=0.01) >= 15.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
+    if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 75):
         print("High CPU load, setting turbo boost: on")
+        turbo(True)
+    elif load1m >= performance_load_threshold:
+        print("High system load, setting turbo boost: on")
         turbo(True)
     else:
         print("Load optimal, setting turbo boost: off")
@@ -369,18 +373,22 @@ def set_performance():
 
 # make turbo suggestions in performance
 def mon_performance():
-
+    
     # cpu usage/system load
     display_load()
 
-    if turbo():
-        print("Currently turbo boost is: on")
-        print("Suggesting to set turbo boost: on")
+    if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 75):
+        print("High CPU load, suggesting to set turbo boost: on")
+        get_turbo()
+        footer()
+    elif load1m > performance_load_threshold:
+        print("High system load, suggesting to set turbo boost: on")
+        get_turbo()
+        footer()
     else:
-        print("Currently turbo boost is: off")
-        print("Suggesting to set turbo boost: on")
-
-    footer()
+        print("Load optimal, suggesting to set turbo boost: off")
+        get_turbo()
+        footer()
 
 
 def set_autofreq():
