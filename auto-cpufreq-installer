@@ -89,7 +89,7 @@ then
     separator
     echo -e "\nDetected Solus distribution\n"
     echo -e "\nSetting up Python environment\n"
-    eopkg install pip python3 inxi
+    eopkg install pip python3
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
     separator
