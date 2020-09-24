@@ -91,7 +91,7 @@ else
     echo -e "Install: python3, pip3, python3-setuptools\n"
     echo -e "Install necessary Python packages:"
     echo -e "pip3 install psutil click distro power"
-    echo -e "\nRun following sequence of lines:"
+    echo -e "\nRun following sequence of lines (may requires root):"
     echo -e "\n-----"
     echo -e "\npython3 setup.py install --record files.txt"
     echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
