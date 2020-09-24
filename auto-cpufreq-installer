@@ -83,6 +83,22 @@ then
     separator
     complete_msg
     separator
+# Solus
+elif [ -f /etc/solus-release ];
+then
+    separator
+    echo -e "\nDetected Solus distribution\n"
+    echo -e "\nSetting up Python environment\n"
+    eopkg install pip python3
+    echo -e "\nInstalling necessary Python packages\n"
+    pip_pkg_install
+    separator
+    echo -e "\ninstalling auto-cpufreq tool\n"
+    install
+    sed -i 's/ExecStart=\/usr\/local\/bin\/auto-cpufreq/ExecStart=\/usr\/bin\/auto-cpufreq/' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
+    separator
+    complete_msg
+    separator
 # Other
 else
     separator
