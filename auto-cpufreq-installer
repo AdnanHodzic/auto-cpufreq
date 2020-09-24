@@ -113,9 +113,6 @@ else
     echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
     echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
     echo -e "\n-----"
-    echo -e "\nFor Solus, run one more command:"
-    echo -e "sed -i 's/ExecStart=\/usr\/local\/bin\/auto-cpufreq/ExecStart=\/usr\/bin\/auto-cpufreq/' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service"
-    echo -e "\n-----"
     echo -e "\nAfter which tool is installed, for full list of options run:"
     echo -e "auto-cpufreq"
     separator
