@@ -117,8 +117,8 @@ def charging():
     # Possible values: Charging, Discharging, Unknown
     battery_info = getoutput(f"grep . {power_dir}BAT*/status")
 
-    # need to explicitly check for each state,
-    # one could appear while others ccouldn't deppending on firmware
+    # need to explicitly check for each state in this order
+    # considering multiple batteries
     if "Discharging" in battery_info:
         battery_state = False
     elif "Charging" in battery_info:
