@@ -107,13 +107,27 @@ def charging():
     """
     get charge state: is battery charging or discharging
     """
-    bat_info = psutil.sensors_battery()
-    if bat_info is None:
-        state = True
-    else:
-        state = bat_info.power_plugged
+    power_dir = "/sys/class/power_supply/"
 
-    return state
+    # AC adapter states: 0, 1, unknown
+    ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
+    # if there's one ac-adapter on-line, ac_state is True
+    ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
+
+    # Possible values: Charging, Discharging, Unknown
+    battery_info = getoutput(f"grep . {power_dir}BAT*/status")
+
+    # need to explicitly check for each state,
+    # one could appear while others ccouldn't deppending on firmware
+    if "Discharging" in battery_info:
+        battery_state = False
+    elif "Charging" in battery_info:
+        battery_state = True
+    else:
+        battery_state = None
+
+    # if both ac-adapter and battery states are unknown default to not charging
+    return ac_state or battery_state
 
 
 def get_avail_gov():
