@@ -103,6 +103,10 @@ Since daemon is running as a systemd service, its status can be seen by running:
 
 `systemctl status auto-cpufreq`
 
+If install has been performed as part of snap package, daemon status can be verified by running: 
+
+`systemctl status snap.auto-cpufreq.service.service`
+
 ### Remove - auto-cpufreq daemon
 
 auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
