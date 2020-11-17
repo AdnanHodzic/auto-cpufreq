@@ -359,7 +359,7 @@ def mon_powersave():
 # set turbo state based on average of all core temperatures
 def set_temp_turbo():
     # access/import necessary variables from get_temp_data func
-    avg_cores_temp, avg_all_core_temp=sysinfo()
+    avg_cores_temp, avg_all_core_temp=sysinfo(avg_cores_temp,avg_all_core_temp)
 
     # set turbo off if:
     # * total CPU usage not too high &
@@ -375,6 +375,10 @@ def set_temp_turbo():
 
 # set performance and enable turbo
 def set_performance():
+
+    # ToDo:
+    # * have special case wgere total CPU usage is at 100% (turbo boost: on)
+    # * add this functionality to "set_powersave" func
 
     print(f"Setting to use: \"{get_avail_performance()}\" governor")
     run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
