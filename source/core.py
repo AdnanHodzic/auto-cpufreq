@@ -379,6 +379,7 @@ def set_performance():
     # ToDo:
     # * have special case wgere total CPU usage is at 100% (turbo boost: on)
     # * add this functionality to "set_powersave" func
+    # * move average temperature of all CPU cores to display_load func
 
     print(f"Setting to use: \"{get_avail_performance()}\" governor")
     run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
@@ -392,6 +393,9 @@ def set_performance():
     # access/import necessary variables from get_temp_data func
     avg_cores_temp, avg_all_core_temp=sysinfo()
 
+    print("\nCurrent average temperature of all CPU cores:", avg_all_core_temp, "°C")
+    
+
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 75):
         #print("High CPU load, setting turbo boost: on")
         #turbo(True)
@@ -399,9 +403,12 @@ def set_performance():
         #set_temp_turbo()
 
         # set turbo state based on average of all core temperatures
-        if cpuload < 60 and avg_all_core_temp >= 85:
-            print("\nBased on high CPU temperature:", avg_all_core_temp, "°C")
-            print("and total CPU load not being too high:", cpuload, "%")
+        if cpuload < 60 and avg_all_core_temp >= 80:
+
+            print("\nDEBUG: cpu 60/temp 80")
+            print("Total CPU temp", avg_all_core_temp, "°C")
+            print("Total CPU usage:", cpuload, "%\n")
+
             print("setting turbo boost: off")
             turbo(False)
         else:
@@ -415,9 +422,12 @@ def set_performance():
         #set_temp_turbo()
 
         # set turbo state based on average of all core temperatures
-        if cpuload < 60 and avg_all_core_temp >= 85:
-            print("\nBased on high CPU temperature:", avg_all_core_temp, "°C")
-            print("and total CPU load not being too high:", cpuload, "%")
+        if cpuload < 50 and avg_all_core_temp >= 80:
+
+            print("\nDEBUG: cpu 50/temp 80")
+            print("Total CPU temp", avg_all_core_temp, "°C")
+            print("Total CPU usage:", cpuload, "%\n")
+
             print("setting turbo boost: off")
             turbo(False)
         else:
@@ -428,9 +438,12 @@ def set_performance():
         #print("Load optimal, setting turbo boost: off")
         print("\nLoad optimal")
 
-        if cpuload < 60 and avg_all_core_temp >= 85:
-            print("\nBased on high CPU temperature:", avg_all_core_temp, "°C")
-            print("and total CPU load not being too high:", cpuload, "%")
+        if cpuload < 40 and avg_all_core_temp >= 80:
+
+            print("\nDEBUG: cpu 40/temp 80")
+            print("Total CPU temp", avg_all_core_temp, "°C")
+            print("Total CPU usage:", cpuload, "%\n")
+
             print("setting turbo boost: off")
             turbo(False)
         else:
