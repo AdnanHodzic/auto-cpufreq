@@ -308,11 +308,6 @@ def countdown(s):
 # get cpu usage + system load for (last minute)
 def display_load():
 
-    # get system/CPU load
-    load1m, _, _ = os.getloadavg()
-    # get CPU utilization as a percentage
-    cpuload = psutil.cpu_percent(interval=1)
-
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m, "\n")
 
@@ -361,6 +356,23 @@ def mon_powersave():
         footer()
 
 
+# set turbo state based on average of all core temperatures
+def set_temp_turbo():
+    # access/import necessary variables from get_temp_data func
+    avg_cores_temp, avg_all_core_temp=sysinfo()
+
+    # set turbo off if:
+    # * total CPU usage not too high &
+    # * average temp of all cores is too high
+    if cpuload < 60 and avg_all_core_temp >= 85:
+        print("\nBased on high CPU temperature:", avg_all_core_temp, "°C")
+        print("and total CPU load not being too high:", cpuload, "%")
+        print("setting turbo boost: off")
+        turbo(False)
+    else:
+        print("setting turbo boost: on")
+        turbo(True)
+
 # set performance and enable turbo
 def set_performance():
     print(f"Setting to use: \"{get_avail_performance()}\" governor")
@@ -375,12 +387,18 @@ def set_performance():
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 75):
         print("High CPU load, setting turbo boost: on")
         turbo(True)
+        # print("High CPU load")
+        # set_temp_turbo()
     elif load1m >= performance_load_threshold:
         print("High system load, setting turbo boost: on")
         turbo(True)
+        #print("High system load")
+        #set_temp_turbo()
     else:
         print("Load optimal, setting turbo boost: off")
         turbo(False)
+        #print("Load optimal")
+        #set_temp_turbo()
 
     footer()
 
@@ -548,6 +566,13 @@ def sysinfo():
 
     if offline_cpus:
         print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
+
+    # get average temperature of all cores
+    avg_cores_temp = sum(temp_per_cpu)
+    avg_all_core_temp = float(avg_cores_temp/online_cpu_count)
+
+    # export/make these variables accessible in other functions
+    return avg_cores_temp, avg_all_core_temp
 
     # print current fan speed | temporarily commented
     # current_fans = psutil.sensors_fans()['thinkpad'][0].current
