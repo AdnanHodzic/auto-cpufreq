@@ -406,12 +406,13 @@ def set_performance():
         print("\nHigh CPU load")
 
         # set turbo state based on average of all core temperatures
-        if cpuload > 60:
+        if cpuload > 25:
             print("setting turbo boost: on")
             turbo(True)
 
-        elif cpuload < 60 and avg_all_core_temp >= 80:
-            print("\nDEBUG: cpu 60/temp 80")
+        elif cpuload < 25 and avg_all_core_temp >= 70:
+            print("\nDEBUG: trigger cpu usage: 25/temp: >= 70")
+            print("actual: cpu usage", cpuload, "temp: ", avg_all_core_temp)
             print("Total CPU temp", avg_all_core_temp, "°C")
 
             print("setting turbo boost: off")
@@ -424,12 +425,13 @@ def set_performance():
         print("\nHigh system load")
 
         # set turbo state based on average of all core temperatures
-        if cpuload > 50:
+        if cpuload > 25:
             print("setting turbo boost: on")
             turbo(True)
 
-        elif cpuload < 50 and avg_all_core_temp >= 80:
-            print("\nDEBUG: cpu 50/temp 80")
+        elif cpuload < 25 and avg_all_core_temp >= 70:
+            print("\nDEBUG: trigger cpu usage: < 25/temp: >= 70")
+            print("actual: cpu usage", cpuload, "temp: ", avg_all_core_temp)
             print("setting turbo boost: off")
             turbo(False)
         else:
@@ -439,12 +441,13 @@ def set_performance():
     else:
         print("\nLoad optimal")
 
-        if cpuload > 40:
+        if cpuload > 25:
             print("setting turbo boost: on")
             turbo(True)
 
-        elif cpuload < 40 and avg_all_core_temp >= 80:
-            print("\nDEBUG: cpu 40/temp 80")
+        elif cpuload < 25 and avg_all_core_temp >= 65:
+            print("\nDEBUG: trigger cpu usage: < 25/temp: >= 65")
+            print("actual: cpu usage", cpuload, "temp: ", avg_all_core_temp)
             print("setting turbo boost: off")
             turbo(False)
         else:
