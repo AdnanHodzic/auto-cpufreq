@@ -372,7 +372,7 @@ def set_performance():
     # cpu usage/system load
     display_load()
 
-    if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 75):
+    if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or max(psutil.cpu_percent(percpu=True, interval=0.01)) >= 75:
         print("High CPU load, setting turbo boost: on")
         turbo(True)
     elif load1m >= performance_load_threshold:
@@ -391,7 +391,7 @@ def mon_performance():
     # cpu usage/system load
     display_load()
 
-    if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 75):
+    if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or max(psutil.cpu_percent(percpu=True, interval=0.01)) >= 75:
         print("High CPU load, suggesting to set turbo boost: on")
         get_turbo()
         footer()
