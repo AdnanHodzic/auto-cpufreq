@@ -206,7 +206,6 @@ def deploy_complete_msg():
 def remove_complete_msg():
     print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
     print("auto-cpufreq successfully removed.")
-    footer()
 
 
 def deploy_daemon():
@@ -313,7 +312,8 @@ def display_load():
     load1m, _, _ = os.getloadavg()
 
     print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    print("Total system load:", load1m)
+    print("Average temp. of all cores:", avg_all_core_temp, "°C", "\n")
 
 # set powersave and enable turbo
 def set_powersave():
@@ -330,18 +330,60 @@ def set_powersave():
     load1m, _, _ = os.getloadavg()
 
     print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    print("Total system load:", load1m)
+    print("Average temp. of all cores:", avg_all_core_temp, "°C")
 
     # conditions for setting turbo in powersave
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
-        print("High CPU load, setting turbo boost: on")
-        turbo(True)
+        print("\nHigh CPU load")
+
+        # high cpu usage trigger
+        if cpuload > 35:
+            print("setting turbo boost: on")
+            turbo(True)
+
+        # set turbo state based on average of all core temperatures
+        elif cpuload < 35 and avg_all_core_temp >= 70:
+            print("Optimal total CPU usage:", cpuload, "%, high average core temp:", avg_all_core_temp, "°C")
+            print("setting turbo boost: off")
+            turbo(False)
+        else:
+            print("setting turbo boost: on")
+            turbo(True)  
+
     elif load1m > powersave_load_threshold:
-        print("High system load, setting turbo boost: on")
-        turbo(True)
+        print("\nHigh system load")
+
+        # high cpu usage trigger
+        if cpuload > 35:
+            print("setting turbo boost: on")
+            turbo(True)
+
+        # set turbo state based on average of all core temperatures
+        elif cpuload < 35 and avg_all_core_temp >= 65:
+            print("Optimal total CPU usage:", cpuload, "%, high average core temp:", avg_all_core_temp, "°C")
+            print("setting turbo boost: off")
+            turbo(False)
+        else:
+            print("setting turbo boost: on")
+            turbo(True)
+
     else:
-        print("Load optimal, setting turbo boost: off")
-        turbo(False)
+        print("\nLoad optimal")
+        
+        # high cpu usage trigger
+        if cpuload > 35:
+            print("setting turbo boost: on")
+            turbo(True)
+
+        # set turbo state based on average of all core temperatures
+        elif cpuload < 35 and avg_all_core_temp >= 60:
+            print("Optimal total CPU usage:", cpuload, "%, high average core temp:", avg_all_core_temp, "°C")
+            print("setting turbo boost: off")
+            turbo(False)
+        else:
+            print("setting turbo boost: on")
+            turbo(True)
 
     footer()
 
@@ -356,20 +398,61 @@ def mon_powersave():
     load1m, _, _ = os.getloadavg()
 
     print("\nTotal CPU usage:", cpuload, "%")
-    print("Total system load:", load1m, "\n")
+    print("Total system load:", load1m)
+    print("Average temp. of all cores:", avg_all_core_temp, "°C")
 
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(max(psutil.cpu_percent(percpu=True, interval=0.01)), 100):
-        print("High CPU load, suggesting to set turbo boost: on")
-        get_turbo()
-        footer()
+        print("\nHigh CPU load")
+
+        # high cpu usage trigger
+        if cpuload > 35:
+            print("suggesting to set turbo boost: on")
+            get_turbo()
+
+        # set turbo state based on average of all core temperatures
+        elif cpuload < 35 and avg_all_core_temp >= 70:
+            print("Optimal total CPU usage:", cpuload, "%, high average core temp:", avg_all_core_temp, "°C")
+            print("suggesting to set turbo boost: off")
+            get_turbo()
+        else:
+            print("suggesting to set turbo boost: on")
+            get_turbo()
+
     elif load1m > powersave_load_threshold:
-        print("High system load, suggesting to set turbo boost: on")
-        get_turbo()
-        footer()
+        print("\nHigh system load")
+        
+        # high cpu usage trigger
+        if cpuload > 35:
+            print("suggesting to set turbo boost: on")
+            get_turbo()
+
+        # set turbo state based on average of all core temperatures
+        elif cpuload < 35 and avg_all_core_temp >= 65:
+            print("Optimal total CPU usage:", cpuload, "%, high average core temp:", avg_all_core_temp, "°C")
+            print("suggesting to set turbo boost: off")
+            get_turbo()
+        else:
+            print("suggesting to set turbo boost: on")
+            get_turbo()
+ 
     else:
-        print("Load optimal, suggesting to set turbo boost: off")
-        get_turbo()
-        footer()
+        print("\nLoad optimal")
+        
+        # high cpu usage trigger
+        if cpuload > 35:
+            print("suggesting to set turbo boost: on")
+            get_turbo()
+
+        # set turbo state based on average of all core temperatures
+        elif cpuload < 35 and avg_all_core_temp >= 60:
+            print("Optimal total CPU usage:", cpuload, "%, high average core temp:", avg_all_core_temp, "°C")
+            print("suggesting to set turbo boost: off")
+            get_turbo()
+        else:
+            print("suggesting to set turbo boost: on")
+            get_turbo()
+
+    footer()
 
 # set performance and enable turbo
 def set_performance():
@@ -440,7 +523,7 @@ def set_performance():
         else:
             print("setting turbo boost: on")
             turbo(True)
-
+            
     footer()
 
 
@@ -461,7 +544,7 @@ def mon_performance():
     load1m, _, _ = os.getloadavg()
 
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0 or max(psutil.cpu_percent(percpu=True, interval=0.01)) >= 75:
-        print("High CPU load")
+        print("\nHigh CPU load")
 
         # high cpu usage trigger
         if cpuload > 25:
@@ -478,7 +561,7 @@ def mon_performance():
             get_turbo()
 
     elif load1m > performance_load_threshold:
-        print("High system load")
+        print("\nHigh system load")
 
         # high cpu usage trigger
         if cpuload > 25:
@@ -494,7 +577,6 @@ def mon_performance():
             print("suggesting to set turbo boost: on")
             get_turbo()
 
-        footer()
     else:
         print("\nLoad optimal")
 
@@ -511,7 +593,8 @@ def mon_performance():
         else:
             print("suggesting to set turbo boost: on")
             get_turbo()
-        footer()
+
+    footer()
 
 
 def set_autofreq():
@@ -592,7 +675,7 @@ def sysinfo():
 
     # processor_info
     model_name = getoutput("egrep 'model name' /proc/cpuinfo -m 1").split(":")[-1]
-    print(f"Procesor:{model_name}")
+    print(f"Processor:{model_name}")
 
     # get core count
     total_cpu_count = int(getoutput("nproc --all"))
