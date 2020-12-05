@@ -11,7 +11,6 @@ from subprocess import call, run
 sys.path.append('../')
 from source.core import *
 
-
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")

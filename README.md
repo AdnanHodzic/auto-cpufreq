@@ -21,20 +21,22 @@ Please note: this tool doesn't conflict and [works great in tandem with TLP](htt
 
 #### Supported architectures and devices
 
-Supported devices must have an Intel, AMD or ARM CPU's. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible. 
+Supported devices must have an Intel, AMD or ARM CPU's. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible.
 
 ## Features
 
-* Monitoring 
+* Monitoring
   * Basic system information
   * CPU frequency (system total & per core)
   * CPU usage (system total & per core)
+  * CPU temperature (total average & per core)
   * Battery state
   * System load
 * CPU frequency scaling, governor and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on
-  * battery state
-  * CPU usage
+  * Battery state
+  * CPU usage (total & per core)
   * System load
+  * CPU temperature in combination with CPU utilization/load (prevent overheating)
 * Automatic CPU & power optimization (temporary and persistent)
 
 ## Installing auto-cpufreq
