@@ -1,6 +1,6 @@
 # auto-cpufreq
 
-Automatic CPU speed & power optimizer for Linux based on active monitoring of laptop's battery state, CPU usage and system load. Ultimately allowing you to improve battery life without making any compromises.
+Automatic CPU speed & power optimizer for Linux based on active monitoring of laptop's battery state, CPU usage, CPU temperature and system load. Ultimately allowing you to improve battery life without making any compromises.
 
 For tl;dr folks there's a: [Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
@@ -35,8 +35,8 @@ Supported devices must have an Intel, AMD or ARM CPU's. This tool was developed 
 * CPU frequency scaling, governor and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on
   * Battery state
   * CPU usage (total & per core)
-  * System load
   * CPU temperature in combination with CPU utilization/load (prevent overheating)
+  * System load
 * Automatic CPU & power optimization (temporary and persistent)
 
 ## Installing auto-cpufreq
