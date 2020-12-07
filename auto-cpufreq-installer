@@ -100,13 +100,18 @@ then
     separator
     complete_msg
     separator
-# OpenSUSE Tumbleweed
-elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [ $ID == "opensuse-tumbleweed" ];
+# OpenSUSE
+elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "opensuse"* ]];
 then
     separator
-    echo -e "\nDetected OpenSUSE Tumbleweed distribution\n"
+    echo -e "\nDetected an OpenSUSE distribution\n"
     echo -e "\nSetting up Python environment\n"
-    zypper install python38 python3-pip python3-setuptools
+    if [[ $ID == "opensuse-leap" ]];
+    then
+        zypper install -y python3 python3-pip python3-setuptools python3-devel gcc
+    else
+        zypper install -y python38 python3-pip python3-setuptools python3-devel gcc
+    fi
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
     separator
