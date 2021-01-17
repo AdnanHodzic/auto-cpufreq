@@ -459,7 +459,7 @@ def set_performance():
 
     print(f"Setting to use: \"{get_avail_performance()}\" governor")
     run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
-    if os.path.exists("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"):
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() == False:
         run("cpufreqctl --epp --set=balance_performance", shell=True)
         print("Setting to use: \"balance_performance\" EPP")
 
