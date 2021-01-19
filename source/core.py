@@ -150,7 +150,7 @@ def get_avail_performance():
 
 
 def get_current_gov():
-    return print("Currently using:", getoutput("cpufreqctl --governor").strip().split(" ")[0], "governor")
+    return print("Currently using:", getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0], "governor")
 
 def cpufreqctl():
     """
@@ -161,30 +161,23 @@ def cpufreqctl():
     if os.getenv('PKG_MARKER') == "SNAP":
         pass
     else:
-        # deploy cpufreqctl script (if missing)
+        # deploy cpufreqctl.auto-cpufreq script
         if os.path.isfile("/usr/bin/cpufreqctl"):
-            shutil.copy("/usr/bin/cpufreqctl", "/usr/bin/cpufreqctl.auto-cpufreq.bak")
-            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl")
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
         else:
-            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl")
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
 
 
 def cpufreqctl_restore():
     """
-    restore original cpufreqctl script
+    remove cpufreqctl.auto-cpufreq script
     """
     # detect if running on a SNAP
     if os.getenv('PKG_MARKER') == "SNAP":
         pass
     else:
-        # restore original cpufreqctl script
-        if os.path.isfile("/usr/bin/cpufreqctl.auto-cpufreq.bak"):
-            os.system("cp /usr/bin/cpufreqctl.auto-cpufreq.bak /usr/bin/cpufreqctl")
-            os.remove("/usr/bin/cpufreqctl.auto-cpufreq.bak")
-        # ToDo: implement mechanism to make sure cpufreqctl (auto-cpufreq) file is
-        # restored if overwritten by system. But during tool removal to also remove it
-        # in def cpufreqctl
-
+        if os.path.isfile("/usr/bin/cpufreqctl.auto-cpufreq"):
+            os.remove("/usr/bin/cpufreqctl.auto-cpufreq")
 
 def footer(l=79):
     print("\n" + "-" * l + "\n")
@@ -318,9 +311,9 @@ def display_load():
 # set powersave and enable turbo
 def set_powersave():
     print(f"Setting to use: \"{get_avail_powersave()}\" governor")
-    run(f"cpufreqctl --governor --set={get_avail_powersave()}", shell=True)
+    run(f"cpufreqctl.auto-cpufreq --governor --set={get_avail_powersave()}", shell=True)
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
-        run("cpufreqctl --epp --set=balance_power", shell=True)
+        run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
         print("Setting to use: \"balance_power\" EPP")
 
     # get CPU utilization as a percentage
@@ -458,9 +451,9 @@ def mon_powersave():
 def set_performance():
 
     print(f"Setting to use: \"{get_avail_performance()}\" governor")
-    run(f"cpufreqctl --governor --set={get_avail_performance()}", shell=True)
+    run(f"cpufreqctl.auto-cpufreq --governor --set={get_avail_performance()}", shell=True)
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() == False:
-        run("cpufreqctl --epp --set=balance_performance", shell=True)
+        run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
         print("Setting to use: \"balance_performance\" EPP")
 
     # get CPU utilization as a percentage
@@ -686,7 +679,7 @@ def sysinfo():
     print("Architecture:", cpu_arch)
 
     # get driver
-    driver = getoutput("cpufreqctl --driver")
+    driver = getoutput("cpufreqctl.auto-cpufreq --driver")
     print("Driver: " + driver)
 
     # get usage and freq info of cpus
