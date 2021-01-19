@@ -31,6 +31,7 @@ def main(monitor, live, daemon, install, log, debug):
     else:
         # Important: order does matter
         if daemon:
+            file_logging()
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 while True:
                     root_check()
@@ -41,7 +42,6 @@ def main(monitor, live, daemon, install, log, debug):
                     sysinfo()
                     set_autofreq()
                     countdown(5)
-                    run("clear")
             elif os.getenv("PKG_MARKER") != "SNAP":
                 while True:
                     root_check()
@@ -52,7 +52,6 @@ def main(monitor, live, daemon, install, log, debug):
                     sysinfo()
                     set_autofreq()
                     countdown(5)
-                    run("clear")
             else:
                 daemon_not_found()
         elif monitor:
@@ -66,7 +65,6 @@ def main(monitor, live, daemon, install, log, debug):
                 sysinfo()
                 mon_autofreq()
                 countdown(5)
-                run("clear")
         elif live:
             while True:
                 root_check()
@@ -78,7 +76,6 @@ def main(monitor, live, daemon, install, log, debug):
                 sysinfo()
                 set_autofreq()
                 countdown(5)
-                run("clear")
         elif log:
             read_log()
         elif debug:
