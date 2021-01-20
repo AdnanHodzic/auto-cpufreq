@@ -18,7 +18,7 @@ setup(
     author='Adnan Hodzic',
     author_email='adnan@hodzic.org',
     url='https://github.com/AdnanHodzic/auto-cpufreq',
-    packages=['source'],
+    packages=['auto_cpufreq'],
     install_requires=read('requirements.txt'),
     include_package_data=True,
     zip_safe=True,

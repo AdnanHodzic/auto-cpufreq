@@ -9,7 +9,7 @@ import sys
 from subprocess import call, run
 
 sys.path.append('../')
-from source.core import *
+from auto_cpufreq.core import *
 
 # cli
 @click.command()
