@@ -722,6 +722,9 @@ def sysinfo():
         elif "k10temp" in core_temp:
             # https://www.kernel.org/doc/Documentation/hwmon/k10temp
             temp_per_cpu = [core_temp["k10temp"][0].current] * online_cpu_count
+        elif "zenpower" in core_temp:
+            # https://github.com/AdnanHodzic/auto-cpufreq/issues/145#issuecomment-763294009
+            temp_per_cpu = [core_temp["zenpower"][0].current] * online_cpu_count
         elif "acpitz" in core_temp:
             temp_per_cpu = [core_temp["acpitz"][0].current] * online_cpu_count
     except:
