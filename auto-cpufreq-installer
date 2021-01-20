@@ -120,6 +120,21 @@ then
     separator
     complete_msg
     separator
+# Manjaro/Arch
+elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "manjaro" || $ID == "arch" ]];
+then
+    separator
+    echo -e "\nDetected an Arch Linux based distribution\n"
+    echo -e "\nSetting up Python environment\n"
+    pacman -S --noconfirm python python-pip python-setuptools gcc
+    echo -e "\nInstalling necessary Python packages\n"
+    pip_pkg_install
+    separator
+    echo -e "\ninstalling auto-cpufreq tool\n"
+    install
+    separator
+    complete_msg
+    separator
 # Other
 else
     separator
