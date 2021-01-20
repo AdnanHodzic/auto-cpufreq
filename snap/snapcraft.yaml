@@ -29,7 +29,7 @@ parts:
     plugin: dump
     source: scripts
     organize:
-      cpufreqctl.sh: usr/bin/cpufreqctl
+      cpufreqctl.sh: usr/bin/cpufreqctl.auto-cpufreq
       snapdaemon.sh: usr/bin/snapdaemon
 
 apps:
