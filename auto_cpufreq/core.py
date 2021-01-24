@@ -12,7 +12,7 @@ import warnings
 from math import isclose
 from pathlib import Path
 from pprint import pformat
-from subprocess import getoutput, call, run, check_output
+from subprocess import getoutput, call, run, check_output, DEVNULL
 
 import psutil
 import distro
@@ -30,7 +30,7 @@ SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 ALL_GOVERNORS = ("performance", "ondemand", "conservative", "schedutil", "userspace", "powersave")
 CPUS = os.cpu_count()
 
-# Note: 
+# Note:
 # "load1m" & "cpuload" can't be global vars and to in order to show correct data must be
 # decraled where their execution takes place
 
@@ -38,12 +38,22 @@ CPUS = os.cpu_count()
 powersave_load_threshold = (75*CPUS)/100
 performance_load_threshold = (50*CPUS)/100
 
-# auto-cpufreq log file
-auto_cpufreq_log_file = Path("/var/log/auto-cpufreq.log")
-auto_cpufreq_log_file_snap = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
+# auto-cpufreq log file path
+auto_cpufreq_log_path = None
+auto_cpufreq_log_file = None
+
+if os.getenv("PKG_MARKER") == "SNAP":
+    auto_cpufreq_log_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
+else:
+    auto_cpufreq_log_path = Path("/var/log/auto-cpufreq.log")
 
 # daemon check
 dcheck = getoutput("snapctl get daemon")
+
+def file_logging():
+    global auto_cpufreq_log_file
+    auto_cpufreq_log_file = open(auto_cpufreq_log_path, "w")
+    sys.stdout = auto_cpufreq_log_file
 
 # ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
 # also come up with same kind of solution for AUR
@@ -95,7 +105,7 @@ def turbo(value: bool = None):
 
  # display current state of turbo
 def get_turbo():
-   
+
     if turbo():
         print("Currently turbo boost is: on")
     else:
@@ -220,7 +230,7 @@ def deploy_daemon():
     except:
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
-    auto_cpufreq_log_file.touch(exist_ok=True)
+    auto_cpufreq_log_path.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
@@ -238,7 +248,7 @@ def remove():
     if not os.path.exists("/usr/bin/auto-cpufreq-remove"):
         print("\nauto-cpufreq daemon is not installed.\n")
         sys.exit(1)
-        
+
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
     print("* Turn on bluetooth on boot")
@@ -261,8 +271,11 @@ def remove():
     os.remove("/usr/bin/auto-cpufreq-remove")
 
     # delete log file
-    if auto_cpufreq_log_file.exists():
-        auto_cpufreq_log_file.unlink()
+    if auto_cpufreq_log_path.exists():
+        if auto_cpufreq_log_file is not None:
+            auto_cpufreq_log_file.close()
+
+        auto_cpufreq_log_path.unlink()
 
     # restore original cpufrectl script
     cpufreqctl_restore()
@@ -283,7 +296,6 @@ def root_check():
         footer()
         exit(1)
 
-
 # refresh countdown
 def countdown(s):
     # Fix for wrong log output and "TERM environment variable not set"
@@ -294,6 +306,12 @@ def countdown(s):
         sys.stdout.write("\t\t\t\"auto-cpufreq\" refresh in:{:2d}".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
+
+    if auto_cpufreq_log_file is not None:
+        auto_cpufreq_log_file.seek(0)
+        auto_cpufreq_log_file.truncate(0)
+    else:
+        run("clear")
 
 # get cpu usage + system load for (last minute)
 def display_load():
@@ -342,7 +360,7 @@ def set_powersave():
             turbo(False)
         else:
             print("setting turbo boost: off")
-            turbo(False)  
+            turbo(False)
 
     elif load1m > powersave_load_threshold:
         print("\nHigh system load")
@@ -363,7 +381,7 @@ def set_powersave():
 
     else:
         print("\nLoad optimal")
-        
+
         # high cpu usage trigger
         if cpuload >= 20:
             print("setting turbo boost: on")
@@ -413,7 +431,7 @@ def mon_powersave():
 
     elif load1m > powersave_load_threshold:
         print("\nHigh system load")
-        
+
         # high cpu usage trigger
         if cpuload >= 20:
             print("suggesting to set turbo boost: on")
@@ -427,10 +445,10 @@ def mon_powersave():
         else:
             print("suggesting to set turbo boost: off")
             get_turbo()
- 
+
     else:
         print("\nLoad optimal")
-        
+
         # high cpu usage trigger
         if cpuload >= 20:
             print("suggesting to set turbo boost: on")
@@ -516,7 +534,7 @@ def set_performance():
         else:
             print("setting turbo boost: on")
             turbo(True)
-            
+
     footer()
 
 
@@ -753,16 +771,9 @@ def no_log_msg():
 
 # read log func
 def read_log():
-
-    # read log (snap)
-    if os.getenv("PKG_MARKER") == "SNAP":
-        if os.path.isfile(auto_cpufreq_log_file_snap):
-            call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file_snap)])
-        else:
-            no_log_msg()
-    # read log (non snap)
-    elif os.path.isfile(auto_cpufreq_log_file):
-        call(["tail", "-n 50", "-f", str(auto_cpufreq_log_file)])
+    # readlog
+    if os.path.isfile(auto_cpufreq_log_path):
+        call(["tail", "-n 50", "-f", str(auto_cpufreq_log_path)], stderr=DEVNULL)
     else:
         no_log_msg()
     footer()
