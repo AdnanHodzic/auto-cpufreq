@@ -117,10 +117,16 @@ def charging():
     """
     power_dir = "/sys/class/power_supply/"
 
-    # AC adapter states: 0, 1, unknown
-    ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
-    # if there's one ac-adapter on-line, ac_state is True
-    ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
+    ac_online = Path("/sys/class/power_supply/A*/online")
+    
+    if ac_online.exists():
+        # AC adapter states: 0, 1, unknown
+        ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
+        # if there's one ac-adapter on-line, ac_state is True
+        ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
+    else:
+        # if there is no ac_online return ac_sate as true
+        ac_state = True
 
     # Possible values: Charging, Discharging, Unknown
     battery_info = getoutput(f"grep . {power_dir}BAT*/status")
