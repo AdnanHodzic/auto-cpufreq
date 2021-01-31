@@ -168,7 +168,7 @@ files="files.txt"
 share_dir="/usr/local/share/auto-cpufreq/"
 srv_install="/usr/bin/auto-cpufreq-install"
 srv_remove="/usr/bin/auto-cpufreq-remove"
-log_file="/var/log/auto-cpufreq.log"
+stats_file="/var/log/auto-cpufreq.log"
 tool_proc_rm="auto-cpufreq --remove"
 
 # stop any running auto-cpufreq argument (daemon/live/monitor)
@@ -192,7 +192,7 @@ fi
 # files cleanup
 [ -f $srv_install ] && rm $srv_install
 [ -f $srv_remove ] && rm $srv_remove
-[ -f $log_file ] && rm $log_file
+[ -f $stats_file ] && rm $stats_file
 
 separator
 echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
