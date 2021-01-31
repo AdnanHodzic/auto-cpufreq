@@ -43,9 +43,9 @@ auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
 if os.getenv("PKG_MARKER") == "SNAP":
-    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
+    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
 else:
-    auto_cpufreq_stats_path = Path("/var/log/auto-cpufreq.log")
+    auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
 
 # daemon check
 dcheck = getoutput("snapctl get daemon")
