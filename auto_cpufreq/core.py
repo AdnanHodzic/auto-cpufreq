@@ -38,22 +38,22 @@ CPUS = os.cpu_count()
 powersave_load_threshold = (75*CPUS)/100
 performance_load_threshold = (50*CPUS)/100
 
-# auto-cpufreq log file path
-auto_cpufreq_log_path = None
-auto_cpufreq_log_file = None
+# auto-cpufreq stats file path
+auto_cpufreq_stats_path = None
+auto_cpufreq_stats_file = None
 
 if os.getenv("PKG_MARKER") == "SNAP":
-    auto_cpufreq_log_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
+    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.log")
 else:
-    auto_cpufreq_log_path = Path("/var/log/auto-cpufreq.log")
+    auto_cpufreq_stats_path = Path("/var/log/auto-cpufreq.log")
 
 # daemon check
 dcheck = getoutput("snapctl get daemon")
 
-def file_logging():
-    global auto_cpufreq_log_file
-    auto_cpufreq_log_file = open(auto_cpufreq_log_path, "w")
-    sys.stdout = auto_cpufreq_log_file
+def file_stats():
+    global auto_cpufreq_stats_file
+    auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
+    sys.stdout = auto_cpufreq_stats_file
 
 # ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
 # also come up with same kind of solution for AUR
@@ -201,7 +201,7 @@ def daemon_not_found():
 
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
-    print("To view live log, run:\nauto-cpufreq --log")
+    print("To view live stats, run:\nauto-cpufreq --stats")
     print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
     footer()
 
@@ -230,7 +230,7 @@ def deploy_daemon():
     except:
         print("\nERROR:\nWas unable to turn off bluetooth on boot")
 
-    auto_cpufreq_log_path.touch(exist_ok=True)
+    auto_cpufreq_stats_path.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
@@ -270,12 +270,12 @@ def remove():
     # remove auto-cpufreq-remove
     os.remove("/usr/bin/auto-cpufreq-remove")
 
-    # delete log file
-    if auto_cpufreq_log_path.exists():
-        if auto_cpufreq_log_file is not None:
-            auto_cpufreq_log_file.close()
+    # delete stats file
+    if auto_cpufreq_stats_path.exists():
+        if auto_cpufreq_stats_file is not None:
+            auto_cpufreq_stats_file.close()
 
-        auto_cpufreq_log_path.unlink()
+        auto_cpufreq_stats_path.unlink()
 
     # restore original cpufrectl script
     cpufreqctl_restore()
@@ -298,7 +298,7 @@ def root_check():
 
 # refresh countdown
 def countdown(s):
-    # Fix for wrong log output and "TERM environment variable not set"
+    # Fix for wrong stats output and "TERM environment variable not set"
     os.environ['TERM'] = 'xterm'
 
     for remaining in range(s, 0, -1):
@@ -307,9 +307,9 @@ def countdown(s):
         sys.stdout.flush()
         time.sleep(1)
 
-    if auto_cpufreq_log_file is not None:
-        auto_cpufreq_log_file.seek(0)
-        auto_cpufreq_log_file.truncate(0)
+    if auto_cpufreq_stats_file is not None:
+        auto_cpufreq_stats_file.seek(0)
+        auto_cpufreq_stats_file.truncate(0)
     else:
         run("clear")
 
@@ -708,7 +708,7 @@ def sysinfo():
     # max and min freqs, psutil reports wrong max/min freqs whith offline cores with percpu=False
     max_freq = max([freq.max for freq in minmax_freq_per_cpu])
     min_freq = min([freq.min for freq in minmax_freq_per_cpu])
-    print("\n" + "-" * 30 + " Current CPU states " + "-" * 30 + "\n")
+    print("\n" + "-" * 30 + " Current CPU stats " + "-" * 30 + "\n")
     print(f"CPU max frequency: {max_freq:.0f} MHz")
     print(f"CPU min frequency: {min_freq:.0f} MHz\n")
 
@@ -765,17 +765,17 @@ def sysinfo():
     # print("\nCPU fan speed:", current_fans, "RPM")
 
 
-def no_log_msg():
-    print("\n" + "-" * 30 + " auto-cpufreq log " + "-" * 31 + "\n")
-    print("ERROR: auto-cpufreq log is missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
+def no_stats_msg():
+    print("\n" + "-" * 29 + " auto-cpufreq stats " + "-" * 30 + "\n")
+    print("ERROR: auto-cpufreq stats are missing.\n\nMake sure to run: \"auto-cpufreq --install\" first")
 
-# read log func
-def read_log():
-    # readlog
-    if os.path.isfile(auto_cpufreq_log_path):
-        call(["tail", "-n 50", "-f", str(auto_cpufreq_log_path)], stderr=DEVNULL)
+# read stats func
+def read_stats():
+    # read stats
+    if os.path.isfile(auto_cpufreq_stats_path):
+        call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
     else:
-        no_log_msg()
+        no_stats_msg()
     footer()
 
 

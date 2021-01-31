@@ -95,11 +95,11 @@ Necessary changes are temporarily made to the system which are lost with system 
 
 ### Install - auto-cpufreq daemon
 
-Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live log is made for monitoring purposes.
+Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
 
 `sudo auto-cpufreq --install`
 
-After daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its logs can be viewed by running: `auto-cpufreq --log`
+After daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
 
 Since daemon is running as a systemd service, its status can be seen by running:
 
@@ -115,11 +115,11 @@ auto-cpufreq daemon and its systemd service, along with all its persistent chang
 
 `sudo auto-cpufreq --remove`
 
-### Log
+### Stats
 
-If daemon has been instaled, live log of CPU/system load monitoring and optimizaiton can be seen by running:
+If daemon has been installed, live stats of CPU/system load monitoring and optimization can be seen by running:
 
-`auto-cpufreq --log`
+`auto-cpufreq --stats`
 
 ## Discussion:
 

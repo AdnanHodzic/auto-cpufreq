@@ -16,10 +16,10 @@ from auto_cpufreq.core import *
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
 @click.option("--install/--remove", default=True, help="Install/remove daemon for (permanent) automatic CPU optimizations")
-@click.option("--log", is_flag=True, help="View live CPU optimization log made by daemon")
+@click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--daemon", is_flag=True, hidden=True)
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
-def main(monitor, live, daemon, install, log, debug):
+def main(monitor, live, daemon, install, stats, debug):
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -31,7 +31,7 @@ def main(monitor, live, daemon, install, log, debug):
     else:
         # Important: order does matter
         if daemon:
-            file_logging()
+            file_stats()
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 while True:
                     root_check()
@@ -77,7 +77,7 @@ def main(monitor, live, daemon, install, log, debug):
                 set_autofreq()
                 countdown(5)
         elif log:
-            read_log()
+            read_stats()
         elif debug:
             root_check()
             footer()
@@ -121,8 +121,8 @@ def main(monitor, live, daemon, install, log, debug):
                 root_check()
                 run("snapctl set daemon=disabled", shell=True)
                 run("snapctl stop --disable auto-cpufreq", shell=True)
-                if auto_cpufreq_log_file.exists():
-                    auto_cpufreq_log_file.unlink()
+                if auto_cpufreq_stats_file.exists():
+                    auto_cpufreq_stats_file.unlink()
                 remove_complete_msg()
             else:
                 root_check()
