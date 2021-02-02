@@ -121,8 +121,11 @@ def main(monitor, live, daemon, install, log, debug):
                 root_check()
                 run("snapctl set daemon=disabled", shell=True)
                 run("snapctl stop --disable auto-cpufreq", shell=True)
-                if auto_cpufreq_log_file.exists():
-                    auto_cpufreq_log_file.unlink()
+                if auto_cpufreq_log_path.exists():
+                    if auto_cpufreq_log_file is not None:
+                        auto_cpufreq_log_file.close()
+
+                    auto_cpufreq_log_path.unlink()
                 remove_complete_msg()
             else:
                 root_check()

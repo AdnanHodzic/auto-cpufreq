@@ -209,7 +209,7 @@ def deploy_complete_msg():
 def remove_complete_msg():
     print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
     print("auto-cpufreq successfully removed.")
-
+    footer()
 
 def deploy_daemon():
     print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
