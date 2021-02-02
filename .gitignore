@@ -135,3 +135,6 @@ dmypy.json
 
 # snap
 *.snap
+
+# pycharm
+.idea/
