@@ -212,7 +212,8 @@ def deploy_complete_msg():
     footer()
 
 def deprecated_log_msg():
-    print("\nThe --log flag has been renamed to --stats")
+    print("\n" + "-" * 24 + " auto-cpufreq log file renamed " + "-" * 24 + "\n")
+    print("The --log flag has been renamed to --stats\n")
     print("To view live stats, run:\nauto-cpufreq --stats")
     footer()
 
