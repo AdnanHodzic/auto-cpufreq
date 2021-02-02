@@ -205,6 +205,10 @@ def deploy_complete_msg():
     print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
     footer()
 
+def deprecated_log_msg():
+    print("\nThe --log flag has been renamed to --stats")
+    print("To view live stats, run:\nauto-cpufreq --stats")
+    footer()
 
 def remove_complete_msg():
     print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
