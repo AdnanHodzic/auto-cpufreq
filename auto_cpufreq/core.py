@@ -117,16 +117,10 @@ def charging():
     """
     power_dir = "/sys/class/power_supply/"
 
-    computer_type = getoutput('hostnamectl status | grep Chassis | cut -f2 -d \":\" | tr -d \' \'')
-    
-    if computer_type == "laptop":
-        # AC adapter states: 0, 1, unknown
-        ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
-        # if there's one ac-adapter on-line, ac_state is True
-        ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
-    else:
-        # if desktop ac_state is true
-        ac_state = True
+    # AC adapter states: 0, 1, unknown
+    ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
+    # if there's one ac-adapter on-line, ac_state is True
+    ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
 
     # Possible values: Charging, Discharging, Unknown
     battery_info = getoutput(f"grep . {power_dir}BAT*/status")
