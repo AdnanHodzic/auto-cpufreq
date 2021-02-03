@@ -687,6 +687,7 @@ def distro_info():
         fdist = distro.linux_distribution()
         dist = " ".join(x for x in fdist)
 
+    print("Computer type: " + computer_type)
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
