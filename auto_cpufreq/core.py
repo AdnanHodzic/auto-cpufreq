@@ -119,14 +119,62 @@ def charging():
 
     computer_type = getoutput('dmidecode --string chassis-type')
     
-    if computer_type == "Notebook":
+    if computer_type == "Desktop":
+        ac_state = True
+    elif computer_type == "Low Profile Desktop":
+        ac_state = True
+    elif computer_type == "Tower":
+        ac_state = True
+    elif computer_type == "Mini Tower":
+        ac_state = True
+    elif computer_type == "All in One":
+        ac_state = True
+    elif computer_type == "Pizza Box":
+        ac_state = True
+    elif computer_type == "Lunch Box":
+        ac_state = True
+    elif computer_type == "Main Server Chassis":
+        ac_state = True
+    elif computer_type == "RAID Chassis":
+        ac_state = True
+    elif computer_type == "Rack Mount Chassis":
+        ac_state = True
+    elif computer_type == "Blade":
+        ac_state = True
+    elif computer_type == "Blade Enclosure":
+        ac_state = True
+    elif computer_type == "Multi-system chassis":
+        ac_state = True
+    elif computer_type == "Sealed-case PC":
+        ac_state = True
+    elif computer_type == "Mini PC":
+        ac_state = True
+    elif computer_type == "Stick PC":
+        ac_state = True
+    elif computer_type == "Embedded PC":
+        ac_state = True
+    elif computer_type == "Advanced TCA":
+        ac_state = True
+    elif computer_type == "Compact PCI":
+        ac_state = True
+    elif computer_type == "IoT Gateway":
+        ac_state = True
+    elif computer_type == "Expansion Chassis":
+        ac_state = True
+    elif computer_type == "Bus Expansion Chassis":
+        ac_state = True
+    elif computer_type == "SubChassis":
+        ac_state = True
+    elif computer_type == "Peripheral Chassis":
+        ac_state = True
+    elif computer_type == "Space-saving":
+        ac_state = True
+    else:
+        #Defaults to laptop power determination
         # AC adapter states: 0, 1, unknown
         ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
         # if there's one ac-adapter on-line, ac_state is True
         ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
-    else:
-        # if desktop ac_state is true
-        ac_state = True
 
     # Possible values: Charging, Discharging, Unknown
     battery_info = getoutput(f"grep . {power_dir}BAT*/status")
