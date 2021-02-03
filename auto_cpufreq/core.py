@@ -117,9 +117,9 @@ def charging():
     """
     power_dir = "/sys/class/power_supply/"
 
-    computer_type = getoutput('hostnamectl status | grep Chassis | cut -f2 -d \":\" | tr -d \' \'')
+    computer_type = getoutput('dmidecode --string chassis-type')
     
-    if computer_type == "laptop":
+    if computer_type == "Notebook":
         # AC adapter states: 0, 1, unknown
         ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
         # if there's one ac-adapter on-line, ac_state is True
@@ -341,7 +341,7 @@ def display_load():
 def set_powersave():
     print(f"Setting to use: \"{get_avail_powersave()}\" governor")
     run(f"cpufreqctl.auto-cpufreq --governor --set={get_avail_powersave()}", shell=True)
-    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() == False:
         run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
         print("Setting to use: \"balance_power\" EPP")
 
