@@ -1,6 +1,6 @@
 name: auto-cpufreq
 base: core20
-version: '1.5.3'
+version: '1.5.4'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
   Automatic CPU speed & power optimizer for Linux based on active
@@ -23,6 +23,7 @@ parts:
        - python3-dev
     stage-packages:
        - coreutils
+       - dmidecode
     source: .
 
   deploy-scripts:
