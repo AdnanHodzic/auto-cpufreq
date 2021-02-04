@@ -119,7 +119,8 @@ def charging():
 
     computer_type = getoutput('dmidecode --string chassis-type')
     
-    if computer_type == "Notebook" or "Laptop" or "Convertible" or "Portable":
+    # Most common types for laptops, source: https://twitter.com/fooctrl/status/1357230198857564160
+    if computer_type in [ "Notebook", "Laptop", "Convertible", "Portable" ]:
         # AC adapter states: 0, 1, unknown
         ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
         # if there's one ac-adapter on-line, ac_state is True
