@@ -322,6 +322,13 @@ def countdown(s):
     if auto_cpufreq_stats_file is not None:
         auto_cpufreq_stats_file.seek(0)
         auto_cpufreq_stats_file.truncate(0)
+                
+        # execution timestamp
+        from datetime import datetime
+        now = datetime.now()
+        current_time = now.strftime("%B %d (%A) - %H:%M:%S")
+        print("\n\t\tExecuted on:", current_time)
+
     else:
         run("clear")
 
