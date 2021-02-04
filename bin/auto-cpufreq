@@ -95,6 +95,7 @@ def main(monitor, live, install, stats, log, daemon, debug):
             print("")
             python_info()
             print("")
+            device_info()
             if charging():
                 print("Battery is: charging")
             else:
