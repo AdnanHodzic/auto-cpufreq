@@ -118,15 +118,21 @@ def charging():
     power_dir = "/sys/class/power_supply/"
 
     computer_type = getoutput('dmidecode --string chassis-type')
-    has_battery = psutil.sensors_battery() is not None
-    if has_battery == True:
-        power_pluggedin = psutil.sensors_battery().power_plugged
-        if power_pluggedin == True:
-            ac_state = True
-        else:
-            ac_state = False
+    if computer_type in [ "Notebook", "Laptop", "Convertible", "Portable" ]:
+        # AC adapter states: 0, 1, unknown
+        ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
+        # if there's one ac-adapter on-line, ac_state is True
+        ac_state = any(['1' in ac.split(':')[-1] for ac in ac_info])
     else:
-        ac_state = True
+        has_battery = psutil.sensors_battery() is not None
+        if has_battery == True:
+            power_pluggedin = psutil.sensors_battery().power_plugged
+            if power_pluggedin == True:
+                ac_state = True
+            else:
+                ac_state = False
+        else:
+            ac_state = True
 
     # if both ac-adapter and battery states are unknown default to not charging
     return ac_state
