@@ -119,7 +119,7 @@ def charging():
 
     computer_type = getoutput('dmidecode --string chassis-type')
     
-    if computer_type == "Notebook":
+    if computer_type == "Notebook" or "Laptop" or "Convertible" or "Portable":
         # AC adapter states: 0, 1, unknown
         ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
         # if there's one ac-adapter on-line, ac_state is True
@@ -661,6 +661,9 @@ def python_info():
     # workaround: Module 'distro' has no '__version__' member () (https://github.com/nir0s/distro/issues/265)
     #print("distro:", distro.__version__)
     run("echo \"distro package\" $(pip3 show distro | sed -n -e 's/^.*Version: //p')", shell=True)
+
+def device_info():
+    print("Computer type", getoutput('dmidecode --string chassis-type'))
 
 
 def distro_info():
