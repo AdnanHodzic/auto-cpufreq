@@ -87,11 +87,7 @@ def main(monitor, live, install, stats, log, daemon, debug):
             distro_info()
             sysinfo()
             print("")
-            if os.getenv('PKG_MARKER') == "SNAP":
-                print("Snap package: yes")
-            else:
-                app_version()
-                print("Snap package: no")
+            app_version()
             print("")
             python_info()
             print("")

@@ -55,13 +55,28 @@ def file_stats():
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
-# ToDo: read version from snap/snapcraft.yaml and write to $SNAP/version for use with snap installs
-# also come up with same kind of solution for AUR
+# get distro name
+dist_name = distro.id()
+
+# display running version of auto-cpufreq
 def app_version():
-    try:
-        print("Build git commit:", check_output(["git", "describe", "--always"]).strip().decode())
-    except:
-        pass
+
+    print("auto-cpufreq version:")
+    # snap package
+    if os.getenv('PKG_MARKER') == "SNAP":
+        print(getoutput("echo Snap: $SNAP_VERSION"))
+    # aur package
+    elif dist_name in ["arch", "manjaro", "garuda"]:
+        try:
+            print("pacman -Qi auto-cpufreq* | grep Version")
+        except:
+            pass
+    else:        
+        # source code (auto-cpufreq-installer)
+        try:
+            print("Git commit:", check_output(["git", "describe", "--always"]).strip().decode())
+        except:
+            pass
 
 def app_res_use():
     p = psutil.Process()
@@ -671,7 +686,7 @@ def python_info():
     run("echo \"distro package\" $(pip3 show distro | sed -n -e 's/^.*Version: //p')", shell=True)
 
 def device_info():
-    print("Computer type", getoutput('dmidecode --string chassis-type'))
+    print("Computer type:", getoutput('dmidecode --string chassis-type'))
 
 
 def distro_info():
