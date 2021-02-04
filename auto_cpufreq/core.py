@@ -714,7 +714,7 @@ def python_info():
 def distro_info():
     dist = "UNKNOWN distro"
     version = "UNKNOWN version"
-
+ 
     # get distro information in snap env.
     if os.getenv("PKG_MARKER") == "SNAP":
         try:
@@ -734,8 +734,9 @@ def distro_info():
         # get distro information
         fdist = distro.linux_distribution()
         dist = " ".join(x for x in fdist)
-
-    print("Computer type: " + computer_type)
+        computer = getoutput('dmidecode --string chassis-type')
+    
+    print("Computer type: " + computer)
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
