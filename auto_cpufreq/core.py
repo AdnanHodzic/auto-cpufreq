@@ -114,7 +114,7 @@ def get_turbo():
 def charging():
     """
     get charge state: is battery charging or discharging
-    """ 
+    """
     power_dir = "/sys/class/power_supply/"
 
     computer_type = getoutput('dmidecode --string chassis-type')
@@ -128,20 +128,8 @@ def charging():
     else:
         ac_state = True
 
-    # Possible values: Charging, Discharging, Unknown
-    battery_info = getoutput(f"grep . {power_dir}BAT*/status")
-
-    # need to explicitly check for each state in this order
-    # considering multiple batteries
-    if "Discharging" in battery_info:
-        battery_state = False
-    elif "Charging" in battery_info:
-        battery_state = True
-    else:
-        battery_state = None
-
     # if both ac-adapter and battery states are unknown default to not charging
-    return ac_state or battery_state
+    return ac_state
 
 
 def get_avail_gov():
