@@ -60,16 +60,19 @@ dist_name = distro.id()
 # display running version of auto-cpufreq
 def app_version():
 
+    aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
+
     print("auto-cpufreq version:")
+
     # snap package
     if os.getenv('PKG_MARKER') == "SNAP":
         print(getoutput("echo Snap: $SNAP_VERSION"))
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
-        try:
-            print("pacman -Qi auto-cpufreq* | grep Version")
-        except:
-            pass
+        if aur_pkg_check == 1:
+            print("Git commit:", check_output(["git", "describe", "--always"]).strip().decode())
+        else:
+            print(getoutput("pacman -Qi auto-cpufreq* | grep Version"))
     else:        
         # source code (auto-cpufreq-installer)
         try:
