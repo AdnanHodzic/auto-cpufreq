@@ -6,6 +6,8 @@
 
 # core import
 import sys
+import time
+import click
 from subprocess import call, run
 
 sys.path.append('../')
@@ -57,6 +59,8 @@ def main(monitor, live, install, stats, log, daemon, debug):
                 daemon_not_found()
         elif monitor:
             while True:
+                print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
+                time.sleep(1)
                 root_check()
                 footer()
                 running_daemon()
@@ -67,6 +71,8 @@ def main(monitor, live, install, stats, log, daemon, debug):
                 mon_autofreq()
                 countdown(5)
         elif live:
+            print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
+            time.sleep(1)
             while True:
                 root_check()
                 footer()
@@ -78,6 +84,8 @@ def main(monitor, live, install, stats, log, daemon, debug):
                 set_autofreq()
                 countdown(5)
         elif stats:
+            print("\nNote: You can quit stats mode by pressing \"ctrl+c\"")
+            time.sleep(1)
             read_stats()
         elif log:
             deprecated_log_msg()

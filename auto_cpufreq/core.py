@@ -4,19 +4,18 @@
 
 import os
 import platform as pl
-import re
 import shutil
 import sys
+import psutil
+import distro
 import time
+import click
 import warnings
 from math import isclose
 from pathlib import Path
 from pprint import pformat
 from subprocess import getoutput, call, run, check_output, DEVNULL
 
-import psutil
-import distro
-import click
 
 warnings.filterwarnings("ignore")
 
