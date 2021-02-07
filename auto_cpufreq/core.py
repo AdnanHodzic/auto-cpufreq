@@ -72,7 +72,7 @@ def app_version():
         if aur_pkg_check == 1:
             print("Git commit:", check_output(["git", "describe", "--always"]).strip().decode())
         else:
-            print(getoutput("pacman -Qi auto-cpufreq* | grep Version"))
+            print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
     else:        
         # source code (auto-cpufreq-installer)
         try:
