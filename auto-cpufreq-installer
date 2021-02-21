@@ -54,7 +54,7 @@ function tool_install {
     echo -e "\nDetected Debian based distribution"
     separator
     echo -e "\nSetting up Python environment\n"
-    apt install python3-dev python3-pip python3-setuptools dmidecode -y
+    apt install python3-dev python3-pip python3-setuptools python3-systemd dmidecode -y
     separator
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
@@ -70,10 +70,11 @@ function tool_install {
     echo -e "\nDetected RedHat based distribution\n"
     echo -e "\nSetting up Python environment\n"
     # CentOS exception
-    if [ -f /etc/centos-release ]; then
-      yum install platform-python-devel dmidecode
+    if [ -f /etc/centos-release ];
+    then
+      yum install platform-python-devel python-systemd dmidecode
     else
-      yum install python-devel dmidecode
+      yum install python-devel python-systemd dmidecode
     fi
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
@@ -88,7 +89,7 @@ function tool_install {
     separator
     echo -e "\nDetected Solus distribution\n"
     echo -e "\nSetting up Python environment\n"
-    eopkg install pip python3 python3-devel dmidecode
+    eopkg install pip python3 python3-devel python3-systemd dmidecode
     eopkg install -c system.devel
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
@@ -104,10 +105,11 @@ function tool_install {
     separator
     echo -e "\nDetected an OpenSUSE distribution\n"
     echo -e "\nSetting up Python environment\n"
-    if [[ $ID == "opensuse-leap" ]]; then
-      zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
+    if [[ $ID == "opensuse-leap" ]];
+    then
+      zypper install -y python3 python3-pip python3-setuptools python3-devel python3-systemd gcc dmidecode
     else
-      zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
+      zypper install -y python38 python3-pip python3-setuptools python3-devel python3-systemd gcc dmidecode
     fi
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
@@ -122,7 +124,7 @@ function tool_install {
     separator
     echo -e "\nDetected an Arch Linux based distribution\n"
     echo -e "\nSetting up Python environment\n"
-    pacman -S --noconfirm python python-pip python-setuptools gcc dmidecode
+    pacman -S --noconfirm python python-pip python-setuptools python-systemd gcc dmidecode
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
     separator
@@ -137,7 +139,7 @@ function tool_install {
     separator
     echo -e "\nDidn't detect Debian or RedHat based distro.\n"
     echo -e "To complete installation, you need to:"
-    echo -e "Install: python3, pip3, python3-setuptools\n"
+    echo -e "Install: python3, pip3, python3-setuptools, python3-systemd\n"
     echo -e "Install necessary Python packages:"
     echo -e "pip3 install psutil click distro power"
     echo -e "\nRun following sequence of lines:"
