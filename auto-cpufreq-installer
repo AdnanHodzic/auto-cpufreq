@@ -132,6 +132,7 @@ then
     separator
     echo -e "\ninstalling auto-cpufreq tool\n"
     install
+    sed -i 's/ExecStart=\/usr\/local\/bin\/auto-cpufreq/ExecStart=\/usr\/bin\/auto-cpufreq/' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
     separator
     complete_msg
     separator
