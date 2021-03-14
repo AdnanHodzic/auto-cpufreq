@@ -11,47 +11,45 @@ distro="$(lsb_release -is)"
 release="$(lsb_release -rs)"
 codename="$(lsb_release -cs)"
 
-separator(){
-sep="\n-------------------------------------------------------------------------------"
-echo -e $sep
+function separator {
+  sep="\n-------------------------------------------------------------------------------"
+  echo -e $sep
 }
 
 # root check
-root_check(){
-if (( $EUID != 0 ));
-then
+function root_check {
+  if (($EUID != 0)); then
     separator
     echo -e "\nMust be run as root (i.e: 'sudo $0')."
     separator
     exit 1
-fi
+  fi
 }
 
 # python packages install
-pip_pkg_install(){
-python3 -m pip install -r requirements.txt
+function pip_pkg_install {
+  python3 -m pip install -r requirements.txt
 }
 
-complete_msg(){
-echo -e "\nauto-cpufreq tool successfully installed.\n"
-echo -e "For list of options, run:\nauto-cpufreq"
+function complete_msg {
+  echo -e "\nauto-cpufreq tool successfully installed.\n"
+  echo -e "For list of options, run:\nauto-cpufreq"
 }
 
 # tool install
-install(){
-python3 setup.py install --record files.txt
-mkdir -p /usr/local/share/auto-cpufreq/
-cp -r scripts/ /usr/local/share/auto-cpufreq/
+function install {
+  python3 setup.py install --record files.txt
+  mkdir -p /usr/local/share/auto-cpufreq/
+  cp -r scripts/ /usr/local/share/auto-cpufreq/
 }
 
-update_service_file(){
+function update_service_file {
   sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
 }
 
-tool_install(){
-# Debian
-if [ -f /etc/debian_version ];
-then
+function tool_install {
+  # Debian
+  if [ -f /etc/debian_version ]; then
     separator
     echo -e "\nDetected Debian based distribution"
     separator
@@ -66,18 +64,16 @@ then
     separator
     complete_msg
     separator
-# RedHat
-elif [ -f /etc/redhat-release ];
-then
+  # RedHat
+  elif [ -f /etc/redhat-release ]; then
     separator
     echo -e "\nDetected RedHat based distribution\n"
     echo -e "\nSetting up Python environment\n"
     # CentOS exception
-    if [ -f /etc/centos-release ];
-    then
-        yum install platform-python-devel dmidecode
+    if [ -f /etc/centos-release ]; then
+      yum install platform-python-devel dmidecode
     else
-        yum install python-devel dmidecode
+      yum install python-devel dmidecode
     fi
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
@@ -87,9 +83,8 @@ then
     separator
     complete_msg
     separator
-# Solus
-elif [ -f /etc/solus-release ];
-then
+  # Solus
+  elif [ -f /etc/solus-release ]; then
     separator
     echo -e "\nDetected Solus distribution\n"
     echo -e "\nSetting up Python environment\n"
@@ -104,17 +99,15 @@ then
     separator
     complete_msg
     separator
-# OpenSUSE
-elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "opensuse"* ]];
-then
+  # OpenSUSE
+  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "opensuse"* ]]; then
     separator
     echo -e "\nDetected an OpenSUSE distribution\n"
     echo -e "\nSetting up Python environment\n"
-    if [[ $ID == "opensuse-leap" ]];
-    then
-        zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
+    if [[ $ID == "opensuse-leap" ]]; then
+      zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
     else
-        zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
+      zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
     fi
     echo -e "\nInstalling necessary Python packages\n"
     pip_pkg_install
@@ -124,9 +117,8 @@ then
     separator
     complete_msg
     separator
-# Manjaro/Arch
-elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "manjaro" || $ID == "arch" || $ID == "garuda" ]];
-then
+  # Manjaro/Arch
+  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "manjaro" || $ID == "arch" || $ID == "garuda" ]]; then
     separator
     echo -e "\nDetected an Arch Linux based distribution\n"
     echo -e "\nSetting up Python environment\n"
@@ -140,8 +132,8 @@ then
     separator
     complete_msg
     separator
-# Other
-else
+  # Other
+  else
     separator
     echo -e "\nDidn't detect Debian or RedHat based distro.\n"
     echo -e "To complete installation, you need to:"
@@ -164,51 +156,50 @@ else
     echo -e "Release: $release"
     echo -e "Codename: $codename"
     separator
-fi
-}
-
-tool_remove(){
-
-files="files.txt"
-share_dir="/usr/local/share/auto-cpufreq/"
-srv_install="/usr/bin/auto-cpufreq-install"
-srv_remove="/usr/bin/auto-cpufreq-remove"
-stats_file="/var/run/auto-cpufreq.stats"
-tool_proc_rm="auto-cpufreq --remove"
-
-# stop any running auto-cpufreq argument (daemon/live/monitor)
-tool_arg_pids=( $(pgrep -f "auto-cpufreq --") )
-for pid in "${tool_arg_pids[@]}"; do
-  if [[ $tool_arg_pids != $$ ]]; then
-    kill "$tool_arg_pids"
   fi
-done
-
-# run uninstall in case of installed daemon
-if [ -f $srv_remove ]
-then
-    eval $tool_proc_rm
-fi
-
-# remove auto-cpufreq and all its supporting files
-[ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
-[ -f $share_dir ] && rm -rf $share_dir
-
-# files cleanup
-[ -f $srv_install ] && rm $srv_install
-[ -f $srv_remove ] && rm $srv_remove
-[ -f $stats_file ] && rm $stats_file
-
-separator
-echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
-separator
 }
 
-ask_operation(){
-echo -e "\n-------------------------- auto-cpufreq installer -----------------------------"
-echo -e "\nWelcome to auto-cpufreq tool installer."
-echo -e "\nOptions:\n"
-read -p "[I]nstall
+function tool_remove {
+
+  files="files.txt"
+  share_dir="/usr/local/share/auto-cpufreq/"
+  srv_install="/usr/bin/auto-cpufreq-install"
+  srv_remove="/usr/bin/auto-cpufreq-remove"
+  stats_file="/var/run/auto-cpufreq.stats"
+  tool_proc_rm="auto-cpufreq --remove"
+
+  # stop any running auto-cpufreq argument (daemon/live/monitor)
+  tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
+  for pid in "${tool_arg_pids[@]}"; do
+    if [[ $tool_arg_pids != $$ ]]; then
+      kill "$tool_arg_pids"
+    fi
+  done
+
+  # run uninstall in case of installed daemon
+  if [ -f $srv_remove ]; then
+    eval $tool_proc_rm
+  fi
+
+  # remove auto-cpufreq and all its supporting files
+  [ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
+  [ -f $share_dir ] && rm -rf $share_dir
+
+  # files cleanup
+  [ -f $srv_install ] && rm $srv_install
+  [ -f $srv_remove ] && rm $srv_remove
+  [ -f $stats_file ] && rm $stats_file
+
+  separator
+  echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
+  separator
+}
+
+function ask_operation {
+  echo -e "\n-------------------------- auto-cpufreq installer -----------------------------"
+  echo -e "\nWelcome to auto-cpufreq tool installer."
+  echo -e "\nOptions:\n"
+  read -p "[I]nstall
 [R]emove
 [Q]uit
 
@@ -217,38 +208,34 @@ Select a key: [i/r/q]: " answer
 
 root_check
 
-if [[ -z "${1}" ]];
-then
-    ask_operation
+if [[ -z "${1}" ]]; then
+  ask_operation
 else
   case "${1}" in
-    "--install")
-        answer="i"
-        ;;
-    "--remove")
-        answer="r"
-        ;;
-    *)
-        answer="n"
-        ;;
+  "--install")
+    answer="i"
+    ;;
+  "--remove")
+    answer="r"
+    ;;
+  *)
+    answer="n"
+    ;;
   esac
 fi
 
-if [[ $answer == [Ii] ]];
-then
-    root_check
-    tool_install
-elif [[ $answer == [Rr] ]];
-then
-    root_check
-    tool_remove
-elif [[ $answer == [Qq] ]];
-then
-    separator
-    echo ""
-    exit 0
+if [[ $answer == [Ii] ]]; then
+  root_check
+  tool_install
+elif [[ $answer == [Rr] ]]; then
+  root_check
+  tool_remove
+elif [[ $answer == [Qq] ]]; then
+  separator
+  echo ""
+  exit 0
 else
-    separator
-    echo -e "\nUnknown key, aborting ...\n"
-    exit 1
+  separator
+  echo -e "\nUnknown key, aborting ...\n"
+  exit 1
 fi
