@@ -44,6 +44,10 @@ mkdir -p /usr/local/share/auto-cpufreq/
 cp -r scripts/ /usr/local/share/auto-cpufreq/
 }
 
+update_service_file(){
+  sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
+}
+
 tool_install(){
 # Debian
 if [ -f /etc/debian_version ];
@@ -96,7 +100,7 @@ then
     separator
     echo -e "\ninstalling auto-cpufreq tool\n"
     install
-    sed -i 's/ExecStart=\/usr\/local\/bin\/auto-cpufreq/ExecStart=\/usr\/bin\/auto-cpufreq/' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
+    update_service_file
     separator
     complete_msg
     separator
@@ -132,7 +136,7 @@ then
     separator
     echo -e "\ninstalling auto-cpufreq tool\n"
     install
-    sed -i 's/ExecStart=\/usr\/local\/bin\/auto-cpufreq/ExecStart=\/usr\/bin\/auto-cpufreq/' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
+    update_service_file
     separator
     complete_msg
     separator
