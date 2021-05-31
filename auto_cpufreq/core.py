@@ -14,7 +14,19 @@ import warnings
 from math import isclose
 from pathlib import Path
 from subprocess import getoutput, call, run, check_output, DEVNULL
+import logging
+import random
+import time
+from systemd.journal import JournalHandler
 
+# setup logging
+logger = logging.getLogger(__name__)
+journald_handler = JournalHandler()
+journald_handler.setFormatter(
+    logging.Formatter('[%(levelname)s] auto-cpufreq: %(message)s')
+)
+logger.addHandler(journald_handler)
+logger.setLevel(logging.INFO)
 
 warnings.filterwarnings("ignore")
 
@@ -119,6 +131,7 @@ def turbo(value: bool = None):
         inverse = False
     else:
         print("Warning: CPU turbo is not available")
+        logger.warning('cpu turbo is not available on this system')
         return False
 
     if value is not None:
@@ -127,8 +140,10 @@ def turbo(value: bool = None):
 
         try:
             f.write_text(str(int(value)) + "\n")
+            logger.info('setting turbo to %s', value)
         except PermissionError:
             print("Warning: Changing CPU turbo is not supported. Skipping.")
+            logger.warning('cannot set cpu turbo, operation not supported')
             return False
 
     value = bool(int(f.read_text().strip()))

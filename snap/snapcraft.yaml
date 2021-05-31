@@ -21,9 +21,11 @@ parts:
     build-packages:
        - gcc
        - python3-dev
+       - python3-systemd
     stage-packages:
        - coreutils
        - dmidecode
+       - python3-systemd
     source: .
 
   deploy-scripts:
