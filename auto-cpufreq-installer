@@ -3,6 +3,18 @@
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
 
+# TODO(github.com/AdnanHodzic/auto-cpufreq/issues/196) fix
+echo 'WARNING: this installer is temporarily NOT recommended' >&2
+echo "Instead please use our Snap package (or AUR if you're on Arch)" >&2
+echo 'For more context, see: https://github.com/AdnanHodzic/auto-cpufreq/issues/196' >&2
+echo >&2
+read -p 'Continue anyway? [N/y] ' warning_response
+if [[ "${warning_response,,}" =~ ^y ]]; then
+  echo "Continuing with this installer." >&2
+else
+  exit
+fi
+
 SCRIPT_PATH=$(readlink -f "$0")
 SCRIPT_DIR=$(dirname "${SCRIPT_PATH}")
 cd "${SCRIPT_DIR}"
