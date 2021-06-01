@@ -132,6 +132,21 @@ function tool_install {
     separator
     complete_msg
     separator
+  # Void Linux
+  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "void" ]]; then
+    separator
+    echo -e "\nDetected an Void Linux based distribution\n"
+    echo -e "\nSetting up Python environment\n"
+    xbps-install -Suy python3 python3-pip python3-setuptools base-devel dmidecode
+    echo -e "\nInstalling necessary Python packages\n"
+    pip_pkg_install
+    separator
+    echo -e "\ninstalling auto-cpufreq tool\n"
+    install
+    update_service_file
+    separator
+    complete_msg
+    separator
   # Other
   else
     separator
