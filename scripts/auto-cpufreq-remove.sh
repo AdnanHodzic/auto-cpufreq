@@ -11,17 +11,28 @@ then
 	exit 1
 fi
 
-echo -e "\n* Stopping auto-cpufreq daemon (systemd) service"
-systemctl stop auto-cpufreq
 
-echo -e "\n* Disabling auto-cpufreq daemon (systemd) at boot"
-systemctl disable auto-cpufreq
+if [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "void"* ]]; then
+    echo -e "\n* Stopping auto-cpufreq daemon (runit) service"
+    sv stop auto-cpufreq
 
-echo -e "\n* Removing auto-cpufreq daemon (systemd) unit file"
-rm /etc/systemd/system/auto-cpufreq.service
+    echo -e "\n* Removing auto-cpufreq daemon (runit) unit files"
+    rm -rf /etc/sv/auto-cpufreq
+    rm -rf /var/service/auto-cpufreq
 
-echo -e "\n* Reloading systemd manager configuration"
-systemctl daemon-reload
+else
+    echo -e "\n* Stopping auto-cpufreq daemon (systemd) service"
+    systemctl stop auto-cpufreq
 
-echo -e "reset failed"
-systemctl reset-failed
+    echo -e "\n* Disabling auto-cpufreq daemon (systemd) at boot"
+    systemctl disable auto-cpufreq
+
+    echo -e "\n* Removing auto-cpufreq daemon (systemd) unit file"
+    rm /etc/systemd/system/auto-cpufreq.service
+
+    echo -e "\n* Reloading systemd manager configuration"
+    systemctl daemon-reload
+
+    echo -e "reset failed"
+    systemctl reset-failed
+fi
