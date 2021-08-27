@@ -118,7 +118,7 @@ function tool_install {
     complete_msg
     separator
   # Manjaro/Arch
-  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "manjaro" || $ID == "arch" || $ID == "endeavouros" || $ID == "garuda" ]]; then
+  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "manjaro" || $ID == "arch" || $ID == "endeavouros" || $ID == "garuda" || $ID == "artix" ]]; then
     separator
     echo -e "\nDetected an Arch Linux based distribution\n"
     echo -e "\nSetting up Python environment\n"
@@ -128,7 +128,9 @@ function tool_install {
     separator
     echo -e "\ninstalling auto-cpufreq tool\n"
     install
-    update_service_file
+    if [[ ! $ID == "artix" ]]; then
+    	update_service_file
+    fi
     separator
     complete_msg
     separator
