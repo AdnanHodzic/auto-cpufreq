@@ -128,7 +128,7 @@ function tool_install {
     separator
     echo -e "\ninstalling auto-cpufreq tool\n"
     install
-    if [[ ! $ID == "artix" ]]; then
+    if [[ $ID != "artix" ]]; then
     	update_service_file
     fi
     separator
