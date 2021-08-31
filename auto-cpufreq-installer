@@ -207,10 +207,8 @@ fi
 
 case $answer in
 	I|i)
-	root_check
 	tool_install ;;
 	R|r)
-	root_check
 	tool_remove ;;
 	Q|q)
 	separator
