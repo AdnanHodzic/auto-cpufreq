@@ -11,40 +11,49 @@ then
 	exit 1
 fi
 
+# First argument is the "sv" path, second argument is the "service" path this
+# only exist because the path between distros may vary
+runit_ln() {
+	echo -e "\n* Deploy auto-cpufreq runit unit file"
+	mkdir "$1"/sv/auto-cpufreq
+	cp /usr/local/share/auto-cpufreq/scripts/run "$1"/sv/auto-cpufreq
+	chmod +x "$1"/sv/auto-cpufreq/run
 
-# Install script for runit
-if [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "void"* ]]; then
-    echo -e "\n* Deploy auto-cpufreq runit unit file"
-    mkdir /etc/sv/auto-cpufreq
-    cp /usr/local/share/auto-cpufreq/scripts/run /etc/sv/auto-cpufreq
-    chmod +x /etc/sv/auto-cpufreq/run
+	echo -e "\n* Creating symbolic link ($2/service/auto-cpufreq -> $1/sv/auto-cpufreq)"
+	ln -s "$1"/sv/auto-cpufreq "$2"/service
+}
 
-    echo -e "\n* Creating symbolic link (/var/service/auto-cpufreq -> /etc/sv/auto-cpufreq)"
-    ln -s /etc/sv/auto-cpufreq /var/service
+# sv commands
+sv_cmd() {
+	echo -e "\n* Stopping auto-cpufreq daemon (runit) service"
+	sv stop auto-cpufreq
+	echo -e "\n* Starting auto-cpufreq daemon (runit) service"
+	sv start auto-cpufreq
+	sv up auto-cpufreq
+}
 
-    echo -e "\n* Stopping auto-cpufreq daemon (runit) service"
-    sv stop auto-cpufreq
+# Installation for runit, we still look for the distro because of the path may
+# vary.
+if [ "$(ps h -o comm 1)" = "runit" ];then
+	if [ -f /etc/os-release ];then
+		eval "$(cat /etc/os-release)"
+		separator
+		case $ID in
+			void)
+				runit_ln /etc /var
+				sv_cmd
+			;;
+			artix)
+			# Note: Artix supports other inits than runnit
+				runit_ln /etc/runit /run/runit
+				sv_cmd
+			;;
+			*)
+				echo -e "\n* Runit init detected but your distro is not supported\n"
+				echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
 
-    echo -e "\n* Starting auto-cpufreq daemon (runit) service"
-    sv start auto-cpufreq
-    sv up auto-cpufreq
-
-elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "artix"* ]]; then
-    echo -e "\n* Deploy auto-cpufreq runit unit file"
-    mkdir /etc/runit/sv/auto-cpufreq
-    cp /usr/local/share/auto-cpufreq/scripts/run /etc/runit/sv/auto-cpufreq
-    chmod +x /etc/runit/sv/auto-cpufreq/run
-
-    echo -e "\n* Creating symbolic link (/run/runit/service/auto-cpufreq -> /etc/runit/sv/auto-cpufreq)"
-    ln -s /etc/runit/sv/auto-cpufreq /run/runit/service
-
-    echo -e "\n* Stopping auto-cpufreq daemon (runit) service"
-    sv stop auto-cpufreq
-
-    echo -e "\n* Starting auto-cpufreq daemon (runit) service"
-    sv start auto-cpufreq
-    sv up auto-cpufreq
-
+		esac
+	fi
 # Install script for systemd
 else
     echo -e "\n* Deploy auto-cpufreq systemd unit file"
