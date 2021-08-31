@@ -30,24 +30,18 @@ function root_check {
 
 # python packages install
 function pip_pkg_install {
-  echo -e "\nInstalling necessary Python packages\n"
   python3 -m pip install -r requirements.txt
-}
-
-function complete_msg {
-  echo -e "\nauto-cpufreq tool successfully installed.\n"
-  echo -e "For list of options, run:\nauto-cpufreq"
 }
 
 # tool install
 function install {
-  echo -e "\ninstalling auto-cpufreq tool\n"
   python3 setup.py install --record files.txt
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
 }
 
 function update_service_file {
+  echo -e "\nUpdating service file (/usr/local/bin/auto-cpufreq -> /usr/bin/auto-cpu-freq)"
   sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' \
 	  /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
 }
@@ -61,11 +55,14 @@ function detected_distro() {
 
 # merged functions pip - install - complete_msg, since it repeats
 function completed () {
+  echo -e "\nInstalling necessary Python packages\n"
   pip_pkg_install
   separator
+  echo -e "\ninstalling auto-cpufreq tool\n"
   install
   separator
-  complete_msg
+  echo -e "\nauto-cpufreq tool successfully installed.\n"
+  echo -e "For list of options, run:\nauto-cpufreq"
   separator
 }
 
