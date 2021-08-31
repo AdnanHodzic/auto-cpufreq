@@ -10,9 +10,9 @@ cd "${SCRIPT_DIR}"
 distro="$(lsb_release -is)"
 release="$(lsb_release -rs)"
 codename="$(lsb_release -cs)"
+sep="\n-------------------------------------------------------------------------------"
 
 function separator {
-  sep="\n-------------------------------------------------------------------------------"
   echo -e $sep
 }
 
@@ -28,8 +28,8 @@ function root_check {
 
 # python packages install
 function pip_pkg_install {
-	echo -e "\nInstalling necessary Python packages\n"
-	python3 -m pip install -r requirements.txt
+  echo -e "\nInstalling necessary Python packages\n"
+  python3 -m pip install -r requirements.txt
 }
 
 function complete_msg {
@@ -45,35 +45,34 @@ function install {
   cp -r scripts/ /usr/local/share/auto-cpufreq/
 }
 
-function installing_pkgs() {
-	echo -e "\nDetected an distribution\n"
-	echo -e "\nSetting up Python environment\n"
-}
-
 function update_service_file {
-sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' \
+  sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' \
 	  /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
 }
 
 # First argument is the distro
 function detected_distro() {
-	echo -e "\nDetected $1 distribution"
-	separator
-	echo -e "\nSetting up Python environment\n"
+  echo -e "\nDetected $1 distribution"
+  separator
+  echo -e "\nSetting up Python environment\n"
 }
 
+# merged functions pip - install - complete_msg, since it repeats
+function completed () {
+  pip_pkg_install
+  separator
+  install
+  separator
+  complete_msg
+  separator
+}
 
 function tool_install {
 separator
 if [ -f /etc/debian_version ]; then
 	detected_distro "Debian based"
 	apt install python3-dev python3-pip python3-setuptools dmidecode -y
-	pip_pkg_install
-	separator
-	install
-	separator
-	complete_msg
-	separator
+	completed
 elif [ -f /etc/redhat-release ]; then
 	detected_distro "RedHat based"
 	if [ -f /etc/centos-release ]; then
@@ -81,22 +80,13 @@ elif [ -f /etc/redhat-release ]; then
 	else
 		yum install python-devel dmidecode
 	fi
-	pip_pkg_install
-	separator
-	install
-	separator
-	complete_msg
-	separator
+	completed
 elif [ -f /etc/solus-release ]; then
 	detected_distro "Solus"
 	eopkg install pip python3 python3-devel dmidecode
 	eopkg install -c system.devel
-	pip_pkg_install
-	separator
-	install
-	separator
-	complete_msg
-	separator
+	update_service_file
+	completed
 elif [ -f /etc/os-release ];then
 	eval "$(cat /etc/os-release)"
 	separator
@@ -122,12 +112,7 @@ elif [ -f /etc/os-release ];then
 		#*)
 		#	echo "Not supported yet, please make an issue on ..." ;;
 	esac
-	pip_pkg_install
-	separator
-	install
-	separator
-	complete_msg
-	separator
+	completed
 else
 	separator
 	echo -e "\nDidn't detect Debian or RedHat based distro.\n"
@@ -155,7 +140,6 @@ fi
 }
 
 function tool_remove {
-
   files="files.txt"
   share_dir="/usr/local/share/auto-cpufreq/"
   srv_install="/usr/bin/auto-cpufreq-install"
@@ -201,6 +185,7 @@ function ask_operation {
 
 Select a key: [i/r/q]: " answer
 }
+# End of functions
 
 root_check
 
