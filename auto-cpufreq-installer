@@ -12,10 +12,12 @@ release="$(lsb_release -rs)"
 codename="$(lsb_release -cs)"
 sep="\n-------------------------------------------------------------------------------"
 
+# functions
+
+#separator
 function separator {
   echo -e $sep
 }
-
 # root check
 function root_check {
   if ((EUID != 0)); then
@@ -67,6 +69,30 @@ function completed () {
   separator
 }
 
+function manual_install {
+  echo -e "\nDidn't detect Debian or RedHat based distro.\n"
+  echo -e "To complete installation, you need to:"
+  echo -e "Install: python3, pip3, python3-setuptools\n"
+  echo -e "Install necessary Python packages:"
+  echo -e "pip3 install psutil click distro power"
+  echo -e "\nRun following sequence of lines:"
+  echo -e "\n-----"
+  echo -e "\npython3 setup.py install --record files.txt"
+  echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
+  echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
+  echo -e "\n-----"
+  echo -e "\nAfter which tool is installed, for full list of options run:"
+  echo -e "auto-cpufreq"
+  separator
+  echo -e "\nConsider creating a feature request to add support for your distro:"
+  echo -e "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"
+  echo -e "\nMake sure to include following information:\n"
+  echo -e "Distribution: $distro"
+  echo -e "Release: $release"
+  echo -e "Codename: $codename"
+  separator
+}
+
 function tool_install {
 separator
 if [ -f /etc/debian_version ]; then
@@ -91,51 +117,31 @@ elif [ -f /etc/os-release ];then
 	eval "$(cat /etc/os-release)"
 	separator
 	case $ID in
-		opensuse-leap)
-			detected_distro "OpenSUSE"
-			zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
-			;;
-		opensuse)
-			detected_distro "OpenSUSE"
-    			echo -e "\nDetected an OpenSUSE ditribution\n\nSetting up Python environment\n"
-			zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
-			;;
-		arch|manjaro|endeavouros|garuda|artix)
-			detected_distro "Arch Linux based"
-			pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
-			[ $ID != "artix" ] && update_service_file
-			;;
-		void)
-			detected_distro "Void Linux"
-    			xbps-install -Suy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode
-			;;
-		#*)
-		#	echo "Not supported yet, please make an issue on ..." ;;
+	opensuse-leap)
+		detected_distro "OpenSUSE"
+		zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
+		;;
+	opensuse)
+		detected_distro "OpenSUSE"
+    		echo -e "\nDetected an OpenSUSE ditribution\n\nSetting up Python environment\n"
+		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
+		;;
+	arch|manjaro|endeavouros|garuda|artix)
+		detected_distro "Arch Linux based"
+		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
+		[ $ID != "artix" ] && update_service_file
+		;;
+	void)
+		detected_distro "Void Linux"
+    		xbps-install -Suy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode
+		;;
+	*) #Any other distro
+	manual_install
+		;;
 	esac
 	completed
-else
-	separator
-	echo -e "\nDidn't detect Debian or RedHat based distro.\n"
-	echo -e "To complete installation, you need to:"
-	echo -e "Install: python3, pip3, python3-setuptools\n"
-	echo -e "Install necessary Python packages:"
-	echo -e "pip3 install psutil click distro power"
-	echo -e "\nRun following sequence of lines:"
-	echo -e "\n-----"
-	echo -e "\npython3 setup.py install --record files.txt"
-	echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
-	echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
-	echo -e "\n-----"
-	echo -e "\nAfter which tool is installed, for full list of options run:"
-	echo -e "auto-cpufreq"
-	separator
-	echo -e "\nConsider creating a feature request to add support for your distro:"
-	echo -e "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"
-	echo -e "\nMake sure to include following information:\n"
-	echo -e "Distribution: $distro"
-	echo -e "Release: $release"
-	echo -e "Codename: $codename"
-	separator
+else # In case /etc/os-release doesn't exist
+	manual_install
 fi
 }
 
