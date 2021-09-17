@@ -52,6 +52,7 @@ if [ "$(ps h -o comm 1)" = "runit" ];then
 				echo -e "\n* Runit init detected but your distro is not supported\n"
 				echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
 
+
 		esac
 	fi
 # Install script for systemd
