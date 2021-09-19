@@ -1,6 +1,6 @@
 name: auto-cpufreq
 base: core20
-version: '1.6.4'
+version: '1.6.9'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
   Automatic CPU speed & power optimizer for Linux based on active
@@ -11,6 +11,8 @@ description: |
 license: LGPL-3.0
 grade: stable
 confinement: strict
+
+compression: lzo
 
 parts:
   auto-cpufreq:
