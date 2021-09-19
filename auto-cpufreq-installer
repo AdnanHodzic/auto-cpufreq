@@ -1,5 +1,5 @@
 #!/bin/bash
-#
+
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
 
@@ -10,15 +10,17 @@ cd "${SCRIPT_DIR}"
 distro="$(lsb_release -is)"
 release="$(lsb_release -rs)"
 codename="$(lsb_release -cs)"
+sep="\n-------------------------------------------------------------------------------"
 
+# functions
+
+#separator
 function separator {
-  sep="\n-------------------------------------------------------------------------------"
   echo -e $sep
 }
-
 # root check
 function root_check {
-  if (($EUID != 0)); then
+  if ((EUID != 0)); then
     separator
     echo -e "\nMust be run as root (i.e: 'sudo $0')."
     separator
@@ -31,11 +33,6 @@ function pip_pkg_install {
   python3 -m pip install -r requirements.txt
 }
 
-function complete_msg {
-  echo -e "\nauto-cpufreq tool successfully installed.\n"
-  echo -e "For list of options, run:\nauto-cpufreq"
-}
-
 # tool install
 function install {
   python3 setup.py install --record files.txt
@@ -44,141 +41,108 @@ function install {
 }
 
 function update_service_file {
-  sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
+  echo -e "\nUpdating service file (/usr/local/bin/auto-cpufreq -> /usr/bin/auto-cpu-freq)"
+  sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' \
+	  /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
+}
+
+# First argument is the distro
+function detected_distro() {
+  echo -e "\nDetected $1 distribution"
+  separator
+  echo -e "\nSetting up Python environment\n"
+}
+
+# merged functions pip - install - complete_msg, since it repeats
+function completed () {
+  echo -e "\nInstalling necessary Python packages\n"
+  pip_pkg_install
+  separator
+  echo -e "\ninstalling auto-cpufreq tool\n"
+  install
+  separator
+  echo -e "\nauto-cpufreq tool successfully installed.\n"
+  echo -e "For list of options, run:\nauto-cpufreq"
+  separator
+}
+
+function manual_install {
+  echo -e "\nDidn't detect Debian or RedHat based distro.\n"
+  echo -e "To complete installation, you need to:"
+  echo -e "Install: python3, pip3, python3-setuptools\n"
+  echo -e "Install necessary Python packages:"
+  echo -e "pip3 install psutil click distro power"
+  echo -e "\nRun following sequence of lines:"
+  echo -e "\n-----"
+  echo -e "\npython3 setup.py install --record files.txt"
+  echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
+  echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
+  echo -e "\n-----"
+  echo -e "\nAfter which tool is installed, for full list of options run:"
+  echo -e "auto-cpufreq"
+  separator
+  echo -e "\nConsider creating a feature request to add support for your distro:"
+  echo -e "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"
+  echo -e "\nMake sure to include following information:\n"
+  echo -e "Distribution: $distro"
+  echo -e "Release: $release"
+  echo -e "Codename: $codename"
+  separator
 }
 
 function tool_install {
-  # Debian
-  if [ -f /etc/debian_version ]; then
-    separator
-    echo -e "\nDetected Debian based distribution"
-    separator
-    echo -e "\nSetting up Python environment\n"
-    apt install python3-dev python3-pip python3-setuptools dmidecode -y
-    separator
-    echo -e "\nInstalling necessary Python packages\n"
-    pip_pkg_install
-    separator
-    echo -e "\ninstalling auto-cpufreq tool\n"
-    install
-    separator
-    complete_msg
-    separator
-  # RedHat
-  elif [ -f /etc/redhat-release ]; then
-    separator
-    echo -e "\nDetected RedHat based distribution\n"
-    echo -e "\nSetting up Python environment\n"
-    # CentOS exception
-    if [ -f /etc/centos-release ]; then
-      yum install platform-python-devel dmidecode
-    else
-      yum install python-devel dmidecode
-    fi
-    echo -e "\nInstalling necessary Python packages\n"
-    pip_pkg_install
-    separator
-    echo -e "\ninstalling auto-cpufreq tool\n"
-    install
-    separator
-    complete_msg
-    separator
-  # Solus
-  elif [ -f /etc/solus-release ]; then
-    separator
-    echo -e "\nDetected Solus distribution\n"
-    echo -e "\nSetting up Python environment\n"
-    eopkg install pip python3 python3-devel dmidecode
-    eopkg install -c system.devel
-    echo -e "\nInstalling necessary Python packages\n"
-    pip_pkg_install
-    separator
-    echo -e "\ninstalling auto-cpufreq tool\n"
-    install
-    update_service_file
-    separator
-    complete_msg
-    separator
-  # OpenSUSE
-  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "opensuse"* ]]; then
-    separator
-    echo -e "\nDetected an OpenSUSE distribution\n"
-    echo -e "\nSetting up Python environment\n"
-    if [[ $ID == "opensuse-leap" ]]; then
-      zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
-    else
-      zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
-    fi
-    echo -e "\nInstalling necessary Python packages\n"
-    pip_pkg_install
-    separator
-    echo -e "\ninstalling auto-cpufreq tool\n"
-    install
-    separator
-    complete_msg
-    separator
-  # Manjaro/Arch
-  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "manjaro" || $ID == "arch" || $ID == "endeavouros" || $ID == "garuda" || $ID == "artix" ]]; then
-    separator
-    echo -e "\nDetected an Arch Linux based distribution\n"
-    echo -e "\nSetting up Python environment\n"
-    pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
-    echo -e "\nInstalling necessary Python packages\n"
-    pip_pkg_install
-    separator
-    echo -e "\ninstalling auto-cpufreq tool\n"
-    install
-    if [[ $ID != "artix" ]]; then
-    	update_service_file
-    fi
-    separator
-    complete_msg
-    separator
-  # Void Linux
-  elif [ -f /etc/os-release ] && eval "$(cat /etc/os-release)" && [[ $ID == "void"* ]]; then
-    separator
-    echo -e "\nDetected Void Linux ditribution\n"
-    separator
-    echo -e "\nSetting up Python environment\n"
-    xbps-install -Suy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode
-    separator
-    echo -e "\nInstalling necessary Python packages\n"
-    pip_pkg_install
-    separator
-    echo -e "\ninstalling auto-cpufreq tool\n"
-    install
-    separator
-    complete_msg
-    separator
-  # Other
-  else
-    separator
-    echo -e "\nDidn't detect Debian or RedHat based distro.\n"
-    echo -e "To complete installation, you need to:"
-    echo -e "Install: python3, pip3, python3-setuptools\n"
-    echo -e "Install necessary Python packages:"
-    echo -e "pip3 install psutil click distro power"
-    echo -e "\nRun following sequence of lines:"
-    echo -e "\n-----"
-    echo -e "\npython3 setup.py install --record files.txt"
-    echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
-    echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
-    echo -e "\n-----"
-    echo -e "\nAfter which tool is installed, for full list of options run:"
-    echo -e "auto-cpufreq"
-    separator
-    echo -e "\nConsider creating a feature request to add support for your distro:"
-    echo -e "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"
-    echo -e "\nMake sure to include following information:\n"
-    echo -e "Distribution: $distro"
-    echo -e "Release: $release"
-    echo -e "Codename: $codename"
-    separator
-  fi
+separator
+if [ -f /etc/debian_version ]; then
+	detected_distro "Debian based"
+	apt install python3-dev python3-pip python3-setuptools dmidecode -y
+	completed
+elif [ -f /etc/redhat-release ]; then
+	detected_distro "RedHat based"
+	if [ -f /etc/centos-release ]; then
+		yum install platform-python-devel dmidecode
+	else
+		yum install python-devel dmidecode
+	fi
+	completed
+elif [ -f /etc/solus-release ]; then
+	detected_distro "Solus"
+	eopkg install pip python3 python3-devel dmidecode
+	eopkg install -c system.devel
+	update_service_file
+	completed
+elif [ -f /etc/os-release ];then
+	eval "$(cat /etc/os-release)"
+	separator
+	case $ID in
+	opensuse-leap)
+		detected_distro "OpenSUSE"
+		zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
+		;;
+	opensuse)
+		detected_distro "OpenSUSE"
+    		echo -e "\nDetected an OpenSUSE ditribution\n\nSetting up Python environment\n"
+		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
+		;;
+	arch|manjaro|endeavouros|garuda|artix)
+		detected_distro "Arch Linux based"
+		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
+		[ $ID != "artix" ] && update_service_file
+		;;
+	void)
+		detected_distro "Void Linux"
+    		xbps-install -Suy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode
+		;;
+	*) #Any other distro
+	manual_install
+		;;
+	esac
+	completed
+else # In case /etc/os-release doesn't exist
+	manual_install
+fi
 }
 
 function tool_remove {
-
   files="files.txt"
   share_dir="/usr/local/share/auto-cpufreq/"
   srv_install="/usr/bin/auto-cpufreq-install"
@@ -217,12 +181,14 @@ function ask_operation {
   echo -e "\n-------------------------- auto-cpufreq installer -----------------------------"
   echo -e "\nWelcome to auto-cpufreq tool installer."
   echo -e "\nOptions:\n"
-  read -p "[I]nstall
+  read -p \
+"[I]nstall
 [R]emove
 [Q]uit
 
 Select a key: [i/r/q]: " answer
 }
+# End of functions
 
 root_check
 
@@ -242,18 +208,17 @@ else
   esac
 fi
 
-if [[ $answer == [Ii] ]]; then
-  root_check
-  tool_install
-elif [[ $answer == [Rr] ]]; then
-  root_check
-  tool_remove
-elif [[ $answer == [Qq] ]]; then
-  separator
-  echo ""
-  exit 0
-else
-  separator
-  echo -e "\nUnknown key, aborting ...\n"
-  exit 1
-fi
+case $answer in
+	I|i)
+	tool_install ;;
+	R|r)
+	tool_remove ;;
+	Q|q)
+	separator
+	echo ""
+	exit 0 ;;
+	*)
+	separator
+	echo -e "\nUnknown key, aborting ...\n"
+	exit 1 ;;
+esac
