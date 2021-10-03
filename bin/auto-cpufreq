@@ -33,6 +33,7 @@ def main(daemon, debug, install, live, log, monitor, stats, version):
         run(["auto-cpufreq", "--help"])
         footer()
     else:
+        get_config()
         # Important: order does matter
         if daemon:
             file_stats()
