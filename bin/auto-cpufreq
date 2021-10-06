@@ -33,7 +33,8 @@ def main(daemon, debug, install, live, log, monitor, stats, version):
         run(["auto-cpufreq", "--help"])
         footer()
     else:
-        get_config()
+        if bool(get_config()):
+            print("\nUsing settings defined in /etc/auto-cpufreq.conf file")
         # Important: order does matter
         if daemon:
             file_stats()
