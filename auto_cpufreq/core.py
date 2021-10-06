@@ -24,7 +24,6 @@ warnings.filterwarnings("ignore")
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
 SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
-CONFIG_FILE = r'/etc/auto-cpufreq.conf'
 
 # from the highest performance to the lowest
 ALL_GOVERNORS = (
@@ -63,12 +62,12 @@ def file_stats():
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
-def get_config():
+def get_config(config_file=''):
     if not hasattr(get_config, 'dict'):
         get_config.dict = dict()
 
         config = configparser.ConfigParser()
-        config.read(CONFIG_FILE)
+        config.read(config_file)
 
         for section in config.sections():
             get_config.dict[section] = dict(config.items(section))
