@@ -73,6 +73,31 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl status auto-cpufreq` to see the status of service, and `systemctl enable auto-cpufreq` for service to persist running accross reboots. 
 
+## Configuring auto-cpufreq
+
+You can configure profiles for battery and power supply. These profiles will let you pick which governor to use and how and when turbo boost is enabled. The possible values for turbo boost behavior are always, auto and never. The default behavior is auto, which only kicks in during high load.
+
+### Example config
+```
+# settings for when connected to a power source
+[charger]
+# see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+# preferred governor.
+governor = performance
+
+# turbo boost setting. possible values: always, auto, never
+turbo = auto
+
+# settings for when using battery power
+[battery]
+# see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+# preferred governor
+governor = powersave
+
+# turbo boost setting. possible values: always, auto, never
+turbo = auto
+```
+
 ## How to run auto-cpufreq
 
 auto-cpufreq can be run by simply running the `auto-cpufreq` and following on screen instructions, i.e:
