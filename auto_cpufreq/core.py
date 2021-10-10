@@ -998,6 +998,8 @@ def sysinfo():
             temp_per_cpu = [core_temp["zenpower"][0].current] * online_cpu_count
         elif "acpitz" in core_temp:
             temp_per_cpu = [core_temp["acpitz"][0].current] * online_cpu_count
+        elif "thinkpad" in core_temp:
+            temp_per_cpu = [core_temp["thinkpad"][0].current] * online_cpu_count
     except Exception as e:
         print(repr(e))
         pass
