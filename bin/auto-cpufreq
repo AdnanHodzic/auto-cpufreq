@@ -26,6 +26,12 @@ from auto_cpufreq.core import *
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
 def main(config, daemon, debug, install, live, log, monitor, stats, version, donate):
+
+    # display info if config file is used
+    def config_info_dialog():
+        if bool(get_config(config)):
+            print("\nUsing settings defined in " + config + " file")
+
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -35,10 +41,8 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         run(["auto-cpufreq", "--help"])
         footer()
     else:
-        if bool(get_config(config)):
-            print("\nUsing settings defined in " + config + " file")
-        # Important: order does matter
         if daemon:
+            config_info_dialog()
             file_stats()
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 while True:
@@ -63,6 +67,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             else:
                 daemon_not_found()
         elif monitor:
+            config_info_dialog()
             while True:
                 print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
                 time.sleep(1)
@@ -76,6 +81,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 mon_autofreq()
                 countdown(5)
         elif live:
+            config_info_dialog()
             print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
             time.sleep(1)
             while True:
@@ -89,12 +95,14 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 set_autofreq()
                 countdown(5)
         elif stats:
+            config_info_dialog()
             print("\nNote: You can quit stats mode by pressing \"ctrl+c\"")
             time.sleep(1)
             read_stats()
         elif log:
             deprecated_log_msg()
         elif debug:
+            config_info_dialog()
             root_check()
             footer()
             distro_info()
