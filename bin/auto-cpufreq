@@ -24,7 +24,8 @@ from auto_cpufreq.core import *
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--version", is_flag=True, help="Show currently installed version")
-def main(config, daemon, debug, install, live, log, monitor, stats, version):
+@click.option("--donate", is_flag=True, help="Support the project")
+def main(config, daemon, debug, install, live, log, monitor, stats, version, donate):
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -118,6 +119,12 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version):
             footer()
             distro_info()
             app_version()
+            footer()
+        elif donate:
+            footer()
+            print("If auto-cpufreq helped you out and you find it useful ...\n")
+            print("Show your appreciation by donating!")
+            print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
             footer()
         elif install:
             if os.getenv('PKG_MARKER') == "SNAP":
