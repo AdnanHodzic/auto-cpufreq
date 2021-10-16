@@ -77,7 +77,9 @@ Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl 
 
 You can configure profiles for battery and power supply. These profiles will let you pick which governor to use and how and when turbo boost is enabled. The possible values for turbo boost behavior are always, auto and never. The default behavior is auto, which only kicks in during high load.
 
-### Example config
+Default location where config needs to be placed for it to be read automatically: `/etc/auto-cpufreq.conf`
+
+### Example config contents
 ```
 # settings for when connected to a power source
 [charger]
@@ -169,7 +171,14 @@ GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_pstate=disable"
 
 ## Donate
 
-Since I'm working on this project in free time, please consider supporting this project by making a donation of any amount!
+Showing your support and appreciation for auto-cpufreq project can be done in two ways:
+
+* Financial donation
+* Code contribution
+
+### Financial donation
+
+If auto-cpufreq helped you out and you find it useful, show your appreciation by donating (any amount) to the project!
 
 ##### PayPal
 [![paypal](https://www.paypalobjects.com/en_US/NL/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=7AHCP5PU95S4Y&item_name=Contribution+for+work+on+auto-cpufreq&currency_code=EUR&source=url)
@@ -178,3 +187,7 @@ Since I'm working on this project in free time, please consider supporting this 
 [bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87](bitcoin:bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87)
 
 [![bitcoin](https://foolcontrol.org/wp-content/uploads/2019/08/btc-donate-displaylink-debian.png)](bitcoin:bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87)
+
+### Code contribution
+
+Other ways of supporting the project consists of making a code or documentation contribution. If you have an idea for a new features or want to implement some of the existing feature requests or fix some of the [bugs & issues](https://github.com/AdnanHodzic/auto-cpufreq/issues). Please make your changes and submit a [pull request](https://github.com/AdnanHodzic/auto-cpufreq/pulls) which I'll be glad to review. If your changes are accepted you'll be credited as part of [releases page](https://github.com/AdnanHodzic/auto-cpufreq/releases).
