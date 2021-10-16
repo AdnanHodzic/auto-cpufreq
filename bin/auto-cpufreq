@@ -15,16 +15,16 @@ from auto_cpufreq.core import *
 
 # cli
 @click.command()
-@click.option("--config", is_flag=False, default="/etc/auto-cpufreq.conf", help="Use config file at defined path")
-@click.option("--daemon", is_flag=True, hidden=True)
-@click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
-@click.option("--install/--remove", default=True, help="Install/remove daemon for (permanent) automatic CPU optimizations")
-@click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
-@click.option("--log", is_flag=True, help="Deprecated flag replaced by --stats")
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
+@click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
+@click.option("--install/--remove", default=True, help="Install/remove daemon for (permanent) automatic CPU optimizations")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
+@click.option("--config", is_flag=False, default="/etc/auto-cpufreq.conf", help="Use config file at defined path")
+@click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
+@click.option("--log", is_flag=True, hidden=True)
+@click.option("--daemon", is_flag=True, hidden=True)
 def main(config, daemon, debug, install, live, log, monitor, stats, version, donate):
 
     # display info if config file is used
