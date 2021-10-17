@@ -33,11 +33,25 @@ function pip_pkg_install {
   python3 -m pip install -r requirements.txt
 }
 
+function install_service_file {
+  echo -e "\nInstall service file (/usr/local/share/auto-cpufreq.service -> /usr/lib/systemd/system/auto-cpufreq.service)"
+  cp -av /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /usr/lib/systemd/system/auto-cpufreq.service
+  /usr/bin/systemctl daemon-reload
+}
+
+function start_service {
+  echo -e "\nEnabling and starting auto-cpufreq service"
+  /usr/bin/systemctl enable auto-cpufreq
+  /usr/bin/systemctl start auto-cpufreq
+}
+
 # tool install
 function install {
   python3 setup.py install --record files.txt
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
+  install_service_file
+  start_service
 }
 
 function update_service_file {
@@ -45,6 +59,8 @@ function update_service_file {
   sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' \
 	  /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
 }
+
+
 
 # First argument is the distro
 function detected_distro() {
@@ -149,6 +165,7 @@ function tool_remove {
   srv_remove="/usr/bin/auto-cpufreq-remove"
   stats_file="/var/run/auto-cpufreq.stats"
   tool_proc_rm="auto-cpufreq --remove"
+  service_file="/usr/lib/systemd/system/auto-cpufreq.service"
 
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
@@ -171,6 +188,10 @@ function tool_remove {
   [ -f $srv_install ] && rm $srv_install
   [ -f $srv_remove ] && rm $srv_remove
   [ -f $stats_file ] && rm $stats_file
+  [ -f $service_file ] && rm $service_file
+
+  # reload systemd daemon
+  /usr/bin/systemctl daemon-reload
 
   separator
   echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
