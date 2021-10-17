@@ -29,8 +29,13 @@ function root_check {
 }
 
 # python packages install
-function pip_pkg_install {
-  python3 -m pip install -r requirements.txt
+function setup_venv {
+    venv_dir=/opt/auto-cpufreq/venv
+    mkdir -p "${venv_dir}"
+    python3 -m venv "${venv_dir}"
+
+    source "${venv_dir}/bin/activate"
+    python3 -m pip install -r requirements.txt
 }
 
 # tool install
@@ -38,6 +43,9 @@ function install {
   python3 setup.py install --record files.txt
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
+
+  cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq /usr/local/bin
+  chmod u+x /usr/local/bin/auto-cpufreq
 }
 
 function update_service_file {
@@ -56,7 +64,7 @@ function detected_distro() {
 # merged functions pip - install - complete_msg, since it repeats
 function completed () {
   echo -e "\nInstalling necessary Python packages\n"
-  pip_pkg_install
+  setup_venv
   separator
   echo -e "\ninstalling auto-cpufreq tool\n"
   install
@@ -148,7 +156,10 @@ function tool_remove {
   srv_install="/usr/bin/auto-cpufreq-install"
   srv_remove="/usr/bin/auto-cpufreq-remove"
   stats_file="/var/run/auto-cpufreq.stats"
-  tool_proc_rm="auto-cpufreq --remove"
+  tool_proc_rm="/usr/local/bin/auto-cpufreq --remove"
+  wrapper_script="/usr/local/bin/auto-cpufreq"
+  unit_file="/etc/systemd/system/auto-cpufreq.service"
+  venv_path="/opt/auto-cpufreq"
 
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
@@ -171,6 +182,11 @@ function tool_remove {
   [ -f $srv_install ] && rm $srv_install
   [ -f $srv_remove ] && rm $srv_remove
   [ -f $stats_file ] && rm $stats_file
+  [ -f $unit_file ] && rm $unit_file
+  [ -f $wrapper_script ] && rm $wrapper_script
+
+  # remove python virtual environment
+  rm -rf "${venv_path}"
 
   separator
   echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."

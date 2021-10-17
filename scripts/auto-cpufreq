@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -eu
+
+# get script name
+PROGNAME=$(basename "${0}")
+
+err_exit()
+{
+    echo "${PROGNAME}: ${1:-wrong invocation. try --help for help.}" 1>&2
+    exit 1
+}
+
+# invocation handling
+#
+param=""
+if [ "${#}" -eq 1 ];
+then
+    param="${1}"
+fi
+
+venv_dir=/opt/auto-cpufreq/venv
+. "${venv_dir}/bin/activate"
+PYTHONPATH=/opt/auto-cpufreq \
+            /opt/auto-cpufreq/venv/bin/python \
+            /opt/auto-cpufreq/venv/bin/auto-cpufreq \
+            "${param}"
