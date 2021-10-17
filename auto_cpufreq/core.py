@@ -1059,12 +1059,17 @@ def is_running(program, argument):
             print(repr(e))
             continue
 
+def daemon_running_msg():
+    print("\n" + "-" * 24 + " auto-cpufreq running " + "-" * 30 + "\n")
+    print(
+        'ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the deamon before running with --live or --monitor mode'
+    )
 
 # check if auto-cpufreq --daemon is running
 def running_daemon():
     if is_running("auto-cpufreq", "--daemon"):
-        deploy_complete_msg()
+        daemon_running_msg()
         exit(1)
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
-        deploy_complete_msg()
+        daemon_running_msg()
         exit(1)
