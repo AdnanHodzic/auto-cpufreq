@@ -48,12 +48,6 @@ function install {
   chmod u+x /usr/local/bin/auto-cpufreq
 }
 
-function update_service_file {
-  echo -e "\nUpdating service file (/usr/local/bin/auto-cpufreq -> /usr/bin/auto-cpu-freq)"
-  sed -i 's|ExecStart=/usr/local/bin/auto-cpufreq|ExecStart=/usr/bin/auto-cpufreq|' \
-	  /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
-}
-
 # First argument is the distro
 function detected_distro() {
   echo -e "\nDetected $1 distribution"
@@ -116,7 +110,6 @@ elif [ -f /etc/solus-release ]; then
 	detected_distro "Solus"
 	eopkg install pip python3 python3-devel dmidecode
 	eopkg install -c system.devel
-	update_service_file
 	completed
 elif [ -f /etc/os-release ];then
 	eval "$(cat /etc/os-release)"
@@ -134,7 +127,6 @@ elif [ -f /etc/os-release ];then
 	arch|manjaro|endeavouros|garuda|artix)
 		detected_distro "Arch Linux based"
 		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
-		[ $ID != "artix" ] && update_service_file
 		;;
 	void)
 		detected_distro "Void Linux"
