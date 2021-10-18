@@ -17,7 +17,7 @@ err_exit()
 param=""
 if [ "${#}" -ne 1 ];
 then
-    err_exit()
+    err_exit
 else
     param="${1}"
 fi
