@@ -35,6 +35,7 @@ function setup_venv {
     python3 -m venv "${venv_dir}"
 
     source "${venv_dir}/bin/activate"
+    python3 -m pip install --upgrade pip
     python3 -m pip install -r requirements.txt
 }
 
@@ -44,7 +45,8 @@ function install {
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
 
-  cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq /usr/local/bin
+  # this is necessary since we need this script before we can run auto-cpufreq itself
+  cp scripts/auto-cpufreq /usr/local/bin
   chmod u+x /usr/local/bin/auto-cpufreq
 }
 
