@@ -25,7 +25,6 @@ rm_sv() {
 if [ "$(ps h -o comm 1)" = "runit" ];then
 	if [ -f /etc/os-release ];then
 		eval "$(cat /etc/os-release)"
-		separator
 		case $ID in
 			void)
 				rm_sv /etc /var ;;
