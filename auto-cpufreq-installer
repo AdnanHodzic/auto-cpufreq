@@ -60,6 +60,9 @@ function completed () {
   separator
   echo -e "\ninstalling auto-cpufreq tool\n"
   install
+}
+
+function complete_msg() {
   separator
   echo -e "\nauto-cpufreq tool successfully installed.\n"
   echo -e "For list of options, run:\nauto-cpufreq"
@@ -96,6 +99,7 @@ if [ -f /etc/debian_version ]; then
 	detected_distro "Debian based"
 	apt install python3-dev python3-pip python3-setuptools dmidecode -y
 	completed
+	complete_msg
 elif [ -f /etc/redhat-release ]; then
 	detected_distro "RedHat based"
 	if [ -f /etc/centos-release ]; then
@@ -104,12 +108,14 @@ elif [ -f /etc/redhat-release ]; then
 		yum install python-devel dmidecode
 	fi
 	completed
+	complete_msg
 elif [ -f /etc/solus-release ]; then
 	detected_distro "Solus"
 	eopkg install pip python3 python3-devel dmidecode
 	eopkg install -c system.devel
-	update_service_file
 	completed
+ 	update_service_file
+ 	complete_msg
 elif [ -f /etc/os-release ];then
 	eval "$(cat /etc/os-release)"
 	separator
@@ -117,26 +123,31 @@ elif [ -f /etc/os-release ];then
 	opensuse-leap)
 		detected_distro "OpenSUSE"
 		zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode
+		completed
 		;;
 	opensuse)
 		detected_distro "OpenSUSE"
     		echo -e "\nDetected an OpenSUSE ditribution\n\nSetting up Python environment\n"
 		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
+		completed
 		;;
 	arch|manjaro|endeavouros|garuda|artix)
 		detected_distro "Arch Linux based"
 		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
+		completed
 		[ $ID != "artix" ] && update_service_file
 		;;
 	void)
 		detected_distro "Void Linux"
     		xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode
+		completed
 		;;
 	*) #Any other distro
 	manual_install
+	completed
 		;;
 	esac
-	completed
+ 	complete_msg
 else # In case /etc/os-release doesn't exist
 	manual_install
 fi
