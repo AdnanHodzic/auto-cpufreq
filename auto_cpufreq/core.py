@@ -14,6 +14,7 @@ import warnings
 import configparser
 from math import isclose
 from pathlib import Path
+from shutil import which
 from subprocess import getoutput, call, run, check_output, DEVNULL
 
 
@@ -293,18 +294,21 @@ def deploy_daemon():
     # deploy cpufreqctl script func call
     cpufreqctl()
 
-    print("* Turn off bluetooth on boot")
-    btconf = Path("/etc/bluetooth/main.conf")
-    try:
-        orig_set = "AutoEnable=true"
-        change_set = "AutoEnable=false"
-        with btconf.open(mode="r+") as f:
-            content = f.read()
-            f.seek(0)
-            f.truncate()
-            f.write(content.replace(orig_set, change_set))
-    except Exception as e:
-        print(f"\nERROR:\nWas unable to turn off bluetooth on boot\n{repr(e)}")
+    if which("bluetoothctl") is not None:
+        print("* Turn off bluetooth on boot")
+        btconf = Path("/etc/bluetooth/main.conf")
+        try:
+            orig_set = "AutoEnable=true"
+            change_set = "AutoEnable=false"
+            with btconf.open(mode="r+") as f:
+                content = f.read()
+                f.seek(0)
+                f.truncate()
+                f.write(content.replace(orig_set, change_set))
+        except Exception as e:
+            print(f"\nERROR:\nWas unable to turn off bluetooth on boot\n{repr(e)}")
+    else:
+        print("* Turn off bluetooth on boot [skipping] (package providing bluetooth access is not present)")
 
     auto_cpufreq_stats_path.touch(exist_ok=True)
 
@@ -329,18 +333,21 @@ def remove():
 
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
-    print("* Turn on bluetooth on boot")
-    btconf = "/etc/bluetooth/main.conf"
-    try:
-        orig_set = "AutoEnable=true"
-        change_set = "AutoEnable=false"
-        with open(btconf, "r+") as f:
-            content = f.read()
-            f.seek(0)
-            f.truncate()
-            f.write(content.replace(change_set, orig_set))
-    except Exception as e:
-        print(f"\nERROR:\nWas unable to turn on bluetooth on boot\n{repr(e)}")
+    if which("bluetoothctl") is not None:
+        print("* Turn on bluetooth on boot")
+        btconf = "/etc/bluetooth/main.conf"
+        try:
+            orig_set = "AutoEnable=true"
+            change_set = "AutoEnable=false"
+            with open(btconf, "r+") as f:
+                content = f.read()
+                f.seek(0)
+                f.truncate()
+                f.write(content.replace(change_set, orig_set))
+        except Exception as e:
+            print(f"\nERROR:\nWas unable to turn on bluetooth on boot\n{repr(e)}")
+    else:
+        print("* Turn on bluetooth on boot [skipping] (package providing bluetooth access is not present)")
 
     # run auto-cpufreq daemon install script
     call("/usr/bin/auto-cpufreq-remove", shell=True)
