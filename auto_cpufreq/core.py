@@ -189,8 +189,8 @@ def charging():
     heat = get_config()
     
     if(heat['heating_problem']['charging_heating_problem'] == 1):
-        ac_state = False
-
+        ac_state = False 
+    
     # if both ac-adapter and battery states are unknown default to not charging
     return ac_state
 
