@@ -83,6 +83,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         elif live:
             config_info_dialog()
             print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
+            gnome_power_disable_live()
             time.sleep(1)
             while True:
                 root_check()
@@ -138,6 +139,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
                 running_daemon()
+                gnome_power_disable()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
                 run("snapctl start --enable auto-cpufreq", shell=True)
@@ -145,6 +147,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             else:
                 root_check()
                 running_daemon()
+                gnome_power_disable()
                 gov_check()
                 deploy_daemon()
                 deploy_complete_msg()

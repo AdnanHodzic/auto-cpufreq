@@ -352,6 +352,9 @@ def remove():
     else:
         print("* Turn on bluetooth on boot [skipping] (package providing bluetooth access is not present)")
 
+    # enable gnome power profiles
+    gnome_power_enable()
+
     # run auto-cpufreq daemon install script
     call("/usr/bin/auto-cpufreq-remove", shell=True)
 
@@ -1083,3 +1086,33 @@ def running_daemon():
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
         daemon_running_msg()
         exit(1)
+
+# disable gnome >= 40 power profiles (live)
+def gnome_power_disable_live():
+    gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+    if(gnome_power_stats == 0):
+        print("Disabling GNOME power profiles")
+        call(["systemctl", "stop", "power-profiles-daemon"])
+        #call(["systemctl", "mask", "power-profiles-daemon"])
+    else:
+        print("GNOME power already disabled")
+
+# disable gnome >= 40 power profiles (install)
+def gnome_power_disable():
+    gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+    if(gnome_power_stats == 0):
+        print("Disabling GNOME power profiles")
+        call(["systemctl", "stop", "power-profiles-daemon"])
+        call(["systemctl", "disable", "power-profiles-daemon"])
+    else:
+        print("GNOME power already disabled")
+
+# enable gnome >= 40 power profiles (uninstall)
+def gnome_power_enable():
+    gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+    if(gnome_power_stats == 0):
+        print("Enabling GNOME power profiles")
+        call(["systemctl", "start", "power-profiles-daemon"])
+        call(["systemctl", "enable", "power-profiles-daemon"])
+    else:
+        print("GNOME power already enabled")
