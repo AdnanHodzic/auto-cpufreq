@@ -21,7 +21,7 @@ Please note: auto-cpufreq aims to replace TLP and after you install auto-cpufreq
 
 #### Supported architectures and devices
 
-Supported devices must have an Intel, AMD or ARM CPU's. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible.
+Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible.
 
 ## Features
 
