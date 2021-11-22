@@ -19,6 +19,8 @@ With that said, I needed a simple tool which would automatically make "cpufreq" 
 
 Please note: auto-cpufreq aims to replace TLP and after you install auto-cpufreq it's recommended to remove TLP. However, if for some reason you still need/want TLP installed and running auto-cpufreq doesn't conflict and [works great in tandem with TLP](https://github.com/AdnanHodzic/auto-cpufreq/discussions/176).
 
+Tool/daemon that does not conflict with auto-cpufreq in any way and is even recommended to have running alongside is [thermald](https://wiki.debian.org/thermald). 
+
 #### Supported architectures and devices
 
 Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible.
