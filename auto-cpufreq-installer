@@ -184,6 +184,7 @@ function tool_remove {
   [ -f $stats_file ] && rm $stats_file
 
   # enable GNOME power profiles in case it was disabled by auto-cpufreq
+  systemctl unmask power-profiles-daemon
   systemctl start power-profiles-daemon
   systemctl enable power-profiles-daemon
 

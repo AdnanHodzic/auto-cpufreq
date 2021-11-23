@@ -1093,7 +1093,6 @@ def gnome_power_disable_live():
     if(gnome_power_stats == 0):
         print("Disabling GNOME power profiles")
         call(["systemctl", "stop", "power-profiles-daemon"])
-        #call(["systemctl", "mask", "power-profiles-daemon"])
     else:
         print("GNOME power already disabled")
 
@@ -1104,6 +1103,7 @@ def gnome_power_disable():
         print("Disabling GNOME power profiles")
         call(["systemctl", "stop", "power-profiles-daemon"])
         call(["systemctl", "disable", "power-profiles-daemon"])
+        call(["systemctl", "mask", "power-profiles-daemon"])
     else:
         print("GNOME power already disabled")
 
@@ -1112,6 +1112,7 @@ def gnome_power_enable():
     gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
     if(gnome_power_stats == 0):
         print("Enabling GNOME power profiles")
+        call(["systemctl", "unmask", "power-profiles-daemon"])
         call(["systemctl", "start", "power-profiles-daemon"])
         call(["systemctl", "enable", "power-profiles-daemon"])
     else:
