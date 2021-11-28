@@ -12,6 +12,7 @@ from subprocess import call, run
 
 sys.path.append('../')
 from auto_cpufreq.core import *
+#from auto_cpufreq.gnome_power import *
 
 # cli
 @click.command()
@@ -83,6 +84,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         elif live:
             config_info_dialog()
             print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
+            gnome_power_detect()
             gnome_power_disable_live()
             time.sleep(1)
             while True:
@@ -139,6 +141,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
                 running_daemon()
+                gnome_power_detect()
                 gnome_power_disable()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
@@ -147,6 +150,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             else:
                 root_check()
                 running_daemon()
+                gnome_power_detect()
                 gnome_power_disable()
                 gov_check()
                 deploy_daemon()
