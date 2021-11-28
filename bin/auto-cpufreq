@@ -84,11 +84,11 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         elif live:
             config_info_dialog()
             print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
-            gnome_power_detect()
-            gnome_power_disable_live()
             time.sleep(1)
             while True:
                 root_check()
+                gnome_power_detect()
+                gnome_power_disable_live()
                 running_daemon()
                 footer()
                 gov_check()

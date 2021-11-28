@@ -38,8 +38,13 @@ parts:
 plugs:
    etc-auto-cpufreq-conf:
     interface: system-files
-    read:
+    write:
     - /etc/auto-cpufreq.conf
+   etc-bluetooth-conf:
+    interface: system-files
+    write:
+    - /etc/bluetooth/main.conf
+
 
 apps:
   auto-cpufreq:
@@ -51,6 +56,7 @@ apps:
       - system-observe
       - hardware-observe
       - etc-auto-cpufreq-conf
+      - etc-bluetooth-conf
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
