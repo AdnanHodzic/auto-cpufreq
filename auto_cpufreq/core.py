@@ -173,7 +173,7 @@ def charging():
         # Battery statuses: Full, Charging, Discharging, Unknown
         battery_status = getoutput(f"grep . {power_dir}B*/status").splitlines()
         # if there's one battery charging, or if there's one ac-adapter on-line, ac_state is True
-        ac_state = (any([not "Discharging" in ac for ac in battery_status]) or 
+        ac_state = (all([not "Discharging" in ac for ac in battery_status]) or 
                     any(["1" in ac.split(":")[-1] for ac in ac_info]))
     else:
         has_battery = psutil.sensors_battery() is not None
