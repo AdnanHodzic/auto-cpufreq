@@ -26,6 +26,7 @@ parts:
     stage-packages:
        - coreutils
        - dmidecode
+       - rfkill
     source: .
 
   deploy-scripts:
@@ -40,27 +41,21 @@ plugs:
     interface: system-files
     write:
     - /etc/auto-cpufreq.conf
-   etc-bluetooth-conf:
-    interface: system-files
-    write:
-    - /etc/bluetooth/main.conf
-
 
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq
     environment:
       PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PKG_MARKER: SNAP
     plugs:
       - cpu-control
       - system-observe
       - hardware-observe
+      - network-control
       - etc-auto-cpufreq-conf
-      - etc-bluetooth-conf
-    environment:
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-      PKG_MARKER: SNAP
 
   service:
     command: usr/bin/snapdaemon
@@ -68,6 +63,8 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
+      - network-control
+      - etc-auto-cpufreq-conf
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8

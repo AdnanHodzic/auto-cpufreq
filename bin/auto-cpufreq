@@ -46,6 +46,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             config_info_dialog()
             file_stats()
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+                gnome_power_detect_snap()
                 while True:
                     root_check()
                     footer()
@@ -56,6 +57,9 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                     set_autofreq()
                     countdown(5)
             elif os.getenv("PKG_MARKER") != "SNAP":
+                gnome_power_detect()
+                # ToDo: disable only if not disabled already
+                gnome_power_disable()
                 while True:
                     root_check()
                     footer()
@@ -73,6 +77,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
                 time.sleep(1)
                 root_check()
+                # ToDO: add gnome profile detect/disable?
                 running_daemon()
                 footer()
                 gov_check()
@@ -85,10 +90,14 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             config_info_dialog()
             print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
             time.sleep(1)
+            if os.getenv("PKG_MARKER") == "SNAP":
+                gnome_power_detect_snap()
+            else:
+                gnome_power_detect()
+                # ToDo: disable only if not disabled already
+                gnome_power_disable()
             while True:
                 root_check()
-                gnome_power_detect()
-                gnome_power_disable_live()
                 running_daemon()
                 footer()
                 gov_check()
@@ -141,8 +150,8 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             if os.getenv('PKG_MARKER') == "SNAP":
                 root_check()
                 running_daemon()
-                gnome_power_detect()
-                gnome_power_disable()
+                gnome_power_detect_snap()
+                bt_snap()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
                 run("snapctl start --enable auto-cpufreq", shell=True)
@@ -151,6 +160,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 root_check()
                 running_daemon()
                 gnome_power_detect()
+                # ToDo: disable only if not disabled already
                 gnome_power_disable()
                 gov_check()
                 deploy_daemon()
@@ -165,6 +175,9 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                         auto_cpufreq_stats_file.close()
 
                     auto_cpufreq_stats_path.unlink()
+                # ToDo: 
+                # * add message to enable GNOME power profiles again
+                # * undo bluetooth boot disable
                 remove_complete_msg()
             else:
                 root_check()

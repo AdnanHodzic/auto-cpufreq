@@ -14,23 +14,25 @@ else:
     app_name="auto-cpufreq"
 
 # detect if gnome power profile service is running
-gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+if os.getenv('PKG_MARKER') != "SNAP":
+    gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
 
 # alert in case gnome power profile service is running
 def gnome_power_detect():
-    # ToDo: broken, can't be checked like this
-    if os.getenv('PKG_MARKER') == "SNAP" and gnome_power_stats == 0:
-        print("\nDetected running GNOME Power Profiles daemon service:")
-        print("This daemon might interfere with auto-cpufreq and should be disabled!\n")
-        print("Due to Snap limitations, it needs to be disabled manually by running, i.e:")
-        print("cd ~/auto-cpufreq/auto_cpufreq")
-        print("python3 gnome_power.py --disable")
-    elif gnome_power_stats == 0:
+    if gnome_power_stats == 0:
         print("\nDetected running GNOME Power Profiles daemon service:")
         print("This daemon might interfere with auto-cpufreq and it will be disabled!")
         print("\nIf you wish to enable this daemon to run concurrently with auto-cpufreq run:")
         print("cd ~/auto-cpufreq/auto_cpufreq")
         print("python3 gnome_power.py --enable")
+
+# notification on snap
+def gnome_power_detect_snap():
+        print("\nUnable to detect state of GNOME Power Profiles daemon service:")
+        print("This daemon might interfere with auto-cpufreq and should be disabled!\n")
+        print("Due to Snap limitations, it needs to be disabled manually by running, i.e:")
+        print("cd ~/auto-cpufreq/auto_cpufreq")
+        print("python3 gnome_power.py --disable")
 
 # disable gnome >= 40 power profiles (live)
 def gnome_power_disable_live():
@@ -62,6 +64,7 @@ def valid_options():
     print("--disable\t\tDisable GNOME Power Profiles daemon\n")
 
 # cli
+# ToDo: implement status option
 @click.command()
 @click.option("--enable", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--disable", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
@@ -74,10 +77,15 @@ def main(enable, disable):
         footer()
     else:
         if enable:
+            # Todo: prettify output
             root_check()
             print("Enabling")
+            gnome_power_enable()
         elif disable:
+            # Todo: prettify output
+            root_check()
             print("Disabling")
+            gnome_power_disable()
         else:
             print("whatever")
 

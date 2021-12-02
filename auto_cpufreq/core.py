@@ -330,6 +330,14 @@ def deploy_daemon():
 
     call("/usr/bin/auto-cpufreq-install", shell=True)
 
+def bt_snap():
+    if os.getenv("PKG_MARKER") == "SNAP":
+        try:
+            print("\n* Turn off bluetooth on boot")
+            call("rfkill block bluetooth", shell=True)
+        except:
+            print("n\nERROR:\nWas unable to turn off bluetooth on boot")
+
 
 # remove auto-cpufreq daemon
 def remove():
