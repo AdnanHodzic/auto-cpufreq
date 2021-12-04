@@ -298,21 +298,8 @@ def deploy_daemon():
     # deploy cpufreqctl script func call
     cpufreqctl()
 
-    if which("bluetoothctl") is not None:
-        print("* Turn off bluetooth on boot")
-        btconf = Path("/etc/bluetooth/main.conf")
-        try:
-            orig_set = "AutoEnable=true"
-            change_set = "AutoEnable=false"
-            with btconf.open(mode="r+") as f:
-                content = f.read()
-                f.seek(0)
-                f.truncate()
-                f.write(content.replace(orig_set, change_set))
-        except Exception as e:
-            print(f"\nERROR:\nWas unable to turn off bluetooth on boot\n{repr(e)}")
-    else:
-        print("* Turn off bluetooth on boot [skipping] (package providing bluetooth access is not present)")
+    # turn off bluetooth on boot
+    bluetooth_disable()
 
     auto_cpufreq_stats_path.touch(exist_ok=True)
 
@@ -329,16 +316,6 @@ def deploy_daemon():
 
     call("/usr/bin/auto-cpufreq-install", shell=True)
 
-# ToDo: change to be a warning and move to power_helper?
-def bt_snap():
-    if os.getenv("PKG_MARKER") == "SNAP":
-        try:
-            print("\n* Turn off bluetooth on boot")
-            call("rfkill block bluetooth", shell=True)
-        except:
-            print("n\nERROR:\nWas unable to turn off bluetooth on boot")
-
-
 # remove auto-cpufreq daemon
 def remove():
 
@@ -349,21 +326,8 @@ def remove():
 
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
-    if which("bluetoothctl") is not None:
-        print("* Turn on bluetooth on boot")
-        btconf = "/etc/bluetooth/main.conf"
-        try:
-            orig_set = "AutoEnable=true"
-            change_set = "AutoEnable=false"
-            with open(btconf, "r+") as f:
-                content = f.read()
-                f.seek(0)
-                f.truncate()
-                f.write(content.replace(change_set, orig_set))
-        except Exception as e:
-            print(f"\nERROR:\nWas unable to turn on bluetooth on boot\n{repr(e)}")
-    else:
-        print("* Turn on bluetooth on boot [skipping] (package providing bluetooth access is not present)")
+    # turn on bluetooth on boot
+    bluetooth_enable()
 
     # output warning if gnome power profile is stopped
     gnome_power_rm_reminder()
@@ -1086,6 +1050,7 @@ def daemon_running_msg():
     print(
         'ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the deamon before running with --live or --monitor mode'
     )
+    footer()
 
 # check if auto-cpufreq --daemon is running
 def running_daemon():

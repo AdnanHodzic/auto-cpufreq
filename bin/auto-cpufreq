@@ -154,8 +154,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 root_check()
                 running_daemon()
                 gnome_power_detect_snap()
-                # ToDo: move elsewhere after func revamp
-                #bt_snap()
+                bluetooth_notif_snap()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
                 run("snapctl start --enable auto-cpufreq", shell=True)
