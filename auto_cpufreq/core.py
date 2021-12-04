@@ -80,7 +80,6 @@ def get_config(config_file=''):
 # get distro name
 dist_name = distro.id()
 
-
 # display running version of auto-cpufreq
 def app_version():
 
@@ -317,9 +316,6 @@ def deploy_daemon():
 
     auto_cpufreq_stats_path.touch(exist_ok=True)
 
-    # disable gnome power profiles
-    gnome_power_disable()
-
     print("\n* Deploy auto-cpufreq install script")
     shutil.copy(
         SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install"
@@ -328,8 +324,12 @@ def deploy_daemon():
     print("\n* Deploy auto-cpufreq remove script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
 
+    # output warning if gnome power profile is running
+    gnome_power_detect()
+
     call("/usr/bin/auto-cpufreq-install", shell=True)
 
+# ToDo: change to be a warning and move to power_helper?
 def bt_snap():
     if os.getenv("PKG_MARKER") == "SNAP":
         try:
@@ -365,10 +365,10 @@ def remove():
     else:
         print("* Turn on bluetooth on boot [skipping] (package providing bluetooth access is not present)")
 
-    # enable gnome power profiles
-    gnome_power_enable()
+    # output warning if gnome power profile is stopped
+    gnome_power_rm_reminder()
 
-    # run auto-cpufreq daemon install script
+    # run auto-cpufreq daemon remove script
     call("/usr/bin/auto-cpufreq-remove", shell=True)
 
     # remove auto-cpufreq-remove

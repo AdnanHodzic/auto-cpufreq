@@ -26,7 +26,6 @@ parts:
     stage-packages:
        - coreutils
        - dmidecode
-       - rfkill
     source: .
 
   deploy-scripts:
@@ -39,7 +38,7 @@ parts:
 plugs:
    etc-auto-cpufreq-conf:
     interface: system-files
-    write:
+    read:
     - /etc/auto-cpufreq.conf
 
 apps:
@@ -54,7 +53,6 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - network-control
       - etc-auto-cpufreq-conf
 
   service:
@@ -63,7 +61,6 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - network-control
       - etc-auto-cpufreq-conf
     environment:
       LC_ALL: C.UTF-8

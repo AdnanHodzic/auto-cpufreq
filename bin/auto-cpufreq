@@ -2,7 +2,7 @@
 #
 # auto-cpufreq - Automatic CPU speed & power optimizer for Linux
 #
-# Blog post: http://foolcontrol.org/?p=3124
+# Blog post: https://foolcontrol.org/?p=3124
 
 # core import
 import sys
@@ -12,7 +12,7 @@ from subprocess import call, run
 
 sys.path.append('../')
 from auto_cpufreq.core import *
-#from auto_cpufreq.gnome_power import *
+from auto_cpufreq.gnome_power import *
 
 # cli
 @click.command()
@@ -44,11 +44,11 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
     else:
         if daemon:
             config_info_dialog()
+            root_check()
             file_stats()
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 gnome_power_detect_snap()
                 while True:
-                    root_check()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -58,10 +58,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                     countdown(5)
             elif os.getenv("PKG_MARKER") != "SNAP":
                 gnome_power_detect()
-                # ToDo: disable only if not disabled already
-                gnome_power_disable()
                 while True:
-                    root_check()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -73,11 +70,14 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 daemon_not_found()
         elif monitor:
             config_info_dialog()
+            root_check()
+            print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
+            if os.getenv("PKG_MARKER") == "SNAP":
+                gnome_power_detect_snap()
+            else:
+                gnome_power_detect()
             while True:
-                print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
                 time.sleep(1)
-                root_check()
-                # ToDO: add gnome profile detect/disable?
                 running_daemon()
                 footer()
                 gov_check()
@@ -87,6 +87,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 mon_autofreq()
                 countdown(5)
         elif live:
+            root_check()
             config_info_dialog()
             print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
             time.sleep(1)
@@ -94,10 +95,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 gnome_power_detect_snap()
             else:
                 gnome_power_detect()
-                # ToDo: disable only if not disabled already
-                gnome_power_disable()
             while True:
-                root_check()
                 running_daemon()
                 footer()
                 gov_check()
@@ -109,11 +107,16 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         elif stats:
             config_info_dialog()
             print("\nNote: You can quit stats mode by pressing \"ctrl+c\"")
+            if os.getenv("PKG_MARKER") == "SNAP":
+                gnome_power_detect_snap()
+            else:
+                gnome_power_detect()
             time.sleep(1)
             read_stats()
         elif log:
             deprecated_log_msg()
         elif debug:
+            # ToDo: add status of GNOME Power Profile servie status
             config_info_dialog()
             root_check()
             footer()
@@ -151,7 +154,8 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 root_check()
                 running_daemon()
                 gnome_power_detect_snap()
-                bt_snap()
+                # ToDo: move elsewhere after func revamp
+                #bt_snap()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
                 run("snapctl start --enable auto-cpufreq", shell=True)
@@ -159,9 +163,6 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             else:
                 root_check()
                 running_daemon()
-                gnome_power_detect()
-                # ToDo: disable only if not disabled already
-                gnome_power_disable()
                 gov_check()
                 deploy_daemon()
                 deploy_complete_msg()
@@ -176,8 +177,8 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
 
                     auto_cpufreq_stats_path.unlink()
                 # ToDo: 
-                # * add message to enable GNOME power profiles again
                 # * undo bluetooth boot disable
+                gnome_power_rm_reminder_snap()
                 remove_complete_msg()
             else:
                 root_check()
