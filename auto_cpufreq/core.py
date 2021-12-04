@@ -312,7 +312,8 @@ def deploy_daemon():
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
 
     # output warning if gnome power profile is running
-    gnome_power_detect()
+    gnome_power_detect_install()
+    gnome_power_svc_disable()
 
     call("/usr/bin/auto-cpufreq-install", shell=True)
 
@@ -331,6 +332,7 @@ def remove():
 
     # output warning if gnome power profile is stopped
     gnome_power_rm_reminder()
+    gnome_power_svc_enable()
 
     # run auto-cpufreq daemon remove script
     call("/usr/bin/auto-cpufreq-remove", shell=True)
