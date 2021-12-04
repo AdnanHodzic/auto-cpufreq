@@ -8,8 +8,8 @@ sys.path.append('../')
 from auto_cpufreq.core import *
 
 # app_name var
-if sys.argv[0] == "gnome_power.py":
-    app_name="python3 gnome_power.py"
+if sys.argv[0] == "power_helper.py":
+    app_name="python3 power_helper.py"
 else:
     app_name="auto-cpufreq"
 
@@ -26,8 +26,7 @@ def gnome_power_detect():
         print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
         print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
         print("cd auto-cpufreq/auto_cpufreq")
-        # ToDo: add proper argument after rename
-        print("python3 gnome_power.py --disable")
+        print("python3 power_helper.py --gnome-power-disable")
 
 
 # notification on snap
@@ -38,10 +37,9 @@ def gnome_power_detect_snap():
         print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
         print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
         print("cd auto-cpufreq/auto_cpufreq")
-        print("python3 gnome_power.py --disable")
+        print("python3 power_helper.py --gnome-power-disable")
 
 
-# ToDo: remove function?
 # disable gnome >= 40 power profiles (live)
 def gnome_power_disable_live():
     if(gnome_power_stats == 0):
@@ -49,7 +47,7 @@ def gnome_power_disable_live():
 
 
 # disable gnome >= 40 power profiles (install)
-def gnome_power_disable():
+def gnome_power_svc_disable():
     if(gnome_power_stats == 0):
         print("\n* Disabling GNOME power profiles")
         call(["systemctl", "stop", "power-profiles-daemon"])
@@ -58,7 +56,7 @@ def gnome_power_disable():
         call(["systemctl", "daemon-reload"])
 
 # enable gnome >= 40 power profiles (uninstall)
-def gnome_power_enable():
+def gnome_power_svc_enable():
     if(gnome_power_stats != 0):
         print("\n* Enabling GNOME power profiles")
         call(["systemctl", "unmask", "power-profiles-daemon"])
@@ -67,10 +65,9 @@ def gnome_power_enable():
         call(["systemctl", "daemon-reload"])
 
 # gnome power profiles current status
-def gnome_power_status():
+def gnome_power_svc_status():
     print("\n* GNOME power profiles status")
     call(["systemctl", "status", "power-profiles-daemon"])
-    # ToDo: add how to disable/enable 
 
 # gnome power removal reminder
 def gnome_power_rm_reminder():
@@ -81,7 +78,7 @@ def gnome_power_rm_reminder():
         print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
         print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
         print("cd auto-cpufreq/auto_cpufreq")
-        print("python3 gnome_power.py --enable")
+        print("python3 power_helper.py --gnome-power-enable")
 
 def gnome_power_rm_reminder_snap():
         print("\n----------------------------------- Warning -----------------------------------\n")
@@ -90,19 +87,19 @@ def gnome_power_rm_reminder_snap():
         print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
         print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
         print("cd auto-cpufreq/auto_cpufreq")
-        print("python3 gnome_power.py --enable")
+        print("python3 power_helper.py --gnome-power-enable")
 
 def valid_options():
-    print("--enable\t\tEnable GNOME Power Profiles daemon")
-    print("--disable\t\tDisable GNOME Power Profiles daemon\n")
+    print("--gnome-power-enable\t\tEnable GNOME Power Profiles daemon")
+    print("--gnome-power-disable\t\tDisable GNOME Power Profiles daemon\n")
 
 
 # cli
 @click.command()
-@click.option("--enable", is_flag=True, help="Enable GNOME Power profiles service")
-@click.option("--disable", is_flag=True, help="Disable GNOME Power profiles service")
-@click.option("--status", is_flag=True, help="Get status of GNOME Power profiles service")
-def main(enable, disable, status):
+@click.option("--gnome_power_enable", is_flag=True, help="Enable GNOME Power profiles service")
+@click.option("--gnome_power_disable", is_flag=True, help="Disable GNOME Power profiles service")
+@click.option("--gnome_power_status", is_flag=True, help="Get status of GNOME Power profiles service")
+def main(gnome_power_enable, gnome_power_disable, gnome_power_status):
 
     root_check()
     if len(sys.argv) == 1:
@@ -110,26 +107,24 @@ def main(enable, disable, status):
         print("Unrecognized option!\n\nRun: \"" + app_name + " --help\" for list of available options.")
         footer()
     else:
-        if enable:
+        if gnome_power_enable:
             footer()
             root_check()
             print("Enabling GNOME Power Profiles")
-            gnome_power_enable()
+            gnome_power_svc_enable()
             footer()
-        elif disable:
+        elif gnome_power_disable:
             footer()
             root_check()
             print("Disabling GNOME Power Profiles")
-            gnome_power_disable()
+            gnome_power_svc_disable()
             footer()
-        elif status:
+        elif gnome_power_status:
             footer()
             root_check()
             print("Status of GNOME Power Profiles")
-            gnome_power_status()
+            gnome_power_svc_status()
             footer()
-        else:
-            print("whatever")
 
 if __name__ == '__main__':
     main()

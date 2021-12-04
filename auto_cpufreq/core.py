@@ -18,7 +18,7 @@ from shutil import which
 from subprocess import getoutput, call, run, check_output, DEVNULL
 
 sys.path.append('../')
-from auto_cpufreq.gnome_power import *
+from auto_cpufreq.power_helper import *
 
 warnings.filterwarnings("ignore")
 
