@@ -7,9 +7,14 @@ SCRIPT_PATH=$(readlink -f "$0")
 SCRIPT_DIR=$(dirname "${SCRIPT_PATH}")
 cd "${SCRIPT_DIR}"
 
-distro="$(lsb_release -is)"
-release="$(lsb_release -rs)"
-codename="$(lsb_release -cs)"
+# check if lsb_release exists on the system before using it
+if command -v lsb_release > /dev/null
+then
+  distro="$(lsb_release -is)"
+  release="$(lsb_release -rs)"
+  codename="$(lsb_release -cs)"
+fi
+
 sep="\n-------------------------------------------------------------------------------"
 
 # functions
