@@ -55,7 +55,7 @@ if [ "$(ps h -o comm 1)" = "runit" ];then
 		esac
 	fi
 # Install script for systemd
-else
+elif [ "$(ps h -o comm 1)" = "systemd" ];then
     echo -e "\n* Deploy auto-cpufreq systemd unit file"
     cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
 
@@ -70,4 +70,7 @@ else
 
     echo -e "\n* Enabling auto-cpufreq daemon (systemd) service at boot"
     systemctl enable auto-cpufreq
+else
+  echo -e "\n* Unsupported init system detected, could not install the daemon\n"
+  echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
 fi

@@ -36,7 +36,8 @@ if [ "$(ps h -o comm 1)" = "runit" ];then
 
 		esac
 	fi
-else
+# Remove service for systemd
+elif [ "$(ps h -o comm 1)" = "systemd" ];then
     echo -e "\n* Stopping auto-cpufreq daemon (systemd) service"
     systemctl stop auto-cpufreq
 
@@ -51,4 +52,7 @@ else
 
     echo -e "reset failed"
     systemctl reset-failed
+else
+  echo -e "\n* Unsupported init system detected, could not remove the daemon\n"
+  echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
 fi
