@@ -63,12 +63,6 @@ function help () {
   echo "  --min-perf      Current min_perf_pct options"
   echo "  --max-perf      Current max_perf_pct options"
   echo ""
-  echo "Package options"
-  echo "  --install       Install extra components for all users"
-  echo "  --uninstall     Uninstall extra components for all users"
-  echo "  --update-fonts  Update font cache"
-  echo "  --reset         Reset to defaults for current user"
-  echo ""
   echo "Events options"
   echo "  --throttle      Get thermal throttle counter"
   echo "  --throttle-event Get kernel thermal throttle events counter"
@@ -462,40 +456,5 @@ if [ $OPTION = "--irqbalance" ]
 then
   M=$(ps -A |grep irqbalance)
   echo "$M"
-  exit
-fi
-
-if [ $OPTION = "--install" ]
-then
-  echo 'installing helpers...'
-  cp $0 /usr/bin/
-  echo 'installing policy...'
-  cp $(dirname "$(readlink -f "$0")")/konkor.cpufreq.policy /usr/share/polkit-1/actions/
-  echo 'installing fonts...'
-  mkdir -p /usr/share/fonts/truetype/cpufreq
-  cp $(dirname "$(readlink -f "$0")")/fonts/cpufreq.ttf /usr/share/fonts/truetype/cpufreq/
-  echo "done"
-  exit
-fi
-if [ $OPTION = "--update-fonts" ]
-then
-  fc-cache -f
-  exit
-fi
-if [ $OPTION = "--uninstall" ]
-then
-  echo 'uninstalling cpufreqctl helper...'
-  rm /usr/bin/cpufreqctl
-  echo 'uninstalling policy...'
-  rm /usr/share/polkit-1/actions/konkor.cpufreq.policy
-  echo 'uninstalling fonts...'
-  rm -rf /usr/share/fonts/truetype/cpufreq
-  echo "done"
-  exit
-fi
-if [ $OPTION = "--reset" ]
-then
-  echo 'reset to default values...'
-  dconf reset -f "/org/gnome/shell/extensions/cpufreq/"
   exit
 fi
