@@ -21,33 +21,36 @@ def helper_opts():
 
 # detect if gnome power profile service is running
 if os.getenv('PKG_MARKER') != "SNAP":
-    try:
-        gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
-    except:
-        print("\nUnable to determine init system")
-        print("If this causes any problems, please submit an issue:")
-        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+    if which("systemctl") is not None:
+        try:
+            gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+        except:
+            print("\nUnable to determine init system")
+            print("If this causes any problems, please submit an issue:")
+            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
 # alert in case gnome power profile service is running
 def gnome_power_detect():
-    if gnome_power_stats == 0:
-        print("\n----------------------------------- Warning -----------------------------------\n")
-        print("Detected running GNOME Power Profiles daemon service!")
-        print("This daemon might interfere with auto-cpufreq and should be disabled.")
-        print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-        print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
-        print("cd auto-cpufreq/auto_cpufreq")
-        print("python3 power_helper.py --gnome_power_disable")
+    if which("systemctl") is not None:
+        if gnome_power_stats == 0:
+            print("\n----------------------------------- Warning -----------------------------------\n")
+            print("Detected running GNOME Power Profiles daemon service!")
+            print("This daemon might interfere with auto-cpufreq and should be disabled.")
+            print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
+            print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
+            print("cd auto-cpufreq/auto_cpufreq")
+            print("python3 power_helper.py --gnome_power_disable")
 
 
 # automatically disable gnome power profile service in case it's running during install
 def gnome_power_detect_install():
-    if gnome_power_stats == 0:
-        print("\n----------------------------------- Warning -----------------------------------\n")
-        print("Detected running GNOME Power Profiles daemon service!")
-        print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
-        print("Disabled daemon is not automatically disabled in \"live\" and \"monitor\" mode and")
-        print("will be enabled after auto-cpufreq is removed.")
+    if which("systemctl") is not None:
+        if gnome_power_stats == 0:
+            print("\n----------------------------------- Warning -----------------------------------\n")
+            print("Detected running GNOME Power Profiles daemon service!")
+            print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
+            print("Disabled daemon is not automatically disabled in \"live\" and \"monitor\" mode and")
+            print("will be enabled after auto-cpufreq is removed.")
 
 # notification on snap
 def gnome_power_detect_snap():
@@ -68,41 +71,44 @@ def gnome_power_disable_live():
 
 # disable gnome >= 40 power profiles (install)
 def gnome_power_svc_disable():
-    try:
-        print("\n* Disabling GNOME power profiles")
-        call(["systemctl", "stop", "power-profiles-daemon"])
-        call(["systemctl", "disable", "power-profiles-daemon"])
-        call(["systemctl", "mask", "power-profiles-daemon"])
-        call(["systemctl", "daemon-reload"])
-    except:
-        print("\nUnable to disable GNOME power profiles")
-        print("If this causes any problems, please submit an issue:")
-        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+    if which("systemctl") is not None:
+        try:
+            print("\n* Disabling GNOME power profiles")
+            call(["systemctl", "stop", "power-profiles-daemon"])
+            call(["systemctl", "disable", "power-profiles-daemon"])
+            call(["systemctl", "mask", "power-profiles-daemon"])
+            call(["systemctl", "daemon-reload"])
+        except:
+            print("\nUnable to disable GNOME power profiles")
+            print("If this causes any problems, please submit an issue:")
+            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
 
 # enable gnome >= 40 power profiles (uninstall)
 def gnome_power_svc_enable():
-    try:
-        print("\n* Enabling GNOME power profiles")
-        call(["systemctl", "unmask", "power-profiles-daemon"])
-        call(["systemctl", "start", "power-profiles-daemon"])
-        call(["systemctl", "enable", "power-profiles-daemon"])
-        call(["systemctl", "daemon-reload"])
-    except:
-        print("\nUnable to enable GNOME power profiles")
-        print("If this causes any problems, please submit an issue:")
-        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+    if which("systemctl") is not None:
+        try:
+            print("\n* Enabling GNOME power profiles")
+            call(["systemctl", "unmask", "power-profiles-daemon"])
+            call(["systemctl", "start", "power-profiles-daemon"])
+            call(["systemctl", "enable", "power-profiles-daemon"])
+            call(["systemctl", "daemon-reload"])
+        except:
+            print("\nUnable to enable GNOME power profiles")
+            print("If this causes any problems, please submit an issue:")
+            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
 
 # gnome power profiles current status
 def gnome_power_svc_status():
-    try:
-        print("* GNOME power profiles status")
-        call(["systemctl", "status", "power-profiles-daemon"])
-    except:
-        print("\nUnable to see GNOME power profiles status")
-        print("If this causes any problems, please submit an issue:")
-        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+    if which("systemctl") is not None:
+        try:
+            print("* GNOME power profiles status")
+            call(["systemctl", "status", "power-profiles-daemon"])
+        except:
+            print("\nUnable to see GNOME power profiles status")
+            print("If this causes any problems, please submit an issue:")
+            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
     
 
 # disable bluetooth on boot
@@ -161,10 +167,11 @@ def bluetooth_on_notif_snap():
 
 # gnome power removal reminder
 def gnome_power_rm_reminder():
-    if gnome_power_stats != 0:
-        print("\n----------------------------------- Warning -----------------------------------\n")
-        print("Detected GNOME Power Profiles daemon service is stopped!")
-        print("This service will now be enabled and started again.")
+    if which("systemctl") is not None:
+        if gnome_power_stats != 0:
+            print("\n----------------------------------- Warning -----------------------------------\n")
+            print("Detected GNOME Power Profiles daemon service is stopped!")
+            print("This service will now be enabled and started again.")
 
 def gnome_power_rm_reminder_snap():
         print("\n----------------------------------- Warning -----------------------------------\n")
