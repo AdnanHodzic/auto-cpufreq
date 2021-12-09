@@ -19,9 +19,16 @@ def header():
 def helper_opts():
     print("\nFor full list of options run: python3 power_helper.py --help")
 
+# used to check if binary exists on the system
+def does_command_exists(cmd):
+    return which(cmd) is not None
+
+systemctl_exists = does_command_exists("systemctl")
+bluetoothctl_exists = does_command_exists("bluetoothctl")
+
 # detect if gnome power profile service is running
 if os.getenv('PKG_MARKER') != "SNAP":
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
         except:
@@ -31,7 +38,7 @@ if os.getenv('PKG_MARKER') != "SNAP":
 
 # alert in case gnome power profile service is running
 def gnome_power_detect():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         if gnome_power_stats == 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected running GNOME Power Profiles daemon service!")
@@ -44,7 +51,7 @@ def gnome_power_detect():
 
 # automatically disable gnome power profile service in case it's running during install
 def gnome_power_detect_install():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         if gnome_power_stats == 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected running GNOME Power Profiles daemon service!")
@@ -71,7 +78,7 @@ def gnome_power_disable_live():
 
 # disable gnome >= 40 power profiles (install)
 def gnome_power_svc_disable():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             print("\n* Disabling GNOME power profiles")
             call(["systemctl", "stop", "power-profiles-daemon"])
@@ -86,7 +93,7 @@ def gnome_power_svc_disable():
 
 # enable gnome >= 40 power profiles (uninstall)
 def gnome_power_svc_enable():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             print("\n* Enabling GNOME power profiles")
             call(["systemctl", "unmask", "power-profiles-daemon"])
@@ -101,7 +108,7 @@ def gnome_power_svc_enable():
 
 # gnome power profiles current status
 def gnome_power_svc_status():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             print("* GNOME power profiles status")
             call(["systemctl", "status", "power-profiles-daemon"])
@@ -115,7 +122,7 @@ def gnome_power_svc_status():
 def bluetooth_disable():
     if os.getenv("PKG_MARKER") == "SNAP":
         bluetooth_notif_snap()
-    elif which("bluetoothctl") is not None:
+    elif bluetoothctl_exists:
         print("* Turn off bluetooth on boot")
         btconf = Path("/etc/bluetooth/main.conf")
         try:
@@ -136,7 +143,7 @@ def bluetooth_disable():
 def bluetooth_enable():
     if os.getenv("PKG_MARKER") == "SNAP":
         bluetooth_on_notif_snap()
-    if which("bluetoothctl") is not None:
+    if bluetoothctl_exists:
         print("* Turn on bluetooth on boot")
         btconf = "/etc/bluetooth/main.conf"
         try:
@@ -167,7 +174,7 @@ def bluetooth_on_notif_snap():
 
 # gnome power removal reminder
 def gnome_power_rm_reminder():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         if gnome_power_stats != 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected GNOME Power Profiles daemon service is stopped!")
