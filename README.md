@@ -13,11 +13,11 @@ One of the problems with Linux today on laptops is that CPU will run in unoptimi
 
 Issue can be mitigated by using tools like [indicator-cpufreq](https://itsfoss.com/cpufreq-ubuntu/) or [cpufreq](https://github.com/konkor/cpufreq), but these still require manual action from your side which can be daunting and cumbersome.
 
-Using tools like [TLP](https://github.com/linrunner/TLP) will help in this situation with extending battery life (which is something I did for numerous years now), but it also might come with its own set of problems, like losing turbo boost.
+Using tools like [TLP](https://github.com/linrunner/TLP) can help in this situation with extending battery life (which is something I used to do for numerous years), but it also might come with its own set of problems, like losing turbo boost.
 
 With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save battery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
 
-Please note: auto-cpufreq aims to replace TLP and after you install auto-cpufreq it's recommended to remove TLP. However, if for some reason you still need/want TLP installed and running auto-cpufreq doesn't conflict and [works great in tandem with TLP](https://github.com/AdnanHodzic/auto-cpufreq/discussions/176).
+Please note: auto-cpufreq aims to replace TLP in terms of functionality and after you install auto-cpufreq _it's recommended to remove TLP_. If both are used for same functionality, i.e: to set CPU frequencies it'll lead to unwanted results like overheating. Hence, only use [both tools in tandem](https://github.com/AdnanHodzic/auto-cpufreq/discussions/176) if you know what you're doing.
 
 Tool/daemon that does not conflict with auto-cpufreq in any way and is even recommended to have running alongside is [thermald](https://wiki.debian.org/thermald). 
 
