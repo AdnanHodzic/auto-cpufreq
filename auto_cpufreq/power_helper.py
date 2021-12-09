@@ -6,6 +6,7 @@ from subprocess import getoutput, call, run, check_output, DEVNULL
 
 sys.path.append('../')
 from auto_cpufreq.core import *
+from auto_cpufreq.tlp_stat_parser import TLPStatusParser
 
 # app_name var
 if sys.argv[0] == "power_helper.py":
@@ -25,6 +26,7 @@ def does_command_exists(cmd):
 
 systemctl_exists = does_command_exists("systemctl")
 bluetoothctl_exists = does_command_exists("bluetoothctl")
+tlp_stat_exists = does_command_exists("tlp-stat")
 
 # detect if gnome power profile service is running
 if os.getenv('PKG_MARKER') != "SNAP":
@@ -35,6 +37,24 @@ if os.getenv('PKG_MARKER') != "SNAP":
             print("\nUnable to determine init system")
             print("If this causes any problems, please submit an issue:")
             print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+
+# alert in case TLP service is running
+def tlp_service_detect():
+    if tlp_stat_exists:
+        status_output = getoutput("tlp-stat -s")
+        tlp_status = TLPStatusParser(status_output)
+        if tlp_status.is_enabled():
+            print("\n----------------------------------- Warning -----------------------------------\n")
+            print("Detected you are running a TLP service!")
+            print("This daemon might interfere with auto-cpufreq which can lead to unexpected results.")
+            print("We strongly encourage you to remove TLP unless you really know what you are doing.")
+
+# alert about TLP when using snap
+def tlp_service_detect_snap():
+    print("\n----------------------------------- Warning -----------------------------------\n")
+    print("Unable to detect if you are using a TLP service!")
+    print("This daemon might interfere with auto-cpufreq which can lead to unexpected results.")
+    print("We strongly encourage you not to use TLP unless you really know what you are doing.")
 
 # alert in case gnome power profile service is running
 def gnome_power_detect():

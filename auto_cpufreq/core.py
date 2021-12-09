@@ -315,6 +315,9 @@ def deploy_daemon():
     gnome_power_detect_install()
     gnome_power_svc_disable()
 
+    # output warning if TLP service is detected
+    tlp_service_detect()
+
     call("/usr/bin/auto-cpufreq-install", shell=True)
 
 # remove auto-cpufreq daemon
