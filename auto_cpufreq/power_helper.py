@@ -30,7 +30,7 @@ bluetoothctl_exists = does_command_exists("bluetoothctl")
 if os.getenv('PKG_MARKER') != "SNAP":
     if systemctl_exists:
         try:
-            gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+            gnome_power_status = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
         except:
             print("\nUnable to determine init system")
             print("If this causes any problems, please submit an issue:")
@@ -39,7 +39,7 @@ if os.getenv('PKG_MARKER') != "SNAP":
 # alert in case gnome power profile service is running
 def gnome_power_detect():
     if systemctl_exists:
-        if gnome_power_stats == 0:
+        if gnome_power_status == 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected running GNOME Power Profiles daemon service!")
             print("This daemon might interfere with auto-cpufreq and should be disabled.")
@@ -52,7 +52,7 @@ def gnome_power_detect():
 # automatically disable gnome power profile service in case it's running during install
 def gnome_power_detect_install():
     if systemctl_exists:
-        if gnome_power_stats == 0:
+        if gnome_power_status == 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected running GNOME Power Profiles daemon service!")
             print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
@@ -72,7 +72,7 @@ def gnome_power_detect_snap():
 
 # disable gnome >= 40 power profiles (live)
 def gnome_power_disable_live():
-    if(gnome_power_stats == 0):
+    if(gnome_power_status == 0):
         call(["systemctl", "stop", "power-profiles-daemon"])
 
 
@@ -175,7 +175,7 @@ def bluetooth_on_notif_snap():
 # gnome power removal reminder
 def gnome_power_rm_reminder():
     if systemctl_exists:
-        if gnome_power_stats != 0:
+        if gnome_power_status != 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected GNOME Power Profiles daemon service is stopped!")
             print("This service will now be enabled and started again.")
