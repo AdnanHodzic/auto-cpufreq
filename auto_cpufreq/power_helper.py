@@ -6,6 +6,7 @@ from subprocess import getoutput, call, run, check_output, DEVNULL
 
 sys.path.append('../')
 from auto_cpufreq.core import *
+from auto_cpufreq.tlp_stat_parser import TLPStatusParser
 
 # app_name var
 if sys.argv[0] == "power_helper.py":
@@ -19,20 +20,46 @@ def header():
 def helper_opts():
     print("\nFor full list of options run: python3 power_helper.py --help")
 
+# used to check if binary exists on the system
+def does_command_exists(cmd):
+    return which(cmd) is not None
+
+systemctl_exists = does_command_exists("systemctl")
+bluetoothctl_exists = does_command_exists("bluetoothctl")
+tlp_stat_exists = does_command_exists("tlp-stat")
+
 # detect if gnome power profile service is running
 if os.getenv('PKG_MARKER') != "SNAP":
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
-            gnome_power_stats = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
+            gnome_power_status = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
         except:
             print("\nUnable to determine init system")
             print("If this causes any problems, please submit an issue:")
             print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
+# alert in case TLP service is running
+def tlp_service_detect():
+    if tlp_stat_exists:
+        status_output = getoutput("tlp-stat -s")
+        tlp_status = TLPStatusParser(status_output)
+        if tlp_status.is_enabled():
+            print("\n----------------------------------- Warning -----------------------------------\n")
+            print("Detected you are running a TLP service!")
+            print("This daemon might interfere with auto-cpufreq which can lead to unexpected results.")
+            print("We strongly encourage you to remove TLP unless you really know what you are doing.")
+
+# alert about TLP when using snap
+def tlp_service_detect_snap():
+    print("\n----------------------------------- Warning -----------------------------------\n")
+    print("Unable to detect if you are using a TLP service!")
+    print("This daemon might interfere with auto-cpufreq which can lead to unexpected results.")
+    print("We strongly encourage you not to use TLP unless you really know what you are doing.")
+
 # alert in case gnome power profile service is running
 def gnome_power_detect():
-    if which("systemctl") is not None:
-        if gnome_power_stats == 0:
+    if systemctl_exists:
+        if gnome_power_status == 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected running GNOME Power Profiles daemon service!")
             print("This daemon might interfere with auto-cpufreq and should be disabled.")
@@ -44,8 +71,8 @@ def gnome_power_detect():
 
 # automatically disable gnome power profile service in case it's running during install
 def gnome_power_detect_install():
-    if which("systemctl") is not None:
-        if gnome_power_stats == 0:
+    if systemctl_exists:
+        if gnome_power_status == 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected running GNOME Power Profiles daemon service!")
             print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
@@ -65,13 +92,13 @@ def gnome_power_detect_snap():
 
 # disable gnome >= 40 power profiles (live)
 def gnome_power_disable_live():
-    if(gnome_power_stats == 0):
+    if(gnome_power_status == 0):
         call(["systemctl", "stop", "power-profiles-daemon"])
 
 
 # disable gnome >= 40 power profiles (install)
 def gnome_power_svc_disable():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             print("\n* Disabling GNOME power profiles")
             call(["systemctl", "stop", "power-profiles-daemon"])
@@ -86,7 +113,7 @@ def gnome_power_svc_disable():
 
 # enable gnome >= 40 power profiles (uninstall)
 def gnome_power_svc_enable():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             print("\n* Enabling GNOME power profiles")
             call(["systemctl", "unmask", "power-profiles-daemon"])
@@ -101,7 +128,7 @@ def gnome_power_svc_enable():
 
 # gnome power profiles current status
 def gnome_power_svc_status():
-    if which("systemctl") is not None:
+    if systemctl_exists:
         try:
             print("* GNOME power profiles status")
             call(["systemctl", "status", "power-profiles-daemon"])
@@ -115,7 +142,7 @@ def gnome_power_svc_status():
 def bluetooth_disable():
     if os.getenv("PKG_MARKER") == "SNAP":
         bluetooth_notif_snap()
-    elif which("bluetoothctl") is not None:
+    elif bluetoothctl_exists:
         print("* Turn off bluetooth on boot")
         btconf = Path("/etc/bluetooth/main.conf")
         try:
@@ -136,7 +163,7 @@ def bluetooth_disable():
 def bluetooth_enable():
     if os.getenv("PKG_MARKER") == "SNAP":
         bluetooth_on_notif_snap()
-    if which("bluetoothctl") is not None:
+    if bluetoothctl_exists:
         print("* Turn on bluetooth on boot")
         btconf = "/etc/bluetooth/main.conf"
         try:
@@ -167,8 +194,8 @@ def bluetooth_on_notif_snap():
 
 # gnome power removal reminder
 def gnome_power_rm_reminder():
-    if which("systemctl") is not None:
-        if gnome_power_stats != 0:
+    if systemctl_exists:
+        if gnome_power_status != 0:
             print("\n----------------------------------- Warning -----------------------------------\n")
             print("Detected GNOME Power Profiles daemon service is stopped!")
             print("This service will now be enabled and started again.")

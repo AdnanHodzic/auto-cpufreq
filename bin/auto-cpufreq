@@ -48,6 +48,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             file_stats()
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 gnome_power_detect_snap()
+                tlp_service_detect_snap()
                 while True:
                     footer()
                     gov_check()
@@ -58,6 +59,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                     countdown(5)
             elif os.getenv("PKG_MARKER") != "SNAP":
                 gnome_power_detect()
+                tlp_service_detect()
                 while True:
                     footer()
                     gov_check()
@@ -74,8 +76,10 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
+                tlp_service_detect_snap()
             else:
                 gnome_power_detect()
+                tlp_service_detect()
             while True:
                 time.sleep(1)
                 running_daemon()
@@ -93,8 +97,10 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             time.sleep(1)
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
+                tlp_service_detect_snap()
             else:
                 gnome_power_detect()
+                tlp_service_detect()
             while True:
                 running_daemon()
                 footer()
@@ -109,8 +115,10 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             print("\nNote: You can quit stats mode by pressing \"ctrl+c\"")
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
+                tlp_service_detect_snap()
             else:
                 gnome_power_detect()
+                tlp_service_detect()
             time.sleep(1)
             read_stats()
         elif log:
@@ -154,6 +162,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 root_check()
                 running_daemon()
                 gnome_power_detect_snap()
+                tlp_service_detect_snap()
                 bluetooth_notif_snap()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
