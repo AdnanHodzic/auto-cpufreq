@@ -165,31 +165,52 @@ def charging():
     """
     get charge state: is battery charging or discharging
     """
-    power_dir = "/sys/class/power_supply/"
+    power_supply_path = "/sys/class/power_supply/"
+    power_supplies = os.listdir(Path(power_supply_path))
 
-    computer_type = getoutput("dmidecode --string chassis-type")
-    if computer_type in ["Notebook", "Laptop", "Convertible", "Portable"]:
-        # AC adapter states: 0, 1, unknown
-        ac_info = getoutput(f"grep . {power_dir}A*/online").splitlines()
-        # Battery statuses: Full, Charging, Discharging, Unknown
-        battery_status = getoutput(f"grep . {power_dir}B*/status").splitlines()
-        # if there's one battery charging, or if there's one ac-adapter on-line, ac_state is True
-        ac_state = (all([not "Discharging" in ac for ac in battery_status]) or 
-                    any(["1" in ac.split(":")[-1] for ac in ac_info]))
+    # check if we found power supplies. on a desktop these are not found
+    # and we assume we are on a powercable.
+    if len(power_supplies) == 0:
+        # nothing found found, so nothing to check
+        return True
+    # we found some power supplies, lets check their state
     else:
-        has_battery = psutil.sensors_battery() is not None
-        if has_battery:
-            power_pluggedin = psutil.sensors_battery().power_plugged
-            if power_pluggedin:
-                ac_state = True
-            else:
-                ac_state = False
-        else:
-            ac_state = True
+        for supply in power_supplies:
+            try:
+                with open(Path(power_supply_path + supply + "/type")) as f:
+                    supply_type = f.read()[:-1]
+                    if supply_type == "Mains":
+                        # we found an AC
+                        try:
+                            with open(Path(power_supply_path + supply + "/online")) as f:
+                                val = int(f.read()[:-1])
+                                if val == 1:
+                                    # we are definitely charging
+                                    return True
+                        except FileNotFoundError:
+                            # we could not find online, check next item
+                            continue
+                    elif supply_type == "Battery":
+                        # we found a battery, check if its being discharged
+                        try:
+                            with open(Path(power_supply_path + supply + "/status")) as f:
+                                val = str(f.read()[:-1])
+                                if val == "Discharging":
+                                    # we found a discharging battery
+                                    return False
+                        except FileNotFoundError:
+                            # could not find status, check the next item
+                            continue
+                    else:
+                        # continue to next item because current is not
+                        # "Mains" or "Battery"
+                        continue
+            except FileNotFoundError:
+                # could not find type, check the next item
+                continue
 
-    # if both ac-adapter and battery states are unknown default to not charging
-    return ac_state
-
+    # we cannot determine discharging state, assume we are on powercable
+    return True
 
 def get_avail_gov():
     f = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
