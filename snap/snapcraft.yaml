@@ -38,7 +38,7 @@ parts:
 plugs:
    etc-auto-cpufreq-conf:
     interface: system-files
-    read:
+    write:
     - /etc/auto-cpufreq.conf
 
 apps:
