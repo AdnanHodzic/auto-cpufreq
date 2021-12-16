@@ -78,7 +78,20 @@ def get_config(config_file=''):
     return get_config.dict
 
 # get distro name
-dist_name = distro.id()
+try:
+    dist_name = distro.id()
+except PermissionError:
+    # Current work-around for distros like Pop!_OS where symlink causes permission issues
+    print("Warning: Cannot get distro name. Attempting to change symlink to hard link for /etc/os-release")
+    yN = input("Continue? [y/N] ")
+    if yN.lower() == "y":
+        # Backup /etc/os-release
+        os.system("sudo mv /etc/os-release /etc/os-release-backup")
+        # Create hard link to /etc/os-release
+        os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
+    else:
+        print("Aborting...")
+        sys.exit(1)
 
 # display running version of auto-cpufreq
 def app_version():
