@@ -90,6 +90,7 @@ except PermissionError:
 
         yN = input("Continue? [y/N] ")
         if yN.lower() == "y":
+            print("Creating hard link for /etc/os-release")
             # Backup /etc/os-release
             os.system("sudo mv /etc/os-release /etc/os-release-backup")
             # Create hard link to /etc/os-release
