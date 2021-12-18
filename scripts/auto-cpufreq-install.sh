@@ -2,6 +2,7 @@
 #
 # auto-cpufreq daemon install script
 # reference: https://github.com/AdnanHodzic/auto-cpufreq
+# Thanks to https://github.com/errornonamer for openrc fix
 echo -e "\n------------------ Running auto-cpufreq daemon install script ------------------"
 
 if [[ $EUID != 0 ]];

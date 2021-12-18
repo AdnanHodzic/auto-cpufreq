@@ -2,6 +2,7 @@
 #
 # auto-cpufreq daemon removal script
 # reference: https://github.com/AdnanHodzic/auto-cpufreq
+# Thanks to https://github.com/errornonamer for openrc fix
 
 echo -e "\n------------------ Running auto-cpufreq daemon removal script ------------------"
 
