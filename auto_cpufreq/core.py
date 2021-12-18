@@ -95,7 +95,7 @@ except PermissionError:
             # Create hard link to /etc/os-release
             os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
         else:
-            print("Aborting...")
+            print("Operation aborted by user")
             sys.exit(1)
     else:
         print("Aborting...")
