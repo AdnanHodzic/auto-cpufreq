@@ -88,15 +88,13 @@ except PermissionError:
         print("Pop!_OS uses a symbolic link for the os-release file, this causes issues \
             and can be fixed by converting to a hard link")
         print("Attempting to change symlink to hard link for /etc/os-release -> /etc/pop-os/os-release")
-    else:
-        print("Aborting...")
-        sys.exit(1)
-    yN = input("Continue? [y/N] ")
-    if yN.lower() == "y":
-        # Backup /etc/os-release
-        os.system("sudo mv /etc/os-release /etc/os-release-backup")
-        # Create hard link to /etc/os-release
-        os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
+
+        yN = input("Continue? [y/N] ")
+        if yN.lower() == "y":
+            # Backup /etc/os-release
+            os.system("sudo mv /etc/os-release /etc/os-release-backup")
+            # Create hard link to /etc/os-release
+            os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
     else:
         print("Aborting...")
         sys.exit(1)
