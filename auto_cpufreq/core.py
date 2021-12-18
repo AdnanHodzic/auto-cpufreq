@@ -85,8 +85,7 @@ except PermissionError:
     print("Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
         print("Pop!_OS detected")
-        print("Pop!_OS uses a symbolic link for the os-release file, this causes issues \
-            and can be fixed by converting to a hard link")
+        print("Pop!_OS uses a symbolic link for the os-release file, this causes issues and can be fixed by converting to a hard link")
         print("Attempting to change symlink to hard link for /etc/os-release -> /etc/pop-os/os-release")
 
         yN = input("Continue? [y/N] ")
@@ -95,6 +94,9 @@ except PermissionError:
             os.system("sudo mv /etc/os-release /etc/os-release-backup")
             # Create hard link to /etc/os-release
             os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
+        else:
+            print("Aborting...")
+            sys.exit(1)
     else:
         print("Aborting...")
         sys.exit(1)
