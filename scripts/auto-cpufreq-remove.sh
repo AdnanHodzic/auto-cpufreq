@@ -2,6 +2,7 @@
 #
 # auto-cpufreq daemon removal script
 # reference: https://github.com/AdnanHodzic/auto-cpufreq
+# Thanks to https://github.com/errornonamer for openrc fix
 
 echo -e "\n------------------ Running auto-cpufreq daemon removal script ------------------"
 
@@ -9,7 +10,6 @@ if [[ $EUID != 0 ]]; then
 	echo -e "\nERROR\nMust be run as root (i.e: 'sudo $0')\n"
 	exit 1
 fi
-
 
 # First argument is the "sv" path, second argument is the "service" path
 rm_sv() {
@@ -52,6 +52,15 @@ elif [ "$(ps h -o comm 1)" = "systemd" ];then
 
     echo -e "reset failed"
     systemctl reset-failed
+elif [ "$(ps h -o comm 1)" = "init" ];then
+	echo -e "\n* Stopping auto-cpufreq daemon (openrc) service"
+	rc-service auto-cpufreq stop
+
+	echo -e "\n* Disabling auto-cpufreq daemon (openrc) at boot"
+	rc-update del auto-cpufreq
+
+	echo -e "\n* Removing auto-cpufreq daemon (openrc) unit file"
+	rm /etc/init.d/auto-cpufreq
 else
   echo -e "\n* Unsupported init system detected, could not remove the daemon\n"
   echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"

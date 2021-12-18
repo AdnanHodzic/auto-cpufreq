@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="auto-cpufreq - Automatic CPU speed & power optimizer for Linux"
+supervisor="supervise-daemon"
+command="/usr/bin/auto-cpufreq"
+command_args="--daemon"
+command_user="root"
+
+depend() {
+	after net
+}

@@ -2,7 +2,7 @@
 #
 # auto-cpufreq daemon install script
 # reference: https://github.com/AdnanHodzic/auto-cpufreq
-
+# Thanks to https://github.com/errornonamer for openrc fix
 echo -e "\n------------------ Running auto-cpufreq daemon install script ------------------"
 
 if [[ $EUID != 0 ]];
@@ -50,8 +50,6 @@ if [ "$(ps h -o comm 1)" = "runit" ];then
 			*)
 				echo -e "\n* Runit init detected but your distro is not supported\n"
 				echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
-
-
 		esac
 	fi
 # Install script for systemd
@@ -70,6 +68,17 @@ elif [ "$(ps h -o comm 1)" = "systemd" ];then
 
     echo -e "\n* Enabling auto-cpufreq daemon (systemd) service at boot"
     systemctl enable auto-cpufreq
+# Install script for openrc
+elif [ "$(ps h -o comm 1)" = "init" ];then
+	echo -e "\n* Deploying auto-cpufreq openrc unit file"
+	cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq /etc/init.d/auto-cpufreq
+	chmod +x /etc/init.d/auto-cpufreq
+
+	echo -e "Starting auto-cpufreq daemon (openrc) service"
+	rc-service auto-cpufreq start
+
+	echo -e "\n* Enabling auto-cpufreq daemon (openrc) service at boot"
+	rc-update add auto-cpufreq
 else
   echo -e "\n* Unsupported init system detected, could not install the daemon\n"
   echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
