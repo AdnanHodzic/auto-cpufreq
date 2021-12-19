@@ -17,7 +17,7 @@ from pathlib import Path
 from shutil import which
 from subprocess import getoutput, call, run, check_output, DEVNULL
 
-sys.path.append('../')
+sys.path.append("../")
 from auto_cpufreq.power_helper import *
 
 warnings.filterwarnings("ignore")
@@ -65,17 +65,16 @@ def file_stats():
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
-def get_config(config_file=''):
-    if not hasattr(get_config, 'dict'):
-        get_config.dict = dict()
 
-        config = configparser.ConfigParser()
-        config.read(config_file)
+def get_config(config_file=""):
+    if not hasattr(get_config, "config"):
+        get_config.config = configparser.ConfigParser()
 
-        for section in config.sections():
-            get_config.dict[section] = dict(config.items(section))
+        if os.path.isfile(config_file):
+            get_config.config.read(config_file)
 
-    return get_config.dict
+    return get_config.config
+
 
 # get distro name
 try:
@@ -85,8 +84,12 @@ except PermissionError:
     print("Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
         print("Pop!_OS detected")
-        print("Pop!_OS uses a symbolic link for the os-release file, this causes issues and can be fixed by converting to a hard link")
-        print("Attempting to change symlink to hard link for /etc/os-release -> /etc/pop-os/os-release")
+        print(
+            "Pop!_OS uses a symbolic link for the os-release file, this causes issues and can be fixed by converting to a hard link"
+        )
+        print(
+            "Attempting to change symlink to hard link for /etc/os-release -> /etc/pop-os/os-release"
+        )
 
         yN = input("Continue? [y/N] ")
         if yN.lower() == "y":
@@ -234,6 +237,7 @@ def charging():
     # we cannot determine discharging state, assume we are on powercable
     return True
 
+
 def get_avail_gov():
     f = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
     return f.read_text().strip().split(" ")
@@ -274,13 +278,9 @@ def cpufreqctl():
     else:
         # deploy cpufreqctl.auto-cpufreq script
         if os.path.isfile("/usr/bin/cpufreqctl"):
-            shutil.copy(
-                SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq"
-            )
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
         else:
-            shutil.copy(
-                SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq"
-            )
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
 
 
 def cpufreqctl_restore():
@@ -308,17 +308,9 @@ def daemon_not_found():
 
 
 def deploy_complete_msg():
-    print(
-        "\n"
-        + "-" * 17
-        + " auto-cpufreq daemon installed and running "
-        + "-" * 17
-        + "\n"
-    )
+    print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
     print("To view live stats, run:\nauto-cpufreq --stats")
-    print(
-        "\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove"
-    )
+    print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
     footer()
 
 
@@ -347,9 +339,7 @@ def deploy_daemon():
     auto_cpufreq_stats_path.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
-    shutil.copy(
-        SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install"
-    )
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
@@ -362,6 +352,7 @@ def deploy_daemon():
     tlp_service_detect()
 
     call("/usr/bin/auto-cpufreq-install", shell=True)
+
 
 # remove auto-cpufreq daemon
 def remove():
@@ -396,19 +387,13 @@ def remove():
     # restore original cpufrectl script
     cpufreqctl_restore()
 
+
 def gov_check():
     for gov in get_avail_gov():
         if gov not in ALL_GOVERNORS:
-            print(
-                "\n"
-                + "-" * 18
-                + " Checking for necessary scaling governors "
-                + "-" * 19
-                + "\n"
-            )
-            sys.exit(
-                "ERROR:\n\nCouldn't find any of the necessary scaling governors.\n"
-            )
+            print("\n" + "-" * 18 + " Checking for necessary scaling governors " + "-" * 19 + "\n")
+            sys.exit("ERROR:\n\nCouldn't find any of the necessary scaling governors.\n")
+
 
 # root check func
 def root_check():
@@ -459,22 +444,40 @@ def display_load():
     print("Average temp. of all cores:", avg_all_core_temp, "°C", "\n")
 
 
+# set minimum and maximum CPU frequencies
+def set_frequencies():
+    conf = get_config()
+    section = "charger" if charging() else "battery"
+    if conf.has_option(section, "scaling_min_freq"):
+        print(
+            f"Setting minimum CPU frequency to {round(int(conf[section]['scaling_min_freq'])/1000)} Mhz"
+        )
+        run(
+            f"cpufreqctl.auto-cpufreq --frequency-min --set={conf[section]['scaling_min_freq']}",
+            shell=True,
+        )
+    if conf.has_option(section, "scaling_max_freq"):
+        print(
+            f"Setting maximum CPU frequency to {round(int(conf[section]['scaling_max_freq'])/1000)} Mhz"
+        )
+        run(
+            f"cpufreqctl.auto-cpufreq --frequency-max --set={conf[section]['scaling_max_freq']}",
+            shell=True,
+        )
+
+
 # set powersave and enable turbo
 def set_powersave():
-    gov = get_config()
-    if "battery" in gov:
-        if "governor" in gov["battery"]:
-            gov = gov["battery"]["governor"]
+    conf = get_config()
+    if conf.has_option("battery", "governor"):
+        gov = conf["battery"]["governor"]
     else:
         gov = get_avail_powersave()
     print(f'Setting to use: "{gov}" governor')
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
     if (
-        Path(
-            "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"
-        ).exists()
-        and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
-        is False
+        Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
+        and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() is False
     ):
         run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
         print('Setting to use: "balance_power" EPP')
@@ -490,10 +493,8 @@ def set_powersave():
     print("Average temp. of all cores:", avg_all_core_temp, "°C")
 
     # conditions for setting turbo in powersave
-    auto = get_config()
-    if "battery" in auto:
-        if "turbo" in auto["battery"]:
-            auto = auto["battery"]["turbo"]
+    if conf.has_option("battery", "turbo"):
+        auto = auto["battery"]["turbo"]
     else:
         auto = "auto"
 
@@ -669,10 +670,9 @@ def mon_powersave():
 
 # set performance and enable turbo
 def set_performance():
-    gov = get_config()
-    if "charger" in gov:
-        if "governor" in gov["charger"]:
-            gov = gov["charger"]["governor"]
+    conf = get_config()
+    if conf.has_option("charger", "governor"):
+        gov = conf["charger"]["governor"]
     else:
         gov = get_avail_performance()
 
@@ -682,11 +682,8 @@ def set_performance():
         shell=True,
     )
     if (
-        Path(
-            "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"
-        ).exists()
-        and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
-        is False
+        Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
+        and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() is False
     ):
         run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
         print('Setting to use: "balance_performance" EPP')
@@ -701,10 +698,8 @@ def set_performance():
     print("Total system load:", load1m)
     print("Average temp. of all cores:", avg_all_core_temp, "°C")
 
-    auto = get_config()
-    if "charger" in auto:
-        if "turbo" in auto["charger"]:
-            auto = auto["charger"]["turbo"]
+    if conf.has_option("charger", "turbo"):
+        auto = conf["charger"]["turbo"]
     else:
         auto = "auto"
 
@@ -945,10 +940,10 @@ def distro_info():
             with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
                 for line in searchfile:
                     if line.startswith("NAME="):
-                        dist = line[5:line.find("$")].strip('"')
+                        dist = line[5 : line.find("$")].strip('"')
                         continue
                     elif line.startswith("VERSION="):
-                        version = line[8:line.find("$")].strip('"')
+                        version = line[8 : line.find("$")].strip('"')
                         continue
         except PermissionError as e:
             print(repr(e))
@@ -998,9 +993,7 @@ def sysinfo():
     print(f"CPU min frequency: {min_freq:.0f} MHz\n")
 
     # get coreid's and frequencies of online cpus by parsing /proc/cpuinfo
-    coreid_info = getoutput("egrep 'processor|cpu MHz|core id' /proc/cpuinfo").split(
-        "\n"
-    )
+    coreid_info = getoutput("egrep 'processor|cpu MHz|core id' /proc/cpuinfo").split("\n")
     cpu_core = dict()
     freq_per_cpu = []
     for i in range(0, len(coreid_info), 3):
@@ -1039,9 +1032,7 @@ def sysinfo():
         pass
 
     print("Core\tUsage\tTemperature\tFrequency")
-    for (cpu, usage, freq, temp) in zip(
-        cpu_core, usage_per_cpu, freq_per_cpu, temp_per_cpu
-    ):
+    for (cpu, usage, freq, temp) in zip(cpu_core, usage_per_cpu, freq_per_cpu, temp_per_cpu):
         print(f"CPU{cpu}:\t{usage:>5.1f}%    {temp:>3.0f} °C    {freq:>5.0f} MHz")
 
     if offline_cpus:
@@ -1093,12 +1084,14 @@ def is_running(program, argument):
             print(repr(e))
             continue
 
+
 def daemon_running_msg():
     print("\n" + "-" * 24 + " auto-cpufreq running " + "-" * 30 + "\n")
     print(
-        'ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the deamon before running with --live or --monitor mode'
+        "ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the deamon before running with --live or --monitor mode"
     )
     footer()
+
 
 # check if auto-cpufreq --daemon is running
 def running_daemon():

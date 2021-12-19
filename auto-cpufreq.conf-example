@@ -7,14 +7,28 @@
 # preferred governor.
 governor = performance
 
+# set minimum CPU frequency
+# Example: for 800 MHz -> scaling_min_freq = 800000
+# scaling_min_freq =
+# set maximum CPU frequency
+# Example: for 1600 MHz -> scaling_min_freq = 1600000
+# scaling_max_freq =
+
 # turbo boost setting. possible values: always, auto, never
 turbo = auto
 
-#settings for when using battery power
+# settings for when using battery power
 [battery]
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 # preferred governor
 governor = powersave
+
+# set minimum CPU frequency
+# example: for 800 MHz -> scaling_min_freq = 800000
+# scaling_min_freq =
+# set maximum CPU frequency
+# example: for 1600 MHz -> scaling_min_freq = 1600000
+# scaling_max_freq =
 
 # turbo boost setting. possible values: always, auto, never
 turbo = auto
