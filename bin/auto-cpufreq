@@ -56,7 +56,6 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                     distro_info()
                     sysinfo()
                     set_autofreq()
-                    set_frequencies()
                     countdown(5)
             elif os.getenv("PKG_MARKER") != "SNAP":
                 gnome_power_detect()
@@ -68,7 +67,6 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                     distro_info()
                     sysinfo()
                     set_autofreq()
-                    set_frequencies()
                     countdown(5)
             else:
                 daemon_not_found()
@@ -111,7 +109,6 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 distro_info()
                 sysinfo()
                 set_autofreq()
-                set_frequencies()
                 countdown(5)
         elif stats:
             config_info_dialog()

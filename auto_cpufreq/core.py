@@ -12,6 +12,7 @@ import time
 import click
 import warnings
 import configparser
+import re
 from math import isclose
 from pathlib import Path
 from shutil import which
@@ -448,22 +449,35 @@ def display_load():
 def set_frequencies():
     conf = get_config()
     section = "charger" if charging() else "battery"
-    if conf.has_option(section, "scaling_min_freq"):
-        print(
-            f"Setting minimum CPU frequency to {round(int(conf[section]['scaling_min_freq'])/1000)} Mhz"
-        )
-        run(
-            f"cpufreqctl.auto-cpufreq --frequency-min --set={conf[section]['scaling_min_freq']}",
-            shell=True,
-        )
-    if conf.has_option(section, "scaling_max_freq"):
-        print(
-            f"Setting maximum CPU frequency to {round(int(conf[section]['scaling_max_freq'])/1000)} Mhz"
-        )
-        run(
-            f"cpufreqctl.auto-cpufreq --frequency-max --set={conf[section]['scaling_max_freq']}",
-            shell=True,
-        )
+
+    frequencies = {
+        "scaling_max_freq": {
+            "cmdargs": f"--frequency-max --set",
+            "minmax": "maximum",
+        },
+        "scaling_min_freq": {
+            "cmdargs": f"--frequency-min --set",
+            "minmax": "minimum",
+        },
+    }
+
+    for freq_type in ["scaling_max_freq", "scaling_min_freq"]:
+        if not conf.has_option(section, freq_type):
+            continue
+
+        # check if valid value is given
+        freq_val = conf[section][freq_type].strip()
+        if re.match(r"\d+$", freq_val) is None:
+            print(f"Invalid value for '{freq_type}': {freq_val}")
+            exit(1)
+
+        value = conf[section][freq_type]
+        args = f"{frequencies[freq_type]['cmdargs']}={value}"
+        message = f'Setting {frequencies[freq_type]["minmax"]} CPU frequency to "{round(int(value)/1000)}" Mhz'
+
+        # run command
+        print(message)
+        run(f"cpufreqctl.auto-cpufreq {args}", shell=True)
 
 
 # set powersave and enable turbo
@@ -481,6 +495,9 @@ def set_powersave():
     ):
         run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
         print('Setting to use: "balance_power" EPP')
+
+    # set frequencies
+    set_frequencies()
 
     # get CPU utilization as a percentage
     cpuload = psutil.cpu_percent(interval=1)
@@ -687,6 +704,9 @@ def set_performance():
     ):
         run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
         print('Setting to use: "balance_performance" EPP')
+
+    # set frequencies
+    set_frequencies()
 
     # get CPU utilization as a percentage
     cpuload = psutil.cpu_percent(interval=1)
