@@ -181,7 +181,7 @@ function tool_remove {
 
   # remove auto-cpufreq and all its supporting files
   [ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
-  [ -f $share_dir ] && rm -rf $share_dir
+  [ -d $share_dir ] && rm -rf $share_dir
 
   # files cleanup
   [ -f $srv_install ] && rm $srv_install
