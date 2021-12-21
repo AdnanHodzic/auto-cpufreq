@@ -1,4 +1,4 @@
-class TLPStatusParser():
+class TLPStatusParser:
     def __init__(self, tlp_stat_output):
         self.data = {}
         self._parse(tlp_stat_output)
@@ -17,4 +17,3 @@ class TLPStatusParser():
 
     def is_enabled(self):
         return self._get_key("state") == "enabled"
-

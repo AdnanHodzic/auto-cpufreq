@@ -88,6 +88,13 @@ Default location where config needs to be placed for it to be read automatically
 # preferred governor.
 governor = performance
 
+# minimum cpu frequency (in kHz)
+# example: for 1800 MHz -> scaling_min_freq = 1800000
+scaling_min_freq = 1800000
+# maximum cpu frequency (in kHz)
+# example: for 2000 MHz -> scaling_max_freq = 2000000
+scaling_max_freq = 2000000
+
 # turbo boost setting. possible values: always, auto, never
 turbo = auto
 
@@ -96,6 +103,13 @@ turbo = auto
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 # preferred governor
 governor = powersave
+
+# minimum cpu frequency (in kHz)
+# example: for 800 MHz -> scaling_min_freq = 800000
+scaling_min_freq = 800000
+# maximum cpu frequency (in kHz)
+# example: for 1700 MHz -> scaling_max_freq = 1700000
+scaling_max_freq = 1700000
 
 # turbo boost setting. possible values: always, auto, never
 turbo = auto
