@@ -51,7 +51,7 @@ function install {
   cp -r scripts/ /usr/local/share/auto-cpufreq/
 
   # this is necessary since we need this script before we can run auto-cpufreq itself
-  cp scripts/auto-cpufreq /usr/local/bin
+  cp scripts/auto-cpufreq-venv-wrapper /usr/local/bin/auto-cpufreq
   chmod u+x /usr/local/bin/auto-cpufreq
 }
 
