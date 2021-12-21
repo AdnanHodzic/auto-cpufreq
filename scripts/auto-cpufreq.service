@@ -5,6 +5,10 @@ After=network.target network-online.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/auto-cpufreq --daemon
+WorkingDirectory=/opt/auto-cpufreq/venv
+Environment=PYTHONPATH=/opt/auto-cpufreq
+ExecStart=/opt/auto-cpufreq/venv/bin/python /opt/auto-cpufreq/venv/bin/auto-cpufreq --daemon
+Restart=on-failure
+
 [Install]
 WantedBy=multi-user.target
