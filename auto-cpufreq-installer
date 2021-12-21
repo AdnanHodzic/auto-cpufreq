@@ -52,7 +52,7 @@ function install {
 
   # this is necessary since we need this script before we can run auto-cpufreq itself
   cp scripts/auto-cpufreq-venv-wrapper /usr/local/bin/auto-cpufreq
-  chmod u+x /usr/local/bin/auto-cpufreq
+  chmod a+x /usr/local/bin/auto-cpufreq
 }
 
 # First argument is the distro
