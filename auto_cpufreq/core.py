@@ -198,6 +198,9 @@ def charging():
     # we found some power supplies, lets check their state
     else:
         for supply in power_supplies:
+            if supply == "hidpp_battery":
+                # disregard from wireless mice
+                continue
             try:
                 with open(Path(power_supply_path + supply + "/type")) as f:
                     supply_type = f.read()[:-1]
