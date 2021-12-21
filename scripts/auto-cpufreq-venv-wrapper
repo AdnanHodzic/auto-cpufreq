@@ -1,0 +1,34 @@
+#!/bin/sh
+# Wrapper script around auto-cpufreq using the python virtual environment
+
+set -eu
+
+# get script name
+PROGNAME=$(basename "${0}")
+
+# bailout function
+err_exit()
+{
+    echo "${PROGNAME}: ${1:-wrong invocation. try --help for help.}" 1>&2
+    exit 1
+}
+
+# invocation handling
+#
+param=""
+if [ "${#}" -ne 1 ];
+then
+    err_exit
+else
+    param="${1}"
+fi
+
+# load python virtual environment
+venv_dir=/opt/auto-cpufreq/venv
+. "${venv_dir}/bin/activate"
+
+# run python code with venv loaded
+PYTHONPATH=/opt/auto-cpufreq \
+            /opt/auto-cpufreq/venv/bin/python \
+            /opt/auto-cpufreq/venv/bin/auto-cpufreq \
+            "${param}"
