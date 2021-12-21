@@ -198,6 +198,10 @@ def charging():
     # we found some power supplies, lets check their state
     else:
         for supply in power_supplies:
+            # skip battery of hid devices
+            # see issue #321
+            if "hid" in supply.lower():
+                continue
             try:
                 with open(Path(power_supply_path + supply + "/type")) as f:
                     supply_type = f.read()[:-1]
