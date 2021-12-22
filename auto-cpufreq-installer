@@ -106,7 +106,7 @@ function tool_install {
 separator
 if [ -f /etc/debian_version ]; then
 	detected_distro "Debian based"
-	apt install python3-dev python3-pip python3-setuptools dmidecode -y
+	apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode -y
 	completed
 	complete_msg
 elif [ -f /etc/redhat-release ]; then
