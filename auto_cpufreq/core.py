@@ -202,6 +202,10 @@ def charging():
     # we found some power supplies, lets check their state
     else:
         for supply in power_supplies:
+            # skip battery of hid devices
+            # see issue #321
+            if "hid" in supply.lower():
+                continue
             try:
                 with open(Path(power_supply_path + supply + "/type")) as f:
                     supply_type = f.read()[:-1]
@@ -1087,22 +1091,13 @@ def read_stats():
 
 # check if program (argument) is running
 def is_running(program, argument):
-    # iterate over all process id's found by psutil
-    for pid in psutil.pids():
-        try:
-            # requests the process information corresponding to each process id
-            proc = psutil.Process(pid)
-            # check if value of program-variable that was used to call the function
-            # matches the name field of the plutil.Process(pid) output
-            if program in proc.name():
-                # check output of p.name(), output name of program
-                # p.cmdline() - echo the exact command line via which p was called.
-                for arg in proc.cmdline():
-                    if argument in str(arg):
-                        return True
-        except Exception as e:
-            print(repr(e))
-            continue
+    # iterate over all processes found by psutil
+    # and find the one with name and args passed to the function
+    for p in psutil.process_iter():
+        for s in filter(lambda x: program in x, p.cmdline()):
+            if argument in p.cmdline():
+                return True
+
 
 
 def daemon_running_msg():

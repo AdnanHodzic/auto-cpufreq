@@ -1,6 +1,6 @@
 name: auto-cpufreq
 base: core20
-version: '1.8.2'
+version: '1.9.0'
 summary: Automatic CPU speed & power optimizer for Linux
 description: |
   Automatic CPU speed & power optimizer for Linux based on active
@@ -40,6 +40,17 @@ plugs:
     interface: system-files
     write:
     - /etc/auto-cpufreq.conf
+
+   etc-pop-os-release:
+    interface: system-files
+    read:
+    - /etc/pop-os/os-release
+
+   etc-os-release:
+    interface: system-files
+    write:
+    - /etc/os-release
+
 
 apps:
   auto-cpufreq:
