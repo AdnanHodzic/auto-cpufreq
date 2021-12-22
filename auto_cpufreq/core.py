@@ -83,7 +83,7 @@ def get_config(config_file=""):
 try:
     dist_name = distro.id()
 except PermissionError:
-    # Current work-around for distros like Pop!_OS where symlink causes permission issues
+    # Current work-around for Pop!_OS where symlink causes permission issues
     print("Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
         print("Pop!_OS detected")
@@ -91,20 +91,51 @@ except PermissionError:
             "Pop!_OS uses a symbolic link for the os-release file, this causes issues and can be fixed by converting to a hard link"
         )
         print(
-            "Attempting to change symlink to hard link for /etc/os-release -> /etc/pop-os/os-release"
+            "You can change the symbolic link to a hard link for /etc/os-release -> /etc/pop-os/os-release"
         )
 
         yN = input("Continue? [y/N] ")
+        print()
         if yN.lower() == "y":
-            print("Creating hard link for /etc/os-release")
-            # Backup /etc/os-release
-            os.system("sudo mv /etc/os-release /etc/os-release-backup")
-            # Create hard link to /etc/os-release
-            os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
+            
+            # Check if using a Snap install (How do I do this?)
+            isSnap = False
+            if isSnap:
+                print(
+                    "Snap install detected, you must manually run the following commands in another terminal:"
+                )
+                print()
+                print("Backup the /etc/os-release file:")
+                print("sudo mv /etc/os-release /etc/os-release-backup")
+                print()
+                input("Press [Enter] to continue...")
+                print()
+                print("Create hard link to /etc/os-release:")
+                print("sudo ln /etc/pop-os/os-release /etc/os-release")
+                print()
+                input("Press [Enter] to continue...")
+            
+            # Runs when installed with installer/manually
+            else:
+                # Backup /etc/os-release
+                print("Backing up /etc/os-release to /etc/os-release-backup")
+                os.system("sudo mv /etc/os-release /etc/os-release-backup")
+                # Create hard link to /etc/os-release
+                print("Creating hard link for /etc/os-release")
+                os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
+            print()
+            print("Checking to see if solution worked...")
+            try:
+                dist_name = distro.id()
+                print("Success!")
+            except PermissionError:
+                print("Failed, aborting...")
+                sys.exit(1)
         else:
             print("Operation aborted by user")
             sys.exit(1)
     else:
+        print("Check /etc/os-release permissions and make sure it is not a symbolic link")
         print("Aborting...")
         sys.exit(1)
 
