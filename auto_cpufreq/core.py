@@ -26,7 +26,8 @@ warnings.filterwarnings("ignore")
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
-SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
+# SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
+SCRIPTS_DIR = Path("../scripts/")
 
 # from the highest performance to the lowest
 ALL_GOVERNORS = (
@@ -453,38 +454,45 @@ def display_load():
 def set_frequencies():
     conf = get_config()
     section = "charger" if charging() else "battery"
-
-    frequencies = {
+    frequency = {
         "scaling_max_freq": {
-            "cmdargs": "--frequency-max --set",
+            "cmdargs": "--frequency-max",
             "minmax": "maximum",
+            "value": None,
         },
         "scaling_min_freq": {
-            "cmdargs": "--frequency-min --set",
+            "cmdargs": "--frequency-min",
             "minmax": "minimum",
+            "value": None,
         },
     }
+    max_limit = None
+    min_limit = None
 
     for freq_type in ["scaling_max_freq", "scaling_min_freq"]:
         if not conf.has_option(section, freq_type):
-            continue
+            frequency.pop(freq_type)
 
-        # check if valid value is given
-        freq_val = conf[section][freq_type].strip()
-        if not freq_val.isdigit():
-            print(f"Invalid value for '{freq_type}': {freq_val}")
+    for freq_type in frequency.keys():
+        try:
+            frequency[freq_type]["value"] = int(conf[section][freq_type].strip())
+        except ValueError:
+            print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
             exit(1)
 
-        lower_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
-        upper_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
-        if not (int(freq_val) >= lower_limit and int(freq_val) <= upper_limit):
+        if not max_limit:
+            max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
+        if not min_limit:
+            min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
+
+        if not (min_limit <= frequency[freq_type]["value"] <= max_limit):
             print(
-                f"Given value for '{freq_type}' is not within the allowed frequencies {lower_limit}-{upper_limit} kHz"
+                f"Given value for '{freq_type}' is not within the allowed frequencies {min_limit}-{max_limit} kHz"
             )
             exit(1)
 
-        args = f"{frequencies[freq_type]['cmdargs']}={freq_val}"
-        message = f'Setting {frequencies[freq_type]["minmax"]} CPU frequency to "{round(int(freq_val)/1000)}" Mhz'
+        args = f"{frequency[freq_type]['cmdargs']} --set={frequency[freq_type]['value']}"
+        message = f'Setting {frequency[freq_type]["minmax"]} CPU frequency to {round(frequency[freq_type]["value"]/1000)} Mhz'
 
         # set the frequency
         print(message)
