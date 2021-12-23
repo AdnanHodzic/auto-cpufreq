@@ -83,29 +83,28 @@ def get_config(config_file=""):
 try:
     dist_name = distro.id()
 except PermissionError:
-    # Current work-around for distros like Pop!_OS where symlink causes permission issues
-    print("Warning: Cannot get distro name")
+    # Current work-around for Pop!_OS where symlink causes permission issues
+    print("[!] Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
-        print("Pop!_OS detected")
-        print(
-            "Pop!_OS uses a symbolic link for the os-release file, this causes issues and can be fixed by converting to a hard link"
-        )
-        print(
-            "Attempting to change symlink to hard link for /etc/os-release -> /etc/pop-os/os-release"
-        )
+            # Check if using a Snap 
+            if os.getenv("PKG_MARKER") == "SNAP":
+                print("[!] Snap install on PopOS detected, you must manually run the following" 
+                        " commands in another terminal:\n")            
+                print("[!] Backup the /etc/os-release file:")
+                print("sudo mv /etc/os-release /etc/os-release-backup\n")                
+                print("[!] Create hardlink to /etc/os-release:")
+                print("sudo ln /etc/pop-os/os-release /etc/os-release\n")            
+                print("[!] Aborting. Restart auto-cpufreq when you created the hardlink")
+                sys.exit(1)
+            else:
+                # This should not be the case. But better be sure.
+                print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
+                print("[!] Aborting...")
+                sys.exit(1)
 
-        yN = input("Continue? [y/N] ")
-        if yN.lower() == "y":
-            print("Creating hard link for /etc/os-release")
-            # Backup /etc/os-release
-            os.system("sudo mv /etc/os-release /etc/os-release-backup")
-            # Create hard link to /etc/os-release
-            os.system("sudo ln /etc/pop-os/os-release /etc/os-release")
-        else:
-            print("Operation aborted by user")
-            sys.exit(1)
     else:
-        print("Aborting...")
+        print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
+        print("[!] Aborting...")
         sys.exit(1)
 
 # display running version of auto-cpufreq
