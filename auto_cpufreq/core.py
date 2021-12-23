@@ -12,7 +12,6 @@ import time
 import click
 import warnings
 import configparser
-import re
 from math import isclose
 from pathlib import Path
 from shutil import which
@@ -73,6 +72,7 @@ def get_config(config_file=""):
 
         if os.path.isfile(config_file):
             get_config.config.read(config_file)
+            get_config.using_cfg_file = True
 
     return get_config.config
 
@@ -471,15 +471,22 @@ def set_frequencies():
 
         # check if valid value is given
         freq_val = conf[section][freq_type].strip()
-        if re.match(r"\d+$", freq_val) is None:
+        if not freq_val.isdigit():
             print(f"Invalid value for '{freq_type}': {freq_val}")
             exit(1)
 
-        value = conf[section][freq_type]
-        args = f"{frequencies[freq_type]['cmdargs']}={value}"
-        message = f'Setting {frequencies[freq_type]["minmax"]} CPU frequency to "{round(int(value)/1000)}" Mhz'
+        lower_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
+        upper_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
+        if not (int(freq_val) >= lower_limit and int(freq_val) <= upper_limit):
+            print(
+                f"Given value for '{freq_type}' is not within the allowed frequencies {lower_limit}-{upper_limit} kHz"
+            )
+            exit(1)
 
-        # run command
+        args = f"{frequencies[freq_type]['cmdargs']}={freq_val}"
+        message = f'Setting {frequencies[freq_type]["minmax"]} CPU frequency to "{round(int(freq_val)/1000)}" Mhz'
+
+        # set the frequency
         print(message)
         run(f"cpufreqctl.auto-cpufreq {args}", shell=True)
 
@@ -515,7 +522,7 @@ def set_powersave():
 
     # conditions for setting turbo in powersave
     if conf.has_option("battery", "turbo"):
-        auto = auto["battery"]["turbo"]
+        auto = conf["battery"]["turbo"]
     else:
         auto = "auto"
 
@@ -1097,7 +1104,6 @@ def is_running(program, argument):
         for s in filter(lambda x: program in x, p.cmdline()):
             if argument in p.cmdline():
                 return True
-
 
 
 def daemon_running_msg():

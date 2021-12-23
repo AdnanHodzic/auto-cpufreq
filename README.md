@@ -89,11 +89,16 @@ Default location where config needs to be placed for it to be read automatically
 governor = performance
 
 # minimum cpu frequency (in kHz)
-# example: for 1800 MHz -> scaling_min_freq = 1800000
-scaling_min_freq = 1800000
+# example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
+# see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+# to use this feature, uncomment the following line and set the value accordingly
+# scaling_min_freq = 800000
+
 # maximum cpu frequency (in kHz)
-# example: for 2000 MHz -> scaling_max_freq = 2000000
-scaling_max_freq = 2000000
+# example: for 1GHz = 1000 MHz = 1000000 kHz -> scaling_max_freq = 1000000
+# see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+# to use this feature, uncomment the following line and set the value accordingly
+# scaling_max_freq = 1000000
 
 # turbo boost setting. possible values: always, auto, never
 turbo = auto
@@ -105,11 +110,16 @@ turbo = auto
 governor = powersave
 
 # minimum cpu frequency (in kHz)
-# example: for 800 MHz -> scaling_min_freq = 800000
-scaling_min_freq = 800000
+# example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
+# see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+# to use this feature, uncomment the following line and set the value accordingly
+# scaling_min_freq = 800000
+
 # maximum cpu frequency (in kHz)
-# example: for 1700 MHz -> scaling_max_freq = 1700000
-scaling_max_freq = 1700000
+# see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+# example: for 1GHz = 1000 MHz = 1000000 kHz -> scaling_max_freq = 1000000
+# to use this feature, uncomment the following line and set the value accordingly
+# scaling_max_freq = 1000000
 
 # turbo boost setting. possible values: always, auto, never
 turbo = auto

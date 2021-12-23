@@ -39,7 +39,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
 
     # display info if config file is used
     def config_info_dialog():
-        if bool(get_config(config)):
+        if get_config(config) and hasattr(get_config, "using_cfg_file"):
             print("\nUsing settings defined in " + config + " file")
 
     if len(sys.argv) == 1:
