@@ -26,8 +26,7 @@ warnings.filterwarnings("ignore")
 # - re-enable CPU fan speed display and make more generic and not only for thinkpad
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
-# SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
-SCRIPTS_DIR = Path("../scripts/")
+SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 
 # from the highest performance to the lowest
 ALL_GOVERNORS = (
