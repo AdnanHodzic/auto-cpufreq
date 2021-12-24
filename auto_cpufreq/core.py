@@ -39,6 +39,9 @@ ALL_GOVERNORS = (
 )
 CPUS = os.cpu_count()
 
+# ignore these devices under /sys/class/power_supply/
+POWER_SUPPLY_IGNORELIST = ["hidpp_battery"]
+
 # Note:
 # "load1m" & "cpuload" can't be global vars and to in order to show correct data must be
 # decraled where their execution takes place
@@ -194,6 +197,8 @@ def charging():
     """
     power_supply_path = "/sys/class/power_supply/"
     power_supplies = os.listdir(Path(power_supply_path))
+    # sort it so AC is 'always' first
+    power_supplies = sorted(power_supplies)
 
     # check if we found power supplies. on a desktop these are not found
     # and we assume we are on a powercable.
@@ -203,10 +208,12 @@ def charging():
     # we found some power supplies, lets check their state
     else:
         for supply in power_supplies:
-            # skip battery of hid devices
-            # see issue #321
-            if "hid" in supply.lower():
+            # Check if supply is in ignore list
+            ignore_supply = any(item in supply for item in POWER_SUPPLY_IGNORELIST)
+            # If found in ignore list, skip it.
+            if ignore_supply:
                 continue
+
             try:
                 with open(Path(power_supply_path + supply + "/type")) as f:
                     supply_type = f.read()[:-1]
