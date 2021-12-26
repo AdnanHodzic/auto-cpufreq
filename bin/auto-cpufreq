@@ -10,7 +10,7 @@ import time
 import click
 from subprocess import call, run
 
-sys.path.append('../')
+sys.path.append("../")
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 
@@ -18,9 +18,18 @@ from auto_cpufreq.power_helper import *
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
-@click.option("--install/--remove", default=True, help="Install/remove daemon for (permanent) automatic CPU optimizations")
+@click.option(
+    "--install/--remove",
+    default=True,
+    help="Install/remove daemon for (permanent) automatic CPU optimizations",
+)
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
-@click.option("--config", is_flag=False, default="/etc/auto-cpufreq.conf", help="Use config file at defined path")
+@click.option(
+    "--config",
+    is_flag=False,
+    default="/etc/auto-cpufreq.conf",
+    help="Use config file at defined path",
+)
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
@@ -30,7 +39,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
 
     # display info if config file is used
     def config_info_dialog():
-        if bool(get_config(config)):
+        if get_config(config) and hasattr(get_config, "using_cfg_file"):
             print("\nUsing settings defined in " + config + " file")
 
     if len(sys.argv) == 1:
@@ -73,7 +82,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         elif monitor:
             config_info_dialog()
             root_check()
-            print("\nNote: You can quit monitor mode by pressing \"ctrl+c\"")
+            print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -93,7 +102,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
         elif live:
             root_check()
             config_info_dialog()
-            print("\nNote: You can quit live mode by pressing \"ctrl+c\"")
+            print('\nNote: You can quit live mode by pressing "ctrl+c"')
             time.sleep(1)
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
@@ -112,7 +121,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 countdown(5)
         elif stats:
             config_info_dialog()
-            print("\nNote: You can quit stats mode by pressing \"ctrl+c\"")
+            print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -158,7 +167,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
             footer()
         elif install:
-            if os.getenv('PKG_MARKER') == "SNAP":
+            if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
                 running_daemon()
                 gnome_power_detect_snap()
@@ -175,7 +184,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 deploy_daemon()
                 deploy_complete_msg()
         elif remove:
-            if os.getenv('PKG_MARKER') == "SNAP":
+            if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
                 run("snapctl set daemon=disabled", shell=True)
                 run("snapctl stop --disable auto-cpufreq", shell=True)
@@ -184,7 +193,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                         auto_cpufreq_stats_file.close()
 
                     auto_cpufreq_stats_path.unlink()
-                # ToDo: 
+                # ToDo:
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
                 remove_complete_msg()
@@ -194,5 +203,5 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 remove_complete_msg()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

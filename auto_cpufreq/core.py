@@ -70,16 +70,14 @@ def file_stats():
 
 
 def get_config(config_file=""):
-    if not hasattr(get_config, "dict"):
-        get_config.dict = dict()
+    if not hasattr(get_config, "config"):
+        get_config.config = configparser.ConfigParser()
 
-        config = configparser.ConfigParser()
-        config.read(config_file)
+        if os.path.isfile(config_file):
+            get_config.config.read(config_file)
+            get_config.using_cfg_file = True
 
-        for section in config.sections():
-            get_config.dict[section] = dict(config.items(section))
-
-    return get_config.dict
+    return get_config.config
 
 
 # get distro name
@@ -457,12 +455,60 @@ def display_load():
     print("Average temp. of all cores:", avg_all_core_temp, "°C", "\n")
 
 
+# set minimum and maximum CPU frequencies
+def set_frequencies():
+    conf = get_config()
+    section = "charger" if charging() else "battery"
+    frequency = {
+        "scaling_max_freq": {
+            "cmdargs": "--frequency-max",
+            "minmax": "maximum",
+            "value": None,
+        },
+        "scaling_min_freq": {
+            "cmdargs": "--frequency-min",
+            "minmax": "minimum",
+            "value": None,
+        },
+    }
+    max_limit = None
+    min_limit = None
+
+    for freq_type in ["scaling_max_freq", "scaling_min_freq"]:
+        if not conf.has_option(section, freq_type):
+            frequency.pop(freq_type)
+
+    for freq_type in frequency.keys():
+        try:
+            frequency[freq_type]["value"] = int(conf[section][freq_type].strip())
+        except ValueError:
+            print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
+            exit(1)
+
+        if not max_limit:
+            max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
+        if not min_limit:
+            min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
+
+        if not (min_limit <= frequency[freq_type]["value"] <= max_limit):
+            print(
+                f"Given value for '{freq_type}' is not within the allowed frequencies {min_limit}-{max_limit} kHz"
+            )
+            exit(1)
+
+        args = f"{frequency[freq_type]['cmdargs']} --set={frequency[freq_type]['value']}"
+        message = f'Setting {frequency[freq_type]["minmax"]} CPU frequency to {round(frequency[freq_type]["value"]/1000)} Mhz'
+
+        # set the frequency
+        print(message)
+        run(f"cpufreqctl.auto-cpufreq {args}", shell=True)
+
+
 # set powersave and enable turbo
 def set_powersave():
-    gov = get_config()
-    if "battery" in gov:
-        if "governor" in gov["battery"]:
-            gov = gov["battery"]["governor"]
+    conf = get_config()
+    if conf.has_option("battery", "governor"):
+        gov = conf["battery"]["governor"]
     else:
         gov = get_avail_powersave()
     print(f'Setting to use: "{gov}" governor')
@@ -473,6 +519,9 @@ def set_powersave():
     ):
         run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
         print('Setting to use: "balance_power" EPP')
+
+    # set frequencies
+    set_frequencies()
 
     # get CPU utilization as a percentage
     cpuload = psutil.cpu_percent(interval=1)
@@ -485,10 +534,8 @@ def set_powersave():
     print("Average temp. of all cores:", avg_all_core_temp, "°C")
 
     # conditions for setting turbo in powersave
-    auto = get_config()
-    if "battery" in auto:
-        if "turbo" in auto["battery"]:
-            auto = auto["battery"]["turbo"]
+    if conf.has_option("battery", "turbo"):
+        auto = conf["battery"]["turbo"]
     else:
         auto = "auto"
 
@@ -664,10 +711,9 @@ def mon_powersave():
 
 # set performance and enable turbo
 def set_performance():
-    gov = get_config()
-    if "charger" in gov:
-        if "governor" in gov["charger"]:
-            gov = gov["charger"]["governor"]
+    conf = get_config()
+    if conf.has_option("charger", "governor"):
+        gov = conf["charger"]["governor"]
     else:
         gov = get_avail_performance()
 
@@ -683,6 +729,9 @@ def set_performance():
         run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
         print('Setting to use: "balance_performance" EPP')
 
+    # set frequencies
+    set_frequencies()
+
     # get CPU utilization as a percentage
     cpuload = psutil.cpu_percent(interval=1)
 
@@ -693,10 +742,8 @@ def set_performance():
     print("Total system load:", load1m)
     print("Average temp. of all cores:", avg_all_core_temp, "°C")
 
-    auto = get_config()
-    if "charger" in auto:
-        if "turbo" in auto["charger"]:
-            auto = auto["charger"]["turbo"]
+    if conf.has_option("charger", "turbo"):
+        auto = conf["charger"]["turbo"]
     else:
         auto = "auto"
 

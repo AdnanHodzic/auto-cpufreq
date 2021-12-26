@@ -40,23 +40,25 @@ function help () {
   echo "Usage:"
   echo "  cpufreqctl [OPTION[=VALUE]...]"
   echo ""
-  echo "  --help          Show help options"
-  echo "  --version       Package version"
-  echo "  --verbose, -v   Verbose output"
+  echo "  --help                 Show help options"
+  echo "  --version              Package version"
+  echo "  --verbose, -v          Verbose output"
   echo ""
-  echo "  --set=VALUE     Set VALUE for selected option"
-  echo "  --core=NUMBER   Apply selected option just for the core NUMBER (0 ~ N - 1)"
-  echo "  --available     Get available values instand of default: current"
+  echo "  --set=VALUE            Set VALUE for selected option"
+  echo "  --core=NUMBER          Apply selected option just for the core NUMBER (0 ~ N - 1)"
+  echo "  --available            Get available values instand of default: current"
   echo ""
-  echo "  --driver        Current processor driver"
-  echo "  --governor      Scaling governor's options"
-  echo "  --epp           Governor's energy_performance_preference options"
-  echo "  --frequency     Frequency options"
-  echo "  --on            Turn on --core=NUMBER"
-  echo "  --off           Turn off --core=NUMBER"
-  echo "  --frequency-min Minimal frequency options"
-  echo "  --frequency-max Maximum frequency options"
-  echo "  --boost         Current cpu boost value"
+  echo "  --driver               Current processor driver"
+  echo "  --governor             Scaling governor's options"
+  echo "  --epp                  Governor's energy_performance_preference options"
+  echo "  --frequency            Frequency options"
+  echo "  --on                   Turn on --core=NUMBER"
+  echo "  --off                  Turn off --core=NUMBER"
+  echo "  --frequency-min        Minimal frequency options"
+  echo "  --frequency-max        Maximum frequency options"
+  echo "  --frequency-min-limit  Get minimal frequency limit"
+  echo "  --frequency-max-limit  Get maximum frequency limit"
+  echo "  --boost                Current cpu boost value"
   echo ""
   echo "intel_pstate options"
   echo "  --no-turbo      Current no_turbo value"
@@ -230,6 +232,22 @@ function set_frequency_max () {
   fi
 }
 
+function get_frequency_min_limit () {
+  if [ -z $CORE ]
+  then
+    CORE=0
+  fi
+  cat /sys/devices/system/cpu/cpu$CORE/cpufreq/cpuinfo_min_freq
+}
+
+function get_frequency_max_limit () {
+  if [ -z $CORE ]
+  then
+    CORE=0
+  fi
+  cat /sys/devices/system/cpu/cpu$CORE/cpufreq/cpuinfo_max_freq
+}
+
 function get_energy_performance_preference () {
   if [ -z $CORE ]
   then
@@ -384,6 +402,16 @@ then
     set_frequency_max
   fi
   exit
+fi
+if [ $OPTION = "--frequency-min-limit" ]
+then
+    verbose "Getting CPU"$CORE" minimal frequency limit"
+    get_frequency_min_limit
+fi
+if [ $OPTION = "--frequency-max-limit" ]
+then
+    verbose "Getting CPU"$CORE" maximum frequency limit"
+    get_frequency_max_limit
 fi
 if [ $OPTION = "--min-perf" ]
 then
