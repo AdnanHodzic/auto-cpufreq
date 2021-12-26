@@ -41,17 +41,6 @@ plugs:
     write:
     - /etc/auto-cpufreq.conf
 
-   etc-pop-os-release:
-    interface: system-files
-    read:
-    - /etc/pop-os/os-release
-
-   etc-os-release:
-    interface: system-files
-    write:
-    - /etc/os-release
-
-
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq
