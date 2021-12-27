@@ -463,36 +463,40 @@ def set_frequencies():
         "scaling_max_freq": {
             "cmdargs": "--frequency-max",
             "minmax": "maximum",
-            "value": None,
         },
         "scaling_min_freq": {
             "cmdargs": "--frequency-min",
             "minmax": "minimum",
-            "value": None,
         },
     }
-    max_limit = None
-    min_limit = None
-
-    for freq_type in ["scaling_max_freq", "scaling_min_freq"]:
-        if not conf.has_option(section, freq_type):
-            frequency.pop(freq_type)
+    if not hasattr(set_frequencies, "max_limit"):
+        set_frequencies.max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
+    if not hasattr(set_frequencies, "min_limit"):
+        set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
 
     for freq_type in frequency.keys():
+        value = None
+        if not conf.has_option(section, freq_type):
+            if freq_type == "scaling_max_freq":
+                curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
+                value = set_frequencies.max_limit
+            else:
+                curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
+                value = set_frequencies.min_limit
+            if curr_freq == value:
+                continue
+
         try:
-            frequency[freq_type]["value"] = int(conf[section][freq_type].strip())
+            frequency[freq_type]["value"] = value if value else int(conf[section][freq_type].strip())
         except ValueError:
             print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
             exit(1)
 
-        if not max_limit:
-            max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
-        if not min_limit:
-            min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
-
-        if not (min_limit <= frequency[freq_type]["value"] <= max_limit):
+        if not (
+            set_frequencies.min_limit <= frequency[freq_type]["value"] <= set_frequencies.max_limit
+        ):
             print(
-                f"Given value for '{freq_type}' is not within the allowed frequencies {min_limit}-{max_limit} kHz"
+                f"Given value for '{freq_type}' is not within the allowed frequencies {set_frequencies.min_limit}-{set_frequencies.max_limit} kHz"
             )
             exit(1)
 
@@ -502,6 +506,9 @@ def set_frequencies():
         # set the frequency
         print(message)
         run(f"cpufreqctl.auto-cpufreq {args}", shell=True)
+
+    # set function attribute to avoid re-setting freqs unnecessarily
+    set_frequencies.done = True
 
 
 # set powersave and enable turbo
