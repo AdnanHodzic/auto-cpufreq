@@ -457,8 +457,23 @@ def display_load():
 
 # set minimum and maximum CPU frequencies
 def set_frequencies():
-    conf = get_config()
-    section = "charger" if charging() else "battery"
+    """
+    Sets frequencies:
+     - if option is used in auto-cpufreq.conf: use configured value
+     - if option is disabled/no conf file used: set default frequencies
+    Frequency setting is performed only once on power supply change
+    """
+    power_supply = "charger" if charging() else "battery"
+
+    # don't do anything if the power supply hasn't changed
+    if (
+        hasattr(set_frequencies, "prev_power_supply")
+        and power_supply == set_frequencies.prev_power_supply
+    ):
+        return
+    else:
+        set_frequencies.prev_power_supply = power_supply
+
     frequency = {
         "scaling_max_freq": {
             "cmdargs": "--frequency-max",
@@ -474,9 +489,12 @@ def set_frequencies():
     if not hasattr(set_frequencies, "min_limit"):
         set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
 
+    conf = get_config()
+
     for freq_type in frequency.keys():
         value = None
-        if not conf.has_option(section, freq_type):
+        if not conf.has_option(power_supply, freq_type):
+            # fetch and use default frequencies
             if freq_type == "scaling_max_freq":
                 curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
                 value = set_frequencies.max_limit
@@ -487,7 +505,9 @@ def set_frequencies():
                 continue
 
         try:
-            frequency[freq_type]["value"] = value if value else int(conf[section][freq_type].strip())
+            frequency[freq_type]["value"] = (
+                value if value else int(conf[power_supply][freq_type].strip())
+            )
         except ValueError:
             print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
             exit(1)
@@ -506,9 +526,6 @@ def set_frequencies():
         # set the frequency
         print(message)
         run(f"cpufreqctl.auto-cpufreq {args}", shell=True)
-
-    # set function attribute to avoid re-setting freqs unnecessarily
-    set_frequencies.done = True
 
 
 # set powersave and enable turbo
