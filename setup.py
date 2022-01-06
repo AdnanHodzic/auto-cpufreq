@@ -15,7 +15,11 @@ def read(name):
 
 setup(
     name="auto-cpufreq",
-    version="1.0",
+    version_config={
+        "template": "{tag}.{sha}",
+        "dev_template": "{tag}.{sha}"
+    },
+    setup_requires=["setuptools-git-versioning"],
     description="Automatic CPU speed & power optimizer for Linux",
     long_description=readme,
     author="Adnan Hodzic",
