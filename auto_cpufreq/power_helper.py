@@ -112,12 +112,18 @@ def gnome_power_detect_snap():
 # disable gnome >= 40 power profiles (live)
 def gnome_power_disable_live():
     if gnome_power_status == 0:
+        call(["powerprofilesctl", "set", "balanced"])
         call(["systemctl", "stop", "power-profiles-daemon"])
 
 
 # disable gnome >= 40 power profiles (install)
 def gnome_power_svc_disable():
     if systemctl_exists:
+        # set balanced profile before disabling it
+        if gnome_power_status == 0:
+            call(["powerprofilesctl", "set", "balanced"])
+
+        # always disable power-profiles-daemon
         try:
             print("\n* Disabling GNOME power profiles")
             call(["systemctl", "stop", "power-profiles-daemon"])
