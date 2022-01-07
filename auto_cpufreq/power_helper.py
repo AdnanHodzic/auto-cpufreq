@@ -31,6 +31,7 @@ def does_command_exists(cmd):
 systemctl_exists = does_command_exists("systemctl")
 bluetoothctl_exists = does_command_exists("bluetoothctl")
 tlp_stat_exists = does_command_exists("tlp-stat")
+powerprofilesctl_exists = does_command_exists("powerprofilesctl")
 
 # detect if gnome power profile service is running
 if os.getenv("PKG_MARKER") != "SNAP":
@@ -109,18 +110,24 @@ def gnome_power_detect_snap():
     print("python3 power_helper.py --gnome_power_disable")
 
 
-# disable gnome >= 40 power profiles (live)
-def gnome_power_disable_live():
-    if gnome_power_status == 0:
-        call(["powerprofilesctl", "set", "balanced"])
-        call(["systemctl", "stop", "power-profiles-daemon"])
+# stops gnome >= 40 power profiles (live)
+def gnome_power_stop_live():
+    if systemctl_exists:
+        if gnome_power_status == 0 and powerprofilesctl_exists:
+            call(["powerprofilesctl", "set", "balanced"])
+            call(["systemctl", "stop", "power-profiles-daemon"])
+
+# starts gnome >= 40 power profiles (live)
+def gnome_power_start_live():
+    if systemctl_exists:
+        call(["systemctl", "start", "power-profiles-daemon"])
 
 
 # disable gnome >= 40 power profiles (install)
 def gnome_power_svc_disable():
     if systemctl_exists:
-        # set balanced profile before disabling it
-        if gnome_power_status == 0:
+        # set balanced profile if its running before disabling it
+        if gnome_power_status == 0 and powerprofilesctl_exists:
             call(["powerprofilesctl", "set", "balanced"])
 
         # always disable power-profiles-daemon
