@@ -981,12 +981,7 @@ def python_info():
     print("psutil package:", psutil.__version__)
     print("platform package:", pl.__version__)
     print("click package:", click.__version__)
-    # workaround: Module 'distro' has no '__version__' member () (https://github.com/nir0s/distro/issues/265)
-    # print("distro:", distro.__version__)
-    run(
-        "echo \"distro package\" $(pip3 show distro | sed -n -e 's/^.*Version: //p')",
-        shell=True,
-    )
+    print("distro package:", distro.__version__)
 
 
 def device_info():
