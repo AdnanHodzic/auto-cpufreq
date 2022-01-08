@@ -116,7 +116,7 @@ def app_version():
 
     # snap package
     if os.getenv("PKG_MARKER") == "SNAP":
-        print(getoutput("echo Snap: $SNAP_VERSION"))
+        print(getoutput("echo Snap version: $SNAP_VERSION"))
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
