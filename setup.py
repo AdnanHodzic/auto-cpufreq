@@ -12,12 +12,16 @@ def read(name):
     with open(os.path.join(this, name)) as f:
         return f.read()
 
+# Used for the tar.gz/snap releases
+VERSION = "1.9.0"
 
 setup(
     name="auto-cpufreq",
-    version_config={
-        "template": "{tag}.{sha}",
-        "dev_template": "{tag}.{sha}"
+    setuptools_git_versioning={
+        "starting_version": VERSION,
+        "template": "{tag}+{sha}",
+        "dev_template": "{tag}+{sha}",
+        "dirty_template": "{tag}+{sha}.post{ccount}.dirty"
     },
     setup_requires=["setuptools-git-versioning"],
     description="Automatic CPU speed & power optimizer for Linux",
