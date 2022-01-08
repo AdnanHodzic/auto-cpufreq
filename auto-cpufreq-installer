@@ -170,6 +170,7 @@ function tool_remove {
   wrapper_script="/usr/local/bin/auto-cpufreq"
   unit_file="/etc/systemd/system/auto-cpufreq.service"
   venv_path="/opt/auto-cpufreq"
+  cpufreqctl="/usr/bin/cpufreqctl.auto-cpufreq"
 
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
@@ -194,6 +195,7 @@ function tool_remove {
   [ -f $stats_file ] && rm $stats_file
   [ -f $unit_file ] && rm $unit_file
   [ -f $wrapper_script ] && rm $wrapper_script
+  [ -f $cpufreqctl ] && rm $cpufreqctl
 
   # remove python virtual environment
   rm -rf "${venv_path}"
