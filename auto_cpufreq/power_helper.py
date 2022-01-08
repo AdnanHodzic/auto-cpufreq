@@ -95,7 +95,7 @@ def gnome_power_detect_install():
             )
             print("Detected running GNOME Power Profiles daemon service!")
             print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
-            print('Disabled daemon is not automatically disabled in "live" and "monitor" mode and')
+            print('This daemon is not automatically disabled in "monitor" mode and')
             print("will be enabled after auto-cpufreq is removed.")
 
 

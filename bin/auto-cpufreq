@@ -108,7 +108,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
-                gnome_power_detect()
+                gnome_power_detect_install()
                 gnome_power_stop_live()
                 tlp_service_detect()
             while True:
