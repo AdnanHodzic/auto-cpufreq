@@ -142,6 +142,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             # ToDo: add status of GNOME Power Profile servie status
             config_info_dialog()
             root_check()
+            cpufreqctl()
             footer()
             distro_info()
             sysinfo()
