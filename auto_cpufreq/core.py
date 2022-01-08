@@ -12,7 +12,6 @@ import time
 import click
 import warnings
 import configparser
-import pkg_resources
 from math import isclose
 from pathlib import Path
 from shutil import which
@@ -112,7 +111,7 @@ except PermissionError:
 # display running version of auto-cpufreq
 def app_version():
 
-    print("auto-cpufreq version: ", end="")
+    print("auto-cpufreq version:")
 
     # snap package
     if os.getenv("PKG_MARKER") == "SNAP":
@@ -121,13 +120,19 @@ def app_version():
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
         if aur_pkg_check == 1:
-            print(pkg_resources.require("auto-cpufreq")[0].version)
+            print(
+                "Git commit:",
+                check_output(["git", "describe", "--always"]).strip().decode(),
+            )
         else:
             print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
     else:
         # source code (auto-cpufreq-installer)
         try:
-            print(pkg_resources.require("auto-cpufreq")[0].version)
+            print(
+                "Git commit:",
+                check_output(["git", "describe", "--always"]).strip().decode(),
+            )
         except Exception as e:
             print(repr(e))
             pass
