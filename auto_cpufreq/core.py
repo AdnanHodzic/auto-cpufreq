@@ -116,7 +116,7 @@ def app_version():
 
     # snap package
     if os.getenv("PKG_MARKER") == "SNAP":
-        print(getoutput("echo Snap: $SNAP_VERSION"))
+        print(getoutput("echo Snap version: $SNAP_VERSION"))
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
@@ -991,12 +991,7 @@ def python_info():
     print("psutil package:", psutil.__version__)
     print("platform package:", pl.__version__)
     print("click package:", click.__version__)
-    # workaround: Module 'distro' has no '__version__' member () (https://github.com/nir0s/distro/issues/265)
-    # print("distro:", distro.__version__)
-    run(
-        "echo \"distro package\" $(pip3 show distro | sed -n -e 's/^.*Version: //p')",
-        shell=True,
-    )
+    print("distro package:", distro.__version__)
 
 
 def device_info():

@@ -108,17 +108,23 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
-                gnome_power_detect()
+                gnome_power_detect_install()
+                gnome_power_stop_live()
                 tlp_service_detect()
             while True:
-                running_daemon()
-                footer()
-                gov_check()
-                cpufreqctl()
-                distro_info()
-                sysinfo()
-                set_autofreq()
-                countdown(5)
+                try:
+                    running_daemon()
+                    footer()
+                    gov_check()
+                    cpufreqctl()
+                    distro_info()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(5)
+                except KeyboardInterrupt:
+                    gnome_power_start_live()
+                    print("")
+                    sys.exit()
         elif stats:
             config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
@@ -136,6 +142,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             # ToDo: add status of GNOME Power Profile servie status
             config_info_dialog()
             root_check()
+            cpufreqctl()
             footer()
             distro_info()
             sysinfo()
