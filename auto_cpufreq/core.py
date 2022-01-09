@@ -12,6 +12,7 @@ import time
 import click
 import warnings
 import configparser
+import pkg_resources
 from math import isclose
 from pathlib import Path
 from shutil import which
@@ -111,7 +112,7 @@ except PermissionError:
 # display running version of auto-cpufreq
 def app_version():
 
-    print("auto-cpufreq version:")
+    print("auto-cpufreq version: ", end="")
 
     # snap package
     if os.getenv("PKG_MARKER") == "SNAP":
@@ -120,23 +121,27 @@ def app_version():
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
         if aur_pkg_check == 1:
-            print(
-                "Git commit:",
-                check_output(["git", "describe", "--always"]).strip().decode(),
-            )
+            print(get_formatted_version())
         else:
             print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
     else:
         # source code (auto-cpufreq-installer)
         try:
-            print(
-                "Git commit:",
-                check_output(["git", "describe", "--always"]).strip().decode(),
-            )
+            print(get_formatted_version())
         except Exception as e:
             print(repr(e))
             pass
 
+# return formatted version for a better readability
+def get_formatted_version():
+    literal_version = pkg_resources.require("auto-cpufreq")[0].version
+    splitted_version = literal_version.split("+")
+    formatted_version = splitted_version[0]
+    
+    if len(splitted_version) > 1:
+        formatted_version += " (git: " + splitted_version[1] + ")"
+
+    return formatted_version
 
 def app_res_use():
     p = psutil.Process()
