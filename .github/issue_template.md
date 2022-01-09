@@ -1,11 +1,17 @@
 ### Error output:
 ```text
-Paste here error output
+Add/paste error output
 ```
 ---
 
 ### System information:
-```text
-Paste here output of the auto-cpufreq --debug
+
+Add/paste output of:
+
 ```
+auto-cpufreq --debug
+```
+
+#### Without providing requested information your issue might be ignored!
+
 ---
