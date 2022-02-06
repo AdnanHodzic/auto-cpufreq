@@ -123,28 +123,6 @@ def gnome_power_start_live():
     if systemctl_exists:
         call(["systemctl", "start", "power-profiles-daemon"])
 
-
-# disable gnome >= 40 power profiles (install)
-# def gnome_power_svc_disable(profile):
-#     if systemctl_exists:
-#         # set balanced profile if its running before disabling it
-#         if gnome_power_status == 0 and powerprofilesctl_exists:
-#             print("Using profile: ", profile)
-#             call(["powerprofilesctl", "set", profile])
-
-#         # always disable power-profiles-daemon
-#         try:
-#             print("\n* Disabling GNOME power profiles")
-#             call(["systemctl", "stop", "power-profiles-daemon"])
-#             call(["systemctl", "disable", "power-profiles-daemon"])
-#             call(["systemctl", "mask", "power-profiles-daemon"])
-#             call(["systemctl", "daemon-reload"])
-#         except:
-#             print("\nUnable to disable GNOME power profiles")
-#             print("If this causes any problems, please submit an issue:")
-#             print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
-
-
 # enable gnome >= 40 power profiles (uninstall)
 def gnome_power_svc_enable():
     if systemctl_exists:
@@ -260,15 +238,15 @@ def valid_options():
 
 # cli
 @click.pass_context
-def gnome_power_svc_disable(ctx, select_profile):
-    gnome_power_profile_selection = ctx.params["gnome_power_disable"]
-    #print(f"Will use: {gnome_power_profile_selection} profile")
+def gnome_power_svc_disable(ctx, power_selection):
+    gnome_power_disable = ctx.params["gnome_power_disable"]
+    str(gnome_power_disable).replace('[','').replace(']','').replace(",", "").replace("(","").replace(")","").replace("'","")
 
     if systemctl_exists:
         # set balanced profile if its running before disabling it
         if gnome_power_status == 0 and powerprofilesctl_exists:
-            print("Using profile: ", gnome_power_profile_selection)
-            call(["powerprofilesctl", "set", gnome_power_profile_selection])
+            print("Using profile: ", gnome_power_disable)
+            call(["powerprofilesctl", "set", gnome_power_disable])
 
         # always disable power-profiles-daemon
         try:
@@ -283,18 +261,23 @@ def gnome_power_svc_disable(ctx, select_profile):
             print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
 @click.command()
-@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service", is_flag=False, type=click.Choice(['balanced', 'performance'], case_sensitive=True), show_choices=True, multiple=True, default="balanced", show_default=True)
-#@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service", is_flag=False, type=click.Choice(['balanced', 'performance'], case_sensitive=True), show_choices=True, multiple=True, default="balanced", show_default=True, required=False)
-@click.option("--select_profile", hidden=True)
+@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced)", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
+# ToDo:
+# * if argument no provided (None) use balanced
+# * add option to enable switching between balanced/performance
+# * if status return enabled (do no re-enable, output status?)
+# * if status return disable (do no re-disable, but output status)
+# * update readme/docs
+#@click.option("--gnome_power_disable", is_flag=False, help="Disable GNOME Power profiles service", type=click.Choice(['balanced', 'performance'], case_sensitive=True), show_choices=True, default="balanced", show_default=True)
+@click.option("--power_selection", hidden=True)
 @click.option("--gnome_power_enable", is_flag=True, help="Enable GNOME Power profiles service")
-#@click.option("--gnome_power_disable", is_flag=True, help="Disable GNOME Power profiles service", type=(str), default="balanced", show_default=True)
-#@click.argument("profile")
+
 @click.option("--gnome_power_status", is_flag=True, help="Get status of GNOME Power profiles service"
 )
 @click.option("--bluetooth_boot_on", is_flag=True, help="Turn on Bluetooth on boot")
 @click.option("--bluetooth_boot_off", is_flag=True, help="Turn off Bluetooth on boot")
 def main(
-    select_profile,
+    power_selection,
     gnome_power_enable,
     gnome_power_disable,
     gnome_power_status,
@@ -319,7 +302,7 @@ def main(
         elif gnome_power_disable:
             header()
             root_check()
-            gnome_power_svc_disable(select_profile)
+            gnome_power_svc_disable(power_selection)
             helper_opts()
             footer()
         elif gnome_power_status:
