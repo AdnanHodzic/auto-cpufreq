@@ -250,7 +250,7 @@ def disable_power_profiles_daemon():
         print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
 
-# default gnome_power service disable func (balanced)
+# default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():
     if systemctl_exists:
         # set balanced profile if its running before disabling it
@@ -265,12 +265,19 @@ def gnome_power_svc_disable():
 @click.pass_context
 # external gnome power srevice disable function
 def gnome_power_svc_disable_ext(ctx, power_selection):
-    gnome_power_disable = ctx.params["gnome_power_disable"]
-    str(gnome_power_disable).replace('[','').replace(']','').replace(",", "").replace("(","").replace(")","").replace("'","")
+    raw_power_disable = ctx.params["gnome_power_disable"]
+    gnome_power_disable = str(raw_power_disable).replace('[','').replace(']','').replace(",", "").replace("(","").replace(")","").replace("'","")
 
     if systemctl_exists:
+        # 0 is active
+        if gnome_power_status != 0:
+            print("Power Profiles Daemon is already disabled, re-enable by running:\n"
+                  "sudo python3 power_helper.py --gnome_power_enable\n"
+                  "\nfollowed by running:\n"
+                  "sudo python3 power_helper.py --gnome_power_disable"
+                  )
         # set balanced profile if its running before disabling it
-        if gnome_power_status == 0 and powerprofilesctl_exists:
+        elif gnome_power_status == 0 and powerprofilesctl_exists:
             print("Using profile: ", gnome_power_disable)
             call(["powerprofilesctl", "set", gnome_power_disable])
 
@@ -280,11 +287,7 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
 @click.command()
 @click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced)", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
 # ToDo:
-# * add option to enable switching between balanced/performance
-# * if status return enabled (do no re-enable, output status?)
-# * if status return disable (do no re-disable, but output status)
 # * update readme/docs
-#@click.option("--gnome_power_disable", is_flag=False, help="Disable GNOME Power profiles service", type=click.Choice(['balanced', 'performance'], case_sensitive=True), show_choices=True, default="balanced", show_default=True)
 @click.option("--power_selection", hidden=True)
 @click.option("--gnome_power_enable", is_flag=True, help="Enable GNOME Power profiles service")
 
