@@ -236,9 +236,35 @@ def valid_options():
     print("--gnome_power_disable\t\tDisable GNOME Power Profiles daemon\n")
 
 
+def disable_power_profiles_daemon():
+    # always disable power-profiles-daemon
+    try:
+        print("\n* Disabling GNOME power profiles")
+        call(["systemctl", "stop", "power-profiles-daemon"])
+        call(["systemctl", "disable", "power-profiles-daemon"])
+        call(["systemctl", "mask", "power-profiles-daemon"])
+        call(["systemctl", "daemon-reload"])
+    except:
+        print("\nUnable to disable GNOME power profiles")
+        print("If this causes any problems, please submit an issue:")
+        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+
+
+# default gnome_power service disable func (balanced)
+def gnome_power_svc_disable():
+    if systemctl_exists:
+        # set balanced profile if its running before disabling it
+        if gnome_power_status == 0 and powerprofilesctl_exists:
+            print("Using profile: ", "balanced")
+            call(["powerprofilesctl", "set", "balanced"])
+
+            disable_power_profiles_daemon()
+
+
 # cli
 @click.pass_context
-def gnome_power_svc_disable(ctx, power_selection):
+# external gnome power srevice disable function
+def gnome_power_svc_disable_ext(ctx, power_selection):
     gnome_power_disable = ctx.params["gnome_power_disable"]
     str(gnome_power_disable).replace('[','').replace(']','').replace(",", "").replace("(","").replace(")","").replace("'","")
 
@@ -248,22 +274,12 @@ def gnome_power_svc_disable(ctx, power_selection):
             print("Using profile: ", gnome_power_disable)
             call(["powerprofilesctl", "set", gnome_power_disable])
 
-        # always disable power-profiles-daemon
-        try:
-            print("\n* Disabling GNOME power profiles")
-            call(["systemctl", "stop", "power-profiles-daemon"])
-            call(["systemctl", "disable", "power-profiles-daemon"])
-            call(["systemctl", "mask", "power-profiles-daemon"])
-            call(["systemctl", "daemon-reload"])
-        except:
-            print("\nUnable to disable GNOME power profiles")
-            print("If this causes any problems, please submit an issue:")
-            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+            disable_power_profiles_daemon()
+
 
 @click.command()
 @click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced)", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
 # ToDo:
-# * if argument no provided (None) use balanced
 # * add option to enable switching between balanced/performance
 # * if status return enabled (do no re-enable, output status?)
 # * if status return disable (do no re-disable, but output status)
@@ -302,7 +318,7 @@ def main(
         elif gnome_power_disable:
             header()
             root_check()
-            gnome_power_svc_disable(power_selection)
+            gnome_power_svc_disable_ext(power_selection)
             helper_opts()
             footer()
         elif gnome_power_status:
