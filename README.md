@@ -76,11 +76,25 @@ Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl 
 
 ## Configuring auto-cpufreq
 
-You can configure profiles for battery and power supply. These profiles will let you pick which governor to use and how and when turbo boost is enabled. The possible values for turbo boost behavior are always, auto and never. The default behavior is auto, which only kicks in during high load.
+While auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. It's possible to perform addition configurations in 2 ways:
 
-Default location where config needs to be placed for it to be read automatically: `/etc/auto-cpufreq.conf`
+### 1: power_helper.py script
 
-### Example config contents
+If detected as running auto-cpufreq will disable GNOME Power profiles service, which would otherwise cause conflicts and cause problems. By default auto-cpufreq uses `balanced` mode which also works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq, you can switch to `performance` mode. Which will result in higher frequencies by default, but also higher use of energy (battery consumption).
+
+This can be done by running: `sudo python3 power_helper.py --gnome_power_disable performance`
+
+After auto-cpufreq git repo has been cloned (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navagiate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
+
+After this step, all necessary changes will still be made automatically. However, if you wish to perform additonal "manual" settings this can be done by following instrucitons explained in next step.
+
+### 2: auto-cpufreq config file
+
+You can configure profiles for battery and power supply. These profiles will let you pick which governor to use and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
+
+By default, auto-cpufreq does not use the config file! If you wish to use it, location where config needs to be placed for it to be read automatically is: `/etc/auto-cpufreq.conf`
+
+#### Example config file contents
 ```
 # settings for when connected to a power source
 [charger]

@@ -272,12 +272,13 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
         # 0 is active
         if gnome_power_status != 0:
             print("Power Profiles Daemon is already disabled, re-enable by running:\n"
-                  "sudo python3 power_helper.py --gnome_power_enable\n"
-                  "\nfollowed by running:\n"
-                  "sudo python3 power_helper.py --gnome_power_disable"
-                  )
+                    "sudo python3 power_helper.py --gnome_power_enable\n"
+                    "\nfollowed by running:\n"
+                    "sudo python3 power_helper.py --gnome_power_disable"
+                    )
+
         # set balanced profile if its running before disabling it
-        elif gnome_power_status == 0 and powerprofilesctl_exists:
+        if gnome_power_status == 0 and powerprofilesctl_exists:
             print("Using profile: ", gnome_power_disable)
             call(["powerprofilesctl", "set", gnome_power_disable])
 
