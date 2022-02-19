@@ -371,10 +371,14 @@ def deploy_daemon():
 
 
 def deploy_daemon_performance():
-    print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
+    print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
 
-    # ToDo:
-    # add check that performance exists otherwise exit
+    # check that performance is in scaling_available_governors
+    with open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors") as available_governors:
+        if "performance" not in available_governors.read():
+            print("\"perfomance\" governor is unavailable on this system, run:\n"
+                    "sudo sudo auto-cpufreq --install\n\n"
+                    "to install auto-cpufreq using default \"balanced\" governor.\n")
 
     # deploy cpufreqctl script func call
     cpufreqctl()

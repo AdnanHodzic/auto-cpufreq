@@ -177,10 +177,9 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
         elif install_performance:
             if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
-                print("This option is only available on non Snap installs"
-                    "Please refer to: power_helper.py script for more info\n")
+                print("This option is only available on non Snap installs\n"
+                    "Please refer to auto-cpufreq power_helper.py script for more info\n")
             else:
-                print("in performance")
                 root_check()
                 running_daemon()
                 gov_check()
@@ -198,7 +197,6 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 run("snapctl start --enable auto-cpufreq", shell=True)
                 deploy_complete_msg()
             else:
-                print("in install")
                 root_check()
                 running_daemon()
                 gov_check()
