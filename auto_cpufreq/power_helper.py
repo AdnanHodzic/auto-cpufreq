@@ -33,6 +33,8 @@ systemctl_exists = does_command_exists("systemctl")
 bluetoothctl_exists = does_command_exists("bluetoothctl")
 tlp_stat_exists = does_command_exists("tlp-stat")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
+snap_check = os.system("snap list | grep auto-cpufreq >/dev/null 2>&1")
+
 
 # detect if gnome power profile service is running
 if os.getenv("PKG_MARKER") != "SNAP":
@@ -281,7 +283,8 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
     if systemctl_exists:
         # 0 is active
         if gnome_power_status != 0:
-            if os.getenv("PKG_MARKER") == "SNAP":
+            # 0 is success (snap package is installed)
+            if snap_check == 0:
                 print("Power Profiles Daemon is already disabled, re-enable by running:\n"
                         "sudo python3 power_helper.py --gnome_power_enable\n"
                         "\nfollowed by running:\n"
@@ -296,7 +299,8 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
 
         # set balanced profile if its running before disabling it
         if gnome_power_status == 0 and powerprofilesctl_exists:
-            if os.getenv("PKG_MARKER") == "SNAP":
+            # 0 is success (snap package is installed)
+            if snap_check == 0:
                 print("Using profile: ", gnome_power_disable)
                 call(["powerprofilesctl", "set", gnome_power_disable])
 

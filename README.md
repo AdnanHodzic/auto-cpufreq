@@ -86,7 +86,7 @@ This can be done by running: `sudo python3 power_helper.py --gnome_power_disable
 
 After auto-cpufreq git repo has been cloned (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navagiate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
 
-After this step, all necessary changes will still be made automatically. However, if you wish to perform additonal "manual" settings this can be done by following instrucitons explained in next step.
+After this step, all necessary changes will still be made automatically. However, if you wish to perform additonal "manual" settings this can be done by following instructions explained in next step.
 
 ### 2: auto-cpufreq config file
 
