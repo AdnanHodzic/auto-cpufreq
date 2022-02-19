@@ -97,7 +97,7 @@ def gnome_power_detect_install():
             print("Detected running GNOME Power Profiles daemon service!")
             print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
             print('This daemon is not automatically disabled in "monitor" mode and')
-            print("will be enabled after auto-cpufreq is removed.")
+            print("will be enabled after auto-cpufreq is removed.\n")
 
 
 # notification on snap
@@ -260,6 +260,16 @@ def gnome_power_svc_disable():
 
             disable_power_profiles_daemon()
 
+# default gnome_power_svc_disable func (performance)
+def gnome_power_svc_disable_performance():
+    if systemctl_exists:
+        # set performance profile if its running before disabling it
+        if gnome_power_status == 0 and powerprofilesctl_exists:
+            print("Using profile: ", "performance")
+            call(["powerprofilesctl", "set", "performance"])
+
+            disable_power_profiles_daemon()
+
 
 # cli
 @click.pass_context
@@ -271,18 +281,30 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
     if systemctl_exists:
         # 0 is active
         if gnome_power_status != 0:
-            print("Power Profiles Daemon is already disabled, re-enable by running:\n"
-                    "sudo python3 power_helper.py --gnome_power_enable\n"
-                    "\nfollowed by running:\n"
-                    "sudo python3 power_helper.py --gnome_power_disable"
-                    )
+            if os.getenv("PKG_MARKER") == "SNAP":
+                print("Power Profiles Daemon is already disabled, re-enable by running:\n"
+                        "sudo python3 power_helper.py --gnome_power_enable\n"
+                        "\nfollowed by running:\n"
+                        "sudo python3 power_helper.py --gnome_power_disable"
+                        )
+            else:
+                print("Power Profiles Daemon is already disabled, first remove auto-cpufreq:\n"
+                        "sudo auto-cpufreq --remove\n"
+                        "\nfollowed by installing auto-cpufreq in performance mode:\n"
+                        "sudo auto-cpufreq --install_performance"
+                        )
 
         # set balanced profile if its running before disabling it
         if gnome_power_status == 0 and powerprofilesctl_exists:
-            print("Using profile: ", gnome_power_disable)
-            call(["powerprofilesctl", "set", gnome_power_disable])
+            if os.getenv("PKG_MARKER") == "SNAP":
+                print("Using profile: ", gnome_power_disable)
+                call(["powerprofilesctl", "set", gnome_power_disable])
 
-            disable_power_profiles_daemon()
+                disable_power_profiles_daemon()
+            else:
+                print("Install auto-cpufreq in performance mode by running:\n"
+                        "sudo auto-cpufreq --install_performance\n"
+                        )
 
 
 @click.command()

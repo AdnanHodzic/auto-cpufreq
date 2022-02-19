@@ -370,6 +370,36 @@ def deploy_daemon():
     call("/usr/bin/auto-cpufreq-install", shell=True)
 
 
+def deploy_daemon_performance():
+    print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon " + "-" * 22 + "\n")
+
+    # ToDo:
+    # add check that performance exists otherwise exit
+
+    # deploy cpufreqctl script func call
+    cpufreqctl()
+
+    # turn off bluetooth on boot
+    bluetooth_disable()
+
+    auto_cpufreq_stats_path.touch(exist_ok=True)
+
+    print("\n* Deploy auto-cpufreq install script")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
+
+    print("\n* Deploy auto-cpufreq remove script")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
+
+    # output warning if gnome power profile is running
+    gnome_power_detect_install()
+    gnome_power_svc_disable_performance()
+
+    # output warning if TLP service is detected
+    tlp_service_detect()
+
+    call("/usr/bin/auto-cpufreq-install", shell=True)
+
+
 # remove auto-cpufreq daemon
 def remove():
 

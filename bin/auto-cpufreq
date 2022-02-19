@@ -23,6 +23,7 @@ from auto_cpufreq.power_helper import *
     default=True,
     help="Install/remove daemon for (permanent) automatic CPU optimizations",
 )
+@click.option("--install_performance", is_flag=True, hidden=True)
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option(
     "--config",
@@ -35,7 +36,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, live, log, monitor, stats, version, donate):
+def main(config, daemon, debug, install, install_performance, live, log, monitor, stats, version, donate):
 
     # display info if config file is used
     def config_info_dialog():
@@ -173,6 +174,18 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
             print("Show your appreciation by donating!")
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
             footer()
+        elif install_performance:
+            if os.getenv("PKG_MARKER") == "SNAP":
+                root_check()
+                print("This option is only available on non Snap installs"
+                    "Please refer to: power_helper.py script for more info\n")
+            else:
+                print("in performance")
+                root_check()
+                running_daemon()
+                gov_check()
+                deploy_daemon_performance()
+                deploy_complete_msg()
         elif install:
             if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
@@ -185,6 +198,7 @@ def main(config, daemon, debug, install, live, log, monitor, stats, version, don
                 run("snapctl start --enable auto-cpufreq", shell=True)
                 deploy_complete_msg()
             else:
+                print("in install")
                 root_check()
                 running_daemon()
                 gov_check()
