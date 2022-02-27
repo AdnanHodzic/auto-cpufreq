@@ -2,7 +2,7 @@
 # * alert user on snap if detected and how to remove first time live/stats message starts
 # * if daemon is disabled and auto-cpufreq is removed (snap) remind user to enable it back
 from logging import root
-import os, sys, click
+import os, sys, click, subprocess
 from subprocess import getoutput, call, run, check_output, DEVNULL
 
 sys.path.append("../")
@@ -33,8 +33,8 @@ systemctl_exists = does_command_exists("systemctl")
 bluetoothctl_exists = does_command_exists("bluetoothctl")
 tlp_stat_exists = does_command_exists("tlp-stat")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
-snap_check = os.system("snap list | grep auto-cpufreq >/dev/null 2>&1")
-
+#snap_pkg_install= os.system("snap list | grep auto-cpufreq >/dev/null 2>&1")
+#snap_exist = os.system("snap >/dev/null 2>&1")
 
 # detect if gnome power profile service is running
 if os.getenv("PKG_MARKER") != "SNAP":
@@ -283,32 +283,59 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
     if systemctl_exists:
         # 0 is active
         if gnome_power_status != 0:
-            # 0 is success (snap package is installed)
-            if snap_check == 0:
-                print("Power Profiles Daemon is already disabled, re-enable by running:\n"
-                        "sudo python3 power_helper.py --gnome_power_enable\n"
-                        "\nfollowed by running:\n"
-                        "sudo python3 power_helper.py --gnome_power_disable"
-                        )
-            else:
+
+            try:
+                snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT)
+
+                # check if snapd is present and if snap package is installed | 0 is success
+                if snap_pkg_check == 0:
+                    print("Power Profiles Daemon is already disabled, re-enable by running:\n"
+                    "sudo python3 power_helper.py --gnome_power_enable\n"
+                    "\nfollowed by running:\n"
+                    "sudo python3 power_helper.py --gnome_power_disable"
+                    )
+                else:
+                    # snapd present, snap package not installed
+                    print("Power Profiles Daemon is already disabled, first remove auto-cpufreq:\n"
+                    "sudo auto-cpufreq --remove\n"
+                    "\nfollowed by installing auto-cpufreq in performance mode:\n"
+                    "sudo auto-cpufreq --install_performance"
+                    )
+
+            except FileNotFoundError:
+                # snapd not found on the system
                 print("Power Profiles Daemon is already disabled, first remove auto-cpufreq:\n"
-                        "sudo auto-cpufreq --remove\n"
-                        "\nfollowed by installing auto-cpufreq in performance mode:\n"
-                        "sudo auto-cpufreq --install_performance"
-                        )
+                    "sudo auto-cpufreq --remove\n"
+                    "\nfollowed by installing auto-cpufreq in performance mode:\n"
+                    "sudo auto-cpufreq --install_performance"
+                    )
 
         # set balanced profile if its running before disabling it
         if gnome_power_status == 0 and powerprofilesctl_exists:
             # 0 is success (snap package is installed)
-            if snap_check == 0:
-                print("Using profile: ", gnome_power_disable)
-                call(["powerprofilesctl", "set", gnome_power_disable])
 
-                disable_power_profiles_daemon()
-            else:
+            try:
+                snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT)
+
+                if snap_pkg_check == 0:
+                #if snap_exist == 0 and snap_pkg_install == 0:
+                    print("Using profile: ", gnome_power_disable)
+                    call(["powerprofilesctl", "set", gnome_power_disable])
+
+                    disable_power_profiles_daemon()
+                else:
+                    print("Install auto-cpufreq in performance mode by running:\n"
+                            "sudo auto-cpufreq --install_performance\n"
+                            )
+
+            except FileNotFoundError:
                 print("Install auto-cpufreq in performance mode by running:\n"
-                        "sudo auto-cpufreq --install_performance\n"
-                        )
+                    "sudo auto-cpufreq --install_performance\n"
+                    )
 
 
 @click.command()
