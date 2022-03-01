@@ -16,7 +16,7 @@ fi
 runit_ln() {
 	echo -e "\n* Deploy auto-cpufreq runit unit file"
 	mkdir "$1"/sv/auto-cpufreq
-	cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-runit "$1"/sv/auto-cpufreq/run
+	cp /usr/share/auto-cpufreq/scripts/auto-cpufreq-runit "$1"/sv/auto-cpufreq/run
 	chmod +x "$1"/sv/auto-cpufreq/run
 
 	echo -e "\n* Creating symbolic link ($2/service/auto-cpufreq -> $1/sv/auto-cpufreq)"
@@ -55,7 +55,7 @@ if [ "$(ps h -o comm 1)" = "runit" ];then
 # Install script for systemd
 elif [ "$(ps h -o comm 1)" = "systemd" ];then
     echo -e "\n* Deploy auto-cpufreq systemd unit file"
-    cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
+    cp /usr/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
 
     echo -e "\n* Reloading systemd manager configuration"
     systemctl daemon-reload
@@ -71,7 +71,7 @@ elif [ "$(ps h -o comm 1)" = "systemd" ];then
 # Install script for openrc
 elif [ "$(ps h -o comm 1)" = "init" ];then
 	echo -e "\n* Deploying auto-cpufreq openrc unit file"
-	cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
+	cp /usr/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
 	chmod +x /etc/init.d/auto-cpufreq
 
 	echo -e "Starting auto-cpufreq daemon (openrc) service"
