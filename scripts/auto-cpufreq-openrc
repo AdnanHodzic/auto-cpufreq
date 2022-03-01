@@ -3,7 +3,7 @@
 name=$RC_SVCNAME
 description="auto-cpufreq - Automatic CPU speed & power optimizer for Linux"
 supervisor="supervise-daemon"
-command="/usr/local/bin/auto-cpufreq"
+command="/usr/bin/auto-cpufreq"
 command_args="--daemon"
 command_user="root"
 
