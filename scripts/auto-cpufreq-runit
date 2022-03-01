@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /usr/local/bin/auto-cpufreq --daemon
+exec /usr/bin/auto-cpufreq --daemon
