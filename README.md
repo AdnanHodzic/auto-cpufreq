@@ -6,6 +6,10 @@ For tl;dr folks there's a: [Youtube: auto-cpufreq - tool demo](https://www.youtu
 
 [![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg)
 
+## Looking for developers and co-maintainers
+
+auto-cpufreq is looking for [co-maintainers & open source developers to help shape future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
+
 ## Why do I need auto-cpufreq?
 
 One of the problems with Linux today on laptops is that CPU will run in unoptimized manner which will negatively reflect on battery life. For example, CPU will run using "performance" governor with turbo boost enabled regardless if it's plugged in to power or not.
