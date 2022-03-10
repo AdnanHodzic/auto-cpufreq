@@ -33,8 +33,6 @@ systemctl_exists = does_command_exists("systemctl")
 bluetoothctl_exists = does_command_exists("bluetoothctl")
 tlp_stat_exists = does_command_exists("tlp-stat")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
-#snap_pkg_install= os.system("snap list | grep auto-cpufreq >/dev/null 2>&1")
-#snap_exist = os.system("snap >/dev/null 2>&1")
 
 # detect if gnome power profile service is running
 if os.getenv("PKG_MARKER") != "SNAP":
