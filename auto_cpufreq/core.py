@@ -491,7 +491,7 @@ def display_load():
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m)
-    print("Average temp. of all cores:", avg_all_core_temp, "°C", "\n")
+    print("Average temp. of all cores:", "{:.2f}".format(avg_all_core_temp), "°C", "\n")
 
 
 # set minimum and maximum CPU frequencies
@@ -594,7 +594,7 @@ def set_powersave():
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m)
-    print("Average temp. of all cores:", avg_all_core_temp, "°C")
+    print("Average temp. of all cores:", "{:.2f}".format(avg_all_core_temp), "°C")
 
     # conditions for setting turbo in powersave
     if conf.has_option("battery", "turbo"):
@@ -696,7 +696,7 @@ def mon_powersave():
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m)
-    print("Average temp. of all cores:", avg_all_core_temp, "°C")
+    print("Average temp. of all cores:", "{:.2f}".format(avg_all_core_temp), "°C")
 
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(
         max(psutil.cpu_percent(percpu=True, interval=0.01)), 100
@@ -803,7 +803,7 @@ def set_performance():
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m)
-    print("Average temp. of all cores:", avg_all_core_temp, "°C")
+    print("Average temp. of all cores:", "{:.2f}".format(avg_all_core_temp), "°C")
 
     if conf.has_option("charger", "turbo"):
         auto = conf["charger"]["turbo"]
@@ -905,7 +905,7 @@ def mon_performance():
 
     print("\nTotal CPU usage:", cpuload, "%")
     print("Total system load:", load1m)
-    print("Average temp. of all cores:", avg_all_core_temp, "°C")
+    print("Average temp. of all cores:", "{:.2f}".format(avg_all_core_temp), "°C")
 
     # get system/CPU load
     load1m, _, _ = os.getloadavg()
