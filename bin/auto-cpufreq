@@ -66,7 +66,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                     distro_info()
                     sysinfo()
                     set_autofreq()
-                    countdown(5)
+                    countdown(2)
             elif os.getenv("PKG_MARKER") != "SNAP":
                 gnome_power_detect()
                 tlp_service_detect()
@@ -77,7 +77,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                     distro_info()
                     sysinfo()
                     set_autofreq()
-                    countdown(5)
+                    countdown(2)
             else:
                 daemon_not_found()
         elif monitor:
@@ -99,7 +99,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 distro_info()
                 sysinfo()
                 mon_autofreq()
-                countdown(5)
+                countdown(2)
         elif live:
             root_check()
             config_info_dialog()
@@ -121,7 +121,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                     distro_info()
                     sysinfo()
                     set_autofreq()
-                    countdown(5)
+                    countdown(2)
                 except KeyboardInterrupt:
                     gnome_power_start_live()
                     print("")
@@ -135,7 +135,6 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-            time.sleep(1)
             read_stats()
         elif log:
             deprecated_log_msg()
