@@ -464,22 +464,23 @@ def countdown(s):
 
     print("\t\t\"auto-cpufreq\" is about to refresh ", end = "")
     
+    # empty log file if size is larger then 10mb
+    if auto_cpufreq_stats_file is not None:
+        log_size = os.path.getsize(auto_cpufreq_stats_path)
+        if log_size >= 1e+7:
+            auto_cpufreq_stats_file.seek(0)
+            auto_cpufreq_stats_file.truncate(0)
+
+    # auto-refresh counter
     for remaining in range(s, -1, -1):
 
         if remaining <= 3 and remaining >= 0:
             print(".", end="", flush=True)
-        time.sleep(1)
+        time.sleep(0.75)
 
-    if auto_cpufreq_stats_file is not None:
-        auto_cpufreq_stats_file.seek(0)
-        auto_cpufreq_stats_file.truncate(0)
-
-        now = datetime.now()
-        current_time = now.strftime("%B %d (%A) - %H:%M:%S")
-        print("\n\t\tExecuted on:", current_time)
-
-    else:
-        run("clear")
+    now = datetime.now()
+    current_time = now.strftime("%B %d (%A) - %H:%M:%S")
+    print("\n\t\tExecuted on:", current_time)
 
 
 # get cpu usage + system load for (last minute)
