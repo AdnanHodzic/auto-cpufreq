@@ -84,7 +84,7 @@ While auto-cpufreq makes all decisions automatically based on various factors li
 
 ### 1: power_helper.py script
 
-If detected as running auto-cpufreq will disable GNOME Power profiles service, which would otherwise cause conflicts and cause problems. By default auto-cpufreq uses `balanced` mode which also works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq, you can switch to `performance` mode. Which will result in higher frequencies by default, but also higher use of energy (battery consumption).
+If detected as running auto-cpufreq will disable [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933), which would otherwise cause conflicts and cause problems. By default auto-cpufreq uses `balanced` mode which also works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq, you can switch to `performance` mode. Which will result in higher frequencies by default, but also higher use of energy (battery consumption).
 
 This can be done by running: `sudo python3 power_helper.py --gnome_power_disable performance`
 
