@@ -84,11 +84,17 @@ While auto-cpufreq makes all decisions automatically based on various factors li
 
 ### 1: power_helper.py script
 
-If detected as running auto-cpufreq will disable [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933), which would otherwise cause conflicts and cause problems. By default auto-cpufreq uses `balanced` mode which also works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq, you can switch to `performance` mode. Which will result in higher frequencies by default, but also higher use of energy (battery consumption).
+If detected as running auto-cpufreq will disable [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933), which would otherwise cause conflicts and cause problems. By default auto-cpufreq uses `balanced` mode which also works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq ([#361](https://github.com/AdnanHodzic/auto-cpufreq/issues/361)), you can switch to `performance` mode. Which will result in higher frequencies by default, but also higher use of energy (battery consumption).
 
-This can be done by running: `sudo python3 power_helper.py --gnome_power_disable performance`
+If you installed auto-cpufreq using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/edit/master/README.md#auto-cpufreq-installer), you can switch to `performance` mode by running:
 
-After auto-cpufreq git repo has been cloned (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navagiate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
+`sudo auto-cpufreq --install_performance`
+
+Or if you installed auto-cpufreq using [Snap package](https://github.com/AdnanHodzic/auto-cpufreq/edit/master/README.md#snap-store) you can switch to `performance` mode by running:
+
+`sudo python3 power_helper.py --gnome_power_disable performance`
+
+Please note! In order to have access to `power_helper.py` script, first clone auto-cpufreq git repo (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navigate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
 
 After this step, all necessary changes will still be made automatically. However, if you wish to perform additonal "manual" settings this can be done by following instructions explained in next step.
 
