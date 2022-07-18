@@ -74,7 +74,7 @@ function completed () {
 function complete_msg() {
   separator
   echo -e "\nauto-cpufreq tool successfully installed.\n"
-  echo -e "For list of options, run:\nauto-cpufreq"
+  echo -e "For list of options, run:\nauto-cpufreq --help"
   separator
 }
 
