@@ -76,7 +76,7 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 **Please note:** If you want to install auto-cpufreq daemon, do not run `auto-cpufreq --install` otherwise you'll run into an issue: [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91), [#96](https://github.com/AdnanHodzic/auto-cpufreq/issues/96).
 
-Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl status auto-cpufreq` to see the status of service, and `systemctl enable auto-cpufreq` for service to persist running accross reboots. 
+Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl status auto-cpufreq` to see the status of service, and `systemctl enable auto-cpufreq` for service to persist running across reboots. 
 
 ## Configuring auto-cpufreq
 
@@ -96,7 +96,7 @@ Or if you installed auto-cpufreq using [Snap package](https://github.com/AdnanHo
 
 Please note! In order to have access to `power_helper.py` script, first clone auto-cpufreq git repo (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navigate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
 
-After this step, all necessary changes will still be made automatically. However, if you wish to perform additonal "manual" settings this can be done by following instructions explained in next step.
+After this step, all necessary changes will still be made automatically. However, if you wish to perform additional "manual" settings this can be done by following instructions explained in next step.
 
 ### 2: auto-cpufreq config file
 
@@ -171,7 +171,7 @@ Necessary changes are temporarily made to the system which are lost with system 
 
 ### Install - auto-cpufreq daemon
 
-Necessary changes are made to the system for auto-cpufreq CPU optimizaton to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
+Necessary changes are made to the system for auto-cpufreq CPU optimization to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
 
 `sudo auto-cpufreq --install`
 
@@ -202,11 +202,11 @@ If daemon has been installed, live stats of CPU/system load monitoring and optim
 **Q:** If after installing auto-cpufreq you're (still) experiencing:
 * high CPU temperatures
 * CPU is not scaling to minimum/maximum frequencies
-* suboptimal CPU peformance
+* suboptimal CPU performance
 
 **A:** If you're using `intel_pstate` CPU management driver consider changing it to: `acpi-cpufreq`.
 
-This can be done by editting `/etc/default/grub` file and appending `intel_pstate=disable` to `GRUB_CMDLINE_LINUX_DEFAULT` line, followed by `sudo update-grub`
+This can be done by editing `/etc/default/grub` file and appending `intel_pstate=disable` to `GRUB_CMDLINE_LINUX_DEFAULT` line, followed by `sudo update-grub`
 
 Example line change:
 

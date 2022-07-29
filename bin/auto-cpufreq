@@ -139,7 +139,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
         elif log:
             deprecated_log_msg()
         elif debug:
-            # ToDo: add status of GNOME Power Profile servie status
+            # ToDo: add status of GNOME Power Profile service status
             config_info_dialog()
             root_check()
             cpufreqctl()
