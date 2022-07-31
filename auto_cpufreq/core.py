@@ -379,7 +379,7 @@ def deploy_daemon_performance():
     # check that performance is in scaling_available_governors
     with open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors") as available_governors:
         if "performance" not in available_governors.read():
-            print("\"perfomance\" governor is unavailable on this system, run:\n"
+            print("\"performance\" governor is unavailable on this system, run:\n"
                     "sudo sudo auto-cpufreq --install\n\n"
                     "to install auto-cpufreq using default \"balanced\" governor.\n")
 
@@ -1090,7 +1090,7 @@ def sysinfo():
     # psutil current freq not used, gives wrong values with offline cpu's
     minmax_freq_per_cpu = psutil.cpu_freq(percpu=True)
 
-    # max and min freqs, psutil reports wrong max/min freqs whith offline cores with percpu=False
+    # max and min freqs, psutil reports wrong max/min freqs with offline cores with percpu=False
     max_freq = max([freq.max for freq in minmax_freq_per_cpu])
     min_freq = min([freq.min for freq in minmax_freq_per_cpu])
     print("\n" + "-" * 30 + " Current CPU stats " + "-" * 30 + "\n")

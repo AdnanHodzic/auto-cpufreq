@@ -135,7 +135,7 @@ elif [ -f /etc/os-release ];then
 		;;
 	opensuse)
 		detected_distro "OpenSUSE"
-    		echo -e "\nDetected an OpenSUSE ditribution\n\nSetting up Python environment\n"
+    		echo -e "\nDetected an OpenSUSE distribution\n\nSetting up Python environment\n"
 		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
 		completed
 		;;

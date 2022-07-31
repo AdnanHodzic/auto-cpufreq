@@ -169,7 +169,7 @@ function set_frequency () {
   set_driver
   if [ $DRIVER = 'pstate']
   then
-    echo "Unavaible function for intel_pstate"
+    echo "Unavailable function for intel_pstate"
     return
   fi
   if [ -z $CORE ]
