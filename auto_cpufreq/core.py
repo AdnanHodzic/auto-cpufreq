@@ -1175,8 +1175,12 @@ def is_running(program, argument):
     # iterate over all processes found by psutil
     # and find the one with name and args passed to the function
     for p in psutil.process_iter():
-        for s in filter(lambda x: program in x, p.cmdline()):
-            if argument in p.cmdline():
+        try:
+            cmd = p.cmdline();
+        except:
+            continue
+        for s in filter(lambda x: program in x, cmd):
+            if argument in cmd:
                 return True
 
 
