@@ -13,7 +13,7 @@ def read(name):
         return f.read()
 
 # Used for the tar.gz/snap releases
-VERSION = "1.9.4"
+VERSION = "1.9.5"
 
 setup(
     name="auto-cpufreq",

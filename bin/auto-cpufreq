@@ -23,7 +23,7 @@ from auto_cpufreq.power_helper import *
     default=True,
     help="Install/remove daemon for (permanent) automatic CPU optimizations",
 )
-@click.option("--install_performance", is_flag=True, hidden=True)
+@click.option("--install_performance", is_flag=True, help="Install daemon in \"performance\" mode, reference:\n https://bit.ly/3bjVZW1")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option(
     "--config",
@@ -176,8 +176,9 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
         elif install_performance:
             if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
-                print("This option is only available on non Snap installs\n"
-                    "Please refer to auto-cpufreq power_helper.py script for more info\n")
+                print("\nThis option is only available on non Snap installs.\n\n"
+                    "Please refer to auto-cpufreq power_helper.py script for more info\n"
+                    "Reference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq\n")
             else:
                 root_check()
                 running_daemon()

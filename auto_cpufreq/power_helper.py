@@ -85,6 +85,7 @@ def gnome_power_detect():
             print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
             print("cd auto-cpufreq/auto_cpufreq")
             print("python3 power_helper.py --gnome_power_disable")
+            print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
 
 
 # automatically disable gnome power profile service in case it's running during install
@@ -109,6 +110,7 @@ def gnome_power_detect_snap():
     print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
     print("cd auto-cpufreq/auto_cpufreq")
     print("python3 power_helper.py --gnome_power_disable")
+    print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
 
 
 # stops gnome >= 40 power profiles (live)
@@ -229,6 +231,8 @@ def gnome_power_rm_reminder_snap():
     print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
     print("cd auto-cpufreq/auto_cpufreq")
     print("python3 power_helper.py --gnome_power_enable")
+    print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
+
 
 
 def valid_options():
@@ -337,7 +341,7 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
 
 
 @click.command()
-@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced)", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
+@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced), reference:\n https://bit.ly/3bjVZW1", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
 # ToDo:
 # * update readme/docs
 @click.option("--power_selection", hidden=True)
