@@ -62,11 +62,11 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
 	echo -e "\n* Removing auto-cpufreq daemon (openrc) unit file"
 	rm /etc/init.d/auto-cpufreq
 # Remove service for s6
-elif [ "$(ps h -o comm 1)" = "s6" ];then
-	echo -e "\n* Stopping auto-cpufreq daemon (s6) service"
-	s6-rc -d change auto-cpufreq default
+elif [ "$(ps h -o comm 1)" = "s6-svscan" ];then
 	echo -e "\n* Disabling auto-cpufreq daemon (s6) at boot"
 	s6-service delete default auto-cpufreq
+    echo -e "\n* Update daemon service bundle (s6)"
+	s6-db-reload
 	echo -e "\n* Removing auto-cpufreq daemon (s6) unit file"
 	rm -rf /etc/s6/sv/auto-cpufreq
 else

@@ -80,9 +80,11 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
 	echo -e "\n* Enabling auto-cpufreq daemon (openrc) service at boot"
 	rc-update add auto-cpufreq
 # Install script for s6
-elif [ "$(ps h -o comm 1)" = "s6" ];then
+elif [ "$(ps h -o comm 1)" = "s6-svscan" ];then
 	echo -e "\n* Deploying auto-cpufreq s6 unit file"
     cp -r /usr/localshare/auto-cpufreq/scripts/auto-cpufreq-s6 /etc/s6/sv/auto-cpufreq
+    echo -e "\n* Update daemon service bundle (s6)"
+    s6-db-reload
     echo -e "\n* Add auto-cpufreq service (s6) to default bundle"
     s6-service add default auto-cpufreq
 	echo -e "Starting auto-cpufreq daemon (s6) service"
