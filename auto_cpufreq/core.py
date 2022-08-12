@@ -296,9 +296,7 @@ def cpufreqctl():
         pass
     else:
         # deploy cpufreqctl.auto-cpufreq script
-        if os.path.isfile("/usr/bin/cpufreqctl"):
-            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
-        else:
+        if not os.path.isfile("/usr/bin/cpufreqctl.auto-cpufreq"):
             shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
 
 
