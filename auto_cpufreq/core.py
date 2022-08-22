@@ -1072,7 +1072,7 @@ def sysinfo():
     print(f"Processor:{model_name}")
 
     # get core count
-    total_cpu_count = int(getoutput("nproc --all"))
+    total_cpu_count = int(getoutput("nproc"))
     print("Cores:", total_cpu_count)
 
     # get architecture
