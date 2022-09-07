@@ -27,6 +27,7 @@ from auto_cpufreq.power_helper import *
 warnings.filterwarnings("ignore")
 
 # ToDo:
+# - re-enable CPU fan speed display and make more generic and not only for thinkpad
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
 SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
@@ -1145,10 +1146,9 @@ def sysinfo():
     global avg_all_core_temp
     avg_all_core_temp = float(avg_cores_temp / online_cpu_count)
 
-    # print current fan speed
-    current_fans = list(psutil.sensors_fans())
-    for current_fan in current_fans:
-        print("\nCPU fan speed:", psutil.sensors_fans()[current_fan][0].current, "RPM")
+    # print current fan speed | temporarily commented
+    # current_fans = psutil.sensors_fans()['thinkpad'][0].current
+    # print("\nCPU fan speed:", current_fans, "RPM")
 
 
 def no_stats_msg():
