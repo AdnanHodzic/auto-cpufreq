@@ -197,7 +197,7 @@ def charging():
     """
     get charge state: is battery charging or discharging
     """
-    return true if psutil.sensors_battery().power_plugged else false
+    return True if psutil.sensors_battery().power_plugged else False
 
 
 def battery_percentage():
