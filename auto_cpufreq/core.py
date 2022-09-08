@@ -1120,11 +1120,8 @@ def sysinfo():
                 cpu_temp_index = core_temp_labels.index(f"Core {core}")
                 temp_per_cpu[i] = core_temp["coretemp"][cpu_temp_index].current
         else:
-            temps = list(psutil.sensors_temperatures())
-            i = 0
-            for temp in temps:
-                temp_per_cpu[i] = [core_temp[temp][0].current] * online_cpu_count
-                i++
+            temp = list(psutil.sensors_temperatures())
+            temp_per_cpu = [core_temp[temp[0]][0].current] * online_cpu_count
     except Exception as e:
         print(repr(e))
         pass
