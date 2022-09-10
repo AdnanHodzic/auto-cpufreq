@@ -1067,7 +1067,7 @@ def sysinfo():
     """
 
     # processor_info
-    model_name = getoutput("egrep 'model name' /proc/cpuinfo -m 1").split(":")[-1]
+    model_name = getoutput("grep -E 'model name' /proc/cpuinfo -m 1").split(":")[-1]
     print(f"Processor:{model_name}")
 
     # get core count
@@ -1095,7 +1095,7 @@ def sysinfo():
     print(f"CPU min frequency: {min_freq:.0f} MHz\n")
 
     # get coreid's and frequencies of online cpus by parsing /proc/cpuinfo
-    coreid_info = getoutput("egrep 'processor|cpu MHz|core id' /proc/cpuinfo").split("\n")
+    coreid_info = getoutput("grep -E 'processor|cpu MHz|core id' /proc/cpuinfo").split("\n")
     cpu_core = dict()
     freq_per_cpu = []
     for i in range(0, len(coreid_info), 3):
