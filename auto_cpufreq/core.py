@@ -1015,12 +1015,12 @@ def mon_autofreq():
 
     # determine which governor should be used
     if charging():
-        print("Battery: " + str(battery_percentage()) + "%\tcharging\n")
+        print("Battery is: charging (" + str(battery_percentage()) + ")\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_performance()}" governor')
         mon_performance()
     else:
-        print("Battery: " + str(battery_percentage()) + "%\tdischarging\n")
+        print("Battery is: discharging (" + str(battery_percentage()) + ")\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_powersave()}" governor')
         mon_powersave()
