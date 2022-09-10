@@ -255,6 +255,12 @@ def charging():
     # we cannot determine discharging state, assume we are on powercable
     return True
 
+def battery_percentage():
+    """
+    get batery percentage
+    """
+    return round(psutil.sensors_battery().percent)
+
 
 def get_avail_gov():
     f = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
@@ -993,10 +999,10 @@ def set_autofreq():
 
     # determine which governor should be used
     if charging():
-        print("Battery is: charging\n")
+        print("Battery is: charging (" + str(battery_percentage()) + "%)\n")
         set_performance()
     else:
-        print("Battery is: discharging\n")
+        print("Battery is: discharging (" + str(battery_percentage()) + "%)\n")
         set_powersave()
 
 
@@ -1009,12 +1015,12 @@ def mon_autofreq():
 
     # determine which governor should be used
     if charging():
-        print("Battery is: charging\n")
+        print("Battery is: charging (" + str(battery_percentage()) + "%)\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_performance()}" governor')
         mon_performance()
     else:
-        print("Battery is: discharging\n")
+        print("Battery is: discharging (" + str(battery_percentage()) + "%)\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_powersave()}" governor')
         mon_powersave()
@@ -1119,16 +1125,9 @@ def sysinfo():
                 core = cpu_core[cpu]
                 cpu_temp_index = core_temp_labels.index(f"Core {core}")
                 temp_per_cpu[i] = core_temp["coretemp"][cpu_temp_index].current
-        elif "k10temp" in core_temp:
-            # https://www.kernel.org/doc/Documentation/hwmon/k10temp
-            temp_per_cpu = [core_temp["k10temp"][0].current] * online_cpu_count
-        elif "zenpower" in core_temp:
-            # https://github.com/AdnanHodzic/auto-cpufreq/issues/145#issuecomment-763294009
-            temp_per_cpu = [core_temp["zenpower"][0].current] * online_cpu_count
-        elif "acpitz" in core_temp:
-            temp_per_cpu = [core_temp["acpitz"][0].current] * online_cpu_count
-        elif "thinkpad" in core_temp:
-            temp_per_cpu = [core_temp["thinkpad"][0].current] * online_cpu_count
+        else:
+            temp = list(psutil.sensors_temperatures())
+            temp_per_cpu = [core_temp[temp[0]][0].current] * online_cpu_count
     except Exception as e:
         print(repr(e))
         pass
