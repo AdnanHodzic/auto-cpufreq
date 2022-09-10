@@ -999,10 +999,10 @@ def set_autofreq():
 
     # determine which governor should be used
     if charging():
-        print("Battery: " + str(battery_percentage()) + "%\tcharging\n")
+        print("Battery is: charging (" + str(battery_percentage()) + ")\n")
         set_performance()
     else:
-        print("Battery: " + str(battery_percentage()) + "%\tdischarging\n")
+        print("Battery is: discharging (" + str(battery_percentage()) + ")\n")
         set_powersave()
 
 
