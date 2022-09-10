@@ -42,6 +42,9 @@ ALL_GOVERNORS = (
 )
 CPUS = os.cpu_count()
 
+# ignore these devices under /sys/class/power_supply/
+POWER_SUPPLY_IGNORELIST = ["hidpp_battery"]
+
 # Note:
 # "load1m" & "cpuload" can't be global vars and to in order to show correct data must be
 # decraled where their execution takes place
@@ -197,8 +200,59 @@ def charging():
     """
     get charge state: is battery charging or discharging
     """
-    return True if psutil.sensors_battery().power_plugged else False
+    power_supply_path = "/sys/class/power_supply/"
+    power_supplies = os.listdir(Path(power_supply_path))
+    # sort it so AC is 'always' first
+    power_supplies = sorted(power_supplies)
 
+    # check if we found power supplies. on a desktop these are not found
+    # and we assume we are on a powercable.
+    if len(power_supplies) == 0:
+        # nothing found found, so nothing to check
+        return True
+    # we found some power supplies, lets check their state
+    else:
+        for supply in power_supplies:
+            # Check if supply is in ignore list
+            ignore_supply = any(item in supply for item in POWER_SUPPLY_IGNORELIST)
+            # If found in ignore list, skip it.
+            if ignore_supply:
+                continue
+            try:
+                with open(Path(power_supply_path + supply + "/type")) as f:
+                    supply_type = f.read()[:-1]
+                    if supply_type == "Mains":
+                        # we found an AC
+                        try:
+                            with open(Path(power_supply_path + supply + "/online")) as f:
+                                val = int(f.read()[:-1])
+                                if val == 1:
+                                    # we are definitely charging
+                                    return True
+                        except FileNotFoundError:
+                            # we could not find online, check next item
+                            continue
+                    elif supply_type == "Battery":
+                        # we found a battery, check if its being discharged
+                        try:
+                            with open(Path(power_supply_path + supply + "/status")) as f:
+                                val = str(f.read()[:-1])
+                                if val == "Discharging":
+                                    # we found a discharging battery
+                                    return False
+                        except FileNotFoundError:
+                            # could not find status, check the next item
+                            continue
+                    else:
+                        # continue to next item because current is not
+                        # "Mains" or "Battery"
+                        continue
+            except FileNotFoundError:
+                # could not find type, check the next item
+                continue
+
+    # we cannot determine discharging state, assume we are on powercable
+    return True
 
 def battery_percentage():
     """
