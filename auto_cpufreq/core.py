@@ -218,7 +218,7 @@ def charging():
             # If found in ignore list, skip it.
             if ignore_supply:
                 continue
-                
+
             try:
                 with open(Path(power_supply_path + supply + "/type")) as f:
                     supply_type = f.read()[:-1]
