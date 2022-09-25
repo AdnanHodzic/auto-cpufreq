@@ -259,7 +259,11 @@ def battery_percentage():
     """
     get batery percentage
     """
-    return round(psutil.sensors_battery().percent)
+    sensors_battery = psutil.sensors_battery()
+    if sensors_battery:
+        return round(sensors_battery.percent)
+    else:
+        return None
 
 
 def get_avail_gov():
@@ -998,11 +1002,14 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
+    battery_percent = battery_percentage()
     if charging():
-        print("Battery is: charging (" + str(battery_percentage()) + "%)\n")
+        if battery_percent:
+            print("Battery is: charging (" + str(battery_percent) + "%)\n")
         set_performance()
     else:
-        print("Battery is: discharging (" + str(battery_percentage()) + "%)\n")
+        if battery_percent:
+            print("Battery is: discharging (" + str(battery_percent) + "%)\n")
         set_powersave()
 
 
@@ -1014,13 +1021,16 @@ def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
+    battery_percent = battery_percentage()
     if charging():
-        print("Battery is: charging (" + str(battery_percentage()) + "%)\n")
+        if battery_percent:
+            print("Battery is: charging (" + str(battery_percent) + "%)\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_performance()}" governor')
         mon_performance()
     else:
-        print("Battery is: discharging (" + str(battery_percentage()) + "%)\n")
+        if battery_percent:
+            print("Battery is: discharging (" + str(battery_percent) + "%)\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_powersave()}" governor')
         mon_powersave()
