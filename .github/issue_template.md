@@ -1,4 +1,4 @@
-### Fill out informtion requested in this template, without doing so issue will be ignored & closed!
+### Fill out information requested in this template, without doing so issue will be ignored & closed!
 
 ### Have you tried?
 
