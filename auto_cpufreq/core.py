@@ -259,11 +259,11 @@ def battery_percentage():
     """
     get batery percentage
     """
-    sensors_battery = psutil.sensors_battery()
-    if sensors_battery:
-        return round(sensors_battery.percent)
-    else:
-        return None
+    try:
+        percentage = psutil.sensors_battery().percent
+    except:
+        percentage = None
+    return percentage
 
 
 def get_avail_gov():
