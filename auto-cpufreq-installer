@@ -40,7 +40,7 @@ function setup_venv {
     python3 -m venv "${venv_dir}"
 
     source "${venv_dir}/bin/activate"
-    python3 -m pip install --upgrade pip
+    python3 -m pip install --upgrade pip wheel
     python3 -m pip install -r requirements.txt
 }
 
