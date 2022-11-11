@@ -114,6 +114,7 @@ except PermissionError:
 # display running version of auto-cpufreq
 def app_version():
 
+    print("suca suca suca")
     print("auto-cpufreq version: ", end="")
 
     # snap package
@@ -827,7 +828,7 @@ def set_performance():
     elif auto == "never":
         print("Configuration file disables turbo boost")
         print("setting turbo boost: off")
-        turbo(True)
+        turbo(False)
     else:
         if (
             psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0
@@ -1207,3 +1208,6 @@ def running_daemon():
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
         daemon_running_msg()
         exit(1)
+
+if __name__ == "__main__":
+    turbo(False)
