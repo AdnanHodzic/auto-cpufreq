@@ -114,7 +114,6 @@ except PermissionError:
 # display running version of auto-cpufreq
 def app_version():
 
-    print("suca suca suca")
     print("auto-cpufreq version: ", end="")
 
     # snap package
@@ -1208,6 +1207,3 @@ def running_daemon():
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
         daemon_running_msg()
         exit(1)
-
-if __name__ == "__main__":
-    turbo(False)
