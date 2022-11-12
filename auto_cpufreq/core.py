@@ -833,7 +833,7 @@ def set_performance():
     elif auto == "never":
         print("Configuration file disables turbo boost")
         print("setting turbo boost: off")
-        turbo(True)
+        turbo(False)
     else:
         if (
             psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0
