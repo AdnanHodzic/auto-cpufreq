@@ -508,7 +508,7 @@ def display_system_load_avg():
 
     load1m, load5m, load15m = os.getloadavg()
 
-    print(f" (load average {load1m:.2f} {load5m:.2f} {load15m:.2f})") 
+    print(f" (load average: {load1m:.2f}, {load5m:.2f}, {load15m:.2f})")
 
 # set minimum and maximum CPU frequencies
 def set_frequencies():
@@ -1011,11 +1011,11 @@ def set_autofreq():
     battery_percent = battery_percentage()
     if charging():
         if battery_percent:
-            print("Battery is: charging (" + str(battery_percent) + "%)\n")
+            print(f"Battery is: charging ({battery_percent:.0f}%)\n")
         set_performance()
     else:
         if battery_percent:
-            print("Battery is: discharging (" + str(battery_percent) + "%)\n")
+            print(f"Battery is: discharging ({battery_percent:.0f}%)\n")
         set_powersave()
 
 
@@ -1030,13 +1030,13 @@ def mon_autofreq():
     battery_percent = battery_percentage()
     if charging():
         if battery_percent:
-            print("Battery is: charging (" + str(battery_percent) + "%)\n")
+            print(f"Battery is: charging ({battery_percent:.0f}%)\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_performance()}" governor')
         mon_performance()
     else:
         if battery_percent:
-            print("Battery is: discharging (" + str(battery_percent) + "%)\n")
+            print(f"Battery is: discharging ({battery_percent:.0f}%)\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_powersave()}" governor')
         mon_powersave()
