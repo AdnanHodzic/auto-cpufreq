@@ -503,6 +503,12 @@ def display_load():
     print("Total system load: {:.2f}".format(load1m))
     print("Average temp. of all cores: {:.2f} °C \n".format(avg_all_core_temp))
 
+# get system load average 1m, 5m, 15m (equivalent to uptime)
+def display_system_load_avg():
+
+    load1m, load5m, load15m = os.getloadavg()
+
+    print(f" (load average {load1m:.2f} {load5m:.2f} {load15m:.2f})") 
 
 # set minimum and maximum CPU frequencies
 def set_frequencies():
@@ -624,7 +630,7 @@ def set_powersave():
         if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(
             max(psutil.cpu_percent(percpu=True, interval=0.01)), 100
         ):
-            print("High CPU load")
+            print("High CPU load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
             if cpuload >= 20:
@@ -670,7 +676,7 @@ def set_powersave():
                 turbo(False)
 
         else:
-            print("Load optimal")
+            print("Load optimal", end=""), display_system_load_avg()
 
             # high cpu usage trigger
             if cpuload >= 20:
@@ -711,7 +717,7 @@ def mon_powersave():
     if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(
         max(psutil.cpu_percent(percpu=True, interval=0.01)), 100
     ):
-        print("High CPU load")
+        print("High CPU load", end=""), display_system_load_avg()
 
         # high cpu usage trigger
         if cpuload >= 20:
@@ -757,7 +763,7 @@ def mon_powersave():
             get_turbo()
 
     else:
-        print("Load optimal")
+        print("Load optimal", end=""), display_system_load_avg()
 
         # high cpu usage trigger
         if cpuload >= 20:
@@ -833,7 +839,7 @@ def set_performance():
             psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0
             or max(psutil.cpu_percent(percpu=True, interval=0.01)) >= 75
         ):
-            print("High CPU load")
+            print("High CPU load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
             if cpuload >= 20:
@@ -879,7 +885,7 @@ def set_performance():
                 turbo(True)
 
         else:
-            print("Load optimal")
+            print("Load optimal", end=""), display_system_load_avg()
 
             # high cpu usage trigger
             if cpuload >= 20:
@@ -924,7 +930,7 @@ def mon_performance():
         psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0
         or max(psutil.cpu_percent(percpu=True, interval=0.01)) >= 75
     ):
-        print("High CPU load")
+        print("High CPU load", end=""), display_system_load_avg()
 
         # high cpu usage trigger
         if cpuload >= 20:
@@ -970,7 +976,7 @@ def mon_performance():
             get_turbo()
 
     else:
-        print("Load optimal")
+        print("Load optimal", end=""), display_system_load_avg()
 
         # high cpu usage trigger
         if cpuload >= 20:
