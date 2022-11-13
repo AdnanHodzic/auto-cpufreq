@@ -653,7 +653,7 @@ def set_powersave():
                 turbo(False)
 
         elif load1m > powersave_load_threshold:
-            print("High system load")
+            print("High system load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
             if cpuload >= 20:
@@ -740,7 +740,7 @@ def mon_powersave():
             get_turbo()
 
     elif load1m > powersave_load_threshold:
-        print("High system load")
+        print("High system load", end=""), display_system_load_avg()
 
         # high cpu usage trigger
         if cpuload >= 20:
@@ -862,7 +862,7 @@ def set_performance():
                 turbo(True)
 
         elif load1m >= performance_load_threshold:
-            print("High system load")
+            print("High system load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
             if cpuload >= 20:
@@ -953,7 +953,7 @@ def mon_performance():
             get_turbo()
 
     elif load1m > performance_load_threshold:
-        print("High system load")
+        print("High system load", end=""), display_system_load_avg()
 
         # high cpu usage trigger
         if cpuload >= 20:
