@@ -255,17 +255,6 @@ def charging():
     # we cannot determine discharging state, assume we are on powercable
     return True
 
-def battery_percentage():
-    """
-    get batery percentage
-    """
-    try:
-        percentage = psutil.sensors_battery().percent
-    except:
-        percentage = None
-    return percentage
-
-
 def get_avail_gov():
     f = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors")
     return f.read_text().strip().split(" ")
@@ -1008,14 +997,11 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
-    battery_percent = battery_percentage()
     if charging():
-        if battery_percent:
-            print(f"Battery is: charging ({battery_percent:.0f}%)\n")
+        print("Battery is: charging\n")
         set_performance()
     else:
-        if battery_percent:
-            print(f"Battery is: discharging ({battery_percent:.0f}%)\n")
+        print("Battery is: discharging\n")
         set_powersave()
 
 
@@ -1027,16 +1013,13 @@ def mon_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
-    battery_percent = battery_percentage()
     if charging():
-        if battery_percent:
-            print(f"Battery is: charging ({battery_percent:.0f}%)\n")
+        print("Battery is: charging\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_performance()}" governor')
         mon_performance()
     else:
-        if battery_percent:
-            print(f"Battery is: discharging ({battery_percent:.0f}%)\n")
+        print("Battery is: discharging\n")
         get_current_gov()
         print(f'Suggesting use of "{get_avail_powersave()}" governor')
         mon_powersave()
