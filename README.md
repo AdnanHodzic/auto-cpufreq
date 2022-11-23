@@ -155,10 +155,28 @@ turbo = auto
 ```
 
 ## How to run auto-cpufreq
-
-auto-cpufreq can be run by simply running the `auto-cpufreq` and following on screen instructions, i.e:
+Running just `auto-cpufreq` like so:
 
 `sudo auto-cpufreq`
+
+will give an error:
+
+`auto-cpufreq: wrong invocation. try --help for help.`
+
+auto-cpufreq should be run with with one of the following long options:
+
+* monitor               Monitor and see suggestions for CPU optimizations
+* live                  Monitor and make (temp.) suggested CPU optimizations
+* install / remove      Install/remove daemon for (permanent) automatic CPU optimizations
+* install_performance   Install daemon in "performance" mode.
+* stats                 View live stats of CPU optimizations made by daemon
+* config TEXT           Use config file at defined path
+* debug                 Show debug info (include when submitting bugs)
+* version               Show currently installed version
+* donate                To support the project
+* help                  Shows all of the above options
+
+Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) for more details.
 
 ## auto-cpufreq modes and options
 
