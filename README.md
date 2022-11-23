@@ -81,13 +81,9 @@ Please note that this git package is currently unmaintained & has issues. Until 
 ## Post Installation
 After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options)for more information on how to run and configure `auto-cpufreq`.
 
-**Please note:** If you want to install the auto-cpufreq daemon, do not run `auto-cpufreq --install` otherwise you'll run into an issue: [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91), [#96](https://github.com/AdnanHodzic/auto-cpufreq/issues/96).
-
-Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl status auto-cpufreq` to see the status of service, and `systemctl enable auto-cpufreq` for service to persist running across reboots. 
-
 ## Configuring auto-cpufreq
 
-While auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. It's possible to perform additional configurations in 2 ways:
+auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. However, it's possible to perform additional configurations in 2 ways:
 
 ### 1: power_helper.py script
 
