@@ -48,7 +48,7 @@ Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed t
 
 ### Snap store
 
-auto-cpufreq is available on [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
+auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
 
 ```
 sudo snap install auto-cpufreq
@@ -57,7 +57,7 @@ sudo snap install auto-cpufreq
 **Please note:** 
 * Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` version is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
 
-* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130). Due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after snap installation. Or using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) which doesn't have this issue.
+* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) which doesn't have this issue.
 
 ### auto-cpufreq-installer
 
@@ -80,17 +80,19 @@ Please note that this git package is currently unmaintained & has issues. Until 
 
 After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options).
 
-**Please note:** If you want to install auto-cpufreq daemon, do not run `auto-cpufreq --install` otherwise you'll run into an issue: [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91), [#96](https://github.com/AdnanHodzic/auto-cpufreq/issues/96).
+**Please note:** If you want to install the auto-cpufreq daemon, do not run `auto-cpufreq --install` otherwise you'll run into an issue: [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91), [#96](https://github.com/AdnanHodzic/auto-cpufreq/issues/96).
 
 Instead run `systemctl start auto-cpufreq` to start the service. Run `systemctl status auto-cpufreq` to see the status of service, and `systemctl enable auto-cpufreq` for service to persist running across reboots. 
 
 ## Configuring auto-cpufreq
 
-While auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. It's possible to perform addition configurations in 2 ways:
+While auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. It's possible to perform additional configurations in 2 ways:
 
 ### 1: power_helper.py script
 
-If detected as running auto-cpufreq will disable [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933), which would otherwise cause conflicts and cause problems. By default auto-cpufreq uses `balanced` mode which also works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq ([#361](https://github.com/AdnanHodzic/auto-cpufreq/issues/361)), you can switch to `performance` mode. Which will result in higher frequencies by default, but also higher use of energy (battery consumption).
+If detected as running, auto-cpufreq will disable [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933), which would otherwise cause conflicts and cause problems.
+
+By default auto-cpufreq uses `balanced` mode which works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq ([#361](https://github.com/AdnanHodzic/auto-cpufreq/issues/361)), you can switch to `performance` mode. Which will result in higher frequencies by default, but also results in higher energy use (battery consumption).
 
 If you installed auto-cpufreq using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/edit/master/README.md#auto-cpufreq-installer), you can switch to `performance` mode by running:
 
@@ -100,15 +102,15 @@ Or if you installed auto-cpufreq using [Snap package](https://github.com/AdnanHo
 
 `sudo python3 power_helper.py --gnome_power_disable performance`
 
-Please note! In order to have access to `power_helper.py` script, first clone auto-cpufreq git repo (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navigate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
+Please note! In order to have access to `power_helper.py` script, first clone the auto-cpufreq git repo (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navigate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
 
 After this step, all necessary changes will still be made automatically. However, if you wish to perform additional "manual" settings this can be done by following instructions explained in next step.
 
 ### 2: auto-cpufreq config file
 
-You can configure profiles for battery and power supply. These profiles will let you pick which governor to use and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
+You can configure seperate profiles for the battery and power supply. These profiles will let you pick which governor to use, and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
 
-By default, auto-cpufreq does not use the config file! If you wish to use it, location where config needs to be placed for it to be read automatically is: `/etc/auto-cpufreq.conf`
+By default, auto-cpufreq does not use the config file! If you wish to use it, the location where config needs to be placed for it to be read automatically is: `/etc/auto-cpufreq.conf`
 
 #### Example config file contents
 ```
@@ -245,6 +247,6 @@ If auto-cpufreq helped you out and you find it useful, show your appreciation by
 
 ### Code contribution
 
-Other ways of supporting the project consists of making a code or documentation contribution. If you have an idea for a new features or want to implement some of the existing feature requests or fix some of the [bugs & issues](https://github.com/AdnanHodzic/auto-cpufreq/issues). Please make your changes and submit a [pull request](https://github.com/AdnanHodzic/auto-cpufreq/pulls) which I'll be glad to review. If your changes are accepted you'll be credited as part of [releases page](https://github.com/AdnanHodzic/auto-cpufreq/releases).
+Other ways of supporting the project consists of making a code or documentation contribution. If you have an idea for a new features or want to implement some of the existing feature requests or fix some of the [bugs & issues](https://github.com/AdnanHodzic/auto-cpufreq/issues) please make your changes and submit a [pull request](https://github.com/AdnanHodzic/auto-cpufreq/pulls) which I'll be glad to review. If your changes are accepted you'll be credited as part of [releases page](https://github.com/AdnanHodzic/auto-cpufreq/releases).
 
 **Please note: auto-cpufreq is looking for co-maintainers & open source developers to [help shape future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)**
