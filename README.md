@@ -206,6 +206,14 @@ auto-cpufreq daemon and its systemd service, along with all its persistent chang
 
 `sudo auto-cpufreq --remove`
 
+You can also stop the service with:
+
+`systemctl stop auto-cpufreq`
+
+and stop it from persistenctly starting with:
+
+`systemctl disable auto-cpufreq`
+
 ### Stats
 
 If daemon has been installed, live stats of CPU/system load monitoring and optimization can be seen by running:
