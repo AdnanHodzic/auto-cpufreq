@@ -78,7 +78,8 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 (For the latest commits/changes) \
 Please note that this git package is currently unmaintained & has issues. Until someone starts maintaining it, use the [manual script installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes.
 
-After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options).
+## Post Installation
+After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options)for more information on how to run and configure `auto-cpufreq`.
 
 **Please note:** If you want to install the auto-cpufreq daemon, do not run `auto-cpufreq --install` otherwise you'll run into an issue: [#91](https://github.com/AdnanHodzic/auto-cpufreq/issues/91), [#96](https://github.com/AdnanHodzic/auto-cpufreq/issues/96).
 
