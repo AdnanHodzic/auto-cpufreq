@@ -176,17 +176,27 @@ Necessary changes are temporarily made to the system which are lost with system 
 
 ### Install - auto-cpufreq daemon
 
-Necessary changes are made to the system for auto-cpufreq CPU optimization to persist across reboots. Daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
+Necessary changes are made to the system for auto-cpufreq CPU optimization to persist across reboots. The daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
+
+Install the daemon using this command (after installing auto-cpufreq):
 
 `sudo auto-cpufreq --install`
 
-After daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
+After the daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
+
+Alternatively, using just systemd:
+
+`systemctl start auto-cpufreq`
+will start the service, and
+
+`systemctl enable auto-cpufreq`
+will persistently start the daemon on boot.
 
 Since daemon is running as a systemd service, its status can be seen by running:
 
 `systemctl status auto-cpufreq`
 
-If install has been performed as part of snap package, daemon status can be verified by running: 
+If the install has been performed as part of snap package, daemon status can be verified by running:
 
 `systemctl status snap.auto-cpufreq.service.service`
 
