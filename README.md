@@ -22,7 +22,7 @@ With that said, I needed a simple tool which would automatically make "cpufreq" 
 
 Please note: auto-cpufreq aims to replace TLP in terms of functionality and after you install auto-cpufreq _it's recommended to remove TLP_. If both are used for same functionality, i.e: to set CPU frequencies it'll lead to unwanted results like overheating. Hence, only use [both tools in tandem](https://github.com/AdnanHodzic/auto-cpufreq/discussions/176) if you know what you're doing.
 
-The Tool/daemon that does not conflict with auto-cpufreq in any way, and is even recommended to have running alongside, is [thermald](https://wiki.debian.org/thermald). 
+The Tool/daemon that does not conflict with auto-cpufreq in any way, and is even recommended to have running alongside, is [thermald](https://wiki.debian.org/thermald).
 
 #### Supported architectures and devices
 
@@ -99,7 +99,9 @@ Or if you installed auto-cpufreq using [Snap package](https://github.com/AdnanHo
 
 `sudo python3 power_helper.py --gnome_power_disable performance`
 
-Please note! In order to have access to `power_helper.py` script, first clone the auto-cpufreq git repo (`git clone https://github.com/AdnanHodzic/auto-cpufreq.git`), navigate to directory where `power_helper.py` script resides by running: `cd auto-cpufreq/auto_cpufreq`
+**Please Note:**  
+The `power_helper.py` script is located at `auto_cpufreq/power_helper.py`
+
 
 After this step, all necessary changes will still be made automatically. However, if you wish to perform additional "manual" settings this can be done by following instructions explained in next step.
 
@@ -165,16 +167,35 @@ will give an error:
 
 auto-cpufreq should be run with with one of the following long options:
 
-* monitor               Monitor and see suggestions for CPU optimizations
-* live                  Monitor and make (temp.) suggested CPU optimizations
-* install / remove      Install/remove daemon for (permanent) automatic CPU optimizations
-* install_performance   Install daemon in "performance" mode.
-* stats                 View live stats of CPU optimizations made by daemon
-* config TEXT           Use config file at defined path
-* debug                 Show debug info (include when submitting bugs)
-* version               Show currently installed version
-* donate                To support the project
-* help                  Shows all of the above options
+* monitor
+    - Monitor and see suggestions for CPU optimizations
+
+* live
+    - Monitor and make (temp.) suggested CPU optimizations
+
+* install / remove
+    - Install/remove daemon for (permanent) automatic CPU optimizations
+
+* install_performance
+    - Install daemon in "performance" mode.
+
+* stats
+    - View live stats of CPU optimizations made by daemon
+
+* config TEXT
+    - Use config file at defined path
+
+* debug
+    - Show debug info (include when submitting bugs)
+
+* version
+    - Show currently installed version
+
+* donate
+    - To support the project
+
+* help
+    - Shows all of the above options
 
 Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) for more details.
 
