@@ -105,7 +105,7 @@ function manual_install {
 	After which tool is installed, for full list of options run:
 
   	auto-cpufreq
-	_EOF_
+_EOF_
   separator
   cat <<- _EOF_
 
@@ -117,7 +117,7 @@ function manual_install {
   Distribution: $distro
   Release: $release
   Codename: $codename
-  _EOF_
+_EOF_
   separator
 }
 
