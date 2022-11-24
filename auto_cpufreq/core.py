@@ -294,8 +294,8 @@ def cpufreqctl():
         pass
     else:
         # deploy cpufreqctl.auto-cpufreq script
-        if not os.path.isfile("/usr/bin/cpufreqctl.auto-cpufreq"):
-            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/bin/cpufreqctl.auto-cpufreq")
+        if not os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
+            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
 
 
 def cpufreqctl_restore():
@@ -306,8 +306,8 @@ def cpufreqctl_restore():
     if os.getenv("PKG_MARKER") == "SNAP":
         pass
     else:
-        if os.path.isfile("/usr/bin/cpufreqctl.auto-cpufreq"):
-            os.remove("/usr/bin/cpufreqctl.auto-cpufreq")
+        if os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
+            os.remove("/usr/local/bin/cpufreqctl.auto-cpufreq")
 
 
 def footer(l=79):
@@ -354,10 +354,10 @@ def deploy_daemon():
     auto_cpufreq_stats_path.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
-    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/local/bin/auto-cpufreq-remove")
 
     # output warning if gnome power profile is running
     gnome_power_detect_install()
@@ -366,7 +366,7 @@ def deploy_daemon():
     # output warning if TLP service is detected
     tlp_service_detect()
 
-    call("/usr/bin/auto-cpufreq-install", shell=True)
+    call("/usr/local/bin/auto-cpufreq-install", shell=True)
 
 
 def deploy_daemon_performance():
@@ -388,10 +388,10 @@ def deploy_daemon_performance():
     auto_cpufreq_stats_path.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
-    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/bin/auto-cpufreq-install")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
 
     print("\n* Deploy auto-cpufreq remove script")
-    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/bin/auto-cpufreq-remove")
+    shutil.copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/local/bin/auto-cpufreq-remove")
 
     # output warning if gnome power profile is running
     gnome_power_detect_install()
@@ -400,14 +400,14 @@ def deploy_daemon_performance():
     # output warning if TLP service is detected
     tlp_service_detect()
 
-    call("/usr/bin/auto-cpufreq-install", shell=True)
+    call("/usr/local/bin/auto-cpufreq-install", shell=True)
 
 
 # remove auto-cpufreq daemon
 def remove():
 
     # check if auto-cpufreq is installed
-    if not os.path.exists("/usr/bin/auto-cpufreq-remove"):
+    if not os.path.exists("/usr/local/bin/auto-cpufreq-remove"):
         print("\nauto-cpufreq daemon is not installed.\n")
         sys.exit(1)
 
@@ -421,10 +421,10 @@ def remove():
     gnome_power_svc_enable()
 
     # run auto-cpufreq daemon remove script
-    call("/usr/bin/auto-cpufreq-remove", shell=True)
+    call("/usr/local/bin/auto-cpufreq-remove", shell=True)
 
     # remove auto-cpufreq-remove
-    os.remove("/usr/bin/auto-cpufreq-remove")
+    os.remove("/usr/local/bin/auto-cpufreq-remove")
 
     # delete stats file
     if auto_cpufreq_stats_path.exists():
