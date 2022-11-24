@@ -225,7 +225,11 @@ function tool_remove {
 }
 
 function ask_operation {
-  echo -e "\n-------------------------- auto-cpufreq installer -----------------------------"
+  MID="$((COLOUMNS / 2))"
+  HEADER=" auto-cpufreq installer "
+  printf "%0.s-" $(seq $((MID-(${#HEADER}/2))))
+  echo -n $HEADER
+  printf "%0.s-" $(seq $((MID-(${#HEADER}/2))))
   echo -e  "\nWelcome to auto-cpufreq tool installer.
   			\nOptions:\n"
   read -p \
