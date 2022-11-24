@@ -15,14 +15,18 @@ then
   codename="$(lsb_release -cs)"
 fi
 
-sep="\n-------------------------------------------------------------------------------"
 
 # functions
 
 #separator
+COLOUMNS="`tput cols`"
 function separator {
-  echo -e $sep
+
+  echo -e "\n"
+  printf "%0.s─" $(seq $COLOUMNS)
+  echo -e "\n"
 }
+
 # root check
 function root_check {
   if ((EUID != 0)); then
