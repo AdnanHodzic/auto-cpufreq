@@ -10,6 +10,35 @@ For tl;dr folks there's a: [Youtube: auto-cpufreq - tool demo](https://www.youtu
 
 auto-cpufreq is looking for [co-maintainers & open source developers to help shape future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
 
+## Index
+
+* [Why do I need auto-cpufreq?](https://github.com/AdnanHodzic/auto-cpufreq/#why-do-i-need-auto-cpufreq)
+    * [Supported architectures and devices](https://github.com/AdnanHodzic/auto-cpufreq/#supported-architectures-and-devices)
+* [Features](https://github.com/AdnanHodzic/auto-cpufreq/#features)
+* [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
+    * [Snap store](https://github.com/AdnanHodzic/auto-cpufreq/#snap-store)
+    * [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer)
+    * [AUR package (Arch/Manjaro Linux)](https://github.com/AdnanHodzic/auto-cpufreq/#aur-package-archmanjaro-linux)
+* [Post Installation]
+* [Configuring auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#configuring-auto-cpufreq)
+    * [1: power_helper.py script](https://github.com/AdnanHodzic/auto-cpufreq/#1-power_helperpy-script)
+    * [2: auto-cpufreq config file](https://github.com/AdnanHodzic/auto-cpufreq/#2-auto-cpufreq-config-file)
+        * [Example config file contents](https://github.com/AdnanHodzic/auto-cpufreq/#example-config-file-contents)
+* [How to run auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#how-to-run-auto-cpufreq)
+* [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-modes-and-options)
+    * [monitor](https://github.com/AdnanHodzic/auto-cpufreq/#monitor)
+    * [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
+    * [Install - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon)
+    * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
+    * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
+* [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#troubleshooting)
+* [Discussion](https://github.com/AdnanHodzic/auto-cpufreq/#discussion)
+* [Donate](https://github.com/AdnanHodzic/auto-cpufreq/#donate)
+    * [Financial donation](https://github.com/AdnanHodzic/auto-cpufreq/#financial-donation)
+        * [Paypal](https://github.com/AdnanHodzic/auto-cpufreq/#paypal)
+        * [BitCoin](https://github.com/AdnanHodzic/auto-cpufreq/#bitcoin)
+    * [Code contribution](https://github.com/AdnanHodzic/auto-cpufreq/#code-contribution)
+
 ## Why do I need auto-cpufreq?
 
 One of the problems with Linux today on laptops is that the CPU will run in an unoptimized manner which will negatively reflect on battery life. For example, the CPU will run using "performance" governor with turbo boost enabled regardless if it's plugged in to power or not.
@@ -189,7 +218,7 @@ auto-cpufreq should be run with with one of the following options:
 * help
     - Shows all of the above options
 
-Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) for more details.
+Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-modes-and-options) for more details.
 
 ## auto-cpufreq modes and options
 
