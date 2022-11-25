@@ -20,7 +20,7 @@ fi
 
 #separator
 function separator {
-  COLOUMNS="`tput cols`"
+  local COLOUMNS="`tput cols`"
   echo -e "\n"
   printf "%0.s─" $(seq $COLOUMNS)
   echo -e "\n"
@@ -34,6 +34,16 @@ function root_check {
     separator
     exit 1
   fi
+}
+
+function header {
+	local COLOUMNS="`tput cols`"
+	MID="$((COLOUMNS / 2))"
+	HEADER="$1"
+	printf "%0.s=" $(seq $((MID-(${#HEADER}/2))))
+	echo -n $HEADER
+	printf "%0.s=" $(seq $((MID-(${#HEADER}/2))))
+	return
 }
 
 # python packages install
@@ -229,11 +239,7 @@ function tool_remove {
 }
 
 function ask_operation {
-  MID="$((COLOUMNS / 2))"
-  HEADER=" auto-cpufreq installer "
-  printf "%0.s-" $(seq $((MID-(${#HEADER}/2))))
-  echo -n $HEADER
-  printf "%0.s-" $(seq $((MID-(${#HEADER}/2))))
+  header " auto-cpufreq installer "
   echo -e  "\nWelcome to auto-cpufreq tool installer.
   			\nOptions:\n"
   read -p \
