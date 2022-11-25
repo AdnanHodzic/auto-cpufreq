@@ -19,9 +19,8 @@ fi
 # functions
 
 #separator
-COLOUMNS="`tput cols`"
 function separator {
-
+  COLOUMNS="`tput cols`"
   echo -e "\n"
   printf "%0.s─" $(seq $COLOUMNS)
   echo -e "\n"
@@ -77,8 +76,13 @@ function completed () {
 
 function complete_msg() {
   separator
-  echo -e 	"\nauto-cpufreq tool successfully installed.\n
-  		For list of options, run:\nauto-cpufreq --help"
+  cat <<- _EOF_
+
+	auto-cpufreq tool successfully installed.
+
+	For list of options, run:
+	auto-cpufreq --help"
+_EOF_
   separator
 }
 
