@@ -79,7 +79,7 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 Please note that this git package is currently unmaintained & has issues. Until someone starts maintaining it, use the [manual script installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes.
 
 ## Post Installation
-After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options)for more information on how to run and configure `auto-cpufreq`.
+After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for more information on how to run and configure `auto-cpufreq`.
 
 ## Configuring auto-cpufreq
 
@@ -157,29 +157,21 @@ turbo = auto
 ```
 
 ## How to run auto-cpufreq
-Running just `auto-cpufreq` like so:
+auto-cpufreq should be run with with one of the following options:
 
-`sudo auto-cpufreq`
-
-will give an error:
-
-`auto-cpufreq: wrong invocation. try --help for help.`
-
-auto-cpufreq should be run with with one of the following long options:
-
-* monitor
+* [monitor](https://github.com/AdnanHodzic/auto-cpufreq/#monitor)
     - Monitor and see suggestions for CPU optimizations
 
-* live
+* [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
     - Monitor and make (temp.) suggested CPU optimizations
 
-* install / remove
+* [install](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon) / [remove](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
     - Install/remove daemon for (permanent) automatic CPU optimizations
 
-* install_performance
+* [install_performance](https://github.com/AdnanHodzic/auto-cpufreq/#1-power_helperpy-script)
     - Install daemon in "performance" mode.
 
-* stats
+* [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
     - View live stats of CPU optimizations made by daemon
 
 * config TEXT
@@ -191,7 +183,7 @@ auto-cpufreq should be run with with one of the following long options:
 * version
     - Show currently installed version
 
-* donate
+* [donate](https://github.com/AdnanHodzic/auto-cpufreq/#financial-donation)
     - To support the project
 
 * help
@@ -221,15 +213,9 @@ Install the daemon using this command (after installing auto-cpufreq):
 
 `sudo auto-cpufreq --install`
 
+This will enable the auto-cpufreq service (equivalent to `systemctl enable auto-cpufreq`) to start on boot, and start it (equivalent to `systemctl start auto-cpufreq`).
+
 After the daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
-
-Alternatively, using just systemd:
-
-`systemctl start auto-cpufreq`
-will start the service, and
-
-`systemctl enable auto-cpufreq`
-will persistently start the daemon on boot.
 
 Since daemon is running as a systemd service, its status can be seen by running:
 
