@@ -40,9 +40,10 @@ function header {
 	local COLOUMNS="`tput cols`"
 	MID="$((COLOUMNS / 2))"
 	HEADER="$1"
-	printf "%0.s=" $(seq $((MID-(${#HEADER}/2)- 1)))
+	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
 	echo -n " $HEADER "
-	printf "%0.s=" $(seq $((MID-(${#HEADER}/2)- 1)))
+	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
+	echo -e "\n"
 	return
 }
 
@@ -240,7 +241,7 @@ function tool_remove {
 
 function ask_operation {
   header "auto-cpufreq installer"
-  echo -e  "\nWelcome to auto-cpufreq tool installer.
+  echo -e  "Welcome to auto-cpufreq tool installer.
   			\nOptions:\n"
   read -p \
 "[I]nstall
