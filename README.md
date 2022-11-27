@@ -129,7 +129,10 @@ Or if you installed auto-cpufreq using [Snap package](https://github.com/AdnanHo
 `sudo python3 power_helper.py --gnome_power_disable performance`
 
 **Please Note:**  
-The `power_helper.py` script is located at `auto_cpufreq/power_helper.py`
+The `power_helper.py` script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
+the repository:
+
+`git clone https://github.com/AdnanHodzic/auto-cpufreq`
 
 
 After this step, all necessary changes will still be made automatically. However, if you wish to perform additional "manual" settings this can be done by following instructions explained in next step.
