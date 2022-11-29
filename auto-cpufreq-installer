@@ -193,7 +193,8 @@ function tool_remove {
     eval $tool_proc_rm
   else
 	separator
-	printf "Couldn't remove auto-cpufreq\n$srv_remove or $srv_remove_old do not exist.\n"
+	printf "Couldn't remove the auto-cpufreq daemon\n$srv_remove or $srv_remove_old do not exist.\n"
+	exit 1;
 	separator
   fi
 
