@@ -183,6 +183,10 @@ function tool_remove {
   # run uninstall in case of installed daemon
   if [ -f $srv_remove ]; then
     eval $tool_proc_rm
+  else
+	separator
+	printf "Couldn't remove auto-cpufreq\n"
+	separator
   fi
 
   # remove auto-cpufreq and all its supporting files
