@@ -167,7 +167,7 @@ function tool_remove {
   srv_install="/usr/local/bin/auto-cpufreq-install"
   srv_install_old="/usr/bin/auto-cpufreq-install"
 
-  srv_remove="/usr/bin/auto-cpufreq-remove"
+  srv_remove="/usr/local/bin/auto-cpufreq-remove"
   srv_remove_old="/usr/bin/auto-cpufreq-remove"
 
   stats_file="/var/run/auto-cpufreq.stats"
@@ -189,7 +189,7 @@ function tool_remove {
   done
 
   # run uninstall in case of installed daemon
-  if [ -f $srv_remove -o -f $srv_remove_old]; then
+  if [ -f $srv_remove -o -f $srv_remove_old ]; then
     eval $tool_proc_rm
   else
 	separator
