@@ -197,14 +197,22 @@ fi
 function tool_remove {
   files="files.txt"
   share_dir="/usr/local/share/auto-cpufreq/"
-  srv_install="/usr/bin/auto-cpufreq-install"
-  srv_remove="/usr/bin/auto-cpufreq-remove"
+
+  srv_install="/usr/local/bin/auto-cpufreq-install"
+  srv_install_old="/usr/bin/auto-cpufreq-install"
+
+  srv_remove="/usr/local/bin/auto-cpufreq-remove"
+  srv_remove_old="/usr/bin/auto-cpufreq-remove"
+
   stats_file="/var/run/auto-cpufreq.stats"
+
   tool_proc_rm="/usr/local/bin/auto-cpufreq --remove"
   wrapper_script="/usr/local/bin/auto-cpufreq"
   unit_file="/etc/systemd/system/auto-cpufreq.service"
   venv_path="/opt/auto-cpufreq"
-  cpufreqctl="/usr/bin/cpufreqctl.auto-cpufreq"
+
+  cpufreqctl="/usr/local/bin/cpufreqctl.auto-cpufreq"
+  cpufreqctl_old="/usr/bin/cpufreqctl.auto-cpufreq"
 
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
@@ -215,8 +223,13 @@ function tool_remove {
   done
 
   # run uninstall in case of installed daemon
-  if [ -f $srv_remove ]; then
+  if [ -f $srv_remove -o -f $srv_remove_old ]; then
     eval $tool_proc_rm
+  else
+	separator
+	printf "Couldn't remove the auto-cpufreq daemon\n$srv_remove or $srv_remove_old do not exist.\n"
+	exit 1;
+	separator
   fi
 
   # remove auto-cpufreq and all its supporting files
@@ -225,11 +238,17 @@ function tool_remove {
 
   # files cleanup
   [ -f $srv_install ] && rm $srv_install
+  [ -f $srv_install_old ] && rm $srv_install_old
+
   [ -f $srv_remove ] && rm $srv_remove
+  [ -f $srv_remove_old ] && rm $srv_remove_old
+
   [ -f $stats_file ] && rm $stats_file
   [ -f $unit_file ] && rm $unit_file
   [ -f $wrapper_script ] && rm $wrapper_script
+
   [ -f $cpufreqctl ] && rm $cpufreqctl
+  [ -f $cpufreqctl_old ] && rm $cpufreqctl_old
 
   # remove python virtual environment
   rm -rf "${venv_path}"
