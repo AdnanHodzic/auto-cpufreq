@@ -223,7 +223,7 @@ function tool_remove {
   done
 
   # run uninstall in case of installed daemon
-  if [ -f $srv_remove -o -f $srv_remove_old ]; then
+  if [ -f $srv_remove -o -f $srv_remove_old -o $wrapper_script ]; then
     eval $tool_proc_rm
   else
 	separator
