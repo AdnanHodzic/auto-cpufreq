@@ -15,14 +15,17 @@ then
   codename="$(lsb_release -cs)"
 fi
 
-sep="\n-------------------------------------------------------------------------------"
 
 # functions
 
 #separator
 function separator {
-  echo -e $sep
+  local COLOUMNS="`tput cols`"
+  echo -e "\n"
+  printf "%0.s─" $(seq $COLOUMNS)
+  echo -e "\n"
 }
+
 # root check
 function root_check {
   if ((EUID != 0)); then
@@ -31,6 +34,17 @@ function root_check {
     separator
     exit 1
   fi
+}
+
+function header {
+	local COLOUMNS="`tput cols`"
+	MID="$((COLOUMNS / 2))"
+	HEADER="$1"
+	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
+	echo -n " $HEADER "
+	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
+	echo -e "\n"
+	return
 }
 
 # python packages install
@@ -73,32 +87,52 @@ function completed () {
 
 function complete_msg() {
   separator
-  echo -e "\nauto-cpufreq tool successfully installed.\n"
-  echo -e "For list of options, run:\nauto-cpufreq --help"
+  cat <<- _EOF_
+
+	auto-cpufreq tool successfully installed.
+
+	For list of options, run:
+	auto-cpufreq --help"
+_EOF_
   separator
 }
 
 function manual_install {
-  echo -e "\nDidn't detect Debian or RedHat based distro.\n"
-  echo -e "To complete installation, you need to:"
-  echo -e "Install: python3, pip3, python3-setuptools\n"
-  echo -e "Install necessary Python packages:"
-  echo -e "pip3 install psutil click distro power"
-  echo -e "\nRun following sequence of lines:"
-  echo -e "\n-----"
-  echo -e "\npython3 setup.py install --record files.txt"
-  echo -e "mkdir -p /usr/local/share/auto-cpufreq/"
-  echo -e "cp -r scripts/ /usr/local/share/auto-cpufreq/"
-  echo -e "\n-----"
-  echo -e "\nAfter which tool is installed, for full list of options run:"
-  echo -e "auto-cpufreq"
+	cat <<- _EOF_
+
+	Didn't detect Debian or RedHat based distro.
+
+	To complete installation, you need to:
+	Install: python3, pip3, python3-setuptools
+
+	Install necessary Python packages:
+	pip3 install psutil click distro power
+	Run following sequence of lines:
+
+	-----
+
+	python3 setup.py install --record files.txt
+	mkdir -p /usr/local/share/auto-cpufreq/
+	cp -r scripts/ /usr/local/share/auto-cpufreq/
+
+	-----
+
+	After which tool is installed, for full list of options run:
+
+  	auto-cpufreq
+_EOF_
   separator
-  echo -e "\nConsider creating a feature request to add support for your distro:"
-  echo -e "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"
-  echo -e "\nMake sure to include following information:\n"
-  echo -e "Distribution: $distro"
-  echo -e "Release: $release"
-  echo -e "Codename: $codename"
+  cat <<- _EOF_
+
+  Consider creating a feature request to add support for your distro:
+  https://github.com/AdnanHodzic/auto-cpufreq/issues/new
+
+  Make sure to include following information:
+
+  Distribution: $distro
+  Release: $release
+  Codename: $codename
+_EOF_
   separator
 }
 
@@ -189,7 +223,7 @@ function tool_remove {
   done
 
   # run uninstall in case of installed daemon
-  if [ -f $srv_remove -o -f $srv_remove_old ]; then
+  if [ -f $srv_remove -o -f $srv_remove_old -o $wrapper_script ]; then
     eval $tool_proc_rm
   else
 	separator
@@ -225,9 +259,9 @@ function tool_remove {
 }
 
 function ask_operation {
-  echo -e "\n-------------------------- auto-cpufreq installer -----------------------------"
-  echo -e "\nWelcome to auto-cpufreq tool installer."
-  echo -e "\nOptions:\n"
+  header "auto-cpufreq installer"
+  echo -e  "Welcome to auto-cpufreq tool installer.
+  			\nOptions:\n"
   read -p \
 "[I]nstall
 [R]emove
