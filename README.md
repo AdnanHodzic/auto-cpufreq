@@ -280,15 +280,23 @@ If daemon has been installed, live stats of CPU/system load monitoring and optim
 * CPU is not scaling to minimum/maximum frequencies
 * suboptimal CPU performance
 
-**A:** If you're using `intel_pstate` CPU management driver consider changing it to: `acpi-cpufreq`.
+**A:** If you're using `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
 
-This can be done by editing `/etc/default/grub` file and appending `intel_pstate=disable` to `GRUB_CMDLINE_LINUX_DEFAULT` line, followed by `sudo update-grub`
+This can be done by editing the `GRUB_CMDLINE_LINUX_DEFAULT` params in `/etc/default/grub`.
 
-Example line change:
+For Intel users:
 
 ```
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_pstate=disable"
 ```
+
+For AMD users:
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0"
+```
+
+After you are done, run `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/grub.cfg`, if you are using Arch.
 
 ## Discussion:
 
