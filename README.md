@@ -209,6 +209,9 @@ auto-cpufreq should be run with with one of the following options:
 * force TEXT
     - Force use of either the powersave or performance governor. Setting to 'reset' goes back to normal mode
 
+* state
+    - Show if the governor has been overriden with --force. Returns 'default' if there's no override
+
 * config TEXT
     - Use config file at defined path
 
