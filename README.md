@@ -206,6 +206,9 @@ auto-cpufreq should be run with with one of the following options:
 * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
     - View live stats of CPU optimizations made by daemon
 
+* force TEXT
+    - Force use of either the powersave or performance governor. Setting to 'reset' goes back to normal mode
+
 * config TEXT
     - Use config file at defined path
 
