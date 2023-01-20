@@ -10,6 +10,7 @@ import psutil
 import distro
 import time
 import click
+import pickle
 import warnings
 import configparser
 import pkg_resources
@@ -57,6 +58,9 @@ performance_load_threshold = (50 * CPUS) / 100
 auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
+# track governor override
+STORE = "/opt/auto-cpufreq/venv/override.pickle"
+
 if os.getenv("PKG_MARKER") == "SNAP":
     auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
 else:
@@ -81,6 +85,23 @@ def get_config(config_file=""):
             get_config.using_cfg_file = True
 
     return get_config.config
+
+def get_override():
+    if os.path.isfile(STORE):
+        with open(STORE, "rb") as store:
+            return pickle.load(store)
+
+def set_override(override=False):
+    if override in ["powersave", "performance"]:
+        with open(STORE, "wb") as store:
+            pickle.dump(override, store)
+        print(f"Set governor override to {override}")
+    elif override == "reset":
+        os.remove(STORE)
+        print("Governor override removed")
+    else:
+        print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
+
 
 
 # get distro name
@@ -997,7 +1018,12 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
-    if charging():
+    override = get_override()
+    if override == "powersave":
+        set_powersave()
+    elif override == "performance":
+        set_performance()
+    elif charging():
         print("Battery is: charging\n")
         set_performance()
     else:

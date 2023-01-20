@@ -25,6 +25,7 @@ from auto_cpufreq.power_helper import *
 )
 @click.option("--install_performance", is_flag=True, help="Install daemon in \"performance\" mode, reference:\n https://bit.ly/3bjVZW1")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
+@click.option("--force", is_flag=False, help="Force use of either powersave or performance governors. Setting to 'reset' will go back to normal mode")
 @click.option(
     "--config",
     is_flag=False,
@@ -36,12 +37,15 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, install_performance, live, log, monitor, stats, version, donate):
+def main(config, daemon, debug, install, install_performance, live, log, monitor, stats, version, donate, force):
 
     # display info if config file is used
     def config_info_dialog():
         if get_config(config) and hasattr(get_config, "using_cfg_file"):
             print("\nUsing settings defined in " + config + " file")
+
+    # set governor override unless None or invalid
+    set_override(force)
 
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
