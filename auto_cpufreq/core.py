@@ -90,16 +90,19 @@ def get_override():
     if os.path.isfile(STORE):
         with open(STORE, "rb") as store:
             return pickle.load(store)
+    else:
+        return "default"
 
-def set_override(override=False):
+def set_override(override):
     if override in ["powersave", "performance"]:
         with open(STORE, "wb") as store:
             pickle.dump(override, store)
         print(f"Set governor override to {override}")
     elif override == "reset":
-        os.remove(STORE)
+        if os.path.isfile(STORE):
+            os.remove(STORE)
         print("Governor override removed")
-    else:
+    elif override is not None:
         print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
 
 
