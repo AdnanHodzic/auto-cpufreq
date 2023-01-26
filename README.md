@@ -206,13 +206,13 @@ auto-cpufreq should be run with with one of the following options:
 * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
     - View live stats of CPU optimizations made by daemon
 
-* force TEXT
+* force=TEXT
     - Force use of either the powersave or performance governor. Setting to 'reset' goes back to normal mode
 
 * state
     - Show if the governor has been overriden with --force. Returns 'default' if there's no override
 
-* config TEXT
+* config=TEXT
     - Use config file at defined path
 
 * debug
@@ -242,6 +242,12 @@ No changes are made to the system, and is solely made for demonstration purposes
 `sudo auto-cpufreq --live`
 
 Necessary changes are temporarily made to the system which are lost with system reboot. This mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
+
+### Overriding governor
+
+`sudo auto-cpufreq --force=governor`
+
+The system will be forced to use the governor of choice. The only governor options are "powersave" and "performance". Setting force to "reset" will disable any override. Please note that any set override will persist even after reboot.
 
 ### Install - auto-cpufreq daemon
 
