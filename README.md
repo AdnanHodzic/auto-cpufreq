@@ -28,6 +28,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
 * [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-modes-and-options)
     * [monitor](https://github.com/AdnanHodzic/auto-cpufreq/#monitor)
     * [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
+    * [overriding governor](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
     * [Install - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon)
     * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
     * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
@@ -206,7 +207,7 @@ auto-cpufreq should be run with with one of the following options:
 * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
     - View live stats of CPU optimizations made by daemon
 
-* force=TEXT
+* [force=TEXT](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
     - Force use of either the powersave or performance governor. Setting to 'reset' goes back to normal mode
 
 * state
