@@ -18,15 +18,13 @@ from auto_cpufreq.power_helper import *
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
-@click.option(
-    "--install/--remove",
-    default=True,
-    help="Install/remove daemon for (permanent) automatic CPU optimizations",
-)
+@click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
+@click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
+
 @click.option("--install_performance", is_flag=True, help="Install daemon in \"performance\" mode, reference:\n https://bit.ly/3bjVZW1")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--force", is_flag=False, help="Force use of either powersave or performance governors. Setting to 'reset' will go back to normal mode")
-@click.option("--state", is_flag=True, help="Show if the governor has been overriden with --force. Returns 'default' if there's no override")
+@click.option("--get-state", is_flag=True, help="Show if the governor has been overriden with --force. Returns 'default' if there's no override")
 @click.option(
     "--config",
     is_flag=False,
@@ -38,7 +36,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, install_performance, live, log, monitor, stats, version, donate, force, state):
+def main(config, daemon, debug, install, remove, install_performance, live, log, monitor, stats, version, donate, force, get_state):
 
     # display info if config file is used
     def config_info_dialog():
@@ -46,11 +44,15 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
             print("\nUsing settings defined in " + config + " file")
 
     # set governor override unless None or invalid
+    if force is not None:
+        not_running_daemon()
     set_override(force)
 
     if len(sys.argv) == 1:
+ 
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
+ 
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
@@ -143,7 +145,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
             read_stats()
         elif log:
             deprecated_log_msg()
-        elif state:
+        elif get_state:
             override = get_override()
             print(override)
         elif debug:
@@ -226,7 +228,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 remove_complete_msg()
             else:
                 root_check()
-                remove()
+                remove_daemon()
                 remove_complete_msg()
 
 
