@@ -428,7 +428,7 @@ def deploy_daemon_performance():
 
 
 # remove auto-cpufreq daemon
-def remove():
+def remove_daemon():
 
     # check if auto-cpufreq is installed
     if not os.path.exists("/usr/local/bin/auto-cpufreq-remove"):
@@ -449,6 +449,10 @@ def remove():
 
     # remove auto-cpufreq-remove
     os.remove("/usr/local/bin/auto-cpufreq-remove")
+
+    # delete override pickle if it exists
+    if os.path.exists(STORE):
+        os.remove(STORE)
 
     # delete stats file
     if auto_cpufreq_stats_path.exists():
@@ -1216,6 +1220,13 @@ def daemon_running_msg():
     )
     footer()
 
+def daemon_not_running_msg():
+    print("\n" + "-" * 24 + " auto-cpufreq not running " + "-" * 30 + "\n")
+    print(
+        "ERROR: auto-cpufreq is not running in daemon mode.\n\nMake sure to start the daemon with --install before running with --force option"
+    )
+    footer()
+
 
 # check if auto-cpufreq --daemon is running
 def running_daemon():
@@ -1224,4 +1235,13 @@ def running_daemon():
         exit(1)
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
         daemon_running_msg()
+        exit(1)
+
+# check if auto-cpufreq --daemon is not running
+def not_running_daemon():
+    if not is_running("auto-cpufreq", "--daemon"):
+        daemon_not_running_msg()
+        exit(1)
+    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
+        daemon_not_running_msg()
         exit(1)
