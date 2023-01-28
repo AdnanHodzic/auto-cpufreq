@@ -23,7 +23,7 @@ from auto_cpufreq.power_helper import *
 
 @click.option("--install_performance", is_flag=True, help="Install daemon in \"performance\" mode, reference:\n https://bit.ly/3bjVZW1")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
-@click.option("--force", is_flag=False, help="Force use of either powersave or performance governors. Setting to 'reset' will go back to normal mode")
+@click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
 @click.option("--get-state", is_flag=True, help="Show if the governor has been overriden with --force. Returns 'default' if there's no override")
 @click.option(
     "--config",
