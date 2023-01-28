@@ -209,7 +209,6 @@ auto-cpufreq should be run with with one of the following options:
 
 * [force=TEXT](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
     - Force use of either the powersave or performance governor. Setting to 'reset' goes back to normal mode
-
 * state
     - Show if the governor has been overriden with --force. Returns 'default' if there's no override
 
@@ -248,7 +247,8 @@ Necessary changes are temporarily made to the system which are lost with system 
 
 `sudo auto-cpufreq --force=governor`
 
-The system will be forced to use the governor of choice. The only governor options are "powersave" and "performance". Setting force to "reset" will disable any override. Please note that any set override will persist even after reboot.
+Force use of either "powersave" or "performance" governors. Setting to "reset" will go back to normal mode
+Please note that any set override will persist even after reboot.
 
 ### Install - auto-cpufreq daemon
 
