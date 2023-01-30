@@ -75,7 +75,6 @@ def file_stats():
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
-
 def get_config(config_file=""):
     if not hasattr(get_config, "config"):
         get_config.config = configparser.ConfigParser()
@@ -608,6 +607,8 @@ def set_powersave():
     else:
         gov = get_avail_powersave()
     print(f'Setting to use: "{gov}" governor')
+    if get_override() != "default":
+        print("Warning: governor overwritten using `--force` flag.")
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
     if (
         Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
@@ -814,6 +815,8 @@ def set_performance():
         gov = get_avail_performance()
 
     print(f'Setting to use: "{gov}" governor')
+    if get_override() != "default":
+        print("Warning: governor overwritten using `--force` flag.")
     run(
         f"cpufreqctl.auto-cpufreq --governor --set={gov}",
         shell=True,
