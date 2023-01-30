@@ -337,14 +337,6 @@ def footer(l=79):
     print("\n" + "-" * l + "\n")
 
 
-def daemon_not_found():
-    print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
-    print(
-        "ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install"
-    )
-    footer()
-
-
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
     print("To view live stats, run:\nauto-cpufreq --stats")
@@ -1185,20 +1177,12 @@ def sysinfo():
         print("\nCPU fan speed:", psutil.sensors_fans()[current_fan][0].current, "RPM")
 
 
-def no_stats_msg():
-    print("\n" + "-" * 29 + " auto-cpufreq stats " + "-" * 30 + "\n")
-    print(
-        'ERROR: auto-cpufreq stats are missing.\n\nMake sure to run: "auto-cpufreq --install" first'
-    )
-
 
 # read stats func
 def read_stats():
     # read stats
     if os.path.isfile(auto_cpufreq_stats_path):
         call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
-    else:
-        no_stats_msg()
     footer()
 
 
@@ -1226,13 +1210,12 @@ def daemon_running_msg():
 def daemon_not_running_msg():
     print("\n" + "-" * 24 + " auto-cpufreq not running " + "-" * 30 + "\n")
     print(
-        "ERROR: auto-cpufreq is not running in daemon mode.\n\nMake sure to start the daemon with --install before running with --force option"
+        "ERROR: auto-cpufreq is not running in daemon mode.\n\nMake sure to run \"sudo auto-cpufreq --install\" first"
     )
     footer()
 
-
 # check if auto-cpufreq --daemon is running
-def running_daemon():
+def running_daemon_check():
     if is_running("auto-cpufreq", "--daemon"):
         daemon_running_msg()
         exit(1)
@@ -1241,7 +1224,7 @@ def running_daemon():
         exit(1)
 
 # check if auto-cpufreq --daemon is not running
-def not_running_daemon():
+def not_running_daemon_check():
     if not is_running("auto-cpufreq", "--daemon"):
         daemon_not_running_msg()
         exit(1)

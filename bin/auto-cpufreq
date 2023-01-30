@@ -45,7 +45,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
 
     # set governor override unless None or invalid
     if force is not None:
-        not_running_daemon()
+        not_running_daemon_check()
     set_override(force)
 
     if len(sys.argv) == 1:
@@ -99,7 +99,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
                 tlp_service_detect()
             while True:
                 time.sleep(1)
-                running_daemon()
+                running_daemon_check()
                 footer()
                 gov_check()
                 cpufreqctl()
@@ -121,7 +121,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
                 tlp_service_detect()
             while True:
                 try:
-                    running_daemon()
+                    running_daemon_check()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -134,6 +134,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
                     print("")
                     sys.exit()
         elif stats:
+            not_running_daemon_check()
             config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if os.getenv("PKG_MARKER") == "SNAP":
@@ -146,6 +147,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
         elif log:
             deprecated_log_msg()
         elif get_state:
+            not_running_daemon_check()
             override = get_override()
             print(override)
         elif debug:
@@ -191,14 +193,14 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
                     "Reference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq\n")
             else:
                 root_check()
-                running_daemon()
+                running_daemon_check()
                 gov_check()
                 deploy_daemon_performance()
                 deploy_complete_msg()
         elif install:
             if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
-                running_daemon()
+                running_daemon_check()
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
                 bluetooth_notif_snap()
@@ -208,7 +210,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
                 deploy_complete_msg()
             else:
                 root_check()
-                running_daemon()
+                running_daemon_check()
                 gov_check()
                 deploy_daemon()
                 deploy_complete_msg()
