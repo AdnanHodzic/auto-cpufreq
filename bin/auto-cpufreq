@@ -18,13 +18,13 @@ from auto_cpufreq.power_helper import *
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
-@click.option(
-    "--install/--remove",
-    default=True,
-    help="Install/remove daemon for (permanent) automatic CPU optimizations",
-)
+@click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
+@click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
+
 @click.option("--install_performance", is_flag=True, help="Install daemon in \"performance\" mode, reference:\n https://bit.ly/3bjVZW1")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
+@click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
+@click.option("--get-state", is_flag=True, hidden=True)
 @click.option(
     "--config",
     is_flag=False,
@@ -36,16 +36,23 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, install_performance, live, log, monitor, stats, version, donate):
+def main(config, daemon, debug, install, remove, install_performance, live, log, monitor, stats, version, donate, force, get_state):
 
     # display info if config file is used
     def config_info_dialog():
         if get_config(config) and hasattr(get_config, "using_cfg_file"):
             print("\nUsing settings defined in " + config + " file")
 
+    # set governor override unless None or invalid
+    if force is not None:
+        not_running_daemon_check()
+    set_override(force)
+
     if len(sys.argv) == 1:
+ 
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
+ 
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
@@ -92,7 +99,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 tlp_service_detect()
             while True:
                 time.sleep(1)
-                running_daemon()
+                running_daemon_check()
                 footer()
                 gov_check()
                 cpufreqctl()
@@ -114,7 +121,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 tlp_service_detect()
             while True:
                 try:
-                    running_daemon()
+                    running_daemon_check()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -127,6 +134,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                     print("")
                     sys.exit()
         elif stats:
+            not_running_daemon_check()
             config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if os.getenv("PKG_MARKER") == "SNAP":
@@ -138,6 +146,10 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
             read_stats()
         elif log:
             deprecated_log_msg()
+        elif get_state:
+            not_running_daemon_check()
+            override = get_override()
+            print(override)
         elif debug:
             # ToDo: add status of GNOME Power Profile service status
             config_info_dialog()
@@ -181,14 +193,14 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                     "Reference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq\n")
             else:
                 root_check()
-                running_daemon()
+                running_daemon_check()
                 gov_check()
                 deploy_daemon_performance()
                 deploy_complete_msg()
         elif install:
             if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
-                running_daemon()
+                running_daemon_check()
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
                 bluetooth_notif_snap()
@@ -198,7 +210,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 deploy_complete_msg()
             else:
                 root_check()
-                running_daemon()
+                running_daemon_check()
                 gov_check()
                 deploy_daemon()
                 deploy_complete_msg()
@@ -218,7 +230,7 @@ def main(config, daemon, debug, install, install_performance, live, log, monitor
                 remove_complete_msg()
             else:
                 root_check()
-                remove()
+                remove_daemon()
                 remove_complete_msg()
 
 

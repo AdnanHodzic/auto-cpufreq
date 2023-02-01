@@ -10,6 +10,7 @@ import psutil
 import distro
 import time
 import click
+import pickle
 import warnings
 import configparser
 import pkg_resources
@@ -57,6 +58,9 @@ performance_load_threshold = (50 * CPUS) / 100
 auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
+# track governor override
+STORE = "/opt/auto-cpufreq/venv/override.pickle"
+
 if os.getenv("PKG_MARKER") == "SNAP":
     auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
 else:
@@ -71,7 +75,6 @@ def file_stats():
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
-
 def get_config(config_file=""):
     if not hasattr(get_config, "config"):
         get_config.config = configparser.ConfigParser()
@@ -81,6 +84,26 @@ def get_config(config_file=""):
             get_config.using_cfg_file = True
 
     return get_config.config
+
+def get_override():
+    if os.path.isfile(STORE):
+        with open(STORE, "rb") as store:
+            return pickle.load(store)
+    else:
+        return "default"
+
+def set_override(override):
+    if override in ["powersave", "performance"]:
+        with open(STORE, "wb") as store:
+            pickle.dump(override, store)
+        print(f"Set governor override to {override}")
+    elif override == "reset":
+        if os.path.isfile(STORE):
+            os.remove(STORE)
+        print("Governor override removed")
+    elif override is not None:
+        print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
+
 
 
 # get distro name
@@ -314,14 +337,6 @@ def footer(l=79):
     print("\n" + "-" * l + "\n")
 
 
-def daemon_not_found():
-    print("\n" + "-" * 32 + " Daemon check " + "-" * 33 + "\n")
-    print(
-        "ERROR:\n\nDaemon not enabled, must run install first, i.e: \nsudo auto-cpufreq --install"
-    )
-    footer()
-
-
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
     print("To view live stats, run:\nauto-cpufreq --stats")
@@ -404,7 +419,7 @@ def deploy_daemon_performance():
 
 
 # remove auto-cpufreq daemon
-def remove():
+def remove_daemon():
 
     # check if auto-cpufreq is installed
     if not os.path.exists("/usr/local/bin/auto-cpufreq-remove"):
@@ -425,6 +440,10 @@ def remove():
 
     # remove auto-cpufreq-remove
     os.remove("/usr/local/bin/auto-cpufreq-remove")
+
+    # delete override pickle if it exists
+    if os.path.exists(STORE):
+        os.remove(STORE)
 
     # delete stats file
     if auto_cpufreq_stats_path.exists():
@@ -580,6 +599,8 @@ def set_powersave():
     else:
         gov = get_avail_powersave()
     print(f'Setting to use: "{gov}" governor')
+    if get_override() != "default":
+        print("Warning: governor overwritten using `--force` flag.")
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
     if (
         Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
@@ -786,6 +807,8 @@ def set_performance():
         gov = get_avail_performance()
 
     print(f'Setting to use: "{gov}" governor')
+    if get_override() != "default":
+        print("Warning: governor overwritten using `--force` flag.")
     run(
         f"cpufreqctl.auto-cpufreq --governor --set={gov}",
         shell=True,
@@ -997,7 +1020,12 @@ def set_autofreq():
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
     # determine which governor should be used
-    if charging():
+    override = get_override()
+    if override == "powersave":
+        set_powersave()
+    elif override == "performance":
+        set_performance()
+    elif charging():
         print("Battery is: charging\n")
         set_performance()
     else:
@@ -1149,20 +1177,12 @@ def sysinfo():
         print("\nCPU fan speed:", psutil.sensors_fans()[current_fan][0].current, "RPM")
 
 
-def no_stats_msg():
-    print("\n" + "-" * 29 + " auto-cpufreq stats " + "-" * 30 + "\n")
-    print(
-        'ERROR: auto-cpufreq stats are missing.\n\nMake sure to run: "auto-cpufreq --install" first'
-    )
-
 
 # read stats func
 def read_stats():
     # read stats
     if os.path.isfile(auto_cpufreq_stats_path):
         call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
-    else:
-        no_stats_msg()
     footer()
 
 
@@ -1187,12 +1207,27 @@ def daemon_running_msg():
     )
     footer()
 
+def daemon_not_running_msg():
+    print("\n" + "-" * 24 + " auto-cpufreq not running " + "-" * 30 + "\n")
+    print(
+        "ERROR: auto-cpufreq is not running in daemon mode.\n\nMake sure to run \"sudo auto-cpufreq --install\" first"
+    )
+    footer()
 
 # check if auto-cpufreq --daemon is running
-def running_daemon():
+def running_daemon_check():
     if is_running("auto-cpufreq", "--daemon"):
         daemon_running_msg()
         exit(1)
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
         daemon_running_msg()
+        exit(1)
+
+# check if auto-cpufreq --daemon is not running
+def not_running_daemon_check():
+    if not is_running("auto-cpufreq", "--daemon"):
+        daemon_not_running_msg()
+        exit(1)
+    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
+        daemon_not_running_msg()
         exit(1)

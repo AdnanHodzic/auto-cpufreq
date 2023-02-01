@@ -28,6 +28,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
 * [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-modes-and-options)
     * [monitor](https://github.com/AdnanHodzic/auto-cpufreq/#monitor)
     * [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
+    * [overriding governor](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
     * [Install - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon)
     * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
     * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
@@ -207,7 +208,10 @@ auto-cpufreq should be run with with one of the following options:
 * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
     - View live stats of CPU optimizations made by daemon
 
-* config TEXT
+* [force=TEXT](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
+    - Force use of either the "powersave" or "performance" governor. Setting to "reset" goes back to normal mode
+
+* config=TEXT
     - Use config file at defined path
 
 * debug
@@ -237,6 +241,13 @@ No changes are made to the system, and is solely made for demonstration purposes
 `sudo auto-cpufreq --live`
 
 Necessary changes are temporarily made to the system which are lost with system reboot. This mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
+
+### Overriding governor
+
+`sudo auto-cpufreq --force=governor`
+
+Force use of either "powersave" or "performance" governors. Setting to "reset" will go back to normal mode
+Please note that any set override will persist even after reboot.
 
 ### Install - auto-cpufreq daemon
 
