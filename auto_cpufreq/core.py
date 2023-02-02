@@ -59,7 +59,7 @@ auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
 # track governor override
-STORE = "/opt/auto-cpufreq/venv/override.pickle"
+STORE = "/opt/auto-cpufreq/override.pickle"
 
 if os.getenv("PKG_MARKER") == "SNAP":
     auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
