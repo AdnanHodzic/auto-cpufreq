@@ -256,17 +256,16 @@ def disable_power_profiles_daemon():
 
 # default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():
-
-    # check if snap package installed
-    snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
-    stdout=subprocess.DEVNULL,
-    stderr=subprocess.STDOUT)
-
+    snap_pkg_check = 0
     if systemctl_exists:
         # 0 is active
         if gnome_power_status != 0:
 
             try:
+                # check if snap package installed
+                snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT)
                 # check if snapd is present and if snap package is installed | 0 is success
                 if snap_pkg_check == 0:
                     print("GNOME Power Profiles Daemon is already disabled, it can be re-enabled by running:\n"
@@ -280,7 +279,8 @@ def gnome_power_svc_disable():
             except:
                 # snapd not found on the system
                 print("There was a problem, couldn't determine GNOME Power Profiles Daemon")
-       
+                snap_pkg_check = 0
+
         if gnome_power_status == 0 and powerprofilesctl_exists:
 
             if snap_pkg_check == 1:
