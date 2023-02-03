@@ -129,7 +129,7 @@ def gnome_power_start_live():
 def gnome_power_svc_enable():
     if systemctl_exists:
         try:
-            print("\n* Enabling GNOME power profiles")
+            print("* Enabling GNOME power profiles\n")
             call(["systemctl", "unmask", "power-profiles-daemon"])
             call(["systemctl", "start", "power-profiles-daemon"])
             call(["systemctl", "enable", "power-profiles-daemon"])
@@ -256,95 +256,50 @@ def disable_power_profiles_daemon():
 
 # default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():
-    if systemctl_exists:
-        # set balanced profile if its running before disabling it
-        if gnome_power_status == 0 and powerprofilesctl_exists:
-            print("Using profile: ", "balanced")
-            call(["powerprofilesctl", "set", "balanced"])
 
-            disable_power_profiles_daemon()
-
-# default gnome_power_svc_disable func (performance)
-def gnome_power_svc_disable_performance():
-    if systemctl_exists:
-        # set performance profile if its running before disabling it
-        if gnome_power_status == 0 and powerprofilesctl_exists:
-            print("Using profile: ", "performance")
-            call(["powerprofilesctl", "set", "performance"])
-
-            disable_power_profiles_daemon()
-
-
-# cli
-@click.pass_context
-# external gnome power srevice disable function
-def gnome_power_svc_disable_ext(ctx, power_selection):
-    raw_power_disable = ctx.params["gnome_power_disable"]
-    gnome_power_disable = str(raw_power_disable).replace('[','').replace(']','').replace(",", "").replace("(","").replace(")","").replace("'","")
+    # check if snap package installed
+    snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.STDOUT)
 
     if systemctl_exists:
         # 0 is active
         if gnome_power_status != 0:
 
             try:
-                snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT)
-
                 # check if snapd is present and if snap package is installed | 0 is success
                 if snap_pkg_check == 0:
-                    print("Power Profiles Daemon is already disabled, re-enable by running:\n"
+                    print("GNOME Power Profiles Daemon is already disabled, it can be re-enabled by running:\n"
                     "sudo python3 power_helper.py --gnome_power_enable\n"
-                    "\nfollowed by running:\n"
-                    "sudo python3 power_helper.py --gnome_power_disable"
                     )
-                else:
-                    # snapd present, snap package not installed
-                    print("Power Profiles Daemon is already disabled, first remove auto-cpufreq:\n"
-                    "sudo auto-cpufreq --remove\n"
-                    "\nfollowed by installing auto-cpufreq in performance mode:\n"
-                    "sudo auto-cpufreq --install_performance"
+                elif snap_pkg_check == 1:
+                    print("auto-cpufreq snap package not installed, GNOME Power Profiles Daemon should be enabled:\n"
+                    "sudo python3 power_helper.py --gnome_power_enable"
                     )
 
-            except FileNotFoundError:
+            except:
                 # snapd not found on the system
-                print("Power Profiles Daemon is already disabled, first remove auto-cpufreq:\n"
-                    "sudo auto-cpufreq --remove\n"
-                    "\nfollowed by installing auto-cpufreq in performance mode:\n"
-                    "sudo auto-cpufreq --install_performance"
-                    )
-
-        # set balanced profile if its running before disabling it
+                print("There was a problem, couldn't determine GNOME Power Profiles Daemon")
+       
         if gnome_power_status == 0 and powerprofilesctl_exists:
-            # 0 is success (snap package is installed)
 
-            try:
-                snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT)
-
-                if snap_pkg_check == 0:
-                #if snap_exist == 0 and snap_pkg_install == 0:
-                    print("Using profile: ", gnome_power_disable)
-                    call(["powerprofilesctl", "set", gnome_power_disable])
-
-                    disable_power_profiles_daemon()
-                else:
-                    print("Install auto-cpufreq in performance mode by running:\n"
-                            "sudo auto-cpufreq --install_performance\n"
-                            )
-
-            except FileNotFoundError:
-                print("Install auto-cpufreq in performance mode by running:\n"
-                    "sudo auto-cpufreq --install_performance\n"
+            if snap_pkg_check == 1:
+                    print("auto-cpufreq snap package not installed.\n\nGNOME Power Profiles Daemon should be enabled:\n"
+                    "sudo python3 power_helper.py --gnome_power_enable\n"
                     )
+            else:
+                print("auto-cpufreq snap package installed, GNOME Power Profiles Daemon should be disabled.\n")
+                print("Using profile: ", "balanced")
+                call(["powerprofilesctl", "set", "balanced"])
 
+                disable_power_profiles_daemon()
 
+# cli
 @click.command()
-@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced), reference:\n https://bit.ly/3bjVZW1", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
+#@click.option("--gnome_power_disable", help="Disable GNOME Power profiles service (default: balanced), reference:\n https://bit.ly/3bjVZW1", type=click.Choice(['balanced', 'performance'], case_sensitive=False))
+@click.option("--gnome_power_disable", is_flag=True, help="Disable GNOME Power profiles service")
 # ToDo:
 # * update readme/docs
-@click.option("--power_selection", hidden=True)
 @click.option("--gnome_power_enable", is_flag=True, help="Enable GNOME Power profiles service")
 
 @click.option("--gnome_power_status", is_flag=True, help="Get status of GNOME Power profiles service"
@@ -352,7 +307,6 @@ def gnome_power_svc_disable_ext(ctx, power_selection):
 @click.option("--bluetooth_boot_on", is_flag=True, help="Turn on Bluetooth on boot")
 @click.option("--bluetooth_boot_off", is_flag=True, help="Turn off Bluetooth on boot")
 def main(
-    power_selection,
     gnome_power_enable,
     gnome_power_disable,
     gnome_power_status,
@@ -377,7 +331,7 @@ def main(
         elif gnome_power_disable:
             header()
             root_check()
-            gnome_power_svc_disable_ext(power_selection)
+            gnome_power_svc_disable()
             helper_opts()
             footer()
         elif gnome_power_status:
