@@ -21,7 +21,6 @@ from auto_cpufreq.power_helper import *
 @click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 
-@click.option("--install_performance", is_flag=True, help="Install daemon in \"performance\" mode, reference:\n https://bit.ly/3bjVZW1")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
 @click.option("--get-state", is_flag=True, hidden=True)
@@ -36,7 +35,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, remove, install_performance, live, log, monitor, stats, version, donate, force, get_state):
+def main(config, daemon, debug, install, remove, live, log, monitor, stats, version, donate, force, get_state):
 
     # display info if config file is used
     def config_info_dialog():
@@ -185,18 +184,6 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
             print("Show your appreciation by donating!")
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
             footer()
-        elif install_performance:
-            if os.getenv("PKG_MARKER") == "SNAP":
-                root_check()
-                print("\nThis option is only available on non Snap installs.\n\n"
-                    "Please refer to auto-cpufreq power_helper.py script for more info\n"
-                    "Reference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq\n")
-            else:
-                root_check()
-                running_daemon_check()
-                gov_check()
-                deploy_daemon_performance()
-                deploy_complete_msg()
         elif install:
             if os.getenv("PKG_MARKER") == "SNAP":
                 root_check()
