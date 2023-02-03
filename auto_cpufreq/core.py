@@ -62,7 +62,7 @@ auto_cpufreq_stats_file = None
 if os.getenv("PKG_MARKER") == "SNAP":
     governor_override_state = Path("/var/snap/auto-cpufreq/current/override.pickle")
 else:
-    governor_override_state = Path("/opt/auto-cpufreq/current/override.pickle")
+    governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
 
 if os.getenv("PKG_MARKER") == "SNAP":
     auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
@@ -370,7 +370,6 @@ def deploy_daemon():
     bluetooth_disable()
 
     auto_cpufreq_stats_path.touch(exist_ok=True)
-    governor_override_state.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
