@@ -164,6 +164,7 @@ def main(config, daemon, debug, install, remove, install_performance, live, log,
             python_info()
             print("")
             device_info()
+            print(f"VALUE {governor_override_state_path}")
             if charging():
                 print("Battery is: charging")
             else:

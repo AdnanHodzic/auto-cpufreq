@@ -59,7 +59,10 @@ auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
 # track governor override
-STORE = "/opt/auto-cpufreq/override.pickle"
+if os.getenv("PKG_MARKER") == "SNAP":
+    governor_override_state = Path("/var/snap/auto-cpufreq/current/override.pickle")
+else:
+    governor_override_state = Path("/opt/auto-cpufreq/current/override.pickle")
 
 if os.getenv("PKG_MARKER") == "SNAP":
     auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
@@ -86,20 +89,20 @@ def get_config(config_file=""):
     return get_config.config
 
 def get_override():
-    if os.path.isfile(STORE):
-        with open(STORE, "rb") as store:
+    if os.path.isfile(governor_override_state):
+        with open(governor_override_state, "rb") as store:
             return pickle.load(store)
     else:
         return "default"
 
 def set_override(override):
     if override in ["powersave", "performance"]:
-        with open(STORE, "wb") as store:
+        with open(governor_override_state, "wb") as store:
             pickle.dump(override, store)
         print(f"Set governor override to {override}")
     elif override == "reset":
-        if os.path.isfile(STORE):
-            os.remove(STORE)
+        if os.path.isfile(governor_override_state):
+            os.remove(governor_override_state)
         print("Governor override removed")
     elif override is not None:
         print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
@@ -367,6 +370,7 @@ def deploy_daemon():
     bluetooth_disable()
 
     auto_cpufreq_stats_path.touch(exist_ok=True)
+    governor_override_state.touch(exist_ok=True)
 
     print("\n* Deploy auto-cpufreq install script")
     shutil.copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
@@ -442,8 +446,8 @@ def remove_daemon():
     os.remove("/usr/local/bin/auto-cpufreq-remove")
 
     # delete override pickle if it exists
-    if os.path.exists(STORE):
-        os.remove(STORE)
+    if os.path.exists(governor_override_state):
+        os.remove(governor_override_state)
 
     # delete stats file
     if auto_cpufreq_stats_path.exists():

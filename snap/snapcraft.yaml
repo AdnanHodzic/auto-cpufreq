@@ -43,10 +43,10 @@ plugs:
     interface: system-files
     write:
     - /etc/auto-cpufreq.conf
-   opt-auto-cpufreq:
-    interface: system-files
-    write:
-    - /opt/auto-cpufreq/override.pickle
+  #  opt-auto-cpufreq:
+  #   interface: system-files
+  #   write:
+  #   - /opt/auto-cpufreq/override.pickle
 
 apps:
   auto-cpufreq:
@@ -60,15 +60,16 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - opt-auto-cpufreq
+      - etc-auto-cpufreq-conf
+      # - opt-auto-cpufreq
   service:
     command: usr/bin/snapdaemon
     plugs:
       - cpu-control
       - system-observe
       - hardware-observe
-      - etc-auto-cpufreq
-      - opt-auto-cpufreq
+      - etc-auto-cpufreq-conf
+      # - opt-auto-cpufreq
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
