@@ -132,6 +132,8 @@ Navigate to repo location where `power_helper.py` resides, i.e:
 
 `cd auto-cpufreq/auto_cpufreq`
 
+Make sure to have `psutil` Python library installed before next step, i.e: `sudo python3 -m pip install psutil`
+
 Then disable GNOME Power Profiles Daemon by runing:
 
 `sudo python3 power_helper.py --gnome_power_disable`
