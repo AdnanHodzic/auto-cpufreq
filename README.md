@@ -33,6 +33,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
     * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
 * [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#troubleshooting)
+    * [AUR](https://github.com/AdnanHodzic/auto-cpufreq/#aur)
 * [Discussion](https://github.com/AdnanHodzic/auto-cpufreq/#discussion)
 * [Donate](https://github.com/AdnanHodzic/auto-cpufreq/#donate)
     * [Financial donation](https://github.com/AdnanHodzic/auto-cpufreq/#financial-donation)
@@ -102,7 +103,7 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 ### AUR package (Arch/Manjaro Linux)
 
-*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471).
+*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting] section for solved known issues.
 
 * [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
 (For the latest binary release on github)
@@ -316,6 +317,21 @@ GRUB_CMDLINE_LINUX_DEFAULT="quiet splash initcall_blacklist=amd_pstate_init amd_
 ```
 
 After you are done, run `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/grub.cfg`, if you are using Arch.
+
+### AUR
+
+* The command ```sudo auto-cpufreq --install``` produces error [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471) please don't use it.
+    * This script is supposed to automate the process of enabling auto-cpufreq.service so you need to manually open terminal and type
+    ~~~
+    sudo systemctl enable --now auto-cpufreq.service
+    ~~~
+    for the service to work.
+* If you have Power Profiles Daemon installed you are likely to experience auto-cpufreq.serivce not autostarting after each reboot like the issue [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463). This happens due to it's conflict with power-profile-daemon.service. 
+    * The only known fix for this is to mask the power-profile-daemon.service. So open your terminal and type
+    ~~~
+    sudo systemctl mask power-profiles-daemon.service
+    ~~~
+    Following this command ```enable``` the auto-cpufreq.service if you haven't already.
 
 ## Discussion:
 
