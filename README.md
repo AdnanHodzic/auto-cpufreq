@@ -103,7 +103,7 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 ### AUR package (Arch/Manjaro Linux)
 
-*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting] section for solved known issues.
+*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#aur) section for solved known issues.
 
 * [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
 (For the latest binary release on github)
