@@ -326,7 +326,7 @@ After you are done, run `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/
     sudo systemctl enable --now auto-cpufreq.service
     ~~~
     for the service to work.
-* If you have Power Profiles Daemon installed you are likely to experience auto-cpufreq.serivce not autostarting after each reboot like the issue [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463). This happens due to it's conflict with power-profile-daemon.service. 
+* If you have Power Profiles Daemon installed you are likely to experience auto-cpufreq.service not autostarting after each reboot like the issue [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463). This happens due to it's conflict with power-profile-daemon.service. 
     * The only known fix for this is to mask the power-profile-daemon.service. So open your terminal and type
     ~~~
     sudo systemctl mask power-profiles-daemon.service
