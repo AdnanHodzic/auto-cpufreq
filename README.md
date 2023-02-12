@@ -326,8 +326,8 @@ After you are done, run `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/
     sudo systemctl enable --now auto-cpufreq.service
     ~~~
     for the service to work.
-* If you have Power Profiles Daemon installed you are likely to experience auto-cpufreq.service not autostarting after each reboot like the issue [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463). This happens due to it's conflict with power-profile-daemon.service. 
-    * The only known fix for this is to mask the power-profile-daemon.service. So open your terminal and type
+* Power Profiles Daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However this doesn't happen with AUR package and will lead to problems (i.e: [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
+    * So open your terminal and type
     ~~~
     sudo systemctl mask power-profiles-daemon.service
     ~~~
