@@ -19,7 +19,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Snap store](https://github.com/AdnanHodzic/auto-cpufreq/#snap-store)
     * [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](https://github.com/AdnanHodzic/auto-cpufreq/#aur-package-archmanjaro-linux)
-* [Post Installation]
+* [Post Installation](https://github.com/AdnanHodzic/auto-cpufreq/blob/install_performance_rm/README.md#post-installation)
 * [Configuring auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#configuring-auto-cpufreq)
     * [1: power_helper.py script](https://github.com/AdnanHodzic/auto-cpufreq/#1-power_helperpy-script)
     * [2: auto-cpufreq config file](https://github.com/AdnanHodzic/auto-cpufreq/#2-auto-cpufreq-config-file)
@@ -33,6 +33,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
     * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
 * [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#troubleshooting)
+    * [AUR](https://github.com/AdnanHodzic/auto-cpufreq/#aur)
 * [Discussion](https://github.com/AdnanHodzic/auto-cpufreq/#discussion)
 * [Donate](https://github.com/AdnanHodzic/auto-cpufreq/#donate)
     * [Financial donation](https://github.com/AdnanHodzic/auto-cpufreq/#financial-donation)
@@ -102,7 +103,7 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 ### AUR package (Arch/Manjaro Linux)
 
-*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471).
+*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#aur) section for solved known issues.
 
 * [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
 (For the latest binary release on github)
@@ -114,32 +115,39 @@ After installation `auto-cpufreq` will be available as a binary and you can refe
 
 ## Configuring auto-cpufreq
 
-auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. However, it's possible to perform additional configurations in 2 ways:
+auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. However, it's possible to perform additional configurations:
 
-### 1: power_helper.py script
+### 1: power_helper.py script (Snap package install **only**)
 
-If detected as running, auto-cpufreq will disable [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933), which would otherwise cause conflicts and cause problems.
+When installing auto-cpufreq using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues. 
 
-By default auto-cpufreq uses `balanced` mode which works the best on various systems. However, if you're not reaching maximum frequencies your CPU is capable of with auto-cpufreq ([#361](https://github.com/AdnanHodzic/auto-cpufreq/issues/361)), you can switch to `performance` mode. Which will result in higher frequencies by default, but also results in higher energy use (battery consumption).
-
-If you installed auto-cpufreq using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/edit/master/README.md#auto-cpufreq-installer), you can switch to `performance` mode by running:
-
-`sudo auto-cpufreq --install_performance`
-
-Or if you installed auto-cpufreq using [Snap package](https://github.com/AdnanHodzic/auto-cpufreq/edit/master/README.md#snap-store) you can switch to `performance` mode by running:
-
-`sudo python3 power_helper.py --gnome_power_disable performance`
+However, when auto-cpufreq is installed as Snap package it's running as part of a container with limited permissions to your host machine, hence it's *highly recommended* you disable GNOME Power Profiles Daemon using `power_helper.py` script.
 
 **Please Note:**  
-The `power_helper.py` script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
+The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
 the repository:
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq`
 
+Navigate to repo location where `power_helper.py` resides, i.e:
 
-After this step, all necessary changes will still be made automatically. However, if you wish to perform additional "manual" settings this can be done by following instructions explained in next step.
+`cd auto-cpufreq/auto_cpufreq`
 
-### 2: auto-cpufreq config file
+Make sure to have `psutil` Python library installed before next step, i.e: `sudo python3 -m pip install psutil`
+
+Then disable GNOME Power Profiles Daemon by runing:
+
+`sudo python3 power_helper.py --gnome_power_disable`
+
+### 2: `--force` governor override
+
+By default auto-cpufreq uses `balanced` mode which works the best on various systems and situations. 
+
+However, you can override this behaviour by switching to `performance` or `powersave` mode manually. Performance will result in higher frequencies by default, but also results in higher energy use (battery consumption) and should be used if max performance is necessary. Otherwise `powersave` will do the opposite and extend the battery life to its maximum.
+
+See [`--force` flag](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor) for more info.
+
+### 3: auto-cpufreq config file
 
 You can configure seperate profiles for the battery and power supply. These profiles will let you pick which governor to use, and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
 
@@ -309,6 +317,21 @@ GRUB_CMDLINE_LINUX_DEFAULT="quiet splash initcall_blacklist=amd_pstate_init amd_
 ```
 
 After you are done, run `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/grub.cfg`, if you are using Arch.
+
+### AUR
+
+* The command ```sudo auto-cpufreq --install``` produces error [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471) please don't use it.
+    * This script is supposed to automate the process of enabling auto-cpufreq.service so you need to manually open terminal and type
+    ~~~
+    sudo systemctl enable --now auto-cpufreq.service
+    ~~~
+    for the service to work.
+* Power Profiles Daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However this doesn't happen with AUR package and will lead to problems (i.e: [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
+    * So open your terminal and type
+    ~~~
+    sudo systemctl mask power-profiles-daemon.service
+    ~~~
+    Following this command ```enable``` the auto-cpufreq.service if you haven't already.
 
 ## Discussion:
 

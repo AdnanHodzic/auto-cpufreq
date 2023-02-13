@@ -63,10 +63,18 @@ function install {
   python3 setup.py install --record files.txt
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
+  cp -r images/ /usr/local/share/auto-cpufreq/
+  cp images/icon.png /usr/share/pixmaps/auto-cpufreq.png
+  cp scripts/org.auto-cpufreq.pkexec.policy /usr/share/polkit-1/actions
 
   # this is necessary since we need this script before we can run auto-cpufreq itself
   cp scripts/auto-cpufreq-venv-wrapper /usr/local/bin/auto-cpufreq
+  cp scripts/start_app /usr/local/bin/auto-cpufreq-gtk
   chmod a+x /usr/local/bin/auto-cpufreq
+  chmod a+x /usr/local/bin/auto-cpufreq-gtk
+
+  desktop-file-install --dir=/usr/share/applications scripts/auto-cpufreq-gtk.desktop
+  update-desktop-database /usr/share/applications
 }
 
 # First argument is the distro
@@ -140,7 +148,7 @@ function tool_install {
 separator
 if [ -f /etc/debian_version ]; then
 	detected_distro "Debian based"
-	apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode -y
+	apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode libgirepository1.0-dev libcairo2-dev -y
 	completed
 	complete_msg
 elif [ -f /etc/redhat-release ]; then
@@ -170,12 +178,12 @@ elif [ -f /etc/os-release ];then
 	opensuse)
 		detected_distro "OpenSUSE"
     		echo -e "\nDetected an OpenSUSE distribution\n\nSetting up Python environment\n"
-		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode
+		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel
 		completed
 		;;
 	arch|manjaro|endeavouros|garuda|artix)
 		detected_distro "Arch Linux based"
-		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode
+		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode  gobject-introspection
 		completed
 		;;
 	void)
@@ -208,11 +216,14 @@ function tool_remove {
 
   tool_proc_rm="/usr/local/bin/auto-cpufreq --remove"
   wrapper_script="/usr/local/bin/auto-cpufreq"
+  gui_wrapper_script="/usr/local/bin/auto-cpufreq-gtk"
   unit_file="/etc/systemd/system/auto-cpufreq.service"
   venv_path="/opt/auto-cpufreq"
 
   cpufreqctl="/usr/local/bin/cpufreqctl.auto-cpufreq"
   cpufreqctl_old="/usr/bin/cpufreqctl.auto-cpufreq"
+
+  desktop_file="/usr/share/applications/auto-cpufreq-gtk.desktop"
 
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
@@ -246,9 +257,13 @@ function tool_remove {
   [ -f $stats_file ] && rm $stats_file
   [ -f $unit_file ] && rm $unit_file
   [ -f $wrapper_script ] && rm $wrapper_script
-
+  [ -f $gui_wrapper_script ] && rm $gui_wrapper_script
+  
   [ -f $cpufreqctl ] && rm $cpufreqctl
   [ -f $cpufreqctl_old ] && rm $cpufreqctl_old
+
+  [ -f $desktop_file ] && rm $desktop_file
+  update-desktop-database /usr/share/applications
 
   # remove python virtual environment
   rm -rf "${venv_path}"

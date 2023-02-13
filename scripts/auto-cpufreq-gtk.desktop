@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=auto-cpufreq
+Exec=auto-cpufreq-gtk
+Type=Application
+Terminal=false
+Icon=auto-cpufreq
+Categories=System;

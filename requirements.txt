@@ -2,3 +2,4 @@ setuptools
 psutil
 click
 distro
+PyGObject
