@@ -112,8 +112,8 @@ class SystemStatsLabel(Gtk.Label):
         old_stdout = sys.stdout
         text = StringIO()
         sys.stdout = text
-        sysinfo()
         distro_info()
+        sysinfo()
         self.set_label(text.getvalue())
         sys.stdout = old_stdout
     
@@ -139,6 +139,7 @@ class DropDownMenu(Gtk.MenuButton):
     def __init__(self, parent):
         super().__init__()
         self.set_halign(Gtk.Align.END)
+        self.set_valign(Gtk.Align.START)
         self.image = Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
         self.add(self.image)
         self.menu = self.build_menu(parent)

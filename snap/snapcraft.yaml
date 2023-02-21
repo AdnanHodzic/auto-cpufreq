@@ -23,6 +23,8 @@ parts:
     build-packages:
        - gcc
        - python3-dev
+       - libgirepository1.0-dev
+       - libcairo2-dev
     stage-packages:
        - coreutils
        - dmidecode
