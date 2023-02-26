@@ -53,7 +53,6 @@ class MyWindow(Gtk.Window):
 
         self.hbox.pack_start(self.vbox_right, False, False, 0)
 
-        self.vbox_top.pack_start(self.hbox, False, False, 0)
 
         GLib.timeout_add_seconds(5, self.refresh)
 
