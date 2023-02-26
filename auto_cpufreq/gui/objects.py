@@ -9,10 +9,12 @@ import os
 import platform as pl
 
 sys.path.append("../../")
-from subprocess import getoutput, call
+from subprocess import getoutput, run, PIPE
 from auto_cpufreq.core import sysinfo, distro_info, set_override, get_override, get_formatted_version, dist_name, deploy_daemon, remove_daemon
 
 from io import StringIO
+
+PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
 
 if os.getenv("PKG_MARKER") == "SNAP":
     auto_cpufreq_stats_path = "/var/snap/auto-cpufreq/current/auto-cpufreq.stats"
@@ -32,7 +34,7 @@ def get_version():
         return getoutput("echo \(Snap\) $SNAP_VERSION")
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
-        aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
+        aur_pkg_check = run("pacman -Qs auto-cpufreq > /dev/null", shell=True)
         if aur_pkg_check == 1:
             return get_formatted_version()
         else:
@@ -77,7 +79,10 @@ class RadioButtonView(Gtk.Box):
 
     def on_button_toggled(self, button, override):
         if button.get_active():
-            set_override(override)
+            result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
+            if result.stderr.decode() == PKEXEC_ERROR:
+                self.set_selected()
+                
 
     def set_selected(self):
         override = get_override()
@@ -170,7 +175,9 @@ class DropDownMenu(Gtk.MenuButton):
         confirm.destroy()
         if response == Gtk.ResponseType.YES:
             try:
-                remove_daemon()
+                result = run("pkexec auto-cpufreq --remove", shell=True, stdout=PIPE, stderr=PIPE)
+                if result.stderr.decode() == PKEXEC_ERROR:
+                    raise Exception("Authorization was cancelled")
                 dialog = Gtk.MessageDialog(
                     transient_for=parent,
                     message_type=Gtk.MessageType.INFO,
@@ -250,7 +257,9 @@ class DaemonNotRunningView(Gtk.Box):
 
     def install_daemon(self, button, parent):
         try:
-            deploy_daemon()
+            result = run("pkexec auto-cpufreq --install", shell=True, stdout=PIPE, stderr=PIPE)
+            if result.stderr.decode() == PKEXEC_ERROR:
+                raise Exception("Authorization was cancelled")
             dialog = Gtk.MessageDialog(
                 transient_for=parent,
                 message_type=Gtk.MessageType.INFO,

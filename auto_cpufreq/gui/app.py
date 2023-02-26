@@ -15,7 +15,7 @@ CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
 
 HBOX_PADDING = 20
 
-class MyWindow(Gtk.Window):
+class ToolWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="auto-cpufreq")
         self.set_default_size(600, 480)
@@ -80,8 +80,7 @@ class MyWindow(Gtk.Window):
         return True
 
 
-
-win = MyWindow()
+win = ToolWindow()
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
 GLib.set_application_name("auto-cpufreq")
