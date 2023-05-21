@@ -1135,10 +1135,20 @@ def sysinfo():
     cpu_core = dict()
     freq_per_cpu = []
     for i in range(0, len(coreid_info), 3):
-        freq_per_cpu.append(float(coreid_info[i + 1].split(":")[-1]))
+        # ensure that indices are within the valid range, before accessing the corresponding elements
+        if i + 1 < len(coreid_info):
+            freq_per_cpu.append(float(coreid_info[i + 1].split(":")[-1]))
+        else:
+            # handle the case where the index is out of range
+            continue
+        # ensure that indices are within the valid range, before accessing the corresponding elements
         cpu = int(coreid_info[i].split(":")[-1])
-        core = int(coreid_info[i + 2].split(":")[-1])
-        cpu_core[cpu] = core
+        if i + 2 < len(coreid_info):
+            core = int(coreid_info[i + 2].split(":")[-1])
+            cpu_core[cpu] = core
+        else:
+            # handle the case where the index is out of range
+            continue
 
     online_cpu_count = len(cpu_core)
     offline_cpus = [str(cpu) for cpu in range(total_cpu_count) if cpu not in cpu_core]
