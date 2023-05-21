@@ -1156,8 +1156,19 @@ def sysinfo():
                 cpu_temp_index = core_temp_labels.index(f"Core {core}")
                 temp_per_cpu[i] = core_temp["coretemp"][cpu_temp_index].current
         else:
-            temp = list(psutil.sensors_temperatures())
-            temp_per_cpu = [core_temp[temp[0]][0].current] * online_cpu_count
+            # iterate over all sensors
+            for sensor in core_temp:
+                # iterate over all temperatures in the current sensor
+                for temp in core_temp[sensor]:
+                    if temp.label == 'CPU':
+                        temp_per_cpu = [temp.current] * online_cpu_count
+                        break
+                else:
+                    continue
+                break
+            else: # if 'CPU' label not found in any sensor, use first available temperature
+                temp = list(core_temp.keys())[0]
+                temp_per_cpu = [core_temp[temp][0].current] * online_cpu_count
     except Exception as e:
         print(repr(e))
         pass
