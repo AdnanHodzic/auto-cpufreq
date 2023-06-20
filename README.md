@@ -297,12 +297,12 @@ If the install has been performed as part of snap package, daemon status can be 
 Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq) of auto-cpufreq with fixes and resolved bugs. Manually clone auto-cpufreq to the latest release if this mode is not available in your package(follow [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
 
 Update the package by running:
-'sudo auto-cpufreq --update'
+`sudo auto-cpufreq --update`
 
 This does the equivalent of:
- * 'systemctl stop auto-cpufreq && systemctl disable auto-cpufreq'
+ * `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`
  * Fetching new update and install
- * 'systemctl enable auto-cpufreq'
+ * `systemctl enable auto-cpufreq`
 
 ### Remove - auto-cpufreq daemon
 
