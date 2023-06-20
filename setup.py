@@ -1,5 +1,5 @@
 import os
-
+import requests
 from setuptools import setup
 
 with open("README.md") as readme_file:
@@ -13,7 +13,10 @@ def read(name):
         return f.read()
 
 # Used for the tar.gz/snap releases
-VERSION = "1.9.8"
+latest_release_url = f"https://api.github.com/repos/AdnanHodzic/auto-cpufreq/releases/latest"
+latest_release = requests.get(latest_release_url).json()
+VERSION =  latest_release["tag_name"]
+
 
 setup(
     name="auto-cpufreq",

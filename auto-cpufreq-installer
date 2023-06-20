@@ -81,7 +81,7 @@ function completed () {
   echo -e "\nInstalling necessary Python packages\n"
   setup_venv
   separator
-  echo -e "\ninstalling auto-cpufreq tool\n"
+  echo -e "\n installing auto-cpufreq tool\n"
   install
 }
 
@@ -254,8 +254,52 @@ function tool_remove {
   rm -rf "${venv_path}"
 
   separator
-  echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
+  echo -e "\nauto-cpufreq tool and all its supporting files successfully removed." 
   separator
+}
+function tool_update {
+    # Specify the repository and package name
+    # IT IS IMPORTANT TO NOTE THAT IF THE REPOSITORY STRUCTURE IS CHANGED, THE FOLLOWING FUNCTION NEEDS TO BE UPDATED ACCORDINGLY
+    repository="AdnanHodzic/auto-cpufreq"
+    # Fetch the latest release information from GitHub API
+    latest_release=$(curl -s "https://api.github.com/repos/$repository/releases/latest")
+    # Extract the latest release version without using jq
+    latest_version=$(echo "$latest_release" | grep -o '"tag_name": "[^"]*' | cut -d'"' -f4)
+    # Get the current version of auto-cpufreq
+      #installed_version=$(pip list | awk '/auto-cpufreq/ {print $2}')
+    installed_version=$(grep -oP "(?<=__requires__ = 'auto-cpufreq==)\d+(\.\d+)+" /opt/auto-cpufreq/venv/bin/auto-cpufreq)
+    #Check whether the same is installed or not
+    if [[ -z "$installed_version" ]]; then
+    echo "Current version not found, please install auto-cpufreq first"
+    echo $installed_version
+    sleep 1
+    exit 1
+    fi
+    installed_version="v$installed_version"
+    # Compare the latest version with the installed version and perform update if necessary
+    if [[ "$latest_version" == "$installed_version" ]]; then
+        echo "auto-cpufreq is up to date"
+    else
+        echo -e "Updates are available,\nCurrent version: $installed_version\nLatest version: $latest_version \nNote that your previous custom settings might be \033[1merased\033[0m with the following update \nalong with the \033[1mcurrent\033[0m directory.  "
+        read -p "Do you want to update auto-cpufreq to the latest release? [y/n]: " ans
+        if [[ "$ans" == "y" ]]; then
+           header "Updating auto-cpufreq to the latest release\n"
+            tool_remove
+            echo -e "deleting the current directory\n"
+            script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+            mkdir "$script_directory/../auto-cpufreq $latest_version" && cd $_
+            rm -rf $script_directory
+            echo -e "cloning to the latest release\n"
+            git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+            cd auto-cpufreq
+            separator
+            tool_install
+        else
+            separator
+            echo "Aborting..."
+            sleep 0.5
+        fi
+    fi
 }
 
 function ask_operation {
@@ -264,10 +308,11 @@ function ask_operation {
   			\nOptions:\n"
   read -p \
 "[I]nstall
+[U]pdate
 [R]emove
 [Q]uit
 
-Select a key: [i/r/q]: " answer
+Select a key: [i/u/r/q]: " answer
 }
 # End of functions
 
@@ -279,6 +324,9 @@ else
   case "${1}" in
   "--install")
     answer="i"
+    ;;
+  "--update")
+    answer="u"
     ;;
   "--remove")
     answer="r"
@@ -292,6 +340,8 @@ fi
 case $answer in
 	I|i)
 	tool_install ;;
+  U|u)
+  tool_update ;;
 	R|r)
 	tool_remove ;;
 	Q|q)

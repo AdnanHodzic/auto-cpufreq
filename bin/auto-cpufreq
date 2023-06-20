@@ -18,6 +18,7 @@ from auto_cpufreq.power_helper import *
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
+@click.option("--update", is_flag=True, help="Update daemon and package for (permanent) automatic CPU optimizations")
 @click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 
@@ -35,7 +36,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, remove, live, log, monitor, stats, version, donate, force, get_state):
+def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state):
 
     # display info if config file is used
     def config_info_dialog():
@@ -85,7 +86,9 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
                     set_autofreq()
                     countdown(2)
             else:
-                daemon_not_found()
+                pass
+            #"daemon_not_found" is not defined
+                #daemon_not_found()
         elif monitor:
             config_info_dialog()
             root_check()
@@ -211,7 +214,8 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
                         auto_cpufreq_stats_file.close()
 
                     auto_cpufreq_stats_path.unlink()
-                # ToDo:
+                # ToDo: 
+                # {the following snippet also used in --update, update it there too(if required)}
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
                 remove_complete_msg()
@@ -219,6 +223,31 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
                 root_check()
                 remove_daemon()
                 remove_complete_msg()
+        elif update:
+            verify_update()
+            ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
+            if ans =='y':
+                root_check()
+                if os.getenv("PKG_MARKER") == "SNAP":
+                    run("snapctl set daemon=disabled", shell=True)
+                    run("snapctl stop --disable auto-cpufreq", shell=True)
+                    if auto_cpufreq_stats_path.exists():
+                        if auto_cpufreq_stats_file is not None:
+                            auto_cpufreq_stats_file.close()
+                        auto_cpufreq_stats_path.unlink()
+                # * undo bluetooth boot disable
+                    gnome_power_rm_reminder_snap()
+                    remove_complete_msg()
+                else:
+                    remove_daemon()
+                    remove_complete_msg()
+                new_update()
+                run(["auto-cpufreq", "--install"])
+                print("auto-cpufreq has been updated to the latest release ")
+                app_version()
+            else:
+                print("Aborted")
+            
 
 
 if __name__ == "__main__":
