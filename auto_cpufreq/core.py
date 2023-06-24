@@ -97,6 +97,7 @@ def get_override():
         return "default"
 
 def set_override(override):
+    root_check() # Calling root_check inside if and elif might be too verbose and is susceptible to bugs in future
     if override in ["powersave", "performance"]:
         with open(governor_override_state, "wb") as store:
             pickle.dump(override, store)
