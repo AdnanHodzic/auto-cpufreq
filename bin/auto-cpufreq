@@ -45,7 +45,8 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
     # set governor override unless None or invalid
     if force is not None:
         not_running_daemon_check()
-    set_override(force)
+        root_check() # Calling root_check before set_override as it will require sudo access
+        set_override(force) # Calling set override, only if force has some values
 
     if len(sys.argv) == 1:
  
