@@ -100,6 +100,12 @@ function driver () {
   cat $FLROOT/cpu0/cpufreq/scaling_driver
 }
 
+function write_value () {
+  if [ -w $FLNM ]; then
+    echo $VALUE > $FLNM
+  fi
+}
+
 function set_driver () {
   DRIVER=`driver`
   case $DRIVER in
@@ -136,7 +142,7 @@ function set_governor () {
     while [ $i -ne $cpucount ]
     do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
-      echo $VALUE > $FLNM
+      write_value
       i=`expr $i + 1`
     done
   else
@@ -178,7 +184,7 @@ function set_frequency () {
     while [ $i -ne $cpucount ]
     do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_setspeed"
-      echo $VALUE > $FLNM
+      write_value
       i=`expr $i + 1`
     done
   else
@@ -201,7 +207,7 @@ function set_frequency_min () {
     while [ $i -ne $cpucount ]
     do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_min_freq"
-      echo $VALUE > $FLNM
+      write_value
       i=`expr $i + 1`
     done
   else
@@ -224,7 +230,7 @@ function set_frequency_max () {
     while [ $i -ne $cpucount ]
     do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_max_freq"
-      echo $VALUE > $FLNM
+      write_value
       i=`expr $i + 1`
     done
   else
@@ -276,7 +282,7 @@ function set_energy_performance_preference () {
     while [ $i -ne $cpucount ]
     do
       FLNM="$FLROOT/cpu"$i"/cpufreq/energy_performance_preference"
-      echo $VALUE > $FLNM
+      write_value
       i=`expr $i + 1`
     done
   else
