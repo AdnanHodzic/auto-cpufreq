@@ -13,9 +13,12 @@ def read(name):
         return f.read()
 
 # Used for the tar.gz/snap releases
+'''
+# fetches release version from github
 latest_release_url = f"https://api.github.com/repos/AdnanHodzic/auto-cpufreq/releases/latest"
 latest_release = requests.get(latest_release_url).json()
-VERSION =  latest_release["tag_name"]
+VERSION =  latest_release["tag_name"]'''
+VERSION = "1.9.8"
 
 
 setup(

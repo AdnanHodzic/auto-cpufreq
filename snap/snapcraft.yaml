@@ -20,6 +20,7 @@ parts:
     python-packages:
        - setuptools
        - wheel
+       - requests
     build-packages:
        - gcc
        - python3-dev

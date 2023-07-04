@@ -227,26 +227,22 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         elif update:
             verify_update()
             ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
-            if ans =='y':
+            if ans =='y|Y':
                 root_check()
                 if os.getenv("PKG_MARKER") == "SNAP":
-                    run("snapctl set daemon=disabled", shell=True)
-                    run("snapctl stop --disable auto-cpufreq", shell=True)
-                    if auto_cpufreq_stats_path.exists():
-                        if auto_cpufreq_stats_file is not None:
-                            auto_cpufreq_stats_file.close()
-                        auto_cpufreq_stats_path.unlink()
-                # * undo bluetooth boot disable
-                    gnome_power_rm_reminder_snap()
-                    remove_complete_msg()
+                    print ("Detected auto-cpufreq was installed using snap or AUR package")
+                    run("snap refresh auto-cpufreq")
+                    print("please update using package managers next time, i.e: `sudo snap refresh auto-cpufreq`.")
                 else:
                     remove_daemon()
                     remove_complete_msg()
-                new_update()
+                    new_update()
+                print("enabling daemon")
                 run(["auto-cpufreq", "--install"])
                 print("auto-cpufreq has been updated to the latest release ")
                 app_version()
             else:
+                print("incorrect input\n")
                 print("Aborted")
             
 

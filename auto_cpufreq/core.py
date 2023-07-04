@@ -187,13 +187,13 @@ def new_update():
     home_dir = "/home/" + username
     os.chdir(home_dir)
     current_working_directory = os.getcwd()
-    print(current_working_directory)
     print("Cloning the latest release to the home directory:  ")
     print(os.getcwd())
     run(["git", "clone", "https://github.com/AdnanHodzic/auto-cpufreq.git"])
     os.chdir("auto-cpufreq")
+    print("package cloned to directory ", current_working_directory)
     run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
-    print("enabling daemon")
+        
              
 # return formatted version for a better readability
 def get_formatted_version():

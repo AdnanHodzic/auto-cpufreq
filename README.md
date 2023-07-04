@@ -102,7 +102,7 @@ git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
 ### Update using auto-cpufreq-installer
-* The feature is available in version >= *1.9.9*. If your current version is below the same, Get source code, run installer and follow on screen instructions:
+* The feature is available from version *1.9.8*. If your current version is below the same, Get source code, run installer and follow on screen instructions:
 
 ```
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
@@ -110,7 +110,6 @@ cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
          and choose 'Update' option
 
-* For version >= *1.9.9*, try [--update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
@@ -295,15 +294,22 @@ If the install has been performed as part of snap package, daemon status can be 
 
 ### Update - auto-cpufreq update
 
-Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq) of auto-cpufreq with fixes and resolved bugs. Manually clone auto-cpufreq to the latest release if this mode is not available in your package(follow [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
+Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) of auto-cpufreq with fixes and resolved bugs. 
 
-Update the package by running:
-`sudo auto-cpufreq --update`
+* If auto-cpufreq is not installed using `snapd`:
+    Manually clone auto-cpufreq to the latest release if this mode is not available in your package(follow [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
 
-This does the equivalent of:
- * `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`
- * Fetching new update and install
- * `systemctl enable auto-cpufreq`
+    Update the package by running(available with both snapd and non-snapd packages):
+    `sudo auto-cpufreq --update`
+
+    This does the equivalent of:
+    * `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`
+    * Fetching new update and install
+    * `systemctl enable auto-cpufreq`
+
+* For snap and AUR packages, run:
+    `sudo snap refresh auto-cpufreq`
+    daemon is automatically enabled after `refresh`
 
 ### Remove - auto-cpufreq daemon
 
