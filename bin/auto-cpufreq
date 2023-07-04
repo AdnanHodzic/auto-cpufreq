@@ -227,7 +227,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         elif update:
             verify_update()
             ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
-            if ans =='y|Y':
+            valid_options = ['y', 'Y', 'yes', 'YES', 'Yes']
+            if ans.lower() in valid_options:
                 root_check()
                 if os.getenv("PKG_MARKER") == "SNAP":
                     print ("Detected auto-cpufreq was installed using snap or AUR package")

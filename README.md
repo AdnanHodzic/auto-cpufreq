@@ -32,7 +32,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
     * [overriding governor](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
     * [Install - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon)
-    * [Update - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
+    * [Update - auto-cpufreq update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
     * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
     * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
 * [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#troubleshooting)
@@ -104,12 +104,13 @@ cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ### Update using auto-cpufreq-installer
 * The feature is available from version *1.9.8*. If your current version is below the same, Get source code, run installer and follow on screen instructions:
 
-```
-git clone https://github.com/AdnanHodzic/auto-cpufreq.git
-cd auto-cpufreq && sudo ./auto-cpufreq-installer
-```
-         and choose 'Update' option
+    ```
+    git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+    cd auto-cpufreq && sudo ./auto-cpufreq-installer
+    ```
+        and choose 'Update' option
 
+For further information: [--update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
@@ -297,9 +298,11 @@ If the install has been performed as part of snap package, daemon status can be 
 Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) of auto-cpufreq with fixes and resolved bugs. 
 
 * If auto-cpufreq is not installed using `snapd`:
+
     Manually clone auto-cpufreq to the latest release if this mode is not available in your package(follow [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
 
     Update the package by running(available with both snapd and non-snapd packages):
+
     `sudo auto-cpufreq --update`
 
     This does the equivalent of:
@@ -308,7 +311,9 @@ Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq/relea
     * `systemctl enable auto-cpufreq`
 
 * For snap and AUR packages, run:
+
     `sudo snap refresh auto-cpufreq`
+    
     daemon is automatically enabled after `refresh`
 
 ### Remove - auto-cpufreq daemon
