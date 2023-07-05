@@ -231,7 +231,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             if ans.lower() in valid_options:
                 root_check()
                 if os.getenv("PKG_MARKER") == "SNAP":
-                    print ("Detected auto-cpufreq was installed using snap or AUR package")
+                    print ("Detected auto-cpufreq was installed using snap")
                     run("snap refresh auto-cpufreq")
                     print("please update using package managers next time, i.e: `sudo snap refresh auto-cpufreq`.")
                 else:
