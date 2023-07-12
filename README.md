@@ -12,39 +12,6 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
 
 ## Index
 
-<<<<<<< HEAD
-* [Why do I need auto-cpufreq?](https://github.com/AdnanHodzic/auto-cpufreq/#why-do-i-need-auto-cpufreq)
-    * [Supported architectures and devices](https://github.com/AdnanHodzic/auto-cpufreq/#supported-architectures-and-devices)
-* [Features](https://github.com/AdnanHodzic/auto-cpufreq/#features)
-* [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
-    * [Snap store](https://github.com/AdnanHodzic/auto-cpufreq/#snap-store)
-    * [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer)
-    * [AUR package (Arch/Manjaro Linux)](https://github.com/AdnanHodzic/auto-cpufreq/#aur-package-archmanjaro-linux)
-    * [Update using installer](https://github.com/AdnanHodzic/auto-cpufreq/#update-using-auto-cpufreq-installer)
-* [Post Installation](https://github.com/AdnanHodzic/auto-cpufreq/#post-installation)
-* [Configuring auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#configuring-auto-cpufreq)
-    * [1: power_helper.py script (Snap package install only)](https://github.com/AdnanHodzic/auto-cpufreq/#1-power_helperpy-script-snap-package-install-only)
-    * [2: `--force` governor override](https://github.com/AdnanHodzic/auto-cpufreq/#2---force-governor-override)
-    * [3: auto-cpufreq config file](https://github.com/AdnanHodzic/auto-cpufreq/#3-auto-cpufreq-config-file)
-        * [Example config file contents](https://github.com/AdnanHodzic/auto-cpufreq/#example-config-file-contents)
-* [How to run auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#how-to-run-auto-cpufreq)
-* [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-modes-and-options)
-    * [monitor](https://github.com/AdnanHodzic/auto-cpufreq/#monitor)
-    * [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
-    * [overriding governor](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
-    * [Install - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon)
-    * [Update - auto-cpufreq update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
-    * [Remove - auto-cpufreq daemon](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
-    * [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
-* [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#troubleshooting)
-    * [AUR](https://github.com/AdnanHodzic/auto-cpufreq/#aur)
-* [Discussion](https://github.com/AdnanHodzic/auto-cpufreq/#discussion)
-* [Donate](https://github.com/AdnanHodzic/auto-cpufreq/#donate)
-    * [Financial donation](https://github.com/AdnanHodzic/auto-cpufreq/#financial-donation)
-        * [Paypal](https://github.com/AdnanHodzic/auto-cpufreq/#paypal)
-        * [BitCoin](https://github.com/AdnanHodzic/auto-cpufreq/#bitcoin)
-    * [Code contribution](https://github.com/AdnanHodzic/auto-cpufreq/#code-contribution)
-=======
 * [Why do I need auto-cpufreq?](#why-do-i-need-auto-cpufreq)
     * [Supported architectures and devices](#supported-architectures-and-devices)
 * [Features](#features)
@@ -52,6 +19,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Snap store](#snap-store)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
+    * [Update using installer](#update-using-auto-cpufreq-installer)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
     * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
@@ -64,6 +32,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [live](#live)
     * [overriding governor](#overriding-governor)
     * [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
+    * [Update - auto-cpufreq update](#update---auto-cpufreq-update)
     * [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
     * [stats](#stats)
 * [Troubleshooting](#troubleshooting)
@@ -74,7 +43,6 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
         * [Paypal](#paypal)
         * [BitCoin](#bitcoin)
     * [Code contribution](#code-contribution)
->>>>>>> faf7134cb6e3ced7205f00ec0a0ca8679d1a735f
 
 ## Why do I need auto-cpufreq?
 
@@ -142,7 +110,7 @@ cd auto-cpufreq && sudo ./auto-cpufreq-installer
     ```
         and choose 'Update' option
 
-For further information: [--update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
+For further information: [--update](#update---auto-cpufreq-update)
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
@@ -255,14 +223,10 @@ auto-cpufreq should be run with with one of the following options:
 * [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
     - Install/remove daemon for (permanent) automatic CPU optimizations
 
-<<<<<<< HEAD
-* [update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
+* [update](#update---auto-cpufreq-update)
     - Update the package to the latest release
 
-* [install_performance](https://github.com/AdnanHodzic/auto-cpufreq/#1-power_helperpy-script)
-=======
 * [install_performance](#1-power_helperpy-script)
->>>>>>> faf7134cb6e3ced7205f00ec0a0ca8679d1a735f
     - Install daemon in "performance" mode.
 
 * [stats](#stats)
@@ -335,7 +299,7 @@ Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq/relea
 
 * If auto-cpufreq is not installed using `snapd`:
 
-    Manually clone auto-cpufreq to the latest release if this mode is not available in your package(follow [Installing auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq/#installing-auto-cpufreq)
+    Manually clone auto-cpufreq to the latest release if this mode is not available in your package(follow [Installing auto-cpufreq](#installing-auto-cpufreq)
 
     Update the package by running(available with both snapd and non-snapd packages):
 
