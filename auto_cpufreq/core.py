@@ -19,6 +19,7 @@ from pathlib import Path
 from shutil import which
 from subprocess import getoutput, call, run, check_output, DEVNULL
 import requests
+import re
 
 # execution timestamp used in countdown func
 from datetime import datetime
@@ -171,8 +172,8 @@ def verify_update():
     # Get the current version of auto-cpufreq
         # Extract version number from the output string
     output = check_output(['auto-cpufreq', '--version']).decode('utf-8')
-    version_line = next(line for line in output.split('\n') if line.startswith('auto-cpufreq version'))
-    installed_version = "v" + version_line.split(':')[1].split('(')[0].strip()
+    version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
+    installed_version = "v" + version_line
     #Check whether the same is installed or not
     # Compare the latest version with the installed version and perform update if necessary
     if latest_version == installed_version:
