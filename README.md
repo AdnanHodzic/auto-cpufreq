@@ -12,6 +12,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
 
 ## Index
 
+<<<<<<< HEAD
 * [Why do I need auto-cpufreq?](https://github.com/AdnanHodzic/auto-cpufreq/#why-do-i-need-auto-cpufreq)
     * [Supported architectures and devices](https://github.com/AdnanHodzic/auto-cpufreq/#supported-architectures-and-devices)
 * [Features](https://github.com/AdnanHodzic/auto-cpufreq/#features)
@@ -43,6 +44,37 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
         * [Paypal](https://github.com/AdnanHodzic/auto-cpufreq/#paypal)
         * [BitCoin](https://github.com/AdnanHodzic/auto-cpufreq/#bitcoin)
     * [Code contribution](https://github.com/AdnanHodzic/auto-cpufreq/#code-contribution)
+=======
+* [Why do I need auto-cpufreq?](#why-do-i-need-auto-cpufreq)
+    * [Supported architectures and devices](#supported-architectures-and-devices)
+* [Features](#features)
+* [Installing auto-cpufreq](#installing-auto-cpufreq)
+    * [Snap store](#snap-store)
+    * [auto-cpufreq-installer](#auto-cpufreq-installer)
+    * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
+* [Post Installation](#post-installation)
+* [Configuring auto-cpufreq](#configuring-auto-cpufreq)
+    * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
+    * [2: `--force` governor override](#2---force-governor-override)
+    * [3: auto-cpufreq config file](#3-auto-cpufreq-config-file)
+        * [Example config file contents](#example-config-file-contents)
+* [How to run auto-cpufreq](#how-to-run-auto-cpufreq)
+* [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options)
+    * [monitor](#monitor)
+    * [live](#live)
+    * [overriding governor](#overriding-governor)
+    * [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
+    * [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
+    * [stats](#stats)
+* [Troubleshooting](#troubleshooting)
+    * [AUR](#aur)
+* [Discussion](#discussion)
+* [Donate](#donate)
+    * [Financial donation](#financial-donation)
+        * [Paypal](#paypal)
+        * [BitCoin](#bitcoin)
+    * [Code contribution](#code-contribution)
+>>>>>>> faf7134cb6e3ced7205f00ec0a0ca8679d1a735f
 
 ## Why do I need auto-cpufreq?
 
@@ -88,10 +120,10 @@ auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq)
 sudo snap install auto-cpufreq
 ```
 
-**Please note:** 
+**Please note:**
 * Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` version is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
 
-* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) which doesn't have this issue.
+* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
 
 ### auto-cpufreq-installer
 
@@ -116,7 +148,7 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 
 ### AUR package (Arch/Manjaro Linux)
 
-*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](https://github.com/AdnanHodzic/auto-cpufreq/#aur) section for solved known issues.
+*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](#aur) section for solved known issues.
 
 * [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
 (For the latest binary release on github)
@@ -132,11 +164,11 @@ auto-cpufreq makes all decisions automatically based on various factors like cpu
 
 ### 1: power_helper.py script (Snap package install **only**)
 
-When installing auto-cpufreq using [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues. 
+When installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues.
 
 However, when auto-cpufreq is installed as Snap package it's running as part of a container with limited permissions to your host machine, hence it's *highly recommended* you disable GNOME Power Profiles Daemon using `power_helper.py` script.
 
-**Please Note:**  
+**Please Note:**<br>
 The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
 the repository:
 
@@ -154,11 +186,11 @@ Then disable GNOME Power Profiles Daemon by runing:
 
 ### 2: `--force` governor override
 
-By default auto-cpufreq uses `balanced` mode which works the best on various systems and situations. 
+By default auto-cpufreq uses `balanced` mode which works the best on various systems and situations.
 
 However, you can override this behaviour by switching to `performance` or `powersave` mode manually. Performance will result in higher frequencies by default, but also results in higher energy use (battery consumption) and should be used if max performance is necessary. Otherwise `powersave` will do the opposite and extend the battery life to its maximum.
 
-See [`--force` flag](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor) for more info.
+See [`--force` flag](#overriding-governor) for more info.
 
 ### 3: auto-cpufreq config file
 
@@ -214,25 +246,29 @@ turbo = auto
 ## How to run auto-cpufreq
 auto-cpufreq should be run with with one of the following options:
 
-* [monitor](https://github.com/AdnanHodzic/auto-cpufreq/#monitor)
+* [monitor](#monitor)
     - Monitor and see suggestions for CPU optimizations
 
-* [live](https://github.com/AdnanHodzic/auto-cpufreq/#live)
+* [live](#live)
     - Monitor and make (temp.) suggested CPU optimizations
 
-* [install](https://github.com/AdnanHodzic/auto-cpufreq/#install---auto-cpufreq-daemon) / [remove](https://github.com/AdnanHodzic/auto-cpufreq/#remove---auto-cpufreq-daemon)
+* [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
     - Install/remove daemon for (permanent) automatic CPU optimizations
 
+<<<<<<< HEAD
 * [update](https://github.com/AdnanHodzic/auto-cpufreq/#update---auto-cpufreq-update)
     - Update the package to the latest release
 
 * [install_performance](https://github.com/AdnanHodzic/auto-cpufreq/#1-power_helperpy-script)
+=======
+* [install_performance](#1-power_helperpy-script)
+>>>>>>> faf7134cb6e3ced7205f00ec0a0ca8679d1a735f
     - Install daemon in "performance" mode.
 
-* [stats](https://github.com/AdnanHodzic/auto-cpufreq/#stats)
+* [stats](#stats)
     - View live stats of CPU optimizations made by daemon
 
-* [force=TEXT](https://github.com/AdnanHodzic/auto-cpufreq/#overriding-governor)
+* [force=TEXT](#overriding-governor)
     - Force use of either the "powersave" or "performance" governor. Setting to "reset" goes back to normal mode
 
 * config=TEXT
@@ -244,13 +280,13 @@ auto-cpufreq should be run with with one of the following options:
 * version
     - Show currently installed version
 
-* [donate](https://github.com/AdnanHodzic/auto-cpufreq/#financial-donation)
+* [donate](#financial-donation)
     - To support the project
 
 * help
     - Shows all of the above options
 
-Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-modes-and-options) for more details.
+Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options) for more details.
 
 ## auto-cpufreq modes and options
 
@@ -360,7 +396,7 @@ For AMD users:
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0"
 ```
 
-Once you have made the necessary changes to the GRUB configuration file, you can update it by running `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/grub.cfg` on Arch Linux. On the other hand, for Fedora, you can update the configuration file by running one of the following commands: 
+Once you have made the necessary changes to the GRUB configuration file, you can update it by running `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/grub.cfg` on Arch Linux. On the other hand, for Fedora, you can update the configuration file by running one of the following commands:
 
 ```
     sudo grub2-mkconfig -o /etc/grub2.cfg
@@ -371,8 +407,8 @@ Once you have made the necessary changes to the GRUB configuration file, you can
 ```
 
 ```
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg  
-    # Legacy boot method for grub update. 
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    # Legacy boot method for grub update.
 ```
 
 ### AUR
