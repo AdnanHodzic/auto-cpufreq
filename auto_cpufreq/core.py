@@ -170,7 +170,7 @@ def verify_update():
     latest_version =  latest_release["tag_name"]
 
     # Get the current version of auto-cpufreq
-        # Extract version number from the output string
+    # Extract version number from the output string
     output = check_output(['auto-cpufreq', '--version']).decode('utf-8')
     version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
     installed_version = "v" + version_line
