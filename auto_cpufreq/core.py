@@ -18,6 +18,8 @@ from math import isclose
 from pathlib import Path
 from shutil import which
 from subprocess import getoutput, call, run, check_output, DEVNULL
+import requests
+import re
 
 # execution timestamp used in countdown func
 from datetime import datetime
@@ -159,7 +161,41 @@ def app_version():
         except Exception as e:
             print(repr(e))
             pass
+def verify_update():
+    # Specify the repository and package name
+    # IT IS IMPORTANT TO  THAT IF THE REPOSITORY STRUCTURE IS CHANGED, THE FOLLOWING FUNCTION NEEDS TO BE UPDATED ACCORDINGLY
+    # Fetch the latest release information from GitHub API
+    latest_release_url = f"https://api.github.com/repos/AdnanHodzic/auto-cpufreq/releases/latest"
+    latest_release = requests.get(latest_release_url).json()
+    latest_version =  latest_release["tag_name"]
 
+    # Get the current version of auto-cpufreq
+    # Extract version number from the output string
+    output = check_output(['auto-cpufreq', '--version']).decode('utf-8')
+    version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
+    installed_version = "v" + version_line
+    #Check whether the same is installed or not
+    # Compare the latest version with the installed version and perform update if necessary
+    if latest_version == installed_version:
+        print("auto-cpufreq is up to date")
+        exit(0)
+    else:
+        print(f"Updates are available,\nCurrent version: {installed_version}\nLatest version: {latest_version}")
+        print("Note that your previous custom settings might be erased with the following update")
+    
+def new_update():
+    username = os.getlogin()
+    home_dir = "/home/" + username
+    os.chdir(home_dir)
+    current_working_directory = os.getcwd()
+    print("Cloning the latest release to the home directory:  ")
+    print(os.getcwd())
+    run(["git", "clone", "https://github.com/AdnanHodzic/auto-cpufreq.git"])
+    os.chdir("auto-cpufreq")
+    print("package cloned to directory ", current_working_directory)
+    run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
+        
+             
 # return formatted version for a better readability
 def get_formatted_version():
     literal_version = pkg_resources.require("auto-cpufreq")[0].version
@@ -413,7 +449,8 @@ def deploy_daemon_performance():
 
     # output warning if gnome power profile is running
     gnome_power_detect_install()
-    gnome_power_svc_disable_performance()
+    #"gnome_power_svc_disable_performance" is not defined
+    #gnome_power_svc_disable_performance()
 
     # output warning if TLP service is detected
     tlp_service_detect()
@@ -1255,3 +1292,4 @@ def not_running_daemon_check():
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
         daemon_not_running_msg()
         exit(1)
+

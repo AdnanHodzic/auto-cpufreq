@@ -19,6 +19,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Snap store](#snap-store)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
+    * [Update using installer](#update-using-auto-cpufreq-installer)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
     * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
@@ -31,6 +32,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [live](#live)
     * [overriding governor](#overriding-governor)
     * [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
+    * [Update - auto-cpufreq update](#update---auto-cpufreq-update)
     * [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
     * [stats](#stats)
 * [Troubleshooting](#troubleshooting)
@@ -99,12 +101,22 @@ Get source code, run installer and follow on screen instructions:
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
+### Update using auto-cpufreq-installer
+* The feature is available from version *1.9.8*. If your current version is below the same, Get source code, run installer and follow on screen instructions:
+
+    ```
+    git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+    cd auto-cpufreq && sudo ./auto-cpufreq-installer
+    ```
+        and choose 'Update' option
+
+For further information: [--update](#update---auto-cpufreq-update)
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
 ### AUR package (Arch/Manjaro Linux)
 
-*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](#aur) section for solved known issues.
+*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](#aur) section for solved known issues.
 
 * [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
 (For the latest binary release on github)
@@ -120,11 +132,11 @@ auto-cpufreq makes all decisions automatically based on various factors like cpu
 
 ### 1: power_helper.py script (Snap package install **only**)
 
-When installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues.
+When installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues. 
 
 However, when auto-cpufreq is installed as Snap package it's running as part of a container with limited permissions to your host machine, hence it's *highly recommended* you disable GNOME Power Profiles Daemon using `power_helper.py` script.
 
-**Please Note:**<br>
+**Please Note:**
 The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
 the repository:
 
@@ -211,6 +223,9 @@ auto-cpufreq should be run with with one of the following options:
 * [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
     - Install/remove daemon for (permanent) automatic CPU optimizations
 
+* [update](#update---auto-cpufreq-update)
+    - Update the package to the latest release
+
 * [install_performance](#1-power_helperpy-script)
     - Install daemon in "performance" mode.
 
@@ -277,6 +292,21 @@ Since daemon is running as a systemd service, its status can be seen by running:
 If the install has been performed as part of snap package, daemon status can be verified by running:
 
 `systemctl status snap.auto-cpufreq.service.service`
+
+### Update - auto-cpufreq update
+
+Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) of auto-cpufreq with fixes and resolved bugs. 
+
+    Manually clone auto-cpufreq to the latest release if this mode is not available in your package follow [Installing auto-cpufreq](#installing-auto-cpufreq)
+
+    Update the package by running:
+
+    `sudo auto-cpufreq --update`
+
+    This does the equivalent of:
+    * `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`
+    * Fetching new update and install
+    * `systemctl enable auto-cpufreq`
 
 ### Remove - auto-cpufreq daemon
 
