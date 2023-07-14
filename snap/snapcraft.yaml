@@ -40,10 +40,6 @@ parts:
       snapdaemon.sh: usr/bin/snapdaemon
 
 plugs:
-  network:
-    interface: network 
-    allow-auto-connection: true
-
   etc-auto-cpufreq-conf:
     interface: system-files
     write:
