@@ -40,11 +40,11 @@ parts:
       snapdaemon.sh: usr/bin/snapdaemon
 
 plugs:
-  etc-auto-cpufreq-conf:
+   etc-auto-cpufreq-conf:
     interface: system-files
     write:
     - /etc/auto-cpufreq.conf
-    
+
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq

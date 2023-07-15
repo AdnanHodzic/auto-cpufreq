@@ -102,7 +102,7 @@ git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
 ### Update using auto-cpufreq-installer
-* The feature is available from version *1.9.8*. If your current version is below the same, Get source code, run installer and follow on screen instructions:
+* The feature is available from version *1.9.8*.
 
     ```
     git clone https://github.com/AdnanHodzic/auto-cpufreq.git
@@ -136,7 +136,7 @@ When installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-instal
 
 However, when auto-cpufreq is installed as Snap package it's running as part of a container with limited permissions to your host machine, hence it's *highly recommended* you disable GNOME Power Profiles Daemon using `power_helper.py` script.
 
-**Please Note:**
+**Please Note:**<br>
 The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
 the repository:
 
