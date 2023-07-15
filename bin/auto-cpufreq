@@ -18,6 +18,7 @@ from auto_cpufreq.power_helper import *
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
+@click.option("--update", is_flag=True, help="Update daemon and package for (permanent) automatic CPU optimizations")
 @click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 
@@ -35,7 +36,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, install, remove, live, log, monitor, stats, version, donate, force, get_state):
+def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state):
 
     # display info if config file is used
     def config_info_dialog():
@@ -86,6 +87,8 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
                     set_autofreq()
                     countdown(2)
             else:
+                pass
+            #"daemon_not_found" is not defined
                 daemon_not_found()
         elif monitor:
             config_info_dialog()
@@ -212,7 +215,8 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
                         auto_cpufreq_stats_file.close()
 
                     auto_cpufreq_stats_path.unlink()
-                # ToDo:
+                # ToDo: 
+                # {the following snippet also used in --update, update it there too(if required)}
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
                 remove_complete_msg()
@@ -220,6 +224,32 @@ def main(config, daemon, debug, install, remove, live, log, monitor, stats, vers
                 root_check()
                 remove_daemon()
                 remove_complete_msg()
+        elif update:
+            root_check()
+            if os.getenv("PKG_MARKER") == "SNAP":
+                print("Detected auto-cpufreq was installed using snap")
+                # refresh snap directly using this command
+
+                print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
+                #check for AUR 
+            elif subprocess.run(["bash", "-c", "command -v yay >/dev/null 2>&1"]).returncode == 0 or subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0:
+                print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
+            else:
+                verify_update()
+                ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
+                valid_options = ['y', 'Y', 'yes', 'YES', 'Yes']
+                if ans.lower() in valid_options:
+                    remove_daemon()
+                    remove_complete_msg()
+                    new_update()
+                else:
+                    print("incorrect input\n")
+                    print("Aborted")
+                print("enabling daemon")
+                run(["auto-cpufreq", "--install"])
+                print("auto-cpufreq is installed with the latest version")
+                app_version()
+            
 
 
 if __name__ == "__main__":
