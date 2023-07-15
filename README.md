@@ -102,9 +102,8 @@ git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
 ### Update using auto-cpufreq-installer
-* The feature is available from version *1.9.8*.
 
-For further information: [--update](#update---auto-cpufreq-update)
+The feature is available from version *1.9.8*. For further information: [--update](#update---auto-cpufreq-update)
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
@@ -218,7 +217,7 @@ auto-cpufreq should be run with with one of the following options:
     - Install/remove daemon for (permanent) automatic CPU optimizations
 
 * [update](#update---auto-cpufreq-update)
-    - Update the package to the latest release
+    - Update auto-cpufreq to the latest release
 
 * [install_performance](#1-power_helperpy-script)
     - Install daemon in "performance" mode.
@@ -289,18 +288,9 @@ If the install has been performed as part of snap package, daemon status can be 
 
 ### Update - auto-cpufreq update
 
-Update to the [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) of auto-cpufreq with fixes and resolved bugs. 
+Update functionality works by cloning auto-cpufreq repo to /home directory of currently logged in user, installing it using [auto-cpufreq-installer](#auto-cpufreq-installer) and performing [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) with [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
 
-    Manually clone auto-cpufreq to the latest release if this mode is not available in your package follow [Installing auto-cpufreq](#installing-auto-cpufreq)
-
-    Update the package by running:
-
-    `sudo auto-cpufreq --update`
-
-    This does the equivalent of:
-    * `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`
-    * Fetching new update and install
-    * `systemctl enable auto-cpufreq`
+Update the package by running: `sudo auto-cpufreq --update`
 
 ### Remove - auto-cpufreq daemon
 
