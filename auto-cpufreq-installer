@@ -20,9 +20,9 @@ fi
 
 #separator
 function separator {
-  local COLOUMNS="`tput cols`"
+  local COLUMNS="`tput cols`"
   echo -e "\n"
-  printf "%0.s─" $(seq $COLOUMNS)
+  printf "%0.s─" $(seq $COLUMNS)
   echo -e "\n"
 }
 
@@ -37,8 +37,8 @@ function root_check {
 }
 
 function header {
-	local COLOUMNS="`tput cols`"
-	MID="$((COLOUMNS / 2))"
+	local COLUMNS="`tput cols`"
+	MID="$((COLUMNS / 2))"
 	HEADER="$1"
 	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
 	echo -n " $HEADER "

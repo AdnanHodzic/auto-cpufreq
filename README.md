@@ -142,7 +142,7 @@ Navigate to repo location where `power_helper.py` resides, i.e:
 
 Make sure to have `psutil` Python library installed before next step, i.e: `sudo python3 -m pip install psutil`
 
-Then disable GNOME Power Profiles Daemon by runing:
+Then disable GNOME Power Profiles Daemon by running:
 
 `sudo python3 power_helper.py --gnome_power_disable`
 
@@ -156,7 +156,7 @@ See [`--force` flag](#overriding-governor) for more info.
 
 ### 3: auto-cpufreq config file
 
-You can configure seperate profiles for the battery and power supply. These profiles will let you pick which governor to use, and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
+You can configure separate profiles for the battery and power supply. These profiles will let you pick which governor to use, and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
 
 By default, auto-cpufreq does not use the config file! If you wish to use it, the location where config needs to be placed for it to be read automatically is: `/etc/auto-cpufreq.conf`
 
