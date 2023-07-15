@@ -104,12 +104,6 @@ cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ### Update using auto-cpufreq-installer
 * The feature is available from version *1.9.8*.
 
-    ```
-    git clone https://github.com/AdnanHodzic/auto-cpufreq.git
-    cd auto-cpufreq && sudo ./auto-cpufreq-installer
-    ```
-        and choose 'Update' option
-
 For further information: [--update](#update---auto-cpufreq-update)
 
 In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
