@@ -288,9 +288,11 @@ If the install has been performed as part of snap package, daemon status can be 
 
 ### Update - auto-cpufreq update
 
-Update functionality works by cloning auto-cpufreq repo to /home directory of currently logged in user, installing it using [auto-cpufreq-installer](#auto-cpufreq-installer) and performing [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) with [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
+Update functionality works by cloning auto-cpufreq repo, installing it using [auto-cpufreq-installer](#auto-cpufreq-installer) and performing [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) with [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
 
-Update the package by running: `sudo auto-cpufreq --update`
+Update auto-cpufreq by running: `sudo auto-cpufreq --update`. Latest revision is cloned to default location `/opt/auto-cpufreq/source`, thus maintaining existing dir structure.
+
+Update and clone to custom directory by running: `sudo auto-cpufreq --update --dir /path/to/directory`.
 
 ### Remove - auto-cpufreq daemon
 

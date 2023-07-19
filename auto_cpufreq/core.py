@@ -183,19 +183,14 @@ def verify_update():
         print(f"Updates are available,\nCurrent version: {installed_version}\nLatest version: {latest_version}")
         print("Note that your previous custom settings might be erased with the following update")
     
-def new_update():
-    username = os.getlogin()
-    home_dir = "/home/" + username
-    os.chdir(home_dir)
-    current_working_directory = os.getcwd()
-    print("Cloning the latest release to the home directory:  ")
-    print(os.getcwd())
+def new_update(custom_dir):
+    os.chdir(custom_dir)
+    print(f"Cloning the latest release to {custom_dir}")
     run(["git", "clone", "https://github.com/AdnanHodzic/auto-cpufreq.git"])
     os.chdir("auto-cpufreq")
-    print("package cloned to directory ", current_working_directory)
+    print(f"package cloned to directory {custom_dir}")
     run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
         
-             
 # return formatted version for a better readability
 def get_formatted_version():
     literal_version = pkg_resources.require("auto-cpufreq")[0].version
