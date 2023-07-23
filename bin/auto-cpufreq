@@ -227,11 +227,17 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         elif update:
             root_check()
             custom_dir = "/opt/auto-cpufreq/source"
+            for arg in sys.argv:
+                if arg.startswith("--update="):
+                    custom_dir = arg.split("=")[1]
+                    sys.argv.remove(arg)
+                    
             if "--update" in sys.argv:
                 update = True
                 sys.argv.remove("--update")
                 if len(sys.argv) == 2:
-                    custom_dir = sys.argv[1]        
+                    custom_dir = sys.argv[1] 
+                    
             if os.getenv("PKG_MARKER") == "SNAP":
                 print("Detected auto-cpufreq was installed using snap")
                 # refresh snap directly using this command
@@ -248,10 +254,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 if custom_dir != "/opt/auto-cpufreq/source":
                     if not os.path.exists(custom_dir):
                         input("Directory does not exist, press Enter to create and proceed or ctrl+c to exit")
-                        os.makedirs(custom_dir)
-                    else:
-                        input("Directory already exists, press Enter to overwrite or ctrl+c to exit")
-                        os.rmdir(custom_dir)
                         os.makedirs(custom_dir)
                 else:
                     if os.path.exists(custom_dir):
