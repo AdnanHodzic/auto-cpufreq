@@ -192,6 +192,7 @@ elif [ -f /etc/os-release ];then
 else # In case /etc/os-release doesn't exist
 	manual_install
 fi
+# to clone the repo
 mkdir /opt/auto-cpufreq/source
 }
 
