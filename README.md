@@ -292,7 +292,7 @@ Update functionality works by cloning auto-cpufreq repo, installing it using [au
 
 Update auto-cpufreq by running: `sudo auto-cpufreq --update`. Latest revision is cloned to default location `/opt/auto-cpufreq/source`, thus maintaining existing dir structure.
 
-Update and clone to custom directory by running: `sudo auto-cpufreq --update --dir /path/to/directory`.
+Update and clone to custom directory by running: `sudo auto-cpufreq --update=/path/to/directory`.
 
 ### Remove - auto-cpufreq daemon
 
