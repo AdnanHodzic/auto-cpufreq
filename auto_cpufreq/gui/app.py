@@ -39,7 +39,7 @@ class ToolWindow(Gtk.Window):
         self.hbox.pack_start(self.systemstats, False, False, 0)
         self.add(self.hbox)
 
-        self.vbox_right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        self.vbox_right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=52)
         
         self.menu = DropDownMenu(self)
         self.hbox.pack_end(self.menu, False, False, 0)
@@ -79,9 +79,3 @@ class ToolWindow(Gtk.Window):
         self.cpufreqstats.refresh()
         return True
 
-
-win = ToolWindow()
-win.connect("destroy", Gtk.main_quit)
-win.show_all()
-GLib.set_application_name("auto-cpufreq")
-Gtk.main()
