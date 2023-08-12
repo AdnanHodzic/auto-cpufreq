@@ -51,6 +51,8 @@ def get_version():
 class RadioButtonView(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+        # this keeps track of whether or not the button was toggled by the app or the user to prompt for authorization
+        self.set_by_app = True
 
         self.set_hexpand(True)
         self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -79,9 +81,13 @@ class RadioButtonView(Gtk.Box):
 
     def on_button_toggled(self, button, override):
         if button.get_active():
-            result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
-            if result.stderr.decode() == PKEXEC_ERROR:
-                self.set_selected()
+            if not self.set_by_app:
+                result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
+                if result.stderr.decode() == PKEXEC_ERROR:
+                    self.set_selected()
+            else:
+                self.set_by_app = False
+
                 
 
     def set_selected(self):
