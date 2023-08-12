@@ -4,5 +4,5 @@ Exec=auto-cpufreq-gtk
 Type=Application
 Terminal=false
 Icon=auto-cpufreq
-StartupWMClass=App.py
+StartupWMClass=app.py
 Categories=System;
