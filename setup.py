@@ -40,5 +40,5 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: POSIX :: Linux" "Environment :: Console" "Natural Language :: English",
     ],
-    scripts=["bin/auto-cpufreq", "auto_cpufreq/gui/app.py"],
+    scripts=["bin/auto-cpufreq", "bin/auto-cpufreq-gtk"],
 )
