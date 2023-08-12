@@ -1,6 +1,4 @@
 # * add status as one of the available options
-# * alert user on snap if detected and how to remove first time live/stats message starts
-# * if daemon is disabled and auto-cpufreq is removed (snap) remind user to enable it back
 from logging import root
 import os, sys, click, subprocess
 from subprocess import getoutput, call, run, check_output, DEVNULL
@@ -35,16 +33,15 @@ tlp_stat_exists = does_command_exists("tlp-stat")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
 
 # detect if gnome power profile service is running
-if os.getenv("PKG_MARKER") != "SNAP":
-    if systemctl_exists:
-        try:
-            gnome_power_status = call(
-                ["systemctl", "is-active", "--quiet", "power-profiles-daemon"]
-            )
-        except:
-            print("\nUnable to determine init system")
-            print("If this causes any problems, please submit an issue:")
-            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+if systemctl_exists:
+    try:
+        gnome_power_status = call(
+            ["systemctl", "is-active", "--quiet", "power-profiles-daemon"]
+        )
+    except:
+        print("\nUnable to determine init system")
+        print("If this causes any problems, please submit an issue:")
+        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
 
 # alert in case TLP service is running
 def tlp_service_detect():
@@ -62,14 +59,6 @@ def tlp_service_detect():
             print(
                 "We strongly encourage you to remove TLP unless you really know what you are doing."
             )
-
-
-# alert about TLP when using snap
-def tlp_service_detect_snap():
-    print("\n----------------------------------- Warning -----------------------------------\n")
-    print("Unable to detect if you are using a TLP service!")
-    print("This daemon might interfere with auto-cpufreq which can lead to unexpected results.")
-    print("We strongly encourage you not to use TLP unless you really know what you are doing.")
 
 
 # alert in case gnome power profile service is running
@@ -99,18 +88,6 @@ def gnome_power_detect_install():
             print("This daemon might interfere with auto-cpufreq and has been disabled.\n")
             print('This daemon is not automatically disabled in "monitor" mode and')
             print("will be enabled after auto-cpufreq is removed.\n")
-
-
-# notification on snap
-def gnome_power_detect_snap():
-    print("\n----------------------------------- Warning -----------------------------------\n")
-    print("Unable to detect state of GNOME Power Profiles daemon service!")
-    print("This daemon might interfere with auto-cpufreq and should be disabled.")
-    print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-    print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
-    print("cd auto-cpufreq/auto_cpufreq")
-    print("python3 power_helper.py --gnome_power_disable")
-    print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
 
 
 # stops gnome >= 40 power profiles (live)
@@ -154,8 +131,6 @@ def gnome_power_svc_status():
 
 # disable bluetooth on boot
 def bluetooth_disable():
-    if os.getenv("PKG_MARKER") == "SNAP":
-        bluetooth_notif_snap()
     elif bluetoothctl_exists:
         print("* Turn off bluetooth on boot")
         btconf = Path("/etc/bluetooth/main.conf")
@@ -177,8 +152,6 @@ def bluetooth_disable():
 
 # enable bluetooth on boot
 def bluetooth_enable():
-    if os.getenv("PKG_MARKER") == "SNAP":
-        bluetooth_on_notif_snap()
     if bluetoothctl_exists:
         print("* Turn on bluetooth on boot")
         btconf = "/etc/bluetooth/main.conf"
@@ -198,20 +171,6 @@ def bluetooth_enable():
         )
 
 
-# turn off bluetooth on snap message
-def bluetooth_notif_snap():
-    print("\n* Unable to turn off bluetooth on boot due to Snap package restrictions!")
-    print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-    print("python3 power_helper.py --bluetooth_boot_off")
-
-
-# turn off bluetooth on snap message
-def bluetooth_on_notif_snap():
-    print("\n* Unable to turn on bluetooth on boot due to Snap package restrictions!")
-    print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-    print("python3 power_helper.py --bluetooth_boot_on")
-
-
 # gnome power removal reminder
 def gnome_power_rm_reminder():
     if systemctl_exists:
@@ -221,18 +180,6 @@ def gnome_power_rm_reminder():
             )
             print("Detected GNOME Power Profiles daemon service is stopped!")
             print("This service will now be enabled and started again.")
-
-
-def gnome_power_rm_reminder_snap():
-    print("\n----------------------------------- Warning -----------------------------------\n")
-    print("Unable to detect state of GNOME Power Profiles daemon service!")
-    print("Now it's recommended to enable this service.")
-    print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-    print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
-    print("cd auto-cpufreq/auto_cpufreq")
-    print("python3 power_helper.py --gnome_power_enable")
-    print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
-
 
 
 def valid_options():
@@ -256,43 +203,17 @@ def disable_power_profiles_daemon():
 
 # default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():
-    snap_pkg_check = 0
     if systemctl_exists:
         # 0 is active
         if gnome_power_status != 0:
-
-            try:
-                # check if snap package installed
-                snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT)
-                # check if snapd is present and if snap package is installed | 0 is success
-                if snap_pkg_check == 0:
-                    print("GNOME Power Profiles Daemon is already disabled, it can be re-enabled by running:\n"
-                    "sudo python3 power_helper.py --gnome_power_enable\n"
-                    )
-                elif snap_pkg_check == 1:
-                    print("auto-cpufreq snap package not installed\nGNOME Power Profiles Daemon should be enabled. run:\n\n"
-                    "sudo python3 power_helper.py --gnome_power_enable"
-                    )
-
-            except:
-                # snapd not found on the system
-                print("There was a problem, couldn't determine GNOME Power Profiles Daemon")
-                snap_pkg_check = 0
+            print("GNOME Power Profiles Daemon should be enabled. run:\n\n"
+            "sudo python3 power_helper.py --gnome_power_enable"
+            )
 
         if gnome_power_status == 0 and powerprofilesctl_exists:
-
-            if snap_pkg_check == 1:
-                    print("auto-cpufreq snap package not installed.\nGNOME Power Profiles Daemon should be enabled, run:\n\n"
-                    "sudo python3 power_helper.py --gnome_power_enable"
-                    )
-            else:
-                print("auto-cpufreq snap package installed, GNOME Power Profiles Daemon should be disabled.\n")
-                print("Using profile: ", "balanced")
-                call(["powerprofilesctl", "set", "balanced"])
-
-                disable_power_profiles_daemon()
+            print("GNOME Power Profiles Daemon should be enabled, run:\n\n"
+            "sudo python3 power_helper.py --gnome_power_enable"
+            )
 
 # cli
 @click.command()

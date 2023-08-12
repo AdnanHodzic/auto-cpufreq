@@ -12,7 +12,7 @@ def read(name):
     with open(os.path.join(this, name)) as f:
         return f.read()
 
-# Used for the tar.gz/snap releases
+# Used for the tar.gz releases
 VERSION = "1.9.9"
 
 setup(

@@ -16,15 +16,13 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Supported architectures and devices](#supported-architectures-and-devices)
 * [Features](#features)
 * [Installing auto-cpufreq](#installing-auto-cpufreq)
-    * [Snap store](#snap-store)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
     * [Update using installer](#update-using-auto-cpufreq-installer)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
-    * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
-    * [2: `--force` governor override](#2---force-governor-override)
-    * [3: auto-cpufreq config file](#3-auto-cpufreq-config-file)
+    * [1: `--force` governor override](#2---force-governor-override)
+    * [2: auto-cpufreq config file](#3-auto-cpufreq-config-file)
         * [Example config file contents](#example-config-file-contents)
 * [How to run auto-cpufreq](#how-to-run-auto-cpufreq)
 * [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options)
@@ -80,19 +78,6 @@ Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed t
 
 ## Installing auto-cpufreq
 
-### Snap store
-
-auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
-
-```
-sudo snap install auto-cpufreq
-```
-
-**Please note:**
-* Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` version is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
-
-* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
-
 ### auto-cpufreq-installer
 
 Get source code, run installer and follow on screen instructions:
@@ -123,29 +108,7 @@ After installation `auto-cpufreq` will be available as a binary and you can refe
 
 auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. However, it's possible to perform additional configurations:
 
-### 1: power_helper.py script (Snap package install **only**)
-
-When installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues. 
-
-However, when auto-cpufreq is installed as Snap package it's running as part of a container with limited permissions to your host machine, hence it's *highly recommended* you disable GNOME Power Profiles Daemon using `power_helper.py` script.
-
-**Please Note:**<br>
-The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
-the repository:
-
-`git clone https://github.com/AdnanHodzic/auto-cpufreq`
-
-Navigate to repo location where `power_helper.py` resides, i.e:
-
-`cd auto-cpufreq/auto_cpufreq`
-
-Make sure to have `psutil` Python library installed before next step, i.e: `sudo python3 -m pip install psutil`
-
-Then disable GNOME Power Profiles Daemon by running:
-
-`sudo python3 power_helper.py --gnome_power_disable`
-
-### 2: `--force` governor override
+### 1: `--force` governor override
 
 By default auto-cpufreq uses `balanced` mode which works the best on various systems and situations.
 
@@ -153,7 +116,7 @@ However, you can override this behaviour by switching to `performance` or `power
 
 See [`--force` flag](#overriding-governor) for more info.
 
-### 3: auto-cpufreq config file
+### 2: auto-cpufreq config file
 
 You can configure separate profiles for the battery and power supply. These profiles will let you pick which governor to use, and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
 
@@ -282,10 +245,6 @@ Since daemon is running as a systemd service, its status can be seen by running:
 
 `systemctl status auto-cpufreq`
 
-If the install has been performed as part of snap package, daemon status can be verified by running:
-
-`systemctl status snap.auto-cpufreq.service.service`
-
 ### Update - auto-cpufreq update
 
 Update functionality works by cloning auto-cpufreq repo to /home directory of currently logged in user, installing it using [auto-cpufreq-installer](#auto-cpufreq-installer) and performing [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) with [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
@@ -359,7 +318,7 @@ Once you have made the necessary changes to the GRUB configuration file, you can
     sudo systemctl enable --now auto-cpufreq.service
     ~~~
     for the service to work.
-* Power Profiles Daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However this doesn't happen with AUR package and will lead to problems (i.e: [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
+* Power Profiles Daemon is automatically disabled by auto-cpufreq-installer due to it's conflict with auto-cpufreq.service. However this doesn't happen with AUR package and will lead to problems (i.e: [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
     * So open your terminal and type
     ~~~
     sudo systemctl mask power-profiles-daemon.service

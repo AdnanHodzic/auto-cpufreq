@@ -64,28 +64,16 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             config_info_dialog()
             root_check()
             file_stats()
-            if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-                while True:
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    set_autofreq()
-                    countdown(2)
-            elif os.getenv("PKG_MARKER") != "SNAP":
-                gnome_power_detect()
-                tlp_service_detect()
-                while True:
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    set_autofreq()
-                    countdown(2)
+            gnome_power_detect()
+            tlp_service_detect()
+            while True:
+                footer()
+                gov_check()
+                cpufreqctl()
+                distro_info()
+                sysinfo()
+                set_autofreq()
+                countdown(2)
             else:
                 pass
             #"daemon_not_found" is not defined
@@ -94,12 +82,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             config_info_dialog()
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
-            if os.getenv("PKG_MARKER") == "SNAP":
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-            else:
-                gnome_power_detect()
-                tlp_service_detect()
+            gnome_power_detect()
+            tlp_service_detect()
             while True:
                 time.sleep(1)
                 running_daemon_check()
@@ -115,13 +99,9 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             config_info_dialog()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
             time.sleep(1)
-            if os.getenv("PKG_MARKER") == "SNAP":
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-            else:
-                gnome_power_detect_install()
-                gnome_power_stop_live()
-                tlp_service_detect()
+            gnome_power_detect_install()
+            gnome_power_stop_live()
+            tlp_service_detect()
             while True:
                 try:
                     running_daemon_check()
@@ -140,12 +120,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             not_running_daemon_check()
             config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
-            if os.getenv("PKG_MARKER") == "SNAP":
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-            else:
-                gnome_power_detect()
-                tlp_service_detect()
+            gnome_power_detect()
+            tlp_service_detect()
             read_stats()
         elif log:
             deprecated_log_msg()
@@ -189,50 +165,19 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
             footer()
         elif install:
-            if os.getenv("PKG_MARKER") == "SNAP":
-                root_check()
-                running_daemon_check()
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-                bluetooth_notif_snap()
-                gov_check()
-                run("snapctl set daemon=enabled", shell=True)
-                run("snapctl start --enable auto-cpufreq", shell=True)
-                deploy_complete_msg()
-            else:
-                root_check()
-                running_daemon_check()
-                gov_check()
-                deploy_daemon()
-                deploy_complete_msg()
+            root_check()
+            running_daemon_check()
+            gov_check()
+            deploy_daemon()
+            deploy_complete_msg()
         elif remove:
-            if os.getenv("PKG_MARKER") == "SNAP":
-                root_check()
-                run("snapctl set daemon=disabled", shell=True)
-                run("snapctl stop --disable auto-cpufreq", shell=True)
-                if auto_cpufreq_stats_path.exists():
-                    if auto_cpufreq_stats_file is not None:
-                        auto_cpufreq_stats_file.close()
-
-                    auto_cpufreq_stats_path.unlink()
-                # ToDo: 
-                # {the following snippet also used in --update, update it there too(if required)}
-                # * undo bluetooth boot disable
-                gnome_power_rm_reminder_snap()
-                remove_complete_msg()
-            else:
-                root_check()
-                remove_daemon()
-                remove_complete_msg()
+            root_check()
+            remove_daemon()
+            remove_complete_msg()
         elif update:
             root_check()
-            if os.getenv("PKG_MARKER") == "SNAP":
-                print("Detected auto-cpufreq was installed using snap")
-                # refresh snap directly using this command
-
-                print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
-                #check for AUR 
-            elif subprocess.run(["bash", "-c", "command -v yay >/dev/null 2>&1"]).returncode == 0 or subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0:
+            #check for AUR 
+            if subprocess.run(["bash", "-c", "command -v yay >/dev/null 2>&1"]).returncode == 0 or subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0:
                 print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 verify_update()

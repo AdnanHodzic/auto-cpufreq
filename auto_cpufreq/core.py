@@ -61,18 +61,9 @@ auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
 # track governor override
-if os.getenv("PKG_MARKER") == "SNAP":
-    governor_override_state = Path("/var/snap/auto-cpufreq/current/override.pickle")
-else:
-    governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
+governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
 
-if os.getenv("PKG_MARKER") == "SNAP":
-    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
-else:
-    auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
-
-# daemon check
-dcheck = getoutput("snapctl get daemon")
+auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
 
 
 def file_stats():
@@ -118,21 +109,10 @@ except PermissionError:
     # Current work-around for Pop!_OS where symlink causes permission issues
     print("[!] Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
-            # Check if using a Snap 
-            if os.getenv("PKG_MARKER") == "SNAP":
-                print("[!] Snap install on PopOS detected, you must manually run the following" 
-                        " commands in another terminal:\n")            
-                print("[!] Backup the /etc/os-release file:")
-                print("sudo mv /etc/os-release /etc/os-release-backup\n")                
-                print("[!] Create hardlink to /etc/os-release:")
-                print("sudo ln /etc/pop-os/os-release /etc/os-release\n")            
-                print("[!] Aborting. Restart auto-cpufreq when you created the hardlink")
-                sys.exit(1)
-            else:
-                # This should not be the case. But better be sure.
-                print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
-                print("[!] Aborting...")
-                sys.exit(1)
+            # This should not be the case. But better be sure.
+            print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
+            print("[!] Aborting...")
+            sys.exit(1)
 
     else:
         print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
@@ -144,9 +124,6 @@ def app_version():
 
     print("auto-cpufreq version: ", end="")
 
-    # snap package
-    if os.getenv("PKG_MARKER") == "SNAP":
-        print(getoutput("echo \(Snap\) $SNAP_VERSION"))
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
@@ -351,25 +328,17 @@ def cpufreqctl():
     deploy cpufreqctl script
     """
 
-    # detect if running on a SNAP
-    if os.getenv("PKG_MARKER") == "SNAP":
-        pass
-    else:
-        # deploy cpufreqctl.auto-cpufreq script
-        if not os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
-            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
+    # deploy cpufreqctl.auto-cpufreq script
+    if not os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
+        shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
 
 
 def cpufreqctl_restore():
     """
     remove cpufreqctl.auto-cpufreq script
     """
-    # detect if running on a SNAP
-    if os.getenv("PKG_MARKER") == "SNAP":
-        pass
-    else:
-        if os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
-            os.remove("/usr/local/bin/cpufreqctl.auto-cpufreq")
+    if os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
+        os.remove("/usr/local/bin/cpufreqctl.auto-cpufreq")
 
 
 def footer(l=79):
@@ -1109,26 +1078,9 @@ def distro_info():
     dist = "UNKNOWN distro"
     version = "UNKNOWN version"
 
-    # get distro information in snap env.
-    if os.getenv("PKG_MARKER") == "SNAP":
-        try:
-            with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
-                for line in searchfile:
-                    if line.startswith("NAME="):
-                        dist = line[5 : line.find("$")].strip('"')
-                        continue
-                    elif line.startswith("VERSION="):
-                        version = line[8 : line.find("$")].strip('"')
-                        continue
-        except PermissionError as e:
-            print(repr(e))
-            pass
-
-        dist = f"{dist} {version}"
-    else:
-        # get distro information
-        fdist = distro.linux_distribution()
-        dist = " ".join(x for x in fdist)
+    # get distro information
+    fdist = distro.linux_distribution()
+    dist = " ".join(x for x in fdist)
 
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
@@ -1280,16 +1232,10 @@ def running_daemon_check():
     if is_running("auto-cpufreq", "--daemon"):
         daemon_running_msg()
         exit(1)
-    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
-        daemon_running_msg()
-        exit(1)
 
 # check if auto-cpufreq --daemon is not running
 def not_running_daemon_check():
     if not is_running("auto-cpufreq", "--daemon"):
-        daemon_not_running_msg()
-        exit(1)
-    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
         daemon_not_running_msg()
         exit(1)
 
