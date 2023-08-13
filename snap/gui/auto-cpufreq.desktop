@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=auto-cpufreq
+Comment=Automatic CPU speed & power optimizer for Linux
+Exec=auto-cpufreq-gtk
+StartupWMClass=app.py
+Terminal=false
+Icon=${SNAP}/meta/gui/auto-cpufreq.png
+Categories=System;

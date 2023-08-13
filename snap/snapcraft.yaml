@@ -62,12 +62,17 @@ apps:
       - etc-auto-cpufreq-conf
   auto-cpufreq-gtk:
     command: bin/auto-cpufreq-gtk
+    #desktop: usr/share/applications/auto-cpufreq.desktop
     environment:
       PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
     plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
       - cpu-control
       - system-observe
       - hardware-observe
