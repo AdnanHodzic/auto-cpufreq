@@ -29,6 +29,9 @@ from auto_cpufreq.power_helper import *
 
 warnings.filterwarnings("ignore")
 
+# add path to auto-cpufreq executables for GUI
+os.environ["PATH"] += ":/usr/local/bin"
+
 # ToDo:
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 

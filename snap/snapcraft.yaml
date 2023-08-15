@@ -24,6 +24,8 @@ parts:
     build-packages:
        - gcc
        - python3-dev
+       - libgirepository1.0-dev
+       - libcairo2-dev
     stage-packages:
        - coreutils
        - dmidecode
@@ -48,6 +50,18 @@ plugs:
 apps:
   auto-cpufreq:
     command: bin/auto-cpufreq
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      PKG_MARKER: SNAP
+    plugs:
+      - cpu-control
+      - system-observe
+      - hardware-observe
+      - etc-auto-cpufreq-conf
+  auto-cpufreq-gtk:
+    command: bin/auto-cpufreq-gtk
     environment:
       PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       LC_ALL: C.UTF-8
