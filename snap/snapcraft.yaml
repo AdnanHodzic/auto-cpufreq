@@ -34,6 +34,25 @@ parts:
       snapcraftctl pull
       snapcraftctl set-version `grep ^VERSION $SNAPCRAFT_PART_SRC/setup.py | sed 's/.*"\(.*\)"/\1/'`
 
+  auto-cpufreq-gtk:
+    plugin: python
+    python-packages:
+       - setuptools
+       - wheel
+       - requests
+    build-packages:
+       - gcc
+       - python3-dev
+       - libgirepository1.0-dev
+       - libcairo2-dev
+    stage-packages:
+       - coreutils
+       - dmidecode
+    source: .
+    # override-pull: |
+    #   snapcraftctl pull
+    #   snapcraftctl set-version `grep ^VERSION $SNAPCRAFT_PART_SRC/setup.py | sed 's/.*"\(.*\)"/\1/'`
+
   deploy-scripts:
     plugin: dump
     source: scripts
@@ -41,11 +60,11 @@ parts:
       cpufreqctl.sh: usr/bin/cpufreqctl.auto-cpufreq
       snapdaemon.sh: usr/bin/snapdaemon
 
-  deploy-auto-cpufreq-gtk:
-    plugin: dump
-    source: bin
-    organize:
-      auto-cpufreq-gtk: usr/bin/auto-cpufreq-gtk
+  # deploy-auto-cpufreq-gtk:
+  #   plugin: dump
+  #   source: bin
+  #   organize:
+  #     auto-cpufreq-gtk: usr/bin/auto-cpufreq-gtk
 
 plugs:
    etc-auto-cpufreq-conf:
