@@ -41,6 +41,12 @@ parts:
       cpufreqctl.sh: usr/bin/cpufreqctl.auto-cpufreq
       snapdaemon.sh: usr/bin/snapdaemon
 
+  deploy-auto-cpufreq-gtk:
+    plugin: dump
+    source: bin
+    organize:
+      auto-cpufreq-gtk: usr/bin/auto-cpufreq-gtk
+
 plugs:
    etc-auto-cpufreq-conf:
     interface: system-files
