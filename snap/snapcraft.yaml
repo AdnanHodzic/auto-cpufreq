@@ -24,8 +24,6 @@ parts:
     build-packages:
        - gcc
        - python3-dev
-       - libgirepository1.0-dev
-       - libcairo2-dev
     stage-packages:
        - coreutils
        - dmidecode
@@ -34,25 +32,6 @@ parts:
       snapcraftctl pull
       snapcraftctl set-version `grep ^VERSION $SNAPCRAFT_PART_SRC/setup.py | sed 's/.*"\(.*\)"/\1/'`
 
-  auto-cpufreq-gtk:
-    plugin: python
-    python-packages:
-       - setuptools
-       - wheel
-       - requests
-    build-packages:
-       - gcc
-       - python3-dev
-       - libgirepository1.0-dev
-       - libcairo2-dev
-    stage-packages:
-       - coreutils
-       - dmidecode
-    source: .
-    # override-pull: |
-    #   snapcraftctl pull
-    #   snapcraftctl set-version `grep ^VERSION $SNAPCRAFT_PART_SRC/setup.py | sed 's/.*"\(.*\)"/\1/'`
-
   deploy-scripts:
     plugin: dump
     source: scripts
@@ -60,11 +39,9 @@ parts:
       cpufreqctl.sh: usr/bin/cpufreqctl.auto-cpufreq
       snapdaemon.sh: usr/bin/snapdaemon
 
-  # deploy-auto-cpufreq-gtk:
-  #   plugin: dump
-  #   source: bin
-  #   organize:
-  #     auto-cpufreq-gtk: usr/bin/auto-cpufreq-gtk
+  copy-image:
+    plugin: dump
+    source: images
 
 plugs:
    etc-auto-cpufreq-conf:
@@ -85,9 +62,10 @@ apps:
       - system-observe
       - hardware-observe
       - etc-auto-cpufreq-conf
+
   auto-cpufreq-gtk:
     command: bin/auto-cpufreq-gtk
-    #desktop: usr/share/applications/auto-cpufreq.desktop
+    extensions: [gnome]
     environment:
       PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       LC_ALL: C.UTF-8
@@ -101,14 +79,13 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - etc-auto-cpufreq-conf
+
   service:
     command: usr/bin/snapdaemon
     plugs:
       - cpu-control
       - system-observe
       - hardware-observe
-      - etc-auto-cpufreq-conf
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8

@@ -11,7 +11,12 @@ sys.path.append("../")
 from auto_cpufreq.core import is_running
 from auto_cpufreq.gui.objects import RadioButtonView, SystemStatsLabel, CPUFreqStatsLabel, CurrentGovernorBox, DropDownMenu, DaemonNotRunningView
 
-CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
+if os.getenv("PKG_MARKER") == "SNAP":
+    ICON_FILE = "/snap/auto-cpufreq/current/icon.png"
+    CSS_FILE = "/snap/auto-cpufreq/current/style.css"
+else:
+    ICON_FILE = "/usr/local/share/auto-cpufreq/images/icon.png"
+    CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
 
 HBOX_PADDING = 20
 
@@ -22,7 +27,7 @@ class ToolWindow(Gtk.Window):
         self.set_border_width(10)
         self.set_resizable(False)
         self.load_css()
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filename="/usr/local/share/auto-cpufreq/images/icon.png", width=500, height=500, preserve_aspect_ratio=True)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=ICON_FILE, width=500, height=500, preserve_aspect_ratio=True)
         self.set_icon(pixbuf)
         self.build()
 
