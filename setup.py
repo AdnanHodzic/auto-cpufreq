@@ -13,7 +13,7 @@ def read(name):
         return f.read()
 
 # Used for the tar.gz/snap releases
-VERSION = "1.9.8"
+VERSION = "1.9.9"
 
 setup(
     name="auto-cpufreq",
@@ -29,7 +29,7 @@ setup(
     author="Adnan Hodzic",
     author_email="adnan@hodzic.org",
     url="https://github.com/AdnanHodzic/auto-cpufreq",
-    packages=["auto_cpufreq"],
+    packages=["auto_cpufreq", "auto_cpufreq/gui"],
     install_requires=read("requirements.txt"),
     include_package_data=True,
     zip_safe=True,
@@ -40,5 +40,5 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: POSIX :: Linux" "Environment :: Console" "Natural Language :: English",
     ],
-    scripts=["bin/auto-cpufreq"],
+    scripts=["bin/auto-cpufreq", "bin/auto-cpufreq-gtk"],
 )
