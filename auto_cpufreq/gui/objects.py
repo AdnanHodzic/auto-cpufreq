@@ -266,6 +266,8 @@ class DaemonNotRunningView(Gtk.Box):
             result = run("pkexec auto-cpufreq --install", shell=True, stdout=PIPE, stderr=PIPE)
             if result.stderr.decode() == PKEXEC_ERROR:
                 raise Exception("Authorization was cancelled")
+            elif result.stderr is not None:
+                raise Exception(result.stderr.decode())
             dialog = Gtk.MessageDialog(
                 transient_for=parent,
                 message_type=Gtk.MessageType.INFO,
