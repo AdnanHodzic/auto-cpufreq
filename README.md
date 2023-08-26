@@ -351,6 +351,27 @@ Once you have made the necessary changes to the GRUB configuration file, you can
     # Legacy boot method for grub update.
 ```
 
+For systemd-boot users:
+
+```
+    sudo nano /etc/kernel/cmdline
+    # make sure you have nano installed, or you can use your favorite text editor.
+```
+
+For Intel users:
+
+```
+quiet splash intel_pstate=disable
+```
+
+For AMD users:
+
+```
+quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0
+```
+
+Once you have made the necessary changes to the cmdline file, you can update it by running `sudo reinstall-kernels`.
+
 ### AUR
 
 * The command ```sudo auto-cpufreq --install``` produces error [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471) please don't use it.
