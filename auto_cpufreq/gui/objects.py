@@ -52,8 +52,6 @@ def get_version():
 class RadioButtonView(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
-        # this keeps track of whether or not the button was toggled by the app or the user to prompt for authorization
-        self.set_by_app = True
 
         self.set_hexpand(True)
         self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -70,6 +68,9 @@ class RadioButtonView(Gtk.Box):
         self.performance.connect("toggled", self.on_button_toggled, "performance")
         self.performance.set_halign(Gtk.Align.END)
         
+
+        # this keeps track of whether or not the button was toggled by the app or the user to prompt for authorization
+        self.set_by_app = True
         self.set_selected()
 
         self.pack_start(self.label, False, False, 0)
@@ -99,6 +100,9 @@ class RadioButtonView(Gtk.Box):
             case "performance":
                 self.performance.set_active(True)
             case "default":
+                # because this is the default button, it does not trigger the callback when set by the app
+                if self.set_by_app:
+                    self.set_by_app = False
                 self.default.set_active(True)
 
 class CurrentGovernorBox(Gtk.Box):
