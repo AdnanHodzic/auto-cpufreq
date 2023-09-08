@@ -6,6 +6,7 @@ from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf
 
 import os
 import sys
+from threading import Thread
 
 sys.path.append("../")
 from auto_cpufreq.core import is_running
@@ -59,7 +60,7 @@ class ToolWindow(Gtk.Window):
         self.hbox.pack_start(self.vbox_right, False, False, 0)
 
 
-        GLib.timeout_add_seconds(5, self.refresh)
+        GLib.timeout_add_seconds(5, self.refresh_in_thread)
 
     def daemon_not_running(self):
         self.box = DaemonNotRunningView(self)
@@ -78,9 +79,12 @@ class ToolWindow(Gtk.Window):
         self.gtk_context.add_provider_for_screen(screen, self.gtk_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.gtk_provider.load_from_file(Gio.File.new_for_path(CSS_FILE))
 
-    def refresh(self):
+    def refresh_in_thread(self):
+        Thread(target=self._refresh).start()
+        return True
+
+    def _refresh(self):
         self.systemstats.refresh()
         self.currentgovernor.refresh()
         self.cpufreqstats.refresh()
-        return True
 

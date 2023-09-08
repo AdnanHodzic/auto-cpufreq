@@ -7,6 +7,7 @@ from gi.repository import Gtk, GdkPixbuf
 import sys
 import os
 import platform as pl
+from threading import Thread
 
 sys.path.append("../../")
 from subprocess import getoutput, run, PIPE
@@ -181,7 +182,8 @@ class DropDownMenu(Gtk.MenuButton):
         confirm.destroy()
         if response == Gtk.ResponseType.YES:
             try:
-                result = run("pkexec auto-cpufreq --remove", shell=True, stdout=PIPE, stderr=PIPE)
+                # run in thread to prevent GUI from hanging
+                result = Thread(target=run, args=("pkexec auto-cpufreq --remove",), kwargs={"shell": True, "stdout": PIPE, "stderr": PIPE}).start()
                 if result.stderr.decode() == PKEXEC_ERROR:
                     raise Exception("Authorization was cancelled")
                 dialog = Gtk.MessageDialog(
@@ -263,7 +265,8 @@ class DaemonNotRunningView(Gtk.Box):
 
     def install_daemon(self, button, parent):
         try:
-            result = run("pkexec auto-cpufreq --install", shell=True, stdout=PIPE, stderr=PIPE)
+            # run in thread to prevent GUI from hanging
+            result = Thread(target=run, args=("pkexec auto-cpufreq --install",), kwargs={"shell": True, "stdout": PIPE, "stderr": PIPE}).start()
             if result.stderr.decode() == PKEXEC_ERROR:
                 raise Exception("Authorization was cancelled")
             elif result.stderr is not None:
