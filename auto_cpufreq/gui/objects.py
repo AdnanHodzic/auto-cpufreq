@@ -78,9 +78,6 @@ class RadioButtonView(Gtk.Box):
         self.pack_start(self.powersave, True, True, 0)
         self.pack_start(self.performance, True, True, 0)
 
-        #self.pack_start(self.label, False, False, 0)
-        #self.pack_start(self.hbox, False, False, 0)
-
     def on_button_toggled(self, button, override):
         if button.get_active():
             if not self.set_by_app:
@@ -220,7 +217,6 @@ class AboutDialog(Gtk.Dialog):
         super().__init__(title="About", transient_for=parent)
         app_version = get_version()
         self.box = self.get_content_area()
-        # self.box.set_homogeneous(True)
         self.box.set_spacing(10)
         self.add_button("Close", Gtk.ResponseType.CLOSE)
         self.set_default_size(400, 350)

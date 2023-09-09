@@ -33,10 +33,6 @@ class ToolWindow(Gtk.Window):
         self.build()
 
     def main(self):
-        # self.vbox_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        # self.vbox_top.set_valign(Gtk.Align.CENTER)
-        # self.vbox_top.set_halign(Gtk.Align.CENTER)
-        #self.add(self.vbox_top)
 
         # Main HBOX
         self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=HBOX_PADDING)
