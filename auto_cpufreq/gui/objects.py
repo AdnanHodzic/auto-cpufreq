@@ -279,8 +279,9 @@ class DaemonNotRunningView(Gtk.Box):
                 result = future.result()
             if result.stderr.decode() == PKEXEC_ERROR:
                 raise Exception("Authorization was cancelled")
-            elif result.stderr is not None:
-                raise Exception(result.stderr.decode())
+            # enable for debug. causes issues if kept
+            # elif result.stderr is not None:
+            #     raise Exception(result.stderr.decode())
             dialog = Gtk.MessageDialog(
                 transient_for=parent,
                 message_type=Gtk.MessageType.INFO,
