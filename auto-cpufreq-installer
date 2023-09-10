@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
