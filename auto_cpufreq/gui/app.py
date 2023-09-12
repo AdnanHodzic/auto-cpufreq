@@ -58,12 +58,28 @@ class ToolWindow(Gtk.Window):
 
         GLib.timeout_add_seconds(5, self.refresh_in_thread)
 
+    def snap(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+
+        label = Gtk.Label(label="GUI not available due to Snap package confinement limitations.\nPlease install auto-cpufreq using auto-cpufreq-installer\nVisit the GitHub repo for more info")
+        label.set_justify(Gtk.Justification.CENTER)
+        button = Gtk.LinkButton.new_with_label(
+            uri="https://github.com/AdnanHodzic/auto-cpufreq",
+            label="GitHub Repo"
+        )
+        
+        box.pack_start(label, False, False, 0)
+        box.pack_start(button, False, False, 0)
+        self.add(box)
+
     def daemon_not_running(self):
         self.box = DaemonNotRunningView(self)
         self.add(self.box)
 
     def build(self):
-        if is_running("auto-cpufreq", "--daemon"):
+        if os.getenv("PKG_MARKER") == "SNAP":
+            self.snap()
+        elif is_running("auto-cpufreq", "--daemon"):
             self.main()
         else:
             self.daemon_not_running()
