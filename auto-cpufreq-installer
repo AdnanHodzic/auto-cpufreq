@@ -191,6 +191,11 @@ elif [ -f /etc/os-release ];then
     		xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode cairo-devel gobject-introspection gcc gtk+3
 		completed
 		;;
+  nixos)
+    echo -e "NixOS detected\n"
+    echo -e "This installer is not supported on NixOS.\nPlease refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
+    exit 1
+    ;;
 	*) #Any other distro
 	manual_install
 	completed

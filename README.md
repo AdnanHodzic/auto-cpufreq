@@ -19,6 +19,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Snap store](#snap-store)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
+    * [NixOS](#nixos)
     * [Update using installer](#update-using-auto-cpufreq-installer)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
@@ -115,6 +116,81 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 (For the latest binary release on github)
 * [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git)
 (For the latest commits/changes)
+
+### NixOS
+
+<details>
+<summary>Flakes</summary>
+<br>
+
+This repo contains a flake that exposes a NixOS Module that manages and offers options for auto-cpufreq. To use it, add the flake as an input to your `flake.nix` file, and enable the module
+
+```nix 
+# flake.nix
+
+{
+
+    inputs = {
+        # ---Snip---
+        auto-cpufreq = {
+            url = "github:adnanhodzic/auto-cpufreq/nix";
+            inputs.nixpkgs.follows = "nixpkgs";
+        };
+        # ---Snip---
+    }
+
+    outputs = {nixpkgs, auto-cpufreq, ...} @ inputs: {
+        nixosConfigurations.HOSTNAME = nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs; };
+            modules = [
+                ./configuration.nix
+                auto-cpufreq.nixosModules.default
+            ];
+        };
+    } 
+}
+```
+Then you can enable the program in your `configuration.nix` file
+```nix
+# configuration.nix
+
+{inputs, pkgs, ...}: {
+    # ---Snip---
+    programs.auto-cpufreq.enable = true;
+    # optionally, you can configure your auto-cpufreq settings, if you have any
+    programs.auto-cpufreq.settings = {
+    charger = {
+      governor = "performance";
+      turbo = "auto";
+    };
+
+    battery = {
+      governor = "powersave";
+      turbo = "auto";
+    };
+  };
+    # ---Snip---
+}
+```
+</details>
+
+<details>
+<summary>Nixpkgs</summary>
+<br>
+
+There is a nixpkg available but it is more prone to being outdated whereas the flake pulls from the latest commit. You can install it in your `configuration.nix` and enable the system service
+```nix
+# configuration.nix
+
+# ---Snip---
+environment.systemPackages = with pkgs; [
+    auto-cpufreq
+];
+
+services.auto-cpufreq.enable = true;
+# ---Snip---
+```
+</details>
 
 ## Post Installation
 After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for more information on how to run and configure `auto-cpufreq`.
