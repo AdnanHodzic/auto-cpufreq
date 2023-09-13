@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # auto-cpufreq daemon install script
 # reference: https://github.com/AdnanHodzic/auto-cpufreq

@@ -24,6 +24,8 @@ parts:
     build-packages:
        - gcc
        - python3-dev
+       - libgirepository1.0-dev
+       - libcairo2-dev
     stage-packages:
        - coreutils
        - dmidecode
@@ -62,24 +64,18 @@ apps:
       - system-observe
       - hardware-observe
       - etc-auto-cpufreq-conf
-
   auto-cpufreq-gtk:
     command: bin/auto-cpufreq-gtk
-    extensions: [gnome]
     environment:
       PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
       PKG_MARKER: SNAP
     plugs:
-      - desktop
-      - desktop-legacy
-      - wayland
-      - x11
       - cpu-control
       - system-observe
       - hardware-observe
-
+      - etc-auto-cpufreq-conf
   service:
     command: usr/bin/snapdaemon
     plugs:
