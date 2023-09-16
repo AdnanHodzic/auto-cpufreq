@@ -81,7 +81,21 @@ Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed t
 
 ## Installing auto-cpufreq
 
+### auto-cpufreq-installer
+
+Get source code, run installer and follow on screen instructions:
+
+```
+git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+cd auto-cpufreq && sudo ./auto-cpufreq-installer
+```
+#### Update using auto-cpufreq-installer
+
+The feature is available from version *1.9.8*. For further information: [--update](#update---auto-cpufreq-update)
+
 ### Snap store
+
+*Please note: due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579) please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*
 
 auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
 
@@ -93,20 +107,6 @@ sudo snap install auto-cpufreq
 * Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` version is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
 
 * Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
-
-### auto-cpufreq-installer
-
-Get source code, run installer and follow on screen instructions:
-
-```
-git clone https://github.com/AdnanHodzic/auto-cpufreq.git
-cd auto-cpufreq && sudo ./auto-cpufreq-installer
-```
-### Update using auto-cpufreq-installer
-
-The feature is available from version *1.9.8*. For further information: [--update](#update---auto-cpufreq-update)
-
-In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
 
 ### AUR package (Arch/Manjaro Linux)
 

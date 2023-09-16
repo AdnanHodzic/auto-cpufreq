@@ -60,7 +60,7 @@ class ToolWindow(Gtk.Window):
 
     def snap(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
-        # reference: https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579/12
+        # reference: https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579
         label = Gtk.Label(label="GUI not available due to Snap package confinement limitations.\nPlease install auto-cpufreq using auto-cpufreq-installer\nVisit the GitHub repo for more info")
         label.set_justify(Gtk.Justification.CENTER)
         button = Gtk.LinkButton.new_with_label(
