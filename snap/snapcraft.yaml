@@ -41,6 +41,10 @@ parts:
       cpufreqctl.sh: usr/bin/cpufreqctl.auto-cpufreq
       snapdaemon.sh: usr/bin/snapdaemon
 
+  copy-image:
+    plugin: dump
+    source: images
+
 plugs:
    etc-auto-cpufreq-conf:
     interface: system-files
@@ -78,7 +82,6 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - etc-auto-cpufreq-conf
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
