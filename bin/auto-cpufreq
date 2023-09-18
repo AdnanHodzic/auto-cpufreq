@@ -7,7 +7,7 @@
 # core import
 import sys
 import time
-import click
+from click import UsageError
 from subprocess import call, run
 
 sys.path.append("../")
@@ -18,8 +18,8 @@ from auto_cpufreq.power_helper import *
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
-@click.option("--update", is_flag=True, help="Update daemon and package for (permanent) automatic CPU optimizations")
 @click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
+@click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
@@ -89,7 +89,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             else:
                 pass
             #"daemon_not_found" is not defined
-                daemon_not_found()
+                #daemon_not_found()
         elif monitor:
             config_info_dialog()
             root_check()
@@ -226,9 +226,22 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 remove_complete_msg()
         elif update:
             root_check()
+            custom_dir = "/opt/auto-cpufreq/source"
+            for arg in sys.argv:
+                if arg.startswith("--update="):
+                    custom_dir = arg.split("=")[1]
+                    sys.argv.remove(arg)
+                    
+            if "--update" in sys.argv:
+                update = True
+                sys.argv.remove("--update")
+                if len(sys.argv) == 2:
+                    custom_dir = sys.argv[1] 
+                    
             if os.getenv("PKG_MARKER") == "SNAP":
                 print("Detected auto-cpufreq was installed using snap")
                 # refresh snap directly using this command
+                # path wont work in this case
 
                 print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
                 #check for AUR 
@@ -238,19 +251,21 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 verify_update()
                 ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
                 valid_options = ['y', 'Y', 'yes', 'YES', 'Yes']
+                if not os.path.exists(custom_dir):
+                    os.makedirs(custom_dir)
+                if os.path.exists(os.path.join(custom_dir, "auto-cpufreq")):
+                    shutil.rmtree(os.path.join(custom_dir, "auto-cpufreq"))
                 if ans.lower() in valid_options:
                     remove_daemon()
                     remove_complete_msg()
-                    new_update()
+                    new_update(custom_dir)
+                    print("enabling daemon")
+                    run(["auto-cpufreq", "--install"])
+                    print("auto-cpufreq is installed with the latest version")
+                    run(["auto-cpufreq", "--version"])
                 else:
                     print("incorrect input\n")
                     print("Aborted")
-                print("enabling daemon")
-                run(["auto-cpufreq", "--install"])
-                print("auto-cpufreq is installed with the latest version")
-                app_version()
-            
-
 
 if __name__ == "__main__":
     main()
