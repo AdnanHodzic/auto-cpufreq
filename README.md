@@ -89,9 +89,6 @@ Get source code, run installer and follow on screen instructions:
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
-#### Update using auto-cpufreq-installer
-
-The feature is available from version *1.9.8*. For further information: [--update](#update---auto-cpufreq-update)
 
 ### Snap store
 
