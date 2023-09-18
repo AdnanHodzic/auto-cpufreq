@@ -104,6 +104,9 @@ def gnome_power_detect_install():
 # notification on snap
 def gnome_power_detect_snap():
     print("\n----------------------------------- Warning -----------------------------------\n")
+    print("Due to Snap package confinement limitations please consider installing auto-cpufreq using")
+    print("auto-cpufreq-installer: https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer")
+    print("")
     print("Unable to detect state of GNOME Power Profiles daemon service!")
     print("This daemon might interfere with auto-cpufreq and should be disabled.")
     print("\nSteps to perform this action using auto-cpufreq: power_helper script:")

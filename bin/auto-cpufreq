@@ -245,7 +245,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
 
                 print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
                 #check for AUR 
-            elif subprocess.run(["bash", "-c", "command -v yay >/dev/null 2>&1"]).returncode == 0 or subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0:
+            elif subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0 and subprocess.run(["bash", "-c", "pacman -Q auto-cpufreq >/dev/null 2>&1"]).returncode == 0:
                 print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 verify_update()

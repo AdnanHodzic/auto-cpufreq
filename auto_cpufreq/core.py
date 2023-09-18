@@ -1189,31 +1189,34 @@ def sysinfo():
     offline_cpus = [str(cpu) for cpu in range(total_cpu_count) if cpu not in cpu_core]
 
     # temperatures
-    core_temp = psutil.sensors_temperatures()
+    temp_sensors = psutil.sensors_temperatures()
     temp_per_cpu = [float("nan")] * online_cpu_count
     try:
-        if "coretemp" in core_temp:
+        # the priority for CPU temp is as follows: coretemp sensor -> sensor with CPU in the label -> acpi -> k10temp
+        if "coretemp" in temp_sensors:
             # list labels in 'coretemp'
-            core_temp_labels = [temp.label for temp in core_temp["coretemp"]]
+            core_temp_labels = [temp.label for temp in temp_sensors["coretemp"]]
             for i, cpu in enumerate(cpu_core):
-                # get correct index in core_temp
+                # get correct index in temp_sensors
                 core = cpu_core[cpu]
                 cpu_temp_index = core_temp_labels.index(f"Core {core}")
-                temp_per_cpu[i] = core_temp["coretemp"][cpu_temp_index].current
+                temp_per_cpu[i] = temp_sensors["coretemp"][cpu_temp_index].current
         else:
             # iterate over all sensors
-            for sensor in core_temp:
+            for sensor in temp_sensors:
                 # iterate over all temperatures in the current sensor
-                for temp in core_temp[sensor]:
-                    if temp.label == 'CPU':
+                for temp in temp_sensors[sensor]:
+                    if 'CPU' in temp.label:
                         temp_per_cpu = [temp.current] * online_cpu_count
                         break
                 else:
                     continue
                 break
-            else: # if 'CPU' label not found in any sensor, use first available temperature
-                temp = list(core_temp.keys())[0]
-                temp_per_cpu = [core_temp[temp][0].current] * online_cpu_count
+            else:
+                if "acpitz" in temp_sensors:
+                    temp_per_cpu = [temp_sensors["acpitz"][0].current] * online_cpu_count
+                elif "k10temp" in temp_sensors:
+                    temp_per_cpu = [temp_sensors["k10temp"][0].current] * online_cpu_count
     except Exception as e:
         print(repr(e))
         pass

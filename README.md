@@ -19,6 +19,7 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Snap store](#snap-store)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
+    * [NixOS](#nixos)
     * [Update using installer](#update-using-auto-cpufreq-installer)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
@@ -80,7 +81,21 @@ Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed t
 
 ## Installing auto-cpufreq
 
+### auto-cpufreq-installer
+
+Get source code, run installer and follow on screen instructions:
+
+```
+git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+cd auto-cpufreq && sudo ./auto-cpufreq-installer
+```
+#### Update using auto-cpufreq-installer
+
+The feature is available from version *1.9.8*. For further information: [--update](#update---auto-cpufreq-update)
+
 ### Snap store
+
+*Please note: due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579) please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*
 
 auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
 
@@ -93,20 +108,6 @@ sudo snap install auto-cpufreq
 
 * Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
 
-### auto-cpufreq-installer
-
-Get source code, run installer and follow on screen instructions:
-
-```
-git clone https://github.com/AdnanHodzic/auto-cpufreq.git
-cd auto-cpufreq && sudo ./auto-cpufreq-installer
-```
-### Update using auto-cpufreq-installer
-
-The feature is available from version *1.9.8*. For further information: [--update](#update---auto-cpufreq-update)
-
-In case you encounter any problems with `auto-cpufreq-installer`, please [submit a bug report](https://github.com/AdnanHodzic/auto-cpufreq/issues/new).
-
 ### AUR package (Arch/Manjaro Linux)
 
 *AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](#aur) section for solved known issues.
@@ -115,6 +116,81 @@ In case you encounter any problems with `auto-cpufreq-installer`, please [submit
 (For the latest binary release on github)
 * [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git)
 (For the latest commits/changes)
+
+### NixOS
+
+<details>
+<summary>Flakes</summary>
+<br>
+
+This repo contains a flake that exposes a NixOS Module that manages and offers options for auto-cpufreq. To use it, add the flake as an input to your `flake.nix` file, and enable the module
+
+```nix 
+# flake.nix
+
+{
+
+    inputs = {
+        # ---Snip---
+        auto-cpufreq = {
+            url = "github:adnanhodzic/auto-cpufreq/nix";
+            inputs.nixpkgs.follows = "nixpkgs";
+        };
+        # ---Snip---
+    }
+
+    outputs = {nixpkgs, auto-cpufreq, ...} @ inputs: {
+        nixosConfigurations.HOSTNAME = nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs; };
+            modules = [
+                ./configuration.nix
+                auto-cpufreq.nixosModules.default
+            ];
+        };
+    } 
+}
+```
+Then you can enable the program in your `configuration.nix` file
+```nix
+# configuration.nix
+
+{inputs, pkgs, ...}: {
+    # ---Snip---
+    programs.auto-cpufreq.enable = true;
+    # optionally, you can configure your auto-cpufreq settings, if you have any
+    programs.auto-cpufreq.settings = {
+    charger = {
+      governor = "performance";
+      turbo = "auto";
+    };
+
+    battery = {
+      governor = "powersave";
+      turbo = "auto";
+    };
+  };
+    # ---Snip---
+}
+```
+</details>
+
+<details>
+<summary>Nixpkgs</summary>
+<br>
+
+There is a nixpkg available but it is more prone to being outdated whereas the flake pulls from the latest commit. You can install it in your `configuration.nix` and enable the system service
+```nix
+# configuration.nix
+
+# ---Snip---
+environment.systemPackages = with pkgs; [
+    auto-cpufreq
+];
+
+services.auto-cpufreq.enable = true;
+# ---Snip---
+```
+</details>
 
 ## Post Installation
 After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for more information on how to run and configure `auto-cpufreq`.
@@ -352,6 +428,27 @@ Once you have made the necessary changes to the GRUB configuration file, you can
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
     # Legacy boot method for grub update.
 ```
+
+For systemd-boot users:
+
+```
+    sudo nano /etc/kernel/cmdline
+    # make sure you have nano installed, or you can use your favorite text editor.
+```
+
+For Intel users:
+
+```
+quiet splash intel_pstate=disable
+```
+
+For AMD users:
+
+```
+quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0
+```
+
+Once you have made the necessary changes to the cmdline file, you can update it by running `sudo reinstall-kernels`.
 
 ### AUR
 

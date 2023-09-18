@@ -7,6 +7,7 @@ from gi.repository import Gtk, GdkPixbuf
 import sys
 import os
 import platform as pl
+from concurrent.futures import ThreadPoolExecutor
 
 sys.path.append("../../")
 from subprocess import getoutput, run, PIPE
@@ -76,9 +77,6 @@ class RadioButtonView(Gtk.Box):
         self.pack_start(self.default, True, True, 0)
         self.pack_start(self.powersave, True, True, 0)
         self.pack_start(self.performance, True, True, 0)
-
-        #self.pack_start(self.label, False, False, 0)
-        #self.pack_start(self.hbox, False, False, 0)
 
     def on_button_toggled(self, button, override):
         if button.get_active():
@@ -185,7 +183,11 @@ class DropDownMenu(Gtk.MenuButton):
         confirm.destroy()
         if response == Gtk.ResponseType.YES:
             try:
-                result = run("pkexec auto-cpufreq --remove", shell=True, stdout=PIPE, stderr=PIPE)
+                # run in thread to prevent GUI from hanging
+                with ThreadPoolExecutor() as executor:
+                    kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
+                    future = executor.submit(run, "pkexec auto-cpufreq --remove", **kwargs)
+                    result = future.result()
                 if result.stderr.decode() == PKEXEC_ERROR:
                     raise Exception("Authorization was cancelled")
                 dialog = Gtk.MessageDialog(
@@ -215,7 +217,6 @@ class AboutDialog(Gtk.Dialog):
         super().__init__(title="About", transient_for=parent)
         app_version = get_version()
         self.box = self.get_content_area()
-        # self.box.set_homogeneous(True)
         self.box.set_spacing(10)
         self.add_button("Close", Gtk.ResponseType.CLOSE)
         self.set_default_size(400, 350)
@@ -267,9 +268,16 @@ class DaemonNotRunningView(Gtk.Box):
 
     def install_daemon(self, button, parent):
         try:
-            result = run("pkexec auto-cpufreq --install", shell=True, stdout=PIPE, stderr=PIPE)
+            # run in thread to prevent GUI from hanging
+            with ThreadPoolExecutor() as executor:
+                kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
+                future = executor.submit(run, "pkexec auto-cpufreq --install", **kwargs)
+                result = future.result()
             if result.stderr.decode() == PKEXEC_ERROR:
                 raise Exception("Authorization was cancelled")
+            # enable for debug. causes issues if kept
+            # elif result.stderr is not None:
+            #     raise Exception(result.stderr.decode())
             dialog = Gtk.MessageDialog(
                 transient_for=parent,
                 message_type=Gtk.MessageType.INFO,

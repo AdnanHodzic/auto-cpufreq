@@ -24,11 +24,10 @@ parts:
     build-packages:
        - gcc
        - python3-dev
-       - libgirepository1.0-dev
-       - libcairo2-dev
     stage-packages:
        - coreutils
        - dmidecode
+       - pkexec
     source: .
     override-pull: |
       snapcraftctl pull
@@ -40,6 +39,10 @@ parts:
     organize:
       cpufreqctl.sh: usr/bin/cpufreqctl.auto-cpufreq
       snapdaemon.sh: usr/bin/snapdaemon
+
+  copy-image:
+    plugin: dump
+    source: images
 
 plugs:
    etc-auto-cpufreq-conf:
@@ -60,8 +63,10 @@ apps:
       - system-observe
       - hardware-observe
       - etc-auto-cpufreq-conf
+
   auto-cpufreq-gtk:
     command: bin/auto-cpufreq-gtk
+    extensions: [gnome]
     environment:
       PYTHONPATH: $SNAP/usr/lib/python3/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       LC_ALL: C.UTF-8
@@ -71,14 +76,16 @@ apps:
       - cpu-control
       - system-observe
       - hardware-observe
-      - etc-auto-cpufreq-conf
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
   service:
     command: usr/bin/snapdaemon
     plugs:
       - cpu-control
       - system-observe
       - hardware-observe
-      - etc-auto-cpufreq-conf
     environment:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
