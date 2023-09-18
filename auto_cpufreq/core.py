@@ -169,13 +169,23 @@ def verify_update():
     # IT IS IMPORTANT TO  THAT IF THE REPOSITORY STRUCTURE IS CHANGED, THE FOLLOWING FUNCTION NEEDS TO BE UPDATED ACCORDINGLY
     # Fetch the latest release information from GitHub API
     latest_release_url = f"https://api.github.com/repos/AdnanHodzic/auto-cpufreq/releases/latest"
-    latest_release = requests.get(latest_release_url).json()
+    try:
+        latest_release = requests.get(latest_release_url).json()
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+            requests.exceptions.RequestException, requests.exceptions.HTTPError) as err:
+        print ("Error Connecting to server!")
+        exit(1)
+
     latest_version =  latest_release["tag_name"]
 
     # Get the current version of auto-cpufreq
     # Extract version number from the output string
     output = check_output(['auto-cpufreq', '--version']).decode('utf-8')
-    version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
+    try:
+        version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
+    except AttributeError:
+        print("Error Retrieving Current Version!")
+        exit(1)
     installed_version = "v" + version_line
     #Check whether the same is installed or not
     # Compare the latest version with the installed version and perform update if necessary
@@ -193,7 +203,7 @@ def new_update(custom_dir):
     os.chdir("auto-cpufreq")
     print(f"package cloned to directory {custom_dir}")
     run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
-        
+
 # return formatted version for a better readability
 def get_formatted_version():
     literal_version = pkg_resources.require("auto-cpufreq")[0].version
