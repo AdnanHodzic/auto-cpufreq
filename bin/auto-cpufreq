@@ -251,16 +251,10 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 verify_update()
                 ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
                 valid_options = ['y', 'Y', 'yes', 'YES', 'Yes']
-                if custom_dir != "/opt/auto-cpufreq/source":
-                    if not os.path.exists(custom_dir):
-                        input("Directory does not exist, press Enter to create and proceed or ctrl+c to exit")
-                        os.makedirs(custom_dir)
-                else:
-                    if os.path.exists(custom_dir):
-                        os.rmdir(custom_dir)
-                        os.makedirs(custom_dir)
-                    else:
-                        os.makedirs(custom_dir)            
+                if not os.path.exists(custom_dir):
+                    os.makedirs(custom_dir)
+                if os.path.exists(os.path.join(custom_dir, "auto-cpufreq")):
+                    shutil.rmtree(os.path.join(custom_dir, "auto-cpufreq"))
                 if ans.lower() in valid_options:
                     remove_daemon()
                     remove_complete_msg()
@@ -268,7 +262,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     print("enabling daemon")
                     run(["auto-cpufreq", "--install"])
                     print("auto-cpufreq is installed with the latest version")
-                    app_version()
+                    run(["auto-cpufreq", "--version"])
                 else:
                     print("incorrect input\n")
                     print("Aborted")
