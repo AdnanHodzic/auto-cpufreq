@@ -20,7 +20,6 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
     * [NixOS](#nixos)
-    * [Update using installer](#update-using-auto-cpufreq-installer)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
     * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
