@@ -249,13 +249,12 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 verify_update()
-                ans = input ("Do you want to update auto-cpufreq to the latest release? [y/n]: ")
-                valid_options = ['y', 'Y', 'yes', 'YES', 'Yes']
+                ans = input("Do you want to update auto-cpufreq to the latest release? [Y/n]: ").strip().lower()
                 if not os.path.exists(custom_dir):
                     os.makedirs(custom_dir)
                 if os.path.exists(os.path.join(custom_dir, "auto-cpufreq")):
                     shutil.rmtree(os.path.join(custom_dir, "auto-cpufreq"))
-                if ans.lower() in valid_options:
+                if ans in ['', 'y', 'yes']:
                     remove_daemon()
                     remove_complete_msg()
                     new_update(custom_dir)
@@ -264,7 +263,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     print("auto-cpufreq is installed with the latest version")
                     run(["auto-cpufreq", "--version"])
                 else:
-                    print("incorrect input\n")
                     print("Aborted")
 
 if __name__ == "__main__":
