@@ -6,6 +6,14 @@ For tl;dr folks there's a: [Youtube: auto-cpufreq - tool demo](https://www.youtu
 
 [![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg)
 
+Example of auto-cpufreq GUI (available >= v2.0)
+
+<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-v2-gui.png" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+
+Example of `auto-cpufreq --stats` CLI output
+
+<img src="https://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-CLI.png" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+
 ## Looking for developers and co-maintainers
 
 auto-cpufreq is looking for [co-maintainers & open source developers to help shape future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
@@ -287,6 +295,10 @@ auto-cpufreq should be run with with one of the following options:
 
 * [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
     - Install/remove daemon for (permanent) automatic CPU optimizations
+ 
+* [install (GUI)](#install---auto-cpufreq-daemon)
+
+    - Install daemon for (permanent) automatic CPU optimizations using GUI
 
 * [update](#update---auto-cpufreq-update)
     - Update auto-cpufreq to the latest release
@@ -342,13 +354,35 @@ Please note that any set override will persist even after reboot.
 
 Necessary changes are made to the system for auto-cpufreq CPU optimization to persist across reboots. The daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
 
-Install the daemon using this command (after installing auto-cpufreq):
+**Install the daemon using CLI ([after installing auto-cpufreq](#installing-auto-cpufreq)):**
+
+Installing auto-cpufreq daemon using CLI is simple as running following command:
 
 `sudo auto-cpufreq --install`
 
-This will enable the auto-cpufreq service (equivalent to `systemctl enable auto-cpufreq`) to start on boot, and start it (equivalent to `systemctl start auto-cpufreq`).
-
 After the daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
+
+*Please note:* after auto-cpufreq daemon was installed using CLI, if app was installed on a desktop environment, it will be possible to view auto-cpufreq in both CLI or GUI. See "Install the daemon using GUI" section for more details.
+
+**Install the daemon using GUI**
+
+Starting with >= v2.0 [after installing auto-cpufreq](#installing-auto-cpufreq), auto-cpufreq desktop entry (icon) will be available, i.e: 
+
+<img src="https://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-desktop-entry-icon.png" width="640" alt="Example of auto-cpufreq desktop entry (icon)"/>
+
+After which it'll be possible to install auto-cpufreq daemon by clicking on GUI install button.
+
+<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-daemon-install-gui.png" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+
+After which auto-cpufreq GUI will be available
+
+<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-v2-gui.png" width="640" alt="Example of auto-cpufreq desktop entry (icon)"/>
+
+*Please note:* after auto-cpufreq daemon was installed using GUI installer as mentioned above, it will be possible to view auto-cpufreq in both CLI or GUI.
+
+**auto-cpufreq daemon service**
+
+Installing auto-cpufreq daemon will enable the auto-cpufreq service (equivalent to `systemctl enable auto-cpufreq`) to start on boot, and start it (equivalent to `systemctl start auto-cpufreq`).
 
 Since daemon is running as a systemd service, its status can be seen by running:
 
@@ -375,6 +409,8 @@ auto-cpufreq daemon and its systemd service, along with all its persistent chang
 This does the equivalent of `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`.
 
 Note that the given command should be used instead of using just `systemctl`.
+
+*Please note:* after daemon is remove, auto-cpufreq GUI and desktop entry (icon) will be removed.
 
 ### Stats
 
