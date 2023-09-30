@@ -2,7 +2,15 @@
 
 Automatic CPU speed & power optimizer for, Linux based on active monitoring of a laptop's battery state, CPU usage, CPU temperature and system load. Ultimately allowing you to improve battery life without making any compromises.
 
-For tl;dr folks there's a: [Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
+For tl;dr folks there's are:
+
+[Youtube: auto-cpufreq v2.0 release & demo of all available features and options](https://www.youtube.com/watch?v=SPGpkZ0AZVU)
+
+[![](https://img.youtube.com/vi/SPGpkZ0AZVU/0.jpg)]([http://www.youtube.com/watch?v=QkYRpVEEIlg](https://www.youtube.com/watch?v=SPGpkZ0AZVU))
+
+
+
+[Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
 [![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg)
 
