@@ -9,7 +9,6 @@ For tl;dr folks there's are:
 [![](https://img.youtube.com/vi/SPGpkZ0AZVU/0.jpg)]([http://www.youtube.com/watch?v=QkYRpVEEIlg](https://www.youtube.com/watch?v=SPGpkZ0AZVU))
 
 
-
 [Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
 [![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg)
@@ -32,8 +31,8 @@ auto-cpufreq is looking for [co-maintainers & open source developers to help sha
     * [Supported architectures and devices](#supported-architectures-and-devices)
 * [Features](#features)
 * [Installing auto-cpufreq](#installing-auto-cpufreq)
-    * [Snap store](#snap-store)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
+    * [Snap store](#snap-store)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
     * [NixOS](#nixos)
 * [Post Installation](#post-installation)
@@ -107,7 +106,7 @@ cd auto-cpufreq && sudo ./auto-cpufreq-installer
 
 ### Snap store
 
-*Please note: due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579) please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*
+*Please note: while all [auto-cpufreq >= v2.0 CLI functionality](https://www.youtube.com/watch?v=SPGpkZ0AZVU&t=295s) will work as intended, [GUI component won't be available on Snap package installs](http://foolcontrol.org/wp-content/uploads/2023/10/auto-cpufreq-v2-snap-deprecation-notice.png), due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579). Hence, please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*.
 
 auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
 
