@@ -75,7 +75,7 @@ The Tool/daemon that does not conflict with auto-cpufreq in any way, and is even
 
 #### Supported architectures and devices
 
-Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible.
+Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible. Not work in Virtual machines.
 
 ## Features
 
