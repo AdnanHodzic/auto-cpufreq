@@ -4,19 +4,13 @@ python310Packages.buildPythonPackage rec {
   pname = "auto-cpufreq";
   inherit version;
 
-  # src = fetchFromGitHub {
-  #   owner = "AdnanHodzic";
-  #   repo = pname;
-  #   rev = "v${version}";
-  #   sha256 = "sha256-ElYzVteBnoz7BevA6j/730BMG0RsmhBQ4PNl9+0Kw4k=";
-  # };
   src = ../.;
 
   nativeBuildInputs = with pkgs; [ wrapGAppsHook gobject-introspection ];
 
   buildInputs = with pkgs; [ gtk3 ];
 
-  propagatedBuildInputs = with python310Packages; [ requests pygobject3 click distro psutil setuptools (callPackage ./pkgs/setuptools-git-versioning.nix {})];
+  propagatedBuildInputs = with python310Packages; [ requests pygobject3 click distro psutil setuptools setuptools-git-versioning ];
 
   doCheck = false;
   pythonImportsCheck = [ "auto_cpufreq" ];
