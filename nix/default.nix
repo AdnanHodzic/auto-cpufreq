@@ -1,16 +1,19 @@
-{ lib, python310Packages, fetchFromGitHub, callPackage, pkgs, version ? "git"}:
+{ lib, python310Packages, fetchFromGitHub, callPackage, pkgs}:
 
 python310Packages.buildPythonPackage rec {
-  pname = "auto-cpufreq";
-  inherit version;
+  # use pyproject.toml instead of setup.py
+  format = "pyproject";
 
+  pname = "auto-cpufreq";
+  version = "2.0.0dev";
   src = ../.;
+
 
   nativeBuildInputs = with pkgs; [ wrapGAppsHook gobject-introspection ];
 
-  buildInputs = with pkgs; [ gtk3 ];
+  buildInputs = with pkgs; [ gtk3 python310Packages.poetry-core ];
 
-  propagatedBuildInputs = with python310Packages; [ requests pygobject3 click distro psutil setuptools setuptools-git-versioning ];
+  propagatedBuildInputs = with python310Packages; [ requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning ];
 
   doCheck = false;
   pythonImportsCheck = [ "auto_cpufreq" ];
