@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Wrapper script around auto-cpufreq using the python virtual environment
 
 set -eu
