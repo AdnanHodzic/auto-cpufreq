@@ -39,7 +39,7 @@ in {
       overrideStrategy = "asDropin";
       serviceConfig.ExecStart = mkForce [
         ""
-        "${getBin} ${defaultPackage} --daemon --config ${cfgFile}"
+        "${defaultPackage}/bin/auto-cpufreq --daemon --config ${cfgFile}"
       ];
     };
   };
