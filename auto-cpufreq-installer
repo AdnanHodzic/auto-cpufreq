@@ -60,7 +60,7 @@ function setup_venv {
 
 # tool install
 function install {
-  python3 setup.py install --record files.txt
+  pip3 install .
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
   cp -r images/ /usr/local/share/auto-cpufreq/

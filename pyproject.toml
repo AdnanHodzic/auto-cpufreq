@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "auto-cpufreq"
+version = "2.0.0"
+description = "Automatic CPU speed & power optimizer for Linux"
+authors = ["Adnan Hodzic <adnan@hodzic.org>"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: Console",
+    "Natural Language :: English"
+]
+keywords=["linux", "cpu", "speed", "power", "frequency", "turbo", "optimzier", "auto", "cpufreq"]
+repository = "https://github.com/AdnanHodzic/auto-cpufreq"
+documentation = "https://github.com/AdnanHodzic/auto-cpufreq#readme"
+packages = [
+    { include = "./auto_cpufreq" },
+    { include = "./auto_cpufreq/gui" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+psutil = "^5.9.5"
+click = "^8.1.0"
+distro = "^1.8.0"
+requests = "^2.31.0"
+PyGObject = "^3.46.0"
+
+[tool.poetry.group.dev.dependencies]
+poetry = "^1.6.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry.scripts]
+auto-cpufreq = "auto_cpufreq.bin.auto_cpufreq:main"
+auto-cpufreq-gtk = "auto_cpufreq.bin.auto_cpufreq_gtk:main"
+
+# https://github.com/mtkennerly/poetry-dynamic-versioning
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+format = "v{base}+{commit}"
+
+# SideNote
+# Regarding zip_safe = https://setuptools.pypa.io/en/latest/deprecated/zip_safe.html
