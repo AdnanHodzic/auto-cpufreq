@@ -10,7 +10,7 @@ import time
 from click import UsageError
 from subprocess import call, run
 
-sys.path.append("../")
+# sys.path.append("../")
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 

@@ -13,7 +13,8 @@ import click
 import pickle
 import warnings
 import configparser
-import pkg_resources
+# import pkg_resources
+import importlib.metadata
 from math import isclose
 from pathlib import Path
 from shutil import which
@@ -204,9 +205,26 @@ def new_update(custom_dir):
     print(f"package cloned to directory {custom_dir}")
     run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
 
+def get_literal_version(package_name):
+    try:
+        package_metadata = importlib.metadata.metadata(package_name)
+
+        package_name = package_metadata['Name']
+        metadata_version = package_metadata['Version']
+
+        numbered_version, _, git_version = metadata_version.partition("+")
+
+        # Construct the literal version string
+        literal_version = f"{numbered_version}+{git_version}"
+
+        return literal_version
+
+    except importlib.metadata.PackageNotFoundError:
+        return f"Package '{package_name}' not found"
+
 # return formatted version for a better readability
 def get_formatted_version():
-    literal_version = pkg_resources.require("auto-cpufreq")[0].version
+    literal_version = get_literal_version("auto-cpufreq")
     splitted_version = literal_version.split("+")
     formatted_version = splitted_version[0]
     
