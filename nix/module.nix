@@ -7,7 +7,7 @@ inputs: {
 }:
 with lib; let
   cfg = config.programs.auto-cpufreq;
-  system = "x86_64-linux";
+  inherit (pkgs.stdenv.hostPlatform) system;
   defaultPackage = inputs.self.packages.${system}.default;
   cfgFilename = "auto-cpufreq.conf";
   cfgFile = format.generate cfgFilename cfg.settings;
@@ -16,7 +16,6 @@ with lib; let
 in {
   options.programs.auto-cpufreq = {
     enable = mkEnableOption "Automatic CPU speed & power optimizer for Linux";
-    #gui.enable = mkEnableOption "Enable GUI";
 
     settings = mkOption {
       description = mdDoc ''
