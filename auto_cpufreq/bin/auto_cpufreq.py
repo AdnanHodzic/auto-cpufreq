@@ -269,9 +269,11 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             if completions == "bash":
                 print("Run the below command in your current shell!\n")
                 print("echo 'eval \"$(_AUTO_CPUFREQ_COMPLETE=bash_source auto-cpufreq)\"' >> ~/.bashrc")
+                print("source ~/.bashrc")
             elif completions == "zsh":
                 print("Run the below command in your current shell!\n")
                 print("echo 'eval \"$(_AUTO_CPUFREQ_COMPLETE=zsh_source auto-cpufreq)\"' >> ~/.zshrc")
+                print("source ~/.zshrc")
             elif completions == "fish":
                 print("Run the below command in your current shell!\n")
                 print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")

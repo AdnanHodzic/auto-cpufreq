@@ -335,6 +335,10 @@ auto-cpufreq should be run with with one of the following options:
 * help
     - Shows all of the above options
 
+* completions=TEXT
+    - To support shell completions (currently bash, zsh and fish)
+    - TEXT can be bash, zsh or fish (shell name)
+
 Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options) for more details.
 
 ## auto-cpufreq modes and options
