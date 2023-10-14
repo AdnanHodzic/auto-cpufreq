@@ -1,6 +1,0 @@
-setuptools
-psutil
-click
-distro
-requests
-PyGObject
