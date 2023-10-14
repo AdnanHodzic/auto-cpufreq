@@ -34,9 +34,10 @@ from auto_cpufreq.power_helper import *
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
+@click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state):
+def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
 
     # display info if config file is used
     def config_info_dialog():
@@ -50,7 +51,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         set_override(force) # Calling set override, only if force has some values
 
     if len(sys.argv) == 1:
- 
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
  
@@ -264,6 +264,23 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     run(["auto-cpufreq", "--version"])
                 else:
                     print("Aborted")
+
+        elif completions:
+            if completions == "bash":
+                print("Run the below command in your current shell!\n")
+                print("echo 'eval \"$(_AUTO_CPUFREQ_COMPLETE=bash_source auto-cpufreq)\"' >> ~/.bashrc")
+                print("source ~/.bashrc")
+            elif completions == "zsh":
+                print("Run the below command in your current shell!\n")
+                print("echo 'eval \"$(_AUTO_CPUFREQ_COMPLETE=zsh_source auto-cpufreq)\"' >> ~/.zshrc")
+                print("source ~/.zshrc")
+            elif completions == "fish":
+                print("Run the below command in your current shell!\n")
+                print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
+            else:
+                print("Invalid Option, try bash|zsh|fish as argument to --completions")
+                
+
 
 if __name__ == "__main__":
     main()

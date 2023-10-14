@@ -15,20 +15,21 @@ err_exit()
 
 # invocation handling
 #
-param=""
-if [ "${#}" -ne 1 ];
-then
-    err_exit
-else
-    param="${1}"
-fi
+
 
 # load python virtual environment
 venv_dir=/opt/auto-cpufreq/venv
 . "${venv_dir}/bin/activate"
 
 # run python code with venv loaded
-PYTHONPATH=/opt/auto-cpufreq \
+if [[ "${#}" -ne 1 ]]; then
+   PYTHONPATH=/opt/auto-cpufreq \
+            /opt/auto-cpufreq/venv/bin/python \
+            /opt/auto-cpufreq/venv/bin/auto-cpufreq 
+else
+    param="${1}"
+    PYTHONPATH=/opt/auto-cpufreq \
             /opt/auto-cpufreq/venv/bin/python \
             /opt/auto-cpufreq/venv/bin/auto-cpufreq \
             "${param}"
+fi
