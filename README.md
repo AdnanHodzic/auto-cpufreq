@@ -36,6 +36,7 @@ Example of `auto-cpufreq --stats` CLI output
     * [Snap store](#snap-store)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
     * [NixOS](#nixos)
+    * [For developers](#installation-development-mode-only)
 * [Post Installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
     * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
@@ -203,6 +204,26 @@ services.auto-cpufreq.enable = true;
 # ---Snip---
 ```
 </details>
+
+### Installation (Development mode only)
+
+- If you have the poetry installed on you
+  ```bash
+  git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+  cd auto-cpufreq
+  poetry install
+  poetry run auto-cpufreq --help
+  ```
+
+- Alternatively, we can use editable pip install for development purposes
+  ```bash
+  git clone https://github.com/AdnanHodzic/auto-cpufreq.git
+  cd auto-cpufreq
+  # Setup  your Virtual Environment (Instructions left here for brevity)
+  pip3 install -e .
+  auto-cpufreq
+  ```
+- Regularly run `poetry update` if you get any inconsistent lock file issues.
 
 ## Post Installation
 After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for more information on how to run and configure `auto-cpufreq`.

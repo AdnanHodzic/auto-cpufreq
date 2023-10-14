@@ -55,12 +55,11 @@ function setup_venv {
 
     source "${venv_dir}/bin/activate"
     python3 -m pip install --upgrade pip wheel
-    python3 -m pip install -r requirements.txt
 }
 
 # tool install
 function install {
-  pip3 install .
+  python -m pip install .
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
   cp -r images/ /usr/local/share/auto-cpufreq/
@@ -119,7 +118,7 @@ function manual_install {
 
 	-----
 
-	python3 setup.py install --record files.txt
+	pip3 install .
 	mkdir -p /usr/local/share/auto-cpufreq/
 	cp -r scripts/ /usr/local/share/auto-cpufreq/
 
@@ -208,7 +207,7 @@ fi
 }
 
 function tool_remove {
-  files="files.txt"
+  # files="files.txt"
   share_dir="/usr/local/share/auto-cpufreq/"
 
   srv_install="/usr/local/bin/auto-cpufreq-install"
@@ -249,7 +248,7 @@ function tool_remove {
   fi
 
   # remove auto-cpufreq and all its supporting files
-  [ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
+  # [ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
   [ -d $share_dir ] && rm -rf $share_dir
 
   # files cleanup
