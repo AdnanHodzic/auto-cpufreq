@@ -1235,16 +1235,18 @@ def sysinfo():
                 # iterate over all temperatures in the current sensor
                 for temp in temp_sensors[sensor]:
                     if 'CPU' in temp.label:
-                        temp_per_cpu = [temp.current] * online_cpu_count
-                        break
+                        if temp.current != 0:
+                            temp_per_cpu = [temp.current] * online_cpu_count
+                            break
                 else:
                     continue
                 break
             else:
-                if "acpitz" in temp_sensors:
-                    temp_per_cpu = [temp_sensors["acpitz"][0].current] * online_cpu_count
-                elif "k10temp" in temp_sensors:
-                    temp_per_cpu = [temp_sensors["k10temp"][0].current] * online_cpu_count
+                for sensor in ["acpitz", "k10temp"]:
+                    if sensor in temp_sensors:
+                        if temp_sensors[sensor][0].current != 0:
+                            temp_per_cpu = [temp_sensors[sensor][0].current] * online_cpu_count
+                            break;
     except Exception as e:
         print(repr(e))
         pass
