@@ -242,6 +242,23 @@ class AboutDialog(Gtk.Dialog):
         self.box.pack_start(self.love, False, False, 0)
         self.show_all()
 
+class UpdateDialog(Gtk.Dialog):
+    def __init__(self, parent, current_version: str, latest_version: str):
+        super().__init__(title="Update Available", transient_for=parent)
+        self.box = self.get_content_area()
+        self.set_default_size(400, 100)
+        self.add_buttons("Update", Gtk.ResponseType.YES, "Cancel", Gtk.ResponseType.NO)
+        self.label = Gtk.Label(label="An update is available\n")
+        self.current_version = Gtk.Label(label=current_version + "\n")
+        self.latest_version = Gtk.Label(label=latest_version + "\n")
+
+        self.box.pack_start(self.label, True, False, 0)
+        self.box.pack_start(self.current_version, True, False, 0)
+        self.box.pack_start(self.latest_version, True, False, 0)
+
+        self.show_all()
+
+
 class ConfirmDialog(Gtk.Dialog):
     def __init__(self, parent, message: str):
         super().__init__(title="Confirmation", transient_for=parent)

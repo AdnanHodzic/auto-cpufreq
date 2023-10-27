@@ -6,11 +6,15 @@ from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf
 
 import os
 import sys
+from contextlib import redirect_stdout
+from io import StringIO
+from subprocess import run, PIPE
+import shutil
 from threading import Thread
 
 sys.path.append("../")
-from auto_cpufreq.core import is_running
-from auto_cpufreq.gui.objects import RadioButtonView, SystemStatsLabel, CPUFreqStatsLabel, CurrentGovernorBox, DropDownMenu, DaemonNotRunningView
+from auto_cpufreq.core import is_running, check_for_update, remove_daemon, new_update
+from auto_cpufreq.gui.objects import RadioButtonView, SystemStatsLabel, CPUFreqStatsLabel, CurrentGovernorBox, DropDownMenu, DaemonNotRunningView, UpdateDialog
 
 if os.getenv("PKG_MARKER") == "SNAP":
     ICON_FILE = "/snap/auto-cpufreq/current/icon.png"
@@ -20,6 +24,8 @@ else:
     CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
 
 HBOX_PADDING = 20
+PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
+
 
 class ToolWindow(Gtk.Window):
     def __init__(self):
@@ -71,6 +77,31 @@ class ToolWindow(Gtk.Window):
         box.pack_start(label, False, False, 0)
         box.pack_start(button, False, False, 0)
         self.add(box)
+
+    def handle_update(self):
+        new_stdout = StringIO()
+        with redirect_stdout(new_stdout):
+            is_new_update = check_for_update()
+            if not is_new_update:
+                return
+        captured_output = new_stdout.getvalue().splitlines()
+        dialog = UpdateDialog(self, captured_output[1], captured_output[2])
+        response = dialog.run()
+        dialog.destroy()
+        if response != Gtk.ResponseType.YES:
+            return
+        updater = run(["pkexec", "auto-cpufreq", "--update"], input="y\n", encoding="utf-8", stderr=PIPE)
+        if updater.stderr == PKEXEC_ERROR:
+            error = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Error updating")
+            error.format_secondary_text("Authorization Failed")
+            error.run()
+            error.destroy()
+            return
+        success = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, "Update successful")
+        success.format_secondary_text("The app will now close. Please reopen to apply changes")
+        success.run()
+        success.destroy()
+        exit(0)
 
     def daemon_not_running(self):
         self.box = DaemonNotRunningView(self)
