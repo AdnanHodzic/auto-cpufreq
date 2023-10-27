@@ -22,7 +22,7 @@ Example of `auto-cpufreq --stats` CLI output
 
 ## Looking for developers and co-maintainers
 
-* If you would like to discuss anything regarding auto-cpufreq or its development, please join the [auto-cpufreq Discord server!](https://discord.gg/jYvWNr68)
+* If you would like to discuss anything regarding auto-cpufreq or its development, please join the [auto-cpufreq Discord server!](https://discord.gg/Sjauxtj6kH)
 * auto-cpufreq is looking for [co-maintainers & open source developers to help shape the future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
 
 ## Index

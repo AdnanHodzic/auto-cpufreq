@@ -248,7 +248,9 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             elif subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0 and subprocess.run(["bash", "-c", "pacman -Q auto-cpufreq >/dev/null 2>&1"]).returncode == 0:
                 print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
-                verify_update()
+                is_new_update = check_for_update()
+                if not is_new_update:
+                    return
                 ans = input("Do you want to update auto-cpufreq to the latest release? [Y/n]: ").strip().lower()
                 if not os.path.exists(custom_dir):
                     os.makedirs(custom_dir)
