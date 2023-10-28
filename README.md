@@ -1,17 +1,16 @@
 # auto-cpufreq
 
-Automatic CPU speed & power optimizer for, Linux based on active monitoring of a laptop's battery state, CPU usage, CPU temperature and system load. Ultimately allowing you to improve battery life without making any compromises.
+Automatic CPU speed & power optimizer for Linux. Actively monitors laptop battery state, CPU usage, CPU temperature, and system load, ultimately allowing you to improve battery life without making any compromises.
 
-For tl;dr folks there's are:
+For tl;dr folks:
 
 [Youtube: auto-cpufreq v2.0 release & demo of all available features and options](https://www.youtube.com/watch?v=SPGpkZ0AZVU)
 
-[![](https://img.youtube.com/vi/SPGpkZ0AZVU/0.jpg)]([http://www.youtube.com/watch?v=QkYRpVEEIlg](https://www.youtube.com/watch?v=SPGpkZ0AZVU))
-
+[![](https://img.youtube.com/vi/SPGpkZ0AZVU/0.jpg)](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
 [Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
-[![](http://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](http://www.youtube.com/watch?v=QkYRpVEEIlg)
+[![](https://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
 Example of auto-cpufreq GUI (available >= v2.0)
 
@@ -23,8 +22,8 @@ Example of `auto-cpufreq --stats` CLI output
 
 ## Looking for developers and co-maintainers
 
-* If you would like to discuss anything regardin auto-cpufreq or its development, please join [auto-cpufreq Discord server!](https://discord.gg/Sjauxtj6kH)
-* auto-cpufreq is looking for [co-maintainers & open source developers to help shape future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
+* If you would like to discuss anything regarding auto-cpufreq or its development, please join the [auto-cpufreq Discord server!](https://discord.gg/Sjauxtj6kH)
+* auto-cpufreq is looking for [co-maintainers & open source developers to help shape the future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
 
 ## Index
 
@@ -33,11 +32,11 @@ Example of `auto-cpufreq --stats` CLI output
 * [Features](#features)
 * [Installing auto-cpufreq](#installing-auto-cpufreq)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
-    * [Snap store](#snap-store)
+    * [Snap Store](#snap-store)
     * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
     * [NixOS](#nixos)
     * [For developers](#installation-development-mode-only)
-* [Post Installation](#post-installation)
+* [Post-installation](#post-installation)
 * [Configuring auto-cpufreq](#configuring-auto-cpufreq)
     * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
     * [2: `--force` governor override](#2---force-governor-override)
@@ -63,21 +62,21 @@ Example of `auto-cpufreq --stats` CLI output
 
 ## Why do I need auto-cpufreq?
 
-One of the problems with Linux today on laptops is that the CPU will run in an unoptimized manner which will negatively reflect on battery life. For example, the CPU will run using "performance" governor with turbo boost enabled regardless if it's plugged in to power or not.
+One of the problems with Linux today on laptops is that the CPU will run in an unoptimized manner which will negatively impact battery life. For example, the CPU may run using the "performance" governor with turbo boost enabled regardless of whether it's plugged into a power outlet or not.
 
-These issues can be mitigated by using tools like [indicator-cpufreq](https://itsfoss.com/cpufreq-ubuntu/) or [cpufreq](https://github.com/konkor/cpufreq), but these still require manual action from your side which can be daunting and cumbersome.
+These issues can be mitigated by using tools like [indicator-cpufreq](https://itsfoss.com/cpufreq-ubuntu/) or [cpufreq](https://github.com/konkor/cpufreq), but those still require manual action from your side which can be daunting and cumbersome.
 
-Using tools like [TLP](https://github.com/linrunner/TLP) can help in this situation with extending battery life (which is something I used to do for numerous years), but it also might come with its own set of problems, like losing turbo boost.
+Tools like [TLP](https://github.com/linrunner/TLP) (which I used for numerous years) can help extend battery life, but may also create their own set of problems, such as losing turbo boost.
 
-With that said, I needed a simple tool which would automatically make "cpufreq" related changes, save battery like TLP, but let Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
+Given all of the above, I needed a simple tool that would automatically make CPU frequency-related changes and save battery life, but let the Linux kernel do most of the heavy lifting. That's how auto-cpufreq was born.
 
-Please note: auto-cpufreq aims to replace TLP in terms of functionality and after you install auto-cpufreq _it's recommended to remove TLP_. If both are used for same functionality, i.e: to set CPU frequencies it'll lead to unwanted results like overheating. Hence, only use [both tools in tandem](https://github.com/AdnanHodzic/auto-cpufreq/discussions/176) if you know what you're doing.
+Please note: auto-cpufreq aims to replace TLP in terms of functionality, so after you install auto-cpufreq _it's recommended to remove TLP_. Using both for the same functionality (i.e., to set CPU frequencies) will lead to unwanted results like overheating. Hence, only use [both tools in tandem](https://github.com/AdnanHodzic/auto-cpufreq/discussions/176) if you know what you're doing.
 
-The Tool/daemon that does not conflict with auto-cpufreq in any way, and is even recommended to have running alongside, is [thermald](https://wiki.debian.org/thermald).
+One tool/daemon that does not conflict with auto-cpufreq in any way, and is even recommended to have running alongside, is [thermald](https://wiki.debian.org/thermald).
 
 #### Supported architectures and devices
 
-Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed to improve performance and battery life on laptops, but running it on desktop/servers (to lower power consumption) should also be possible.
+Only devices with an Intel, AMD, or ARM CPU are supported. This tool was developed to improve performance and battery life on laptops, but running it on desktops/servers (to lower power consumption) should also be possible.
 
 ## Features
 
@@ -88,10 +87,10 @@ Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed t
   * CPU temperature (total average & per core)
   * Battery state
   * System load
-* CPU frequency scaling, governor and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on
+* CPU frequency scaling, governor, and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on
   * Battery state
   * CPU usage (total & per core)
-  * CPU temperature in combination with CPU utilization/load (prevent overheating)
+  * CPU temperature in combination with CPU utilization/load (to prevent overheating)
   * System load
 * Automatic CPU & power optimization (temporary and persistent)
 
@@ -99,36 +98,36 @@ Supported devices must have an Intel, AMD or ARM CPUs. This tool was developed t
 
 ### auto-cpufreq-installer
 
-Get source code, run installer and follow on screen instructions:
+Get source code, run installer, and follow on-screen instructions:
 
 ```
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
 
-### Snap store
+### Snap Store
 
-*Please note: while all [auto-cpufreq >= v2.0 CLI functionality](https://www.youtube.com/watch?v=SPGpkZ0AZVU&t=295s) will work as intended, [GUI component won't be available on Snap package installs](http://foolcontrol.org/wp-content/uploads/2023/10/auto-cpufreq-v2-snap-deprecation-notice.png), due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579). Hence, please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*.
+*Please note: while all [auto-cpufreq >= v2.0 CLI functionality](https://www.youtube.com/watch?v=SPGpkZ0AZVU&t=295s) will work as intended, [the GUI won't be available on Snap package installs](http://foolcontrol.org/wp-content/uploads/2023/10/auto-cpufreq-v2-snap-deprecation-notice.png) due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579). Hence, please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*.
 
-auto-cpufreq is available on the [snap store](https://snapcraft.io/auto-cpufreq), or can be installed using CLI:
+auto-cpufreq is available on the [Snap Store](https://snapcraft.io/auto-cpufreq) or via CLI:
 
 ```
 sudo snap install auto-cpufreq
 ```
 
 **Please note:**
-* Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` version is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
+* Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
 
-* Fedora users will [encounter following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
+* Fedora users will [encounter the following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
 
 ### AUR package (Arch/Manjaro Linux)
 
-*AUR is currently unmaintained & has issues*! Until someone starts maintaining it, use the [auto-cpufreq-installer](#auto-cpufreq-installer) if you intend to have the latest changes as otherwise you'll run into errors, i.e: [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471). However, if you still wish to use AUR then follow the [Troubleshooting](#aur) section for solved known issues.
+*The AUR packages below are often unmaintained & have issues*! Unless you see evidence of good recent maintenance, use the [auto-cpufreq-installer](#auto-cpufreq-installer) instead as otherwise you'll run into errors (e.g., [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471)). If you still choose to install via AUR, see the [Troubleshooting](#aur) section for solved known issues.
 
 * [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
-(For the latest binary release on github)
+(for the latest binary release)
 * [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git)
-(For the latest commits/changes)
+(for the latest commits/changes)
 
 ### NixOS
 
@@ -136,7 +135,7 @@ sudo snap install auto-cpufreq
 <summary>Flakes</summary>
 <br>
 
-This repo contains a flake that exposes a NixOS Module that manages and offers options for auto-cpufreq. To use it, add the flake as an input to your `flake.nix` file, and enable the module
+This repo contains a flake that exposes a NixOS Module that manages and offers options for auto-cpufreq. To use it, add the flake as an input to your `flake.nix` file and enable the module:
 
 ```nix 
 # flake.nix
@@ -163,7 +162,7 @@ This repo contains a flake that exposes a NixOS Module that manages and offers o
     } 
 }
 ```
-Then you can enable the program in your `configuration.nix` file
+Then you can enable the program in your `configuration.nix` file:
 ```nix
 # configuration.nix
 
@@ -191,7 +190,7 @@ Then you can enable the program in your `configuration.nix` file
 <summary>Nixpkgs</summary>
 <br>
 
-There is a nixpkg available but it is more prone to being outdated whereas the flake pulls from the latest commit. You can install it in your `configuration.nix` and enable the system service
+There is a nixpkg available, but it is more prone to being outdated, whereas the flake pulls from the latest commit. You can install it in your `configuration.nix` and enable the system service:
 ```nix
 # configuration.nix
 
@@ -205,9 +204,9 @@ services.auto-cpufreq.enable = true;
 ```
 </details>
 
-### Installation (Development mode only)
+### Installation (development mode only)
 
-- If you have the poetry installed on you
+- If you have `poetry` installed:
   ```bash
   git clone https://github.com/AdnanHodzic/auto-cpufreq.git
   cd auto-cpufreq
@@ -215,65 +214,68 @@ services.auto-cpufreq.enable = true;
   poetry run auto-cpufreq --help
   ```
 
-- Alternatively, we can use editable pip install for development purposes
+- Alternatively, we can use an editable pip install for development purposes:
   ```bash
   git clone https://github.com/AdnanHodzic/auto-cpufreq.git
   cd auto-cpufreq
-  # Setup  your Virtual Environment (Instructions left here for brevity)
+  # set up virtual environment (details removed for brevity)
   pip3 install -e .
   auto-cpufreq
   ```
 - Regularly run `poetry update` if you get any inconsistent lock file issues.
 
-## Post Installation
-After installation `auto-cpufreq` will be available as a binary and you can refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for more information on how to run and configure `auto-cpufreq`.
+## Post-installation
+
+After installation, `auto-cpufreq` is available as a binary. Refer to [auto-cpufreq modes and options](https://github.com/AdnanHodzic/auto-cpufreq#auto-cpufreq-modes-and-options) for detailed information on how to run and configure `auto-cpufreq`.
 
 ## Configuring auto-cpufreq
 
-auto-cpufreq makes all decisions automatically based on various factors like cpu usage, temperature or system load. However, it's possible to perform additional configurations:
+auto-cpufreq makes all decisions automatically based on various factors such as CPU usage, temperature, and system load. However, it's possible to perform additional configurations:
 
 ### 1: power_helper.py script (Snap package install **only**)
 
-When installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer) if it detects [GNOME Power profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running it will automatically disable it. Otherwise this daemon will cause conflicts and various other performance issues. 
+When installing auto-cpufreq via [auto-cpufreq-installer](#auto-cpufreq-installer), if it detects the [GNOME Power Profiles service](https://twitter.com/fooctrl/status/1467469508373884933) is running, it will automatically disable it. Otherwise, that daemon will cause conflicts and various other performance issues. 
 
-However, when auto-cpufreq is installed as Snap package it's running as part of a container with limited permissions to your host machine, hence it's *highly recommended* you disable GNOME Power Profiles Daemon using `power_helper.py` script.
+However, when auto-cpufreq is installed as a Snap package it's running as part of a container with limited permissions, hence it's *highly recommended* to disable the GNOME Power Profiles daemon using the `power_helper.py` script.
 
 **Please Note:**<br>
-The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located at `auto_cpufreq/power_helper.py`. In order to have access to it, you need to first clone
+The [`power_helper.py`](https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto_cpufreq/power_helper.py) script is located within the auto-cpufreq repo at `auto_cpufreq/power_helper.py`. In order to access it, first clone
 the repository:
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq`
 
-Navigate to repo location where `power_helper.py` resides, i.e:
+Navigate to the directory where `power_helper.py` resides:
 
 `cd auto-cpufreq/auto_cpufreq`
 
-Make sure to have `psutil` Python library installed before next step, i.e: `sudo python3 -m pip install psutil`
+Make sure to have `psutil` Python library installed before next step:
 
-Then disable GNOME Power Profiles Daemon by running:
+`sudo python3 -m pip install psutil`
+
+Then disable the GNOME Power Profiles daemon:
 
 `sudo python3 power_helper.py --gnome_power_disable`
 
 ### 2: `--force` governor override
 
-By default auto-cpufreq uses `balanced` mode which works the best on various systems and situations.
+By default, auto-cpufreq uses `balanced` mode which works best for many systems and situations.
 
-However, you can override this behaviour by switching to `performance` or `powersave` mode manually. Performance will result in higher frequencies by default, but also results in higher energy use (battery consumption) and should be used if max performance is necessary. Otherwise `powersave` will do the opposite and extend the battery life to its maximum.
+However, you can override this behaviour by switching to `performance` or `powersave` mode manually. The `performance` mode results in higher default frequencies, but also higher energy use (battery consumption) and should only be used if maximum performance is needed. The `powersave` mode does the opposite and extends battery life to its maximum.
 
 See [`--force` flag](#overriding-governor) for more info.
 
 ### 3: auto-cpufreq config file
 
-You can configure separate profiles for the battery and power supply. These profiles will let you pick which governor to use, and how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto` and `never`. The default behavior is `auto`, which only kicks in during high load.
+You can configure separate profiles for the battery and power supply. These profiles will let you pick which governor to use, as well as how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto`, and `never`. The default behavior is `auto`, which only activates turbo during high load.
 
-By default, auto-cpufreq does not use the config file! If you wish to use it, the location where config needs to be placed for it to be read automatically is: `/etc/auto-cpufreq.conf`
+By default, auto-cpufreq does not use the config file! If you wish to use it, the location where it needs to be placed to be read automatically is: `/etc/auto-cpufreq.conf`
 
 #### Example config file contents
 ```
 # settings for when connected to a power source
 [charger]
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-# preferred governor.
+# preferred governor
 governor = performance
 
 # minimum cpu frequency (in kHz)
@@ -309,7 +311,7 @@ governor = powersave
 # to use this feature, uncomment the following line and set the value accordingly
 # scaling_max_freq = 1000000
 
-# turbo boost setting. possible values: always, auto, never
+# turbo boost setting (always, auto, or never)
 turbo = auto
 ```
 
@@ -320,29 +322,28 @@ auto-cpufreq should be run with with one of the following options:
     - Monitor and see suggestions for CPU optimizations
 
 * [live](#live)
-    - Monitor and make (temp.) suggested CPU optimizations
+    - Monitor and automatically make (temporary) CPU optimizations
 
 * [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
     - Install/remove daemon for (permanent) automatic CPU optimizations
  
 * [install (GUI)](#install---auto-cpufreq-daemon)
-
-    - Install daemon for (permanent) automatic CPU optimizations using GUI
+    - Install daemon via GUI for (permanent) automatic CPU optimizations
 
 * [update](#update---auto-cpufreq-update)
     - Update auto-cpufreq to the latest release
 
 * [install_performance](#1-power_helperpy-script)
-    - Install daemon in "performance" mode.
+    - Install daemon in "performance" mode
 
 * [stats](#stats)
     - View live stats of CPU optimizations made by daemon
 
 * [force=TEXT](#overriding-governor)
-    - Force use of either the "powersave" or "performance" governor. Setting to "reset" goes back to normal mode
+    - Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode
 
 * config=TEXT
-    - Use config file at defined path
+    - Use config file at designated path
 
 * debug
     - Show debug info (include when submitting bugs)
@@ -357,8 +358,7 @@ auto-cpufreq should be run with with one of the following options:
     - Shows all of the above options
 
 * completions=TEXT
-    - To support shell completions (currently bash, zsh and fish)
-    - TEXT can be bash, zsh or fish (shell name)
+    - To support shell completions (current options are "bash", "zsh", or "fish")
 
 Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options) for more details.
 
@@ -368,86 +368,84 @@ Running `auto-cpufreq --help` will print the same list of options as above. Read
 
 `sudo auto-cpufreq --monitor`
 
-No changes are made to the system, and is solely made for demonstration purposes what auto-cpufreq could do differently for your system.
+No changes are made to the system. This is solely to demonstrate what auto-cpufreq could do for your system.
 
 ### Live
 
 `sudo auto-cpufreq --live`
 
-Necessary changes are temporarily made to the system which are lost with system reboot. This mode is made to evaluate what the system would behave with auto-cpufreq permanently running on the system.
+Necessary changes are temporarily made to the system over time, but this process and its changes are lost at system reboot. This mode is provided to evaluate how the system would behave with auto-cpufreq permanently running on the system.
 
 ### Overriding governor
 
 `sudo auto-cpufreq --force=governor`
 
-Force use of either "powersave" or "performance" governors. Setting to "reset" will go back to normal mode
+Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode.
 Please note that any set override will persist even after reboot.
 
 ### Install - auto-cpufreq daemon
 
-Necessary changes are made to the system for auto-cpufreq CPU optimization to persist across reboots. The daemon is deployed and then started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
+Necessary changes are made to the system over time and this process will continue across reboots. The daemon is deployed and started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
 
 **Install the daemon using CLI ([after installing auto-cpufreq](#installing-auto-cpufreq)):**
 
-Installing auto-cpufreq daemon using CLI is simple as running following command:
+Installing the auto-cpufreq daemon using CLI is as simple as running the following command:
 
 `sudo auto-cpufreq --install`
 
-After the daemon is installed, `auto-cpufreq` is available as a binary and is running in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
+After the daemon is installed, `auto-cpufreq` is available as a binary and runs in the background. Its stats can be viewed by running: `auto-cpufreq --stats`
 
-*Please note:* after auto-cpufreq daemon was installed using CLI, if app was installed on a desktop environment, it will be possible to view auto-cpufreq in both CLI or GUI. See "Install the daemon using GUI" section for more details.
+*Please note:* if the daemon is installed within a desktop environment, then its stats and options can be accessed via CLI or GUI. See "Install the daemon using GUI" below for more details.
 
 **Install the daemon using GUI**
 
-Starting with >= v2.0 [after installing auto-cpufreq](#installing-auto-cpufreq), auto-cpufreq desktop entry (icon) will be available, i.e: 
+Starting with >= v2.0 [after installing auto-cpufreq](#installing-auto-cpufreq), an auto-cpufreq desktop entry (icon) is available, i.e.:
 
 <img src="https://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-desktop-entry-icon.png" width="640" alt="Example of auto-cpufreq desktop entry (icon)"/>
 
-After which it'll be possible to install auto-cpufreq daemon by clicking on GUI install button.
+After selecting it to open the GUI, the auto-cpufreq daemon can be installed by clicking the "Install" button:
 
-<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-daemon-install-gui.png" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-daemon-install-gui.png" width="480" alt="The auto-cpufreq GUI's 'Install' button"/>
 
-After which auto-cpufreq GUI will be available
+After that, the full auto-cpufreq GUI is available:
 
-<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-v2-gui.png" width="640" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-v2-gui.png" width="640" alt="The full auto-cpufreq GUI"/>
 
-*Please note:* after auto-cpufreq daemon was installed using GUI installer as mentioned above, it will be possible to view auto-cpufreq in both CLI or GUI.
+*Please note:* after the daemon is installed (by any method), its stats and options are accessible via both CLI and GUI.
 
 **auto-cpufreq daemon service**
 
-Installing auto-cpufreq daemon will enable the auto-cpufreq service (equivalent to `systemctl enable auto-cpufreq`) to start on boot, and start it (equivalent to `systemctl start auto-cpufreq`).
+Installing the auto-cpufreq daemon also enables the associated service (equivalent to `systemctl enable auto-cpufreq`), causing it to start on boot, and immediately starts it (equivalent to `systemctl start auto-cpufreq`).
 
-Since daemon is running as a systemd service, its status can be seen by running:
+Since the daemon is running as a systemd service, its status can be seen by running:
 
 `systemctl status auto-cpufreq`
 
-If the install has been performed as part of snap package, daemon status can be verified by running:
+If installed via Snap package, daemon status can be viewed as follows:
 
 `systemctl status snap.auto-cpufreq.service.service`
 
 ### Update - auto-cpufreq update
 
-Update functionality works by cloning auto-cpufreq repo, installing it using [auto-cpufreq-installer](#auto-cpufreq-installer) and performing [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) with [latest version](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
+Update functionality works by cloning the auto-cpufreq repo, installing it via [auto-cpufreq-installer](#auto-cpufreq-installer), and performing a fresh [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) to provide the [latest version's](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
 
-Update auto-cpufreq by running: `sudo auto-cpufreq --update`. Latest revision is cloned to default location `/opt/auto-cpufreq/source`, thus maintaining existing dir structure.
+Update auto-cpufreq by running: `sudo auto-cpufreq --update`. By default, the latest revision is cloned to `/opt/auto-cpufreq/source`, thus maintaining existing directory structure.
 
-Update and clone to custom directory by running: `sudo auto-cpufreq --update=/path/to/directory`.
+Update and clone to a custom directory by running: `sudo auto-cpufreq --update=/path/to/directory`
 
 ### Remove - auto-cpufreq daemon
 
-auto-cpufreq daemon and its systemd service, along with all its persistent changes can be removed by running:
+The auto-cpufreq daemon, its systemd service, and all its persistent changes can be removed by running:
 
 `sudo auto-cpufreq --remove`
 
-This does the equivalent of `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`.
+This does, in part, the equivalent of `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`, but the above command should be used instead of using `systemctl`.
 
-Note that the given command should be used instead of using just `systemctl`.
-
-*Please note:* after daemon is remove, auto-cpufreq GUI and desktop entry (icon) will be removed.
+*Please note:* after the daemon is removed, the auto-cpufreq GUI and desktop entry (icon) are also removed.
 
 ### Stats
 
-If daemon has been installed, live stats of CPU/system load monitoring and optimization can be seen by running:
+If the daemon has been installed, live stats of CPU/system load monitoring and optimization can be seen by running:
 
 `auto-cpufreq --stats`
 
@@ -455,16 +453,16 @@ If daemon has been installed, live stats of CPU/system load monitoring and optim
 
 **Q:** If after installing auto-cpufreq you're (still) experiencing:
 * high CPU temperatures
-* CPU is not scaling to minimum/maximum frequencies
+* CPU not scaling to minimum/maximum frequencies
 * suboptimal CPU performance
 
-**A:** If you're using `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
+**A:** If you're using the `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
 
 This can be done by editing the `GRUB_CMDLINE_LINUX_DEFAULT` params in `/etc/default/grub`. For instance:
 
 ```
     sudo nano /etc/default/grub
-    # make sure you have nano installed, or you can use your favorite text editor.
+    # make sure you have nano installed, or you can use your favorite text editor
 ```
 
 For Intel users:
@@ -479,7 +477,7 @@ For AMD users:
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0"
 ```
 
-Once you have made the necessary changes to the GRUB configuration file, you can update it by running `sudo update-grub` or `sudo grub-mkconfig -o /boot/grub/grub.cfg` on Arch Linux. On the other hand, for Fedora, you can update the configuration file by running one of the following commands:
+Once you have made the necessary changes to the GRUB configuration file, you can update GRUB by running `sudo update-grub` on Debian/Ubuntu, `sudo grub-mkconfig -o /boot/grub/grub.cfg` on Arch Linux, or one of the following on Fedora:
 
 ```
     sudo grub2-mkconfig -o /etc/grub2.cfg
@@ -491,14 +489,14 @@ Once you have made the necessary changes to the GRUB configuration file, you can
 
 ```
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-    # Legacy boot method for grub update.
+    # legacy boot method
 ```
 
 For systemd-boot users:
 
 ```
     sudo nano /etc/kernel/cmdline
-    # make sure you have nano installed, or you can use your favorite text editor.
+    # make sure you have nano installed, or you can use your favorite text editor
 ```
 
 For Intel users:
@@ -513,22 +511,14 @@ For AMD users:
 quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0
 ```
 
-Once you have made the necessary changes to the cmdline file, you can update it by running `sudo reinstall-kernels`.
+Once you have made the necessary changes to the `cmdline` file, you can update it by running `sudo reinstall-kernels`.
 
 ### AUR
 
-* The command ```sudo auto-cpufreq --install``` produces error [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471) please don't use it.
-    * This script is supposed to automate the process of enabling auto-cpufreq.service so you need to manually open terminal and type
-    ~~~
-    sudo systemctl enable --now auto-cpufreq.service
-    ~~~
-    for the service to work.
-* Power Profiles Daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However this doesn't happen with AUR package and will lead to problems (i.e: [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
-    * So open your terminal and type
-    ~~~
-    sudo systemctl mask power-profiles-daemon.service
-    ~~~
-    Following this command ```enable``` the auto-cpufreq.service if you haven't already.
+* For AUR installs, the command `sudo auto-cpufreq --install` produces an error ([#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471)), so don't use that command.
+    * The auto-cpufreq-installer script automates the enabling of auto-cpufreq.service, but since the AUR install process doesn't use that script, you need to open a terminal and run `sudo systemctl enable --now auto-cpufreq.service` to enable and start the service.
+* The GNOME Power Profiles daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However, this doesn't happen with AUR installs, which can lead to problems (e.g., [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
+    * Open a terminal and run `sudo systemctl mask power-profiles-daemon.service` (then `enable` and `start` the auto-cpufreq.service if you haven't already).
 
 ## Discussion:
 
@@ -536,7 +526,7 @@ Once you have made the necessary changes to the cmdline file, you can update it 
 
 ## Donate
 
-Showing your support and appreciation for auto-cpufreq project can be done in two ways:
+Showing your support and appreciation for the auto-cpufreq project can be done in two ways:
 
 * Financial donation
 * Code contribution
@@ -555,6 +545,6 @@ If auto-cpufreq helped you out and you find it useful, show your appreciation by
 
 ### Code contribution
 
-Other ways of supporting the project consists of making a code or documentation contribution. If you have an idea for a new features or want to implement some of the existing feature requests or fix some of the [bugs & issues](https://github.com/AdnanHodzic/auto-cpufreq/issues) please make your changes and submit a [pull request](https://github.com/AdnanHodzic/auto-cpufreq/pulls) which I'll be glad to review. If your changes are accepted you'll be credited as part of [releases page](https://github.com/AdnanHodzic/auto-cpufreq/releases).
+Other ways of supporting the project consist of making a code or documentation contribution. If you have an idea for a new feature or you want to implement some of the existing feature requests or fix some of the [bugs & issues](https://github.com/AdnanHodzic/auto-cpufreq/issues), please make your changes and submit a [pull request](https://github.com/AdnanHodzic/auto-cpufreq/pulls). I'll be glad to review it and, if your changes are accepted, you'll be credited on the [releases page](https://github.com/AdnanHodzic/auto-cpufreq/releases).
 
-**Please note: auto-cpufreq is looking for co-maintainers & open source developers to [help shape future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)**
+**Please note: auto-cpufreq is looking for co-maintainers & open source developers to [help shape the future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)**
