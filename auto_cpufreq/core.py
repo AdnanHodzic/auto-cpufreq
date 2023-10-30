@@ -1246,7 +1246,7 @@ def sysinfo():
                     continue
                 break
             else:
-                for sensor in ["acpitz", "k10temp"]:
+                for sensor in ["acpitz", "k10temp", "zenpower"]:
                     if sensor in temp_sensors:
                         if temp_sensors[sensor][0].current != 0:
                             temp_per_cpu = [temp_sensors[sensor][0].current] * online_cpu_count
