@@ -271,7 +271,7 @@ You can configure separate profiles for the battery and power supply. These prof
 By default, auto-cpufreq does not use the config file! If you wish to use it, the location where it needs to be placed to be read automatically is: `/etc/auto-cpufreq.conf`
 
 #### Example config file contents
-```
+```python
 # settings for when connected to a power source
 [charger]
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
