@@ -153,9 +153,9 @@ if [ -f /etc/debian_version ]; then
 elif [ -f /etc/redhat-release ]; then
 	detected_distro "RedHat based"
 	if [ -f /etc/centos-release ]; then
-		yum install platform-python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
+		dnf install -y platform-python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
 	else
-		yum install python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
+		dnf install -y python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
 	fi
 	completed
 	complete_msg
