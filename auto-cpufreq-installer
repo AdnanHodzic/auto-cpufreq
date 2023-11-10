@@ -59,6 +59,7 @@ function setup_venv {
 
 # tool install
 function install {
+  git config --global --add safe.directory $(pwd)
   python -m pip install .
   mkdir -p /usr/local/share/auto-cpufreq/
   cp -r scripts/ /usr/local/share/auto-cpufreq/
