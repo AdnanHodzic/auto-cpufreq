@@ -31,7 +31,7 @@ parts:
     source: .
     override-pull: |
       snapcraftctl pull
-      snapcraftctl set-version `grep ^VERSION $SNAPCRAFT_PART_SRC/setup.py | sed 's/.*"\(.*\)"/\1/'`
+      snapcraftctl set-version `grep ^version $SNAPCRAFT_PART_SRC/pyproject.toml | sed 's/.*"\(.*\)"/\1/'`
 
   deploy-scripts:
     plugin: dump
