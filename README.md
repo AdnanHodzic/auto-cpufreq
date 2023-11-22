@@ -122,12 +122,20 @@ sudo snap install auto-cpufreq
 
 ### AUR package (Arch/Manjaro Linux)
 
-*The AUR packages below are often unmaintained & have issues*! Unless you see evidence of good recent maintenance, use the [auto-cpufreq-installer](#auto-cpufreq-installer) instead as otherwise you'll run into errors (e.g., [#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471)). If you still choose to install via AUR, see the [Troubleshooting](#aur) section for solved known issues.
+The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was last updated on version 2.1.0 and is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12). 
 
-* [Binary Package](https://aur.archlinux.org/packages/auto-cpufreq)
-(for the latest binary release)
-* [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git)
-(for the latest commits/changes)
+**Notices**
+
+* The [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git) is seperately maintained and was last updated on version 1.9.6. 
+* The build process links to `/usr/share/` instead of `/usr/local/share/`
+* The daemon installer provided does not work, instead start the daemon with 
+
+``` 
+# systemctl enable --now auto-cpufreq 
+```
+* The GNOME Power Profiles daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However, this doesn't happen with AUR installs, which can lead to problems (e.g., [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
+    * Open a terminal and run `sudo systemctl mask power-profiles-daemon.service` (then `enable` and `start` the auto-cpufreq.service if you haven't already).
+
 
 ### NixOS
 
@@ -515,10 +523,7 @@ Once you have made the necessary changes to the `cmdline` file, you can update i
 
 ### AUR
 
-* For AUR installs, the command `sudo auto-cpufreq --install` produces an error ([#471](https://github.com/AdnanHodzic/auto-cpufreq/issues/471)), so don't use that command.
-    * The auto-cpufreq-installer script automates the enabling of auto-cpufreq.service, but since the AUR install process doesn't use that script, you need to open a terminal and run `sudo systemctl enable --now auto-cpufreq.service` to enable and start the service.
-* The GNOME Power Profiles daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However, this doesn't happen with AUR installs, which can lead to problems (e.g., [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
-    * Open a terminal and run `sudo systemctl mask power-profiles-daemon.service` (then `enable` and `start` the auto-cpufreq.service if you haven't already).
+* If the AUR installer does not work for your system, fallback to `auto-cpufreq-installer` and open an issue. 
 
 ## Discussion:
 
