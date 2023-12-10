@@ -463,6 +463,7 @@ If the daemon has been installed, live stats of CPU/system load monitoring and o
 * high CPU temperatures
 * CPU not scaling to minimum/maximum frequencies
 * suboptimal CPU performance
+* turbo mode not available
 
 **A:** If you're using the `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
 
