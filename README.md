@@ -153,7 +153,7 @@ This repo contains a flake that exposes a NixOS Module that manages and offers o
     inputs = {
         # ---Snip---
         auto-cpufreq = {
-            url = "github:adnanhodzic/auto-cpufreq/nix";
+            url = "github:AdnanHodzic/auto-cpufreq";
             inputs.nixpkgs.follows = "nixpkgs";
         };
         # ---Snip---
