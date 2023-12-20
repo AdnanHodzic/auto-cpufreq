@@ -4,7 +4,7 @@
 # preferred governor.
 governor = performance
 
-# see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference
+# see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = performance
 
 # minimum cpu frequency (in kHz)
@@ -28,7 +28,7 @@ turbo = auto
 # preferred governor
 governor = powersave
 
-# see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference
+# see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = power
 
 # minimum cpu frequency (in kHz)
