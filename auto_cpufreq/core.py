@@ -676,8 +676,15 @@ def set_powersave():
         Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
         and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() is False
     ):
-        run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
-        print('Setting to use: "balance_power" EPP')
+        if conf.has_option("battery", "energy_performance_preference"):
+            epp = conf["battery"]["energy_performance_preference"]
+            run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+            print(f'Setting to use: "{epp}" EPP')
+        else:
+            run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
+            print('Setting to use: "balance_power" EPP')
+    else:
+        print('Not setting EPP (not supported by system)')
 
     # set frequencies
     set_frequencies()
@@ -887,8 +894,15 @@ def set_performance():
         Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
         and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() is False
     ):
-        run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
-        print('Setting to use: "balance_performance" EPP')
+        if conf.has_option("charger", "energy_performance_preference"):
+            epp = conf["charger"]["energy_performance_preference"]
+            run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+            print(f'Setting to use: "{epp}" EPP')
+        else:
+            run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
+            print('Setting to use: "balance_performance" EPP')
+    else:
+        print('Not setting EPP (not supported by system)')
 
     # set frequencies
     set_frequencies()

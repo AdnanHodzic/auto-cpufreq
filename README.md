@@ -286,6 +286,9 @@ By default, auto-cpufreq does not use the config file! If you wish to use it, th
 # preferred governor
 governor = performance
 
+# EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+energy_performance_preference = performance
+
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
 # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
@@ -306,6 +309,9 @@ turbo = auto
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 # preferred governor
 governor = powersave
+
+# EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+energy_performance_preference = power
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
