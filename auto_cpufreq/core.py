@@ -683,6 +683,8 @@ def set_powersave():
         else:
             run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
             print('Setting to use: "balance_power" EPP')
+    else:
+        print('Not setting EPP (not supported by system)')
 
     # set frequencies
     set_frequencies()
@@ -899,6 +901,8 @@ def set_performance():
         else:
             run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
             print('Setting to use: "balance_performance" EPP')
+    else:
+        print('Not setting EPP (not supported by system)')
 
     # set frequencies
     set_frequencies()
