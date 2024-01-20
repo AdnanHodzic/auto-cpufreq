@@ -103,10 +103,13 @@ function driver () {
 function write_value () {
   if [ -w $FLNM ]; then
     ERROR_MESSAGE=$((echo $VALUE > $FLNM) 2>& 1)
+    EXIT_STATUS=$?
 
     if ! [[ -z $ERROR_MESSAGE || $ERROR_MESSAGE =~ .*write[[:space:]]error:[[:space:]]Device[[:space:]]or[[:space:]]resource[[:space:]]busy.* ]]; then
       echo ERROR_MESSAGE >& 2
     fi
+
+    return $EXIT_STATUS
   fi
 }
 
