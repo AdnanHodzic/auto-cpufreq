@@ -178,7 +178,7 @@ def check_for_update():
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
             requests.exceptions.RequestException, requests.exceptions.HTTPError) as err:
         print ("Error Connecting to server!")
-        exit(1)
+        return False
 
     latest_version =  latest_release["tag_name"]
 
