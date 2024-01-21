@@ -105,7 +105,7 @@ function write_value () {
     ERROR_MESSAGE=$((echo $VALUE > $FLNM) 2>& 1)
     EXIT_STATUS=$?
 
-    if ! [[ -z $ERROR_MESSAGE || $ERROR_MESSAGE =~ .*write[[:space:]]error:[[:space:]]Device[[:space:]]or[[:space:]]resource[[:space:]]busy.* ]]; then
+    if ! [[ -z $ERROR_MESSAGE || $ERROR_MESSAGE == *"write error: Device or resource busy."* ]]; then
       echo ERROR_MESSAGE >& 2
     fi
 
