@@ -674,7 +674,7 @@ def set_powersave():
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
 
 
-    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is false:
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
     else:
         dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
@@ -901,7 +901,7 @@ def set_performance():
     )
 
 
-    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is false:
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
     else:
         dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
