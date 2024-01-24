@@ -672,19 +672,28 @@ def set_powersave():
     if get_override() != "default":
         print("Warning: governor overwritten using `--force` flag.")
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
-    if (
-        Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
-        and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() is False
-    ):
-        if conf.has_option("battery", "energy_performance_preference"):
-            epp = conf["battery"]["energy_performance_preference"]
-            run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
-            print(f'Setting to use: "{epp}" EPP')
-        else:
-            run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
-            print('Setting to use: "balance_power" EPP')
-    else:
+
+
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
+    else:
+        dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
+
+        if dynboost_enabled:
+            dynboost_enabled = bool(int(
+                os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
+            ))
+
+        if dynboost_enabled:
+            print('Not setting EPP (dynamic boosting is enabled)')
+        else:
+            if conf.has_option("battery", "energy_performance_preference"):
+                epp = conf["battery"]["energy_performance_preference"]
+                run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+                print(f'Setting to use: "{epp}" EPP')
+            else:
+                run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
+                print('Setting to use: "balance_power" EPP')
 
     # set frequencies
     set_frequencies()
@@ -890,19 +899,28 @@ def set_performance():
         f"cpufreqctl.auto-cpufreq --governor --set={gov}",
         shell=True,
     )
-    if (
-        Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists()
-        and Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists() is False
-    ):
-        if conf.has_option("charger", "energy_performance_preference"):
-            epp = conf["charger"]["energy_performance_preference"]
-            run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
-            print(f'Setting to use: "{epp}" EPP')
-        else:
-            run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
-            print('Setting to use: "balance_performance" EPP')
-    else:
+
+
+    if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
+    else:
+        dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
+
+        if dynboost_enabled:
+            dynboost_enabled = bool(int(
+                os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
+            ))
+
+        if dynboost_enabled:
+            print('Not setting EPP (dynamic boosting is enabled)')
+        else:
+            if conf.has_option("charger", "energy_performance_preference"):
+                epp = conf["charger"]["energy_performance_preference"]
+                run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+                print(f'Setting to use: "{epp}" EPP')
+            else:
+                run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
+                print('Setting to use: "balance_performance" EPP')
 
     # set frequencies
     set_frequencies()
