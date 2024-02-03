@@ -116,8 +116,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 countdown(2)
         elif live:
             root_check()
-            battery_setup()
-            battery_get_thresholds()
             config_info_dialog()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
             time.sleep(1)
