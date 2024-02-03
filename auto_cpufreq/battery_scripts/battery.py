@@ -20,7 +20,7 @@ def battery_start_threshold():
         start_threshold = conf["battery"]["start_threshold"]
         return int(start_threshold)
     else:
-        return
+        return 0
 
 
 def battery_stop_threshold():
@@ -29,7 +29,7 @@ def battery_stop_threshold():
         stop_threshold = conf["battery"]["stop_threshold"]
         return int(stop_threshold)
     else:
-        return 0
+        return 100
 
 
 def battery_setup():
@@ -45,7 +45,6 @@ def battery_setup():
         pass
 
 
-# TODO
 def battery_get_thresholds():
     conf = get_config()
     print(conf["battery"]["enable_thresholds"])
