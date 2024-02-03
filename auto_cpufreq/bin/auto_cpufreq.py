@@ -13,7 +13,7 @@ from subprocess import call, run
 # sys.path.append("../")
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
-
+from battery_scripts.battery import *
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -67,6 +67,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
+                battery_setup()
                 while True:
                     footer()
                     gov_check()
@@ -78,6 +79,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             elif os.getenv("PKG_MARKER") != "SNAP":
                 gnome_power_detect()
                 tlp_service_detect()
+                battery_setup()
                 while True:
                     footer()
                     gov_check()
