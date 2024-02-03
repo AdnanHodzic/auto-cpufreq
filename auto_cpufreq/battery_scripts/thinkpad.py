@@ -1,14 +1,14 @@
-#! /bin/python
+#!/usr/bin/env python3
 import os
 
 
-def ideapad_setup(start_threshold, stop_threshold):
+def thinkpad_setup(start_threshold, stop_threshold):
 
     # check if thinkpad_acpi is enabled if not this wont work
-    if os.system("lsmod | grep ideapad_latop") is not None:
+    if os.system("lsmod | grep thinkpad_acpi") is not None:
         # this path is specific to thinkpads
         path_to_bats = '/sys/class/power_supply/'
-        # gets the numb of batterys
+        # gets the numb of batteries
         battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])
 
         for b in range(battery_count):
@@ -26,12 +26,11 @@ def ideapad_setup(start_threshold, stop_threshold):
                 pass
 
 
-#TODO cleanup and figure out how to display battery info
-def ideapad_print_thresholds():
+# this is for testing and debuging
+
+def thinkpad_print_thresholds():
     path_to_bats = '/sys/class/power_supply/'
     battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])
-
-    print("Battery Info")
 
     for b in range(battery_count):
 
