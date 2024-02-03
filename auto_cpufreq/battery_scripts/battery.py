@@ -26,7 +26,7 @@ def battery_stop_threshold():
 
 def battery_setup():
     conf = get_config()
-    if conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == True:
+    if conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == "true":
         lsmod = os.system("lsmod")
         if lsmod.find("thinkpad_acpi") is not None:
             thinkpad.thinkpad_setup(battery_start_threshold(), battery_stop_threshold())
@@ -41,6 +41,8 @@ def battery_setup():
 # TODO
 def battery_get_thresholds():
     conf = get_config()
+    if conf["battery"]["enable_thresholds"] != "true":
+        return
     lsmod = os.system("lsmod")
     if conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == True:
         if lsmod.find("thinkpad_acpi") is not None:
