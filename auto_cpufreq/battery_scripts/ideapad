@@ -26,7 +26,7 @@ def ideapad_setup(start_threshold, stop_threshold):
                 pass
 
 
-
+#TODO cleanup and figure out how to display battery info
 def ideapad_print_thresholds():
     path_to_bats = '/sys/class/power_supply/'
     battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])

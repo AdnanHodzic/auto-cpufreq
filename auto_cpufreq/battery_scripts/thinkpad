@@ -8,7 +8,7 @@ def thinkpad_setup(start_threshold, stop_threshold):
     if os.system("lsmod | grep thinkpad_acpi") is not None:
         # this path is specific to thinkpads
         path_to_bats = '/sys/class/power_supply/'
-        # gets the numb of batterys
+        # gets the numb of batteries
         battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])
 
         for b in range(battery_count):
