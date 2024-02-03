@@ -13,7 +13,7 @@ from subprocess import call, run
 # sys.path.append("../")
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
-from battery_scripts.battery import *
+from auto_cpufreq.battery_scripts.battery import *
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -96,6 +96,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             config_info_dialog()
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
+            battery_setup()
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -114,6 +115,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 countdown(2)
         elif live:
             root_check()
+            battery_setup()
             config_info_dialog()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
             time.sleep(1)

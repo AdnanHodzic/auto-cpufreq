@@ -8,7 +8,7 @@ def ideapad_setup(start_threshold, stop_threshold):
     if os.system("lsmod | grep ideapad_latop") is not None:
         # this path is specific to thinkpads
         path_to_bats = '/sys/class/power_supply/'
-        # gets the numb of batterys
+        # gets the numb of batteries
         battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])
 
         for b in range(battery_count):
@@ -26,22 +26,18 @@ def ideapad_setup(start_threshold, stop_threshold):
                 pass
 
 
-#TODO cleanup and figure out how to display battery info
 def ideapad_print_thresholds():
     path_to_bats = '/sys/class/power_supply/'
     battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])
-
-    print("Battery Info")
-
+    print(f"number of batteries = {battery_count}")
     for b in range(battery_count):
-
         try:
             with open(f'{path_to_bats}BAT{b}/charge_start_threshold', 'r') as f:
-                print(f'BAT{b} start is set to {f.read()}')
+                print(f'battery{b} start threshold is set to {f.read()}')
                 f.close()
 
             with open(f'{path_to_bats}BAT{b}/charge_stop_threshold', 'r') as f:
-                print(f'BAT{b} stop is set to {f.read()}')
+                print(f'battery{b} stop threshold is set to {f.read()}')
                 f.close()
 
         except Exception as e:
