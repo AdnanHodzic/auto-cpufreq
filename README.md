@@ -98,6 +98,8 @@ Only devices with an Intel, AMD, or ARM CPU are supported. This tool was develop
 
 ### auto-cpufreq-installer
 
+> As auto-cpufreq relies on git based versioning, users are advised to install `auto-cpufreq`  using `git clone` method only. Downloading source code as a zip/from release will emit build error like [these](https://github.com/AdnanHodzic/auto-cpufreq/issues/623).
+
 Get source code, run installer, and follow on-screen instructions:
 
 ```
@@ -153,7 +155,7 @@ This repo contains a flake that exposes a NixOS Module that manages and offers o
     inputs = {
         # ---Snip---
         auto-cpufreq = {
-            url = "github:adnanhodzic/auto-cpufreq/nix";
+            url = "github:AdnanHodzic/auto-cpufreq";
             inputs.nixpkgs.follows = "nixpkgs";
         };
         # ---Snip---
@@ -286,6 +288,9 @@ By default, auto-cpufreq does not use the config file! If you wish to use it, th
 # preferred governor
 governor = performance
 
+# EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+energy_performance_preference = performance
+
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
 # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
@@ -306,6 +311,9 @@ turbo = auto
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 # preferred governor
 governor = powersave
+
+# EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+energy_performance_preference = power
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
@@ -463,6 +471,7 @@ If the daemon has been installed, live stats of CPU/system load monitoring and o
 * high CPU temperatures
 * CPU not scaling to minimum/maximum frequencies
 * suboptimal CPU performance
+* turbo mode not available
 
 **A:** If you're using the `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
 
