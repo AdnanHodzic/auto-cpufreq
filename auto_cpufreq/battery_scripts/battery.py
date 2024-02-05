@@ -45,7 +45,6 @@ def battery_setup():
         pass
 
 
-# TODO
 def battery_get_thresholds():
     conf = get_config()
     print(conf["battery"]["enable_thresholds"])
