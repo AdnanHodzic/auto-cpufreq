@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import os
+from auto_cpufreq.core import root_check
 
 
 def ideapad_setup(start_threshold, stop_threshold):
+    root_check()
     # this path is specific to ideapads
     path_to_bats = '/sys/class/power_supply/'
     # gets the numb of batteries
@@ -24,6 +26,7 @@ def ideapad_setup(start_threshold, stop_threshold):
 
 
 def ideapad_print_thresholds():
+    root_check()
     path_to_bats = '/sys/class/power_supply/'
     battery_count = len([name for name in os.listdir(path_to_bats) if name.startswith('BAT')])
     print(f"number of batteries = {battery_count}")
