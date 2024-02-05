@@ -26,7 +26,7 @@ def thinkpad_setup(start_threshold, stop_threshold):
                 f.close()
 
         except Exception as e:
-            print(f"could not write to BAT{b} stop threshold")
+            print(f"could not write to BAT{b} stop threshold you might be setting it too low try < 65")
             print(e)
             pass
 
