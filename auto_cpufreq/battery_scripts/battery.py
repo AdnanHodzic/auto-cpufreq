@@ -35,11 +35,14 @@ def battery_stop_threshold():
 def battery_setup():
     root_check()
     conf = get_config()
-    if conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == "true":
-        if lsmod("thinkpad_acpi"):
-            thinkpad_setup(battery_start_threshold(), battery_stop_threshold())
-        elif lsmod("ideapad_acpi"):
-            ideapad_setup(battery_start_threshold(), battery_stop_threshold())
+    if conf.has_option("battery", "enable_thresholds"):
+        if conf["battery"]["enable_thresholds"] == "true":
+            if lsmod("thinkpad_acpi"):
+                thinkpad_setup(battery_start_threshold(), battery_stop_threshold())
+            elif lsmod("ideapad_acpi"):
+                ideapad_setup(battery_start_threshold(), battery_stop_threshold())
+            else:
+                pass
         else:
             pass
     else:
@@ -48,13 +51,16 @@ def battery_setup():
 
 def battery_get_thresholds():
     conf = get_config()
-    if conf["battery"]["enable_thresholds"] == "true":
-        print("-" * 30)
-        if lsmod("thinkpad_acpi"):
-            thinkpad_print_thresholds()
-        elif lsmod("ideapad_acpi"):
-            ideapad_print_thresholds()
+    if conf.has_option("battery", "enable_thresholds"):
+        if conf["battery"]["enable_thresholds"] == "true":
+            print("-" * 30 )
+            if lsmod("thinkpad_acpi"):
+                thinkpad_print_thresholds()
+            elif lsmod("ideapad_acpi"):
+                ideapad_print_thresholds()
+            else:
+                pass
         else:
-            pass
+            return
     else:
         return
