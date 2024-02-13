@@ -7,7 +7,8 @@ from auto_cpufreq.battery_scripts.ideapad import *
 
 
 def lsmod(module):
-    output = subprocess.run(['lsmod'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    output = subprocess.run(
+        ['lsmod'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if module in output.stdout:
         return True
     else:
@@ -38,9 +39,11 @@ def battery_setup():
     if conf.has_option("battery", "enable_thresholds"):
         if conf["battery"]["enable_thresholds"] == "true":
             if lsmod("thinkpad_acpi"):
-                thinkpad_setup(battery_start_threshold(), battery_stop_threshold())
+                thinkpad_setup(battery_start_threshold(),
+                               battery_stop_threshold())
             elif lsmod("ideapad_acpi"):
-                ideapad_setup(battery_start_threshold(), battery_stop_threshold())
+                ideapad_setup(battery_start_threshold(),
+                              battery_stop_threshold())
             else:
                 pass
         else:
@@ -53,7 +56,7 @@ def battery_get_thresholds():
     conf = get_config()
     if conf.has_option("battery", "enable_thresholds"):
         if conf["battery"]["enable_thresholds"] == "true":
-            print("-" * 30 )
+            print("-" * 30)
             if lsmod("thinkpad_acpi"):
                 thinkpad_print_thresholds()
             elif lsmod("ideapad_acpi"):

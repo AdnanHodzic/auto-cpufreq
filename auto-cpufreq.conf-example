@@ -54,8 +54,8 @@ turbo = auto
 # enable thresholds true or false
 #enable_thresholds = true
 #
-# start threshold (defaults to 0 ) can be 0 - 100
+# start threshold (defaults to 0 ) 
 #start_threshold = 0
 #
-# stop threshold (defaults to 100) this value must be greater or equal to 65
+# stop threshold (defaults to 100) 
 #stop_threshold = 100
