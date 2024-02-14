@@ -119,6 +119,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             config_info_dialog()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
             time.sleep(1)
+            battery_setup()
+            battery_get_thresholds()
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
