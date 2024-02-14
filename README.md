@@ -471,7 +471,7 @@ If the daemon has been installed, live stats of CPU/system load monitoring and o
 
 ## Battery charging thresholds
 
-As of v2.2.0, battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values
+As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0), battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values
 
 ### Supported devices
 
