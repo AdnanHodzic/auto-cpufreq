@@ -333,6 +333,12 @@ energy_performance_preference = power
 
 # turbo boost setting (always, auto, or never)
 turbo = auto
+
+# battery charging threshold
+# reference: https://github.com/AdnanHodzic/auto-cpufreq/#battery-charging-thresholds
+#enable_thresholds = true
+#start_threshold = 20
+#stop_threshold = 80
 ```
 
 ## How to run auto-cpufreq
@@ -485,7 +491,7 @@ As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0),
 ### Battery config
 Edit the config at `/etc/auto-cpufreq.conf`
 
-Example config for battery
+Example config for battery ([already part of example config file](https://github.com/AdnanHodzic/auto-cpufreq/#example-config-file-contents))
 ```
 [battery]
 enable_thresholds = true
