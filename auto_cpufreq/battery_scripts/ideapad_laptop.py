@@ -51,7 +51,7 @@ def check_conservation_mode():
         return False
 
 
-def ideapad_laptop_pad_setup():
+def ideapad_laptop_setup():
     config = get_config()
 
     if not config.had_option("battery", "enable_thresholds"):

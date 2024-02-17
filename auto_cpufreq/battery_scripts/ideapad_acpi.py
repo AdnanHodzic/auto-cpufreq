@@ -25,7 +25,7 @@ def get_threshold_value(mode):
             return 100
 
 
-def ideapad_setup():
+def ideapad_acpi_setup():
     config = get_config()
 
     if not config.had_option("battery", "enable_thresholds"):
@@ -41,7 +41,7 @@ def ideapad_setup():
         set_battery(get_threshold_value("stop"), "stop", bat)
 
 
-def ideapad_print_thresholds():
+def ideapad_acpi_print_thresholds():
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
     print(f"number of batteries = {battery_count}")

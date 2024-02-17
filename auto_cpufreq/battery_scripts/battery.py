@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import subprocess
 
-from auto_cpufreq.battery_scripts.thinkpad import *
-from auto_cpufreq.battery_scripts.ideapad import *
-from auto_cpufreq.battery_scripts.ideapad_laptop import *
+from auto_cpufreq.battery_scripts.thinkpad import thinkpad_setup, thinkpad_print_thresholds
+from auto_cpufreq.battery_scripts.ideapad import ideapad_acpi_setup, ideapad_acpi_print_thresholds
+from auto_cpufreq.battery_scripts.ideapad_laptop import ideapad_laptop_setup, ideapad_laptop_print_thresholds
 
 
 def lsmod(module):
@@ -21,7 +21,7 @@ def battery_setup():
         thinkpad_setup()
 
     elif lsmod("ideapad_acpi"):
-        ideapad_setup()
+        ideapad_acpi_setup()
 
     elif lsmod("ideapad_laptop"):
         ideapad_laptop_setup()
@@ -31,3 +31,16 @@ def battery_setup():
 
 
 def battery_get_thresholds():
+    if lsmod("thinkpad_acpi"):
+        thinkpad_print_thresholds()
+
+    elif lsmod("ideapad_acpi"):
+        ideapad_acpi_print_thresholds()
+
+    elif lsmod("ideapad_laptop"):
+        ideapad_laptop_print_thresholds()
+
+    else:
+        return
+
+
