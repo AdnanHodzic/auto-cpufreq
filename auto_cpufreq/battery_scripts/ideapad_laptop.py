@@ -25,7 +25,34 @@ def get_threshold_value(mode):
             return 100
 
 
-def thinkpad_setup():
+conservation_mode(value):
+    try:
+        subprocess.check_output(
+            f"echo {value} | tee /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode", shell=True, text=True)
+        print(f"conservation_mode is {value}")
+        return
+    except:
+        print("unable to set conservation mode")
+        return
+
+
+check_conservation_mode():
+    try:
+        value = subprocess.check_output(
+            "cat /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode", shell=True, text=True)
+        if value == "1":
+            return True
+        elif value == "0":
+            return False
+        else:
+            print("could not get value from conservation mode")
+            return True
+    except:
+        print("could not get the value from conservation mode")
+        return False
+
+
+def ideapad_laptop_pad_setup():
     config = get_config()
 
     if not config.had_option("battery", "enable_thresholds"):
@@ -36,12 +63,22 @@ def thinkpad_setup():
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
 
-    for bat in range(battery_count):
-        set_battery(get_threshold_value("start"), "start", bat)
-        set_battery(get_threshold_value("stop"), "stop", bat)
+    if config.has_option("battery", "ideapad_laptop_conservation_mode"):
+        if config["battery"]["ideapad_laptop_conservation_mode"] == "true":
+            conservation_mode(1)
+            return
+        elif config["battery"]["ideapad_laptop_conservation_mode"] == "false":
+            conservation_mode(0)
+
+    if check_conservation_mode() == False:
+        for bat in range(battery_count):
+            set_battery(get_threshold_value("start"), "start", bat)
+            set_battery(get_threshold_value("stop"), "stop", bat)
+    else:
+        print("conservation mode is enabled unable to set thresholds")
 
 
-def thinkpad_print_thresholds():
+def ideapad_laptop_print_thresholds():
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
     print(f"number of batteries = {battery_count}")
