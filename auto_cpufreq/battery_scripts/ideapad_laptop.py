@@ -19,13 +19,12 @@ def get_threshold_value(mode):
         return config["battery"][f"{mode}_threshold"]
     else:
         if mode == "start":
-
             return 0
         else:
             return 100
 
 
-conservation_mode(value):
+def conservation_mode(value):
     try:
         subprocess.check_output(
             f"echo {value} | tee /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode", shell=True, text=True)
@@ -36,7 +35,7 @@ conservation_mode(value):
         return
 
 
-check_conservation_mode():
+def check_conservation_mode():
     try:
         value = subprocess.check_output(
             "cat /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode", shell=True, text=True)
@@ -46,7 +45,7 @@ check_conservation_mode():
             return False
         else:
             print("could not get value from conservation mode")
-            return True
+            return None
     except:
         print("could not get the value from conservation mode")
         return False
@@ -67,10 +66,10 @@ def ideapad_laptop_pad_setup():
         if config["battery"]["ideapad_laptop_conservation_mode"] == "true":
             conservation_mode(1)
             return
-        elif config["battery"]["ideapad_laptop_conservation_mode"] == "false":
+        if config["battery"]["ideapad_laptop_conservation_mode"] == "false":
             conservation_mode(0)
 
-    if check_conservation_mode() == False:
+    if check_conservation_mode() is False:
         for bat in range(battery_count):
             set_battery(get_threshold_value("start"), "start", bat)
             set_battery(get_threshold_value("stop"), "stop", bat)
@@ -79,6 +78,10 @@ def ideapad_laptop_pad_setup():
 
 
 def ideapad_laptop_print_thresholds():
+    if check_conservation_mode() is True:
+        print("conservation mode is on")
+        return
+
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
     print(f"number of batteries = {battery_count}")
