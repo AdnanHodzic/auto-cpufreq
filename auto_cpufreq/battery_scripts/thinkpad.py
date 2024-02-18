@@ -28,7 +28,7 @@ def get_threshold_value(mode):
 def thinkpad_setup():
     config = get_config()
 
-    if not config.had_option("battery", "enable_thresholds"):
+    if not config.has_option("battery", "enable_thresholds"):
         return
     if not config["battery"]["enable_thresholds"] == "true":
         return

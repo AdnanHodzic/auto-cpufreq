@@ -2,7 +2,7 @@
 import subprocess
 
 from auto_cpufreq.battery_scripts.thinkpad import thinkpad_setup, thinkpad_print_thresholds
-from auto_cpufreq.battery_scripts.ideapad import ideapad_acpi_setup, ideapad_acpi_print_thresholds
+from auto_cpufreq.battery_scripts.ideapad_acpi import ideapad_acpi_setup, ideapad_acpi_print_thresholds
 from auto_cpufreq.battery_scripts.ideapad_laptop import ideapad_laptop_setup, ideapad_laptop_print_thresholds
 
 
