@@ -89,7 +89,7 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
 	rc-service auto-cpufreq start
 
 	echo -e "\n* Enabling auto-cpufreq daemon (openrc) service at boot"
-	rc-update add auto-cpufreq local/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
+	rc-update add auto-cpufreq
 fi
 # Install script for s6
 elif [ "$(ps h -o comm 1)" = "s6-svscan" ];then
