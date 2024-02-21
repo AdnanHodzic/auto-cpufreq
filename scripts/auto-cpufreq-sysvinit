@@ -5,10 +5,10 @@
 # Required-Stop:     $local_fs $network $named $time $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Description:       Automatic\ CPU\ speed\ \&\ power\ optimizer\ for\ Linux
+# Description:       Automatic CPU speed & power optimizer for Linux
 ### END INIT INFO
 
-SCRIPT="/home/Abdulhafez/.scripts/Auto-cpufreq.sh"
+SCRIPT="/usr/local/share/auto-cpufreq/scripts/auto-cpufreq-s6/run"
 RUNAS=root
 
 PIDFILE=/var/run/auto-cpufreq.pid
