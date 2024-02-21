@@ -74,12 +74,14 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
     if [ -e "/etc/inittab" ]; then 
         echo -e "\n* Deploy auto-cpufreq sysvinit unit file"
         cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-sysvinit /etc/init.d/auto-cpufreq
- 
+        chmod +x /etc/init.d/auto-cpufreq
+        chmod +x /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-s6/run
+        
         echo -e "\n* Starting auto-cpufreq daemon (sysvinit) service"
-        sysv-rc-conf --level auto-cpufreq start
+        service auto-cpufreq start
         
         echo -e "\n* Enabling auto-cpufreq daemon (sysvinit) service at boot"
-	sysv-rc-conf --level auto-cpufreq-sysvinit on
+	update-rc.d auto-cpufreq defaults
       else
         echo -e "\n* Deploy auto-cpufreq openrc unit file"
         cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
@@ -87,7 +89,7 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
 	rc-service auto-cpufreq start
 
 	echo -e "\n* Enabling auto-cpufreq daemon (openrc) service at boot"
-	rc-update add auto-cpufreqlocal/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
+	rc-update add auto-cpufreq local/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
 fi
 # Install script for s6
 elif [ "$(ps h -o comm 1)" = "s6-svscan" ];then
@@ -103,3 +105,4 @@ else
   echo -e "\n* Unsupported init system detected, could not install the daemon\n"
   echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
 fi
+
