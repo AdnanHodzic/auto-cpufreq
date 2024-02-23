@@ -51,6 +51,9 @@ Example of `auto-cpufreq --stats` CLI output
     * [Update - auto-cpufreq update](#update---auto-cpufreq-update)
     * [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
     * [stats](#stats)
+* [Battery charging thresholds](#battery-charging-thresholds)
+  * [Supported Devices](#supported-devices)
+  * [Battery config](#battery-config)
 * [Troubleshooting](#troubleshooting)
     * [AUR](#aur)
 * [Discussion](#discussion)
@@ -93,6 +96,7 @@ Only devices with an Intel, AMD, or ARM CPU are supported. This tool was develop
   * CPU temperature in combination with CPU utilization/load (to prevent overheating)
   * System load
 * Automatic CPU & power optimization (temporary and persistent)
+* Settings battery charging thresholds (limited support)
 
 ## Installing auto-cpufreq
 
@@ -329,6 +333,12 @@ energy_performance_preference = power
 
 # turbo boost setting (always, auto, or never)
 turbo = auto
+
+# battery charging threshold
+# reference: https://github.com/AdnanHodzic/auto-cpufreq/#battery-charging-thresholds
+#enable_thresholds = true
+#start_threshold = 20
+#stop_threshold = 80
 ```
 
 ## How to run auto-cpufreq
@@ -464,6 +474,31 @@ This does, in part, the equivalent of `systemctl stop auto-cpufreq && systemctl 
 If the daemon has been installed, live stats of CPU/system load monitoring and optimization can be seen by running:
 
 `auto-cpufreq --stats`
+
+## Battery charging thresholds
+
+As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0), battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values
+
+### Supported devices
+
+* **Lenovo ThinkPad** (thinkpad_acpi)*
+* **Lenovo IdeaPad** (ideapad_acpi)*
+
+***Please note, your laptop must have an installed ACPI kernel driver specific to the manufacturer.** To check if you have the correct module installed and loaded run `lsmod [module]`
+
+**To request that your device be supported, please open an [issue](https://github.com/AdnanHodzic/auto-cpufreq/issues/new). In your issue, make us aware of the driver that works with your laptop**
+
+### Battery config
+Edit the config at `/etc/auto-cpufreq.conf`
+
+Example config for battery ([already part of example config file](https://github.com/AdnanHodzic/auto-cpufreq/#example-config-file-contents))
+```
+[battery]
+enable_thresholds = true
+start_threshold = 20
+stop_threshold = 80
+```
+
 
 ## Troubleshooting
 
