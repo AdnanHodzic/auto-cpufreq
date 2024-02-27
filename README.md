@@ -1,4 +1,6 @@
 # auto-cpufreq
+[![Linux Build](https://github.com/shadeyg56/auto-cpufreq/actions/workflows/build-linux.yml/badge.svg?event=push)](https://github.com/shadeyg56/auto-cpufreq/actions/workflows/build-linux.yml)
+[![Nix Flake](https://github.com/shadeyg56/auto-cpufreq/actions/workflows/build-nix.yaml/badge.svg?event=push)](https://github.com/shadeyg56/auto-cpufreq/actions/workflows/build-nix.yaml)
 
 Automatic CPU speed & power optimizer for Linux. Actively monitors laptop battery state, CPU usage, CPU temperature, and system load, ultimately allowing you to improve battery life without making any compromises.
 
