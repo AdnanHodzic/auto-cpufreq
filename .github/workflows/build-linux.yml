@@ -1,0 +1,25 @@
+name: Linux Build
+
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+      - ".gitignore"
+      - "LICENSE"
+  pull_request:
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+
+      - name: "Setup Python"
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: 3.12
+          cache: "poetry"
+
+      - name: "Install auto-cpufreq"
+        run: ./auto-cpufreq-installer --install
+      
