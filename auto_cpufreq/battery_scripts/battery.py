@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import subprocess
-from auto_cpufreq.core import get_config, root_check
+from auto_cpufreq.core import root_check
 
 from auto_cpufreq.battery_scripts.thinkpad import *
 from auto_cpufreq.battery_scripts.ideapad import *
+from auto_cpufreq.utils.config import config
 
 
 def lsmod(module):
@@ -16,7 +17,7 @@ def lsmod(module):
 
 
 def battery_start_threshold():
-    conf = get_config()
+    conf = config.config()
     if conf.has_option("battery", "start_threshold"):
         start_threshold = conf["battery"]["start_threshold"]
         return int(start_threshold)
@@ -25,7 +26,7 @@ def battery_start_threshold():
 
 
 def battery_stop_threshold():
-    conf = get_config()
+    conf = config.get_config()
     if conf.has_option("battery", "stop_threshold"):
         stop_threshold = conf["battery"]["stop_threshold"]
         return int(stop_threshold)
@@ -35,7 +36,7 @@ def battery_stop_threshold():
 
 def battery_setup():
     root_check()
-    conf = get_config()
+    conf = config.get_config()
     if conf.has_option("battery", "enable_thresholds"):
         if conf["battery"]["enable_thresholds"] == "true":
             if lsmod("thinkpad_acpi"):
@@ -53,7 +54,7 @@ def battery_setup():
 
 
 def battery_get_thresholds():
-    conf = get_config()
+    conf = config.get_config()
     if conf.has_option("battery", "enable_thresholds"):
         if conf["battery"]["enable_thresholds"] == "true":
             print("-" * 30)

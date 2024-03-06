@@ -14,6 +14,7 @@ from subprocess import call, run
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 from auto_cpufreq.battery_scripts.battery import *
+from auto_cpufreq.utils.config import config as conf
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -40,8 +41,9 @@ from auto_cpufreq.battery_scripts.battery import *
 def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
 
     # display info if config file is used
+    conf.set_path(config)
     def config_info_dialog():
-        if get_config(config) and hasattr(get_config, "using_cfg_file"):
+        if conf.has_config():
             print("\nUsing settings defined in " + config + " file")
 
     # set governor override unless None or invalid
@@ -69,6 +71,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect_snap()
                 battery_setup()
                 while True:
+                    conf.check_for_changes()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -81,6 +84,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
                 battery_setup()
                 while True:
+                    conf.check_for_changes()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -106,6 +110,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
             while True:
                 time.sleep(1)
+                conf.check_for_changes()
                 running_daemon_check()
                 footer()
                 gov_check()
@@ -130,6 +135,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
             while True:
                 try:
+                    conf.check_for_changes()
                     running_daemon_check()
                     footer()
                     gov_check()
