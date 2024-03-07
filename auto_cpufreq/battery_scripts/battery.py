@@ -17,7 +17,7 @@ def lsmod(module):
 
 
 def battery_start_threshold():
-    conf = config.config()
+    conf = config.get_config()
     if conf.has_option("battery", "start_threshold"):
         start_threshold = conf["battery"]["start_threshold"]
         return int(start_threshold)
