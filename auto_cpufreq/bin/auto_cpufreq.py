@@ -71,7 +71,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect_snap()
                 battery_setup()
                 while True:
-                    conf.check_for_changes()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -84,7 +83,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
                 battery_setup()
                 while True:
-                    conf.check_for_changes()
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -110,7 +108,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
             while True:
                 time.sleep(1)
-                conf.check_for_changes()
                 running_daemon_check()
                 footer()
                 gov_check()
@@ -135,7 +132,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
             while True:
                 try:
-                    conf.check_for_changes()
                     running_daemon_check()
                     footer()
                     gov_check()

@@ -9,8 +9,11 @@ class _Config:
         self._config: ConfigParser = ConfigParser()
         self.watch_manager: pyinotify.WatchManager = pyinotify.WatchManager()
         self.config_handler = ConfigEventHandler(self)
-        self.notifier: pyinotify.Notifier = pyinotify.Notifier(
+
+        # check for file changes using threading
+        notifier: pyinotify.ThreadedNotifierNotifier = pyinotify.ThreadedNotifier(
             self.watch_manager, self.config_handler)
+        notifier.start()
         
     def set_path(self, path: str) -> None:
         if os.path.isfile(path):
@@ -27,11 +30,5 @@ class _Config:
     
     def update_config(self) -> None:
         self._config.read(self.path)
-
-    def check_for_changes(self) -> None:
-        self.notifier.process_events()
-        if self.notifier.check_events():
-            self.notifier.read_events()
-
 
 config = _Config()
