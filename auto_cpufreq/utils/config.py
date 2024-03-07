@@ -16,11 +16,11 @@ class _Config:
         notifier.start()
         
     def set_path(self, path: str) -> None:
+        self.path = path;
+        mask = pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MODIFY
+        self.watch_manager.add_watch(os.path.dirname(path), mask=mask)
         if os.path.isfile(path):
-            mask = pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MODIFY
-            self.path = path;
             self.update_config()
-            self.watch_manager.add_watch(os.path.dirname(path), mask=mask)
 
 
     def has_config(self) -> bool:
@@ -30,6 +30,8 @@ class _Config:
         return self._config
     
     def update_config(self) -> None:
+        # create new ConfigParser to prevent old data from remaining
+        self._config = ConfigParser()
         try:
             self._config.read(self.path)
         except ParsingError as e:
