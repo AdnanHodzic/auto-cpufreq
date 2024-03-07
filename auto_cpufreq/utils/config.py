@@ -1,4 +1,4 @@
-from configparser import ConfigParser
+from configparser import ConfigParser, ParsingError
 from auto_cpufreq.utils.config_event_handler import ConfigEventHandler
 import pyinotify
 import os
@@ -17,9 +17,10 @@ class _Config:
         
     def set_path(self, path: str) -> None:
         if os.path.isfile(path):
+            mask = pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MODIFY
             self.path = path;
             self.update_config()
-            self.watch_manager.add_watch(os.path.dirname(path), pyinotify.ALL_EVENTS)
+            self.watch_manager.add_watch(os.path.dirname(path), mask=mask)
 
 
     def has_config(self) -> bool:
@@ -29,6 +30,9 @@ class _Config:
         return self._config
     
     def update_config(self) -> None:
-        self._config.read(self.path)
+        try:
+            self._config.read(self.path)
+        except ParsingError as e:
+            print(f"The following error occured while parsing the config file: \n{e}")
 
 config = _Config()
