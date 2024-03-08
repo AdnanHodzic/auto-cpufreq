@@ -1,0 +1,26 @@
+name: Nix Flake
+
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+      - ".gitignore"
+      - "LICENSE"
+  pull_request:
+
+jobs:
+  build-nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Install Nix ❄️"
+        uses: cachix/install-nix-action@v25
+
+      - name: "Nix Cache"
+        uses: DeterminateSystems/magic-nix-cache-action@v3
+
+      - name: "Build Nix Flake ❄️"
+        run: nix build
+
+      
