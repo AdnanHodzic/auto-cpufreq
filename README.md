@@ -501,6 +501,11 @@ start_threshold = 20
 stop_threshold = 80
 ```
 
+### Lenovo_laptop conservation mode
+
+this works only with `lenovo_laptop` kernel module compatable laptops.  
+
+add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
 ## Troubleshooting
 
