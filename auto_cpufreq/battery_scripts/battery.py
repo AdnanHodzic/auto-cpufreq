@@ -8,7 +8,7 @@ from auto_cpufreq.battery_scripts.ideapad_laptop import ideapad_laptop_setup, id
 
 def lsmod(module):
     output = subprocess.run(
-        ['lsmod'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        ['lsmod'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
     if module in output.stdout:
         return True
     else:
