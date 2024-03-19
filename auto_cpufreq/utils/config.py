@@ -11,9 +11,8 @@ class _Config:
         self.config_handler = ConfigEventHandler(self)
 
         # check for file changes using threading
-        notifier: pyinotify.ThreadedNotifierNotifier = pyinotify.ThreadedNotifier(
+        self.notifier: pyinotify.ThreadedNotifier = pyinotify.ThreadedNotifier(
             self.watch_manager, self.config_handler)
-        notifier.start()
         
     def set_path(self, path: str) -> None:
         self.path = path;
