@@ -130,7 +130,7 @@ sudo snap install auto-cpufreq
 
 ### AUR package (Arch/Manjaro Linux)
 
-The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was last updated on version 2.1.0 and is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12). 
+The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was last updated on version 2.2.0 and is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12), [liljaylj](https://github.com/liljaylj), and [parmjotsinghrobot](https://github.com/Parmjot-Singh). 
 
 **Notices**
 
@@ -501,6 +501,11 @@ start_threshold = 20
 stop_threshold = 80
 ```
 
+### Lenovo_laptop conservation mode
+
+this works only with `lenovo_laptop` kernel module compatable laptops.  
+
+add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
 ## Troubleshooting
 
