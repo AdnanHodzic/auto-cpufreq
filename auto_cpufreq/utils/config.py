@@ -17,7 +17,8 @@ class _Config:
         
     def set_path(self, path: str) -> None:
         self.path = path;
-        mask = pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MODIFY
+        mask = pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MODIFY \
+            | pyinotify.IN_MOVED_FROM | pyinotify.IN_MOVED_TO
         self.watch_manager.add_watch(os.path.dirname(path), mask=mask)
         if os.path.isfile(path):
             self.update_config()
