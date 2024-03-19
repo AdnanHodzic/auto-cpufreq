@@ -15,7 +15,7 @@ python310Packages.buildPythonPackage {
 
   buildInputs = with pkgs; [gtk3 python310Packages.poetry-core];
 
-  propagatedBuildInputs = with python310Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning];
+  propagatedBuildInputs = with python310Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify];
 
   doCheck = false;
   pythonImportsCheck = ["auto_cpufreq"];

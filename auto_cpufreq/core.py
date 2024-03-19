@@ -12,7 +12,6 @@ import time
 import click
 import pickle
 import warnings
-import configparser
 # import pkg_resources
 import importlib.metadata
 from math import isclose
@@ -27,6 +26,7 @@ from datetime import datetime
 
 sys.path.append("../")
 from auto_cpufreq.power_helper import *
+from auto_cpufreq.utils.config import config
 
 warnings.filterwarnings("ignore")
 
@@ -83,16 +83,6 @@ def file_stats():
     global auto_cpufreq_stats_file
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
-
-def get_config(config_file=""):
-    if not hasattr(get_config, "config"):
-        get_config.config = configparser.ConfigParser()
-
-        if os.path.isfile(config_file):
-            get_config.config.read(config_file)
-            get_config.using_cfg_file = True
-
-    return get_config.config
 
 def get_override():
     if os.path.isfile(governor_override_state):
@@ -638,7 +628,7 @@ def set_frequencies():
     if not hasattr(set_frequencies, "min_limit"):
         set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
 
-    conf = get_config()
+    conf = config.get_config()
 
     for freq_type in frequency.keys():
         value = None
@@ -679,7 +669,7 @@ def set_frequencies():
 
 # set powersave and enable turbo
 def set_powersave():
-    conf = get_config()
+    conf = config.get_config()
     if conf.has_option("battery", "governor"):
         gov = conf["battery"]["governor"]
     else:
@@ -902,7 +892,7 @@ def mon_powersave():
 
 # set performance and enable turbo
 def set_performance():
-    conf = get_config()
+    conf = config.get_config()
     if conf.has_option("charger", "governor"):
         gov = conf["charger"]["governor"]
     else:

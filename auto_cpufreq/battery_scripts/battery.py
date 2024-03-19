@@ -31,6 +31,7 @@ def battery_setup():
 
 
 def battery_get_thresholds():
+
     if lsmod("thinkpad_acpi"):
         thinkpad_print_thresholds()
 
