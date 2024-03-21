@@ -7,7 +7,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/auto-cpufreq/venv
 Environment=PYTHONPATH=/opt/auto-cpufreq
-ExecStart=/opt/auto-cpufreq/venv/bin/python /opt/auto-cpufreq/venv/bin/auto-cpufreq --daemon
+ExecStart=if git -c advice.detachedHead=false pull -v https://github.com/AdnanHodzic/auto-cpufreq.git | grep -q -v '^\s*\(Updating\|Already up-to-date\|From\s\)\s'; then exit; else echo "i" | sudo ~/auto-cpufreq/auto-cpufreq-installer && notify-send -a "auto-cpufreq" "Update installed" && sleep 1000; fi ; /opt/auto-cpufreq/venv/bin/python /opt/auto-cpufreq/venv/bin/auto-cpufreq --daemon
 Restart=on-failure
 
 [Install]
