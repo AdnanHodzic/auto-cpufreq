@@ -32,7 +32,7 @@ def get_stats():
 def get_version():
     # snap package
     if os.getenv("PKG_MARKER") == "SNAP":
-        return getoutput("echo \(Snap\) $SNAP_VERSION")
+        return getoutput(r"echo \(Snap\) $SNAP_VERSION")
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = run("pacman -Qs auto-cpufreq > /dev/null", shell=True)

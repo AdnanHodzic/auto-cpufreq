@@ -1,4 +1,6 @@
 # auto-cpufreq
+[![Linux Build](https://github.com/AdnanHodzic/auto-cpufreq/actions/workflows/build-linux.yml/badge.svg?event=push)](https://github.com/AdnanHodzic/auto-cpufreq/actions/workflows/build-linux.yml)
+[![Nix Flake](https://github.com/AdnanHodzic/auto-cpufreq/actions/workflows/build-nix.yaml/badge.svg?event=push)](https://github.com/AdnanHodzic/auto-cpufreq/actions/workflows/build-nix.yaml)
 
 Automatic CPU speed & power optimizer for Linux. Actively monitors laptop battery state, CPU usage, CPU temperature, and system load, ultimately allowing you to improve battery life without making any compromises.
 
@@ -128,7 +130,7 @@ sudo snap install auto-cpufreq
 
 ### AUR package (Arch/Manjaro Linux)
 
-The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was last updated on version 2.1.0 and is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12). 
+The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was last updated on version 2.2.0 and is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12), [liljaylj](https://github.com/liljaylj), and [parmjotsinghrobot](https://github.com/Parmjot-Singh). 
 
 **Notices**
 
@@ -499,6 +501,11 @@ start_threshold = 20
 stop_threshold = 80
 ```
 
+### Lenovo_laptop conservation mode
+
+this works only with `lenovo_laptop` kernel module compatable laptops.  
+
+add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
 ## Troubleshooting
 
