@@ -13,7 +13,7 @@ class ConfigEventHandler(pyinotify.ProcessEvent):
         self._process_update(event)
 
     # activates when auto-cpufreq config file is deleted
-    def process_IN_DELETE_SELF(self, event: pyinotify.Event) -> None:
+    def process_IN_DELETE(self, event: pyinotify.Event) -> None:
         self._process_update(event)
 
     # activates when auto-cpufreq config file is created
