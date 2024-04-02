@@ -105,7 +105,7 @@ def find_config_file(args_config_file):
     system_config_file = "/etc/auto-cpufreq.conf"
 
     # If config file is provided as a command line argument but is invalid, exit with error message
-    if args_config_file != None and args_config_file is not "":
+    if args_config_file is not None:
         if not os.path.isfile(args_config_file):
             print(f"Config file specified with '--config {args_config_file}' not found.")
             sys.exit(1)
