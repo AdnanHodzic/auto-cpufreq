@@ -84,6 +84,34 @@ def file_stats():
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
+
+def find_config_file(args_config_file):
+    """
+    Find the config file to use.
+
+    Look for a config file in the following priorization order:
+    1. Command line argument
+    2. User config file
+    3. System config file
+
+    :param args_config_file: Path to the config file provided as a command line argument
+    :return: The path to the config file to use
+    """
+
+    # Prepare paths
+    home = os.getenv("HOME")
+    user_config_dir = os.getenv("XDG_CONFIG_HOME", default=os.path.join(home, ".config"))
+    user_config_file = os.path.join(user_config_dir, "auto-cpufreq/auto-cpufreq.conf")
+    system_config_file = "/etc/auto-cpufreq.conf"
+
+    if args_config_file and os.path.isfile(args_config_file):  # (1) Command line argument
+        return args_config_file
+    elif os.path.isfile(os.path.join(user_config_file)):  # (2) User config file
+        return user_config_file
+    else:  # (3) System config file (default if nothing else is found)
+        return system_config_file
+
+
 def get_config(config_file=""):
     if not hasattr(get_config, "config"):
         get_config.config = configparser.ConfigParser()
