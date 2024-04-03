@@ -284,7 +284,11 @@ See [`--force` flag](#overriding-governor) for more info.
 
 You can configure separate profiles for the battery and power supply. These profiles will let you pick which governor to use, as well as how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto`, and `never`. The default behavior is `auto`, which only activates turbo during high load.
 
-By default, auto-cpufreq does not use the config file! If you wish to use it, the location where it needs to be placed to be read automatically is: `/etc/auto-cpufreq.conf`
+By default, auto-cpufreq does not use a config file. If you wish to configure auto-cpufreq statically, we look for a configuration file in the following order:
+
+1. Commandline argument: `--config <FILE>` if passed as commandline argument to `auto-cpufreq`
+2. User-specific configuration: `$XDG_CONFIG_HOME/auto-cpufreq/auto-cpufreq.conf`
+3. System-wide configuration: `/etc/auto-cpufreq.conf`
 
 #### Example config file contents
 ```python

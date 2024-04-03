@@ -28,7 +28,7 @@ from auto_cpufreq.battery_scripts.battery import *
 @click.option(
     "--config",
     is_flag=False,
-    default="/etc/auto-cpufreq.conf",
+    required=False,
     help="Use config file at defined path",
 )
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
@@ -41,8 +41,10 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
 
     # display info if config file is used
     def config_info_dialog():
-        if get_config(config) and hasattr(get_config, "using_cfg_file"):
-            print("\nUsing settings defined in " + config + " file")
+
+        config_file = find_config_file(config)
+        if get_config(config_file) and hasattr(get_config, "using_cfg_file"):
+            print("\nUsing settings defined in " + config_file + " file")
 
     # set governor override unless None or invalid
     if force is not None:
