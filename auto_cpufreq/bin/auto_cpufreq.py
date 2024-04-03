@@ -29,7 +29,7 @@ from auto_cpufreq.utils.config import config as conf
 @click.option(
     "--config",
     is_flag=False,
-    default="/etc/auto-cpufreq.conf",
+    required=False,
     help="Use config file at defined path",
 )
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
