@@ -104,14 +104,14 @@ def find_config_file(args_config_file):
     user_config_file = os.path.join(user_config_dir, "auto-cpufreq/auto-cpufreq.conf")
     system_config_file = "/etc/auto-cpufreq.conf"
 
-    # If config file is provided as a command line argument but is invalid, exit with error message
-    if args_config_file is not None:
-        if not os.path.isfile(args_config_file):
+    if args_config_file is not None: # (1) Command line argument was specified
+        # Check if the config file path points to a valid file
+        if os.path.isfile(args_config_file):
+            return args_config_file
+        else:
+            # Not a valid file
             print(f"Config file specified with '--config {args_config_file}' not found.")
             sys.exit(1)
-
-    if args_config_file and os.path.isfile(args_config_file):  # (1) Command line argument
-        return args_config_file
     elif os.path.isfile(os.path.join(user_config_file)):  # (2) User config file
         return user_config_file
     else:  # (3) System config file (default if nothing else is found)
