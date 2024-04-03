@@ -1,7 +1,47 @@
 from configparser import ConfigParser, ParsingError
 from auto_cpufreq.utils.config_event_handler import ConfigEventHandler
 import pyinotify
+from subprocess import run, PIPE
 import os
+import sys
+
+def find_config_file(args_config_file: str | None) -> str:
+    """
+    Find the config file to use.
+
+    Look for a config file in the following priorization order:
+    1. Command line argument
+    2. User config file
+    3. System config file
+
+    :param args_config_file: Path to the config file provided as a command line argument
+    :return: The path to the config file to use
+    """
+
+    # Prepare paths
+
+    # use $SUDO_USER or $USER to get home dir since sudo can't access
+    # user env vars
+    home = run(["getent passwd ${SUDO_USER:-$USER} | cut -d: -f6"],
+               shell=True,
+               stdout=PIPE,
+               universal_newlines=True).stdout.rstrip()
+    user_config_dir = os.getenv("XDG_CONFIG_HOME", default=os.path.join(home, ".config"))
+    user_config_file = os.path.join(user_config_dir, "auto-cpufreq/auto-cpufreq.conf")
+    system_config_file = "/etc/auto-cpufreq.conf"
+
+    if args_config_file is not None: # (1) Command line argument was specified
+        # Check if the config file path points to a valid file
+        if os.path.isfile(args_config_file):
+            return args_config_file
+        else:
+            # Not a valid file
+            print(f"Config file specified with '--config {args_config_file}' not found.")
+            sys.exit(1)
+    elif os.path.isfile(user_config_file):  # (2) User config file
+        return user_config_file
+    else:  # (3) System config file (default if nothing else is found)
+        return system_config_file
 
 class _Config:
     def __init__(self) -> None:

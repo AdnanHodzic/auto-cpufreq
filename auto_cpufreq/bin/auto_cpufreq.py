@@ -14,7 +14,7 @@ from subprocess import call, run
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 from auto_cpufreq.battery_scripts.battery import *
-from auto_cpufreq.utils.config import config as conf
+from auto_cpufreq.utils.config import config as conf, find_config_file
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -41,10 +41,11 @@ from auto_cpufreq.utils.config import config as conf
 def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
 
     # display info if config file is used
-    conf.set_path(config)
+    config_path = find_config_file(config)
+    conf.set_path(config_path)
     def config_info_dialog():
         if conf.has_config():
-            print("\nUsing settings defined in " + config + " file")
+            print("\nUsing settings defined in " + config_path + " file")
 
     # set governor override unless None or invalid
     if force is not None:
