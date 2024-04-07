@@ -267,6 +267,8 @@ def turbo(value: bool = None):
     """
     p_state = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
     cpufreq = Path("/sys/devices/system/cpu/cpufreq/boost")
+    amd_pstate = Path("/sys/devices/system/cpu/amd_pstate/status")
+    scaling_driver = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver")
 
     if p_state.exists():
         inverse = True
@@ -274,6 +276,14 @@ def turbo(value: bool = None):
     elif cpufreq.exists():
         f = cpufreq
         inverse = False
+    elif amd_pstate.exists() and scaling_driver.exists():
+        amd_value = amd_pstate.read_text().strip()
+        scaling_driver_value = scaling_driver.read_text().strip()
+        if amd_value == "active" and scaling_driver_value == "amd-pstate-epp":
+            print("CPU turbo is controlled by amd-pstate-epp driver")
+        else:
+            print("Warning: CPU turbo is not available")
+        return False
     else:
         print("Warning: CPU turbo is not available")
         return False
