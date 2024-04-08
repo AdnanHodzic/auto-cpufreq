@@ -279,9 +279,8 @@ def turbo(value: bool = None):
         value = amd_pstate.read_text().strip()
         if value == "active":
             print("CPU turbo is controlled by amd-pstate-epp driver")
-        else:
-            print("Warning: CPU turbo is not available")
-        return False
+            return False
+        # Should not reach here.
     else:
         print("Warning: CPU turbo is not available")
         return False
