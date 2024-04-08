@@ -276,8 +276,8 @@ def turbo(value: bool = None):
         f = cpufreq
         inverse = False
     elif amd_pstate.exists():
-        value = amd_pstate.read_text().strip()
-        if value == "active":
+        amd_value = amd_pstate.read_text().strip()
+        if amd_value == "active":
             print("CPU turbo is controlled by amd-pstate-epp driver")
             return False
         # Should not reach here.
