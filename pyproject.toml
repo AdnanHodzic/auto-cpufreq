@@ -22,7 +22,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-psutil = "^5.9.5"
+psutil = {git = "https://github.com/giampaolo/psutil.git", rev = "4cf56e08c1bc883ec89758834b50954380759858"}
 click = "^8.1.0"
 distro = "^1.8.0"
 requests = "^2.31.0"
