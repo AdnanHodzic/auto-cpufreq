@@ -5,11 +5,12 @@ from auto_cpufreq.core import get_config
 
 
 def set_battery(value, mode, bat):
-    try:
+    path = f"/sys/class/power_supply/BAT{bat}/charge_{mode}_threshold"
+    if os.path.exists(path):
         subprocess.check_output(
             f"echo {value} | tee /sys/class/power_supply/BAT{bat}/charge_{mode}_threshold", shell=True, text=True)
-    except Exception as e:
-        print(f"Error writing to file_path: {e}")
+    else:
+        print(f"WARNING: {path} does NOT exist")
 
 
 def get_threshold_value(mode):
