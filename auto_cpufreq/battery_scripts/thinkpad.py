@@ -34,7 +34,7 @@ def thinkpad_setup():
     if not config["battery"]["enable_thresholds"] == "true":
         return
 
-    if os.path.isfile("/sys/class/power_supply/"):
+    if os.path.exists("/sys/class/power_supply/"):
         battery_count = len([name for name in os.listdir(
             "/sys/class/power_supply/") if name.startswith('BAT')])
 

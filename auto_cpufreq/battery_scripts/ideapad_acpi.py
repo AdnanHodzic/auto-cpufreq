@@ -5,11 +5,12 @@ from auto_cpufreq.core import get_config
 
 
 def set_battery(value, mode, bat):
-    try:
+    path = f"/sys/class/power_supply/BAT{bat}/charge_{mode}_threshold"
+    if os.path.isfile(path):
         subprocess.check_output(
-            f"echo {value} | tee /sys/class/power_supply/BAT{bat}/charge_{mode}_threshold", shell=True, text=True)
-    except Exception as e:
-        print(f"Error writing to file_path: {e}")
+            f"echo {value} | tee {path}", shell=True, text=True)
+    else:
+        print(f"WARNING: {path} does NOT exist")
 
 
 def get_threshold_value(mode):
@@ -33,12 +34,15 @@ def ideapad_acpi_setup():
     if not config["battery"]["enable_thresholds"] == "true":
         return
 
-    battery_count = len([name for name in os.listdir(
-        "/sys/class/power_supply/") if name.startswith('BAT')])
+    if os.path.exists("/sys/class/power_supply/"):
+        battery_count = len([name for name in os.listdir(
+            "/sys/class/power_supply/") if name.startswith('BAT')])
 
-    for bat in range(battery_count):
-        set_battery(get_threshold_value("start"), "start", bat)
-        set_battery(get_threshold_value("stop"), "stop", bat)
+        for bat in range(battery_count):
+            set_battery(get_threshold_value("start"), "start", bat)
+            set_battery(get_threshold_value("stop"), "stop", bat)
+    else:
+        print("WARNING: could NOT access /sys/class/power_supply")
 
 
 def ideapad_acpi_print_thresholds():
