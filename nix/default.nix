@@ -2,7 +2,18 @@
   lib,
   python310Packages,
   pkgs,
+  fetchFromGitHub,
 }:
+let
+  psutilGit = python310Packages.psutil.overrideAttrs (oldAttrs: {
+    src = fetchFromGitHub {
+      owner = "giampaolo";
+      repo = "psutil";
+      rev = "4cf56e08c1bc883ec89758834b50954380759858";
+      sha256 = "61JwXP/cZrXqdBnb2J0kdDJoKpltO62KcpM0sYX6g1A=";
+    };
+  });
+in
 python310Packages.buildPythonPackage {
   # use pyproject.toml instead of setup.py
   format = "pyproject";
@@ -15,7 +26,7 @@ python310Packages.buildPythonPackage {
 
   buildInputs = with pkgs; [gtk3 python310Packages.poetry-core];
 
-  propagatedBuildInputs = with python310Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify];
+  propagatedBuildInputs = with python310Packages; [requests pygobject3 click distro psutilGit setuptools poetry-dynamic-versioning pyinotify];
 
   doCheck = false;
   pythonImportsCheck = ["auto_cpufreq"];

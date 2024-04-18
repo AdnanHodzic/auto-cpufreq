@@ -258,6 +258,7 @@ def turbo(value: bool = None):
     """
     p_state = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
     cpufreq = Path("/sys/devices/system/cpu/cpufreq/boost")
+    amd_pstate = Path("/sys/devices/system/cpu/amd_pstate/status")
 
     if p_state.exists():
         inverse = True
@@ -265,6 +266,12 @@ def turbo(value: bool = None):
     elif cpufreq.exists():
         f = cpufreq
         inverse = False
+    elif amd_pstate.exists():
+        amd_value = amd_pstate.read_text().strip()
+        if amd_value == "active":
+            print("CPU turbo is controlled by amd-pstate-epp driver")
+        # Basically, no other value should exist.
+        return False
     else:
         print("Warning: CPU turbo is not available")
         return False
