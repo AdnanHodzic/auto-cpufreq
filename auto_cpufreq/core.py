@@ -942,8 +942,12 @@ def set_performance():
                 run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
                 print(f'Setting to use: "{epp}" EPP')
             else:
-                run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
-                print('Setting to use: "performance" EPP')
+                if Path("/sys/devices/system/cpu/intel_pstate/status").exists() is True:
+                    run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
+                    print('Setting to use: "performance" EPP')
+                else:
+                    run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
+                    print('Setting to use: "balance_performance" EPP')
 
     # set frequencies
     set_frequencies()
