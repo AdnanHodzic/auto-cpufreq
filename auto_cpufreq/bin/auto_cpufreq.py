@@ -76,13 +76,17 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             battery_setup()
             conf.notifier.start()
             while True:
-                footer()
-                gov_check()
-                cpufreqctl()
-                distro_info()
-                sysinfo()
-                set_autofreq()
-                countdown(2)
+                try:
+                    footer()
+                    gov_check()
+                    cpufreqctl()
+                    distro_info()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(2)
+                except KeyboardInterrupt:
+                    break;
+            conf.notifier.stop()
         elif monitor:
             config_info_dialog()
             root_check()
@@ -97,15 +101,19 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 gnome_power_detect()
                 tlp_service_detect()
             while True:
-                time.sleep(1)
-                running_daemon_check()
-                footer()
-                gov_check()
-                cpufreqctl()
-                distro_info()
-                sysinfo()
-                mon_autofreq()
-                countdown(2)
+                try:
+                    time.sleep(1)
+                    running_daemon_check()
+                    footer()
+                    gov_check()
+                    cpufreqctl()
+                    distro_info()
+                    sysinfo()
+                    mon_autofreq()
+                    countdown(2)
+                except KeyboardInterrupt:
+                    break
+            conf.notifier.stop()
         elif live:
             root_check()
             config_info_dialog()
@@ -134,7 +142,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 except KeyboardInterrupt:
                     gnome_power_start_live()
                     print("")
-                    sys.exit()
+                    break
+            conf.notifier.stop()
         elif stats:
             not_running_daemon_check()
             config_info_dialog()
