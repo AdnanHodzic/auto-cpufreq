@@ -48,16 +48,17 @@ def thinkpad_setup():
 def thinkpad_print_thresholds():
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
-    print(f"number of batteries = {battery_count}")
+    print("\n-------------------------------- Battery Info ---------------------------------\n")
+    print(f"battery count = {battery_count}\n")
     for b in range(battery_count):
         try:
             with open(f'/sys/class/power_supply/BAT{b}/charge_start_threshold', 'r') as f:
-                print(f'battery{b} start threshold is set to {f.read()}')
+                print(f'battery{b} start threshold = {f.read()}')
                 f.close()
 
             with open(f'/sys/class/power_supply/BAT{b}/charge_stop_threshold', 'r') as f:
-                print(f'battery{b} stop threshold is set to {f.read()}')
+                print(f'battery{b} stop threshold = {f.read()}')
                 f.close()
 
-        except Exception as e:
-            print(f"Error reading battery thresholds: {e}")
+        except Exception:
+            print(f"ERROR: failed to read battery {b} thresholds")
