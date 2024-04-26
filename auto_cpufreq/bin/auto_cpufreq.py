@@ -144,7 +144,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     sys.exit()
         elif stats:
             not_running_daemon_check()
-            battery_get_thresholds()
             config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if os.getenv("PKG_MARKER") == "SNAP":
@@ -153,6 +152,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             else:
                 gnome_power_detect()
                 tlp_service_detect()
+            brttery_get_thresholds()
             read_stats()
         elif log:
             deprecated_log_msg()
@@ -163,8 +163,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         elif debug:
             # ToDo: add status of GNOME Power Profile service status
             config_info_dialog()
-            battery_get_thresholds()
             root_check()
+            battery_get_thresholds()
             cpufreqctl()
             footer()
             distro_info()
