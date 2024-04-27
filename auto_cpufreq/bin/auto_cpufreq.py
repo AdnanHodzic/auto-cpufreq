@@ -14,16 +14,19 @@ from subprocess import call, run
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 from auto_cpufreq.battery_scripts.battery import *
+
+
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
 @click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
-@click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
+@click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations",
+              flag_value="--update")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
-
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
-@click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
+@click.option("--force", is_flag=False,
+              help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
 @click.option("--get-state", is_flag=True, hidden=True)
 @click.option(
     "--config",
@@ -34,11 +37,12 @@ from auto_cpufreq.battery_scripts.battery import *
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-@click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
+@click.option("--completions", is_flag=False,
+              help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
-
+def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state,
+         completions):
     # display info if config file is used
     def config_info_dialog():
         if get_config(config) and hasattr(get_config, "using_cfg_file"):
@@ -47,13 +51,13 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
     # set governor override unless None or invalid
     if force is not None:
         not_running_daemon_check()
-        root_check() # Calling root_check before set_override as it will require sudo access
-        set_override(force) # Calling set override, only if force has some values
+        root_check()  # Calling root_check before set_override as it will require sudo access
+        set_override(force)  # Calling set override, only if force has some values
 
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
- 
+
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
@@ -91,7 +95,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             else:
                 pass
             #"daemon_not_found" is not defined
-                #daemon_not_found()
+            #daemon_not_found()
         elif monitor:
             config_info_dialog()
             root_check()
@@ -200,7 +204,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 running_daemon_check()
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
-                bluetooth_notif_snap()
+                bluetooth_notify(status="off")
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
                 run("snapctl start --enable auto-cpufreq", shell=True)
@@ -237,13 +241,13 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 if arg.startswith("--update="):
                     custom_dir = arg.split("=")[1]
                     sys.argv.remove(arg)
-                    
+
             if "--update" in sys.argv:
                 update = True
                 sys.argv.remove("--update")
                 if len(sys.argv) == 2:
-                    custom_dir = sys.argv[1] 
-                    
+                    custom_dir = sys.argv[1]
+
             if os.getenv("PKG_MARKER") == "SNAP":
                 print("Detected auto-cpufreq was installed using snap")
                 # refresh snap directly using this command
@@ -251,8 +255,10 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
 
                 print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
                 #check for AUR 
-            elif subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0 and subprocess.run(["bash", "-c", "pacman -Q auto-cpufreq >/dev/null 2>&1"]).returncode == 0:
-                print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
+            elif subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0 and subprocess.run(
+                    ["bash", "-c", "pacman -Q auto-cpufreq >/dev/null 2>&1"]).returncode == 0:
+                print(
+                    "Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 is_new_update = check_for_update()
                 if not is_new_update:
@@ -284,10 +290,10 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 print("source ~/.zshrc")
             elif completions == "fish":
                 print("Run the below command in your current shell!\n")
-                print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
+                print(
+                    "echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
             else:
                 print("Invalid Option, try bash|zsh|fish as argument to --completions")
-                
 
 
 if __name__ == "__main__":
