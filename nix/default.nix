@@ -1,11 +1,12 @@
 {
   lib,
-  python310Packages,
+  python3Packages,
   pkgs,
   fetchFromGitHub,
 }:
 let
-  psutilGit = python310Packages.psutil.overrideAttrs (oldAttrs: {
+
+  psutil = python3Packages.psutil.overrideAttrs (oldAttrs: {
     src = fetchFromGitHub {
       owner = "giampaolo";
       repo = "psutil";
@@ -13,8 +14,18 @@ let
       sha256 = "61JwXP/cZrXqdBnb2J0kdDJoKpltO62KcpM0sYX6g1A=";
     };
   });
+
+  pyinotify = python3Packages.pyinotify.overrideAttrs (oldAttrs: {
+    src = fetchFromGitHub {
+      owner = "shadeyg56";
+      repo = "pyinotify-3.12";
+      rev = "923cebec3a2a84c7e38c9e68171eb93f5d07ce5d";
+      hash = "sha256-714CximEK4YhIqDmvqJYOUGs39gvDkWGrkNrXwxT8iM=";
+    };
+  });
+
 in
-python310Packages.buildPythonPackage {
+python3Packages.buildPythonPackage {
   # use pyproject.toml instead of setup.py
   format = "pyproject";
 
@@ -24,9 +35,9 @@ python310Packages.buildPythonPackage {
 
   nativeBuildInputs = with pkgs; [wrapGAppsHook gobject-introspection];
 
-  buildInputs = with pkgs; [gtk3 python310Packages.poetry-core];
+  buildInputs = with pkgs; [gtk3 python3Packages.poetry-core];
 
-  propagatedBuildInputs = with python310Packages; [requests pygobject3 click distro psutilGit setuptools poetry-dynamic-versioning pyinotify];
+  propagatedBuildInputs = with python3Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify];
 
   doCheck = false;
   pythonImportsCheck = ["auto_cpufreq"];
