@@ -937,12 +937,20 @@ def set_performance():
         if dynboost_enabled:
             print('Not setting EPP (dynamic boosting is enabled)')
         else:
+            intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
+
             if conf.has_option("charger", "energy_performance_preference"):
                 epp = conf["charger"]["energy_performance_preference"]
+
+                if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance":
+                    print(f'Warning "{epp}" EPP is not allowed in Intel CPU')
+                    print('Overriding EPP to "performance"')
+                    epp = "performance"
+
                 run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
                 print(f'Setting to use: "{epp}" EPP')
             else:
-                if Path("/sys/devices/system/cpu/intel_pstate/status").exists() and open("/sys/devices/system/cpu/intel_pstate/status", 'r').read().strip() == "active":
+                if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active":
                     run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
                     print('Setting to use: "performance" EPP')
                 else:
