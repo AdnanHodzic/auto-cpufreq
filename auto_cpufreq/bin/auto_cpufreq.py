@@ -14,6 +14,7 @@ from subprocess import call, run
 from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 from auto_cpufreq.battery_scripts.battery import *
+from auto_cpufreq.utils.config import config as conf, find_config_file
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -28,7 +29,7 @@ from auto_cpufreq.battery_scripts.battery import *
 @click.option(
     "--config",
     is_flag=False,
-    default="/etc/auto-cpufreq.conf",
+    required=False,
     help="Use config file at defined path",
 )
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
@@ -40,9 +41,11 @@ from auto_cpufreq.battery_scripts.battery import *
 def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
 
     # display info if config file is used
+    config_path = find_config_file(config)
+    conf.set_path(config_path)
     def config_info_dialog():
-        if get_config(config) and hasattr(get_config, "using_cfg_file"):
-            print("\nUsing settings defined in " + config + " file")
+        if conf.has_config():
+            print("\nUsing settings defined in " + config_path + " file")
 
     # set governor override unless None or invalid
     if force is not None:
@@ -67,20 +70,13 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
-                battery_setup()
-                while True:
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    set_autofreq()
-                    countdown(2)
             elif os.getenv("PKG_MARKER") != "SNAP":
                 gnome_power_detect()
                 tlp_service_detect()
-                battery_setup()
-                while True:
+            battery_setup()
+            conf.notifier.start()
+            while True:
+                try:
                     footer()
                     gov_check()
                     cpufreqctl()
@@ -88,16 +84,16 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     sysinfo()
                     set_autofreq()
                     countdown(2)
-            else:
-                pass
-            #"daemon_not_found" is not defined
-                #daemon_not_found()
+                except KeyboardInterrupt:
+                    break;
+            conf.notifier.stop()
         elif monitor:
             config_info_dialog()
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
             battery_setup()
             battery_get_thresholds()
+            conf.notifier.start()
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -105,15 +101,19 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 gnome_power_detect()
                 tlp_service_detect()
             while True:
-                time.sleep(1)
-                running_daemon_check()
-                footer()
-                gov_check()
-                cpufreqctl()
-                distro_info()
-                sysinfo()
-                mon_autofreq()
-                countdown(2)
+                try:
+                    time.sleep(1)
+                    running_daemon_check()
+                    footer()
+                    gov_check()
+                    cpufreqctl()
+                    distro_info()
+                    sysinfo()
+                    mon_autofreq()
+                    countdown(2)
+                except KeyboardInterrupt:
+                    break
+            conf.notifier.stop()
         elif live:
             root_check()
             config_info_dialog()
@@ -121,6 +121,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             time.sleep(1)
             battery_setup()
             battery_get_thresholds()
+            conf.notifier.start()
             if os.getenv("PKG_MARKER") == "SNAP":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -141,7 +142,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 except KeyboardInterrupt:
                     gnome_power_start_live()
                     print("")
-                    sys.exit()
+                    break
+            conf.notifier.stop()
         elif stats:
             not_running_daemon_check()
             config_info_dialog()
