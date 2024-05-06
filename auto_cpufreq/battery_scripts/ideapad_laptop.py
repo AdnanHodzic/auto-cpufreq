@@ -86,15 +86,15 @@ def ideapad_laptop_print_thresholds():
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
     print("\n-------------------------------- Battery Info ---------------------------------\n")
-    print(f"battery count = {battery_count}\n")
+    print(f"battery count = {battery_count}")
     for b in range(battery_count):
         try:
             with open(f'/sys/class/power_supply/BAT{b}/charge_start_threshold', 'r') as f:
-                print(f'battery{b} start threshold = {f.read()}')
+                print(f'battery{b} start threshold = {f.read()}', end="")
                 f.close()
 
             with open(f'/sys/class/power_supply/BAT{b}/charge_stop_threshold', 'r') as f:
-                print(f'battery{b} stop threshold = {f.read()}')
+                print(f'battery{b} stop threshold = {f.read()}', end="")
                 f.close()
 
         except Exception:
