@@ -113,14 +113,14 @@ except PermissionError:
     # Current work-around for Pop!_OS where symlink causes permission issues
     print("[!] Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
-            # Check if using a Snap 
+            # Check if using a Snap
             if os.getenv("PKG_MARKER") == "SNAP":
-                print("[!] Snap install on PopOS detected, you must manually run the following" 
-                        " commands in another terminal:\n")            
+                print("[!] Snap install on PopOS detected, you must manually run the following"
+                        " commands in another terminal:\n")
                 print("[!] Backup the /etc/os-release file:")
-                print("sudo mv /etc/os-release /etc/os-release-backup\n")                
+                print("sudo mv /etc/os-release /etc/os-release-backup\n")
                 print("[!] Create hardlink to /etc/os-release:")
-                print("sudo ln /etc/pop-os/os-release /etc/os-release\n")            
+                print("sudo ln /etc/pop-os/os-release /etc/os-release\n")
                 print("[!] Aborting. Restart auto-cpufreq when you created the hardlink")
                 sys.exit(1)
             else:
@@ -173,7 +173,7 @@ def check_for_update():
             print("Error fetching recent release!")
             if message is not None and message.startswith("API rate limit exceeded"):
                 print("GitHub Rate limit exceeded. Please try again later within 1 hour or use different network/VPN.")
-            else: 
+            else:
                 print("Unexpected status code:", response.status_code)
             return False
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
@@ -206,8 +206,8 @@ def check_for_update():
         # Handle the case where "tag_name" key doesn't exist
         print("Malformed Released data!\nReinstall manually or Open an issue on GitHub for help!")
 
-    
-    
+
+
 def new_update(custom_dir):
     os.chdir(custom_dir)
     print(f"Cloning the latest release to {custom_dir}")
@@ -238,7 +238,7 @@ def get_formatted_version():
     literal_version = get_literal_version("auto-cpufreq")
     splitted_version = literal_version.split("+")
     formatted_version = splitted_version[0]
-    
+
     if len(splitted_version) > 1:
         formatted_version += " (git: " + splitted_version[1] + ")"
 
@@ -562,7 +562,7 @@ def countdown(s):
     os.environ["TERM"] = "xterm"
 
     print("\t\t\"auto-cpufreq\" is about to refresh ", end = "")
-    
+
     # empty log file if size is larger then 10mb
     if auto_cpufreq_stats_file is not None:
         log_size = os.path.getsize(auto_cpufreq_stats_path)
@@ -928,13 +928,25 @@ def set_performance():
         if dynboost_enabled:
             print('Not setting EPP (dynamic boosting is enabled)')
         else:
+            intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
+
             if conf.has_option("charger", "energy_performance_preference"):
                 epp = conf["charger"]["energy_performance_preference"]
+
+                if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance":
+                    print(f'Warning "{epp}" EPP is not allowed in Intel CPU')
+                    print('Overriding EPP to "performance"')
+                    epp = "performance"
+
                 run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
                 print(f'Setting to use: "{epp}" EPP')
             else:
-                run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
-                print('Setting to use: "balance_performance" EPP')
+                if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active":
+                    run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
+                    print('Setting to use: "performance" EPP')
+                else:
+                    run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
+                    print('Setting to use: "balance_performance" EPP')
 
     # set frequencies
     set_frequencies()
@@ -1373,4 +1385,3 @@ def not_running_daemon_check():
     elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
         daemon_not_running_msg()
         exit(1)
-
