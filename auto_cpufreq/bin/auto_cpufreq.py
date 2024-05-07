@@ -152,7 +152,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-            brttery_get_thresholds()
+            battery_get_thresholds()
             read_stats()
         elif log:
             deprecated_log_msg()
