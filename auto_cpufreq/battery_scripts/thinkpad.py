@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import subprocess
-from auto_cpufreq.core import get_config
+from auto_cpufreq.utils.config import config
 
 
 def set_battery(value, mode, bat):
@@ -15,9 +15,9 @@ def set_battery(value, mode, bat):
 
 def get_threshold_value(mode):
 
-    config = get_config()
-    if config.has_option("battery", f"{mode}_threshold"):
-        return config["battery"][f"{mode}_threshold"]
+    conf = config.get_config()
+    if conf.has_option("battery", f"{mode}_threshold"):
+        return conf["battery"][f"{mode}_threshold"]
     else:
         if mode == "start":
 
@@ -27,11 +27,11 @@ def get_threshold_value(mode):
 
 
 def thinkpad_setup():
-    config = get_config()
+    conf = config.get_config()
 
-    if not config.has_option("battery", "enable_thresholds"):
+    if not conf.has_option("battery", "enable_thresholds"):
         return
-    if not config["battery"]["enable_thresholds"] == "true":
+    if not conf["battery"]["enable_thresholds"] == "true":
         return
 
     if os.path.exists("/sys/class/power_supply/"):
