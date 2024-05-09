@@ -89,6 +89,16 @@ elif [ "$(ps h -o comm 1)" = "s6-svscan" ];then
     s6-rc -u change auto-cpufreq default
     echo -e "\n* Update daemon service bundle (s6)"
     s6-db-reload
+# Install script for dinit
+elif [ "$(ps h -o comm 1)" = "dinit" ];then
+	echo -e "\n* Deploying auto-cpufreq dinit unit file"
+	cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-dinit /etc/dinit.d/auto-cpufreq
+
+	echo -e "Starting auto-cpufreq daemon (dinit) service"
+	dinitctl start auto-cpufreq
+
+	echo -e "\n* Enabling auto-cpufreq daemon (dinit) service at boot"
+	dinitctl enable auto-cpufreq
 else
   echo -e "\n* Unsupported init system detected, could not install the daemon\n"
   echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
