@@ -3,9 +3,7 @@
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
 
-SCRIPT_PATH=$(readlink -f "$0")
-SCRIPT_DIR=$(dirname "${SCRIPT_PATH}")
-cd "${SCRIPT_DIR}" || exit 1
+cd "$(dirname "$(readlink -f "$0")")" || exit 1
 
 # check if lsb_release exists on the system before using it
 if command -v lsb_release > /dev/null
@@ -47,16 +45,6 @@ function header {
 	return
 }
 
-# python packages install
-function setup_venv {
-    venv_dir=/opt/auto-cpufreq/venv
-    mkdir -p "${venv_dir}"
-    python3 -m venv "${venv_dir}"
-
-    source "${venv_dir}/bin/activate"
-    python3 -m pip install --upgrade pip wheel
-}
-
 # tool install
 function install {
   git config --global --add safe.directory $(pwd)
@@ -78,31 +66,10 @@ function install {
 }
 
 # First argument is the distro
-function detected_distro() {
+function detected_distro {
   echo -e "\nDetected $1 distribution"
   separator
   echo -e "\nSetting up Python environment\n"
-}
-
-# merged functions pip - install - complete_msg, since it repeats
-function completed () {
-  echo -e "\nInstalling necessary Python packages\n"
-  setup_venv
-  separator
-  echo -e "\ninstalling auto-cpufreq tool\n"
-  install
-}
-
-function complete_msg() {
-  completed
-  separator
-  echo -e "
-    auto-cpufreq tool successfully installed.
-
-    For list of options, run:
-    
-      auto-cpufreq --help"
-  separator
 }
 
 function manual_install {
@@ -190,7 +157,28 @@ function tool_install {
     manual_install
     exit 1
   fi
-  complete_msg
+
+  echo -e "\nInstalling necessary Python packages\n"
+
+  venv_dir=/opt/auto-cpufreq/venv
+  mkdir -p "${venv_dir}"
+  python3 -m venv "${venv_dir}"
+
+  source "${venv_dir}/bin/activate"
+  python3 -m pip install --upgrade pip wheel
+
+  separator
+  echo -e "\ninstalling auto-cpufreq tool\n"
+  install
+
+  separator
+  echo -e "
+    auto-cpufreq tool successfully installed.
+
+    For list of options, run:
+    
+      auto-cpufreq --help"
+  separator
 }
 
 function tool_remove {
