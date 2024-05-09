@@ -52,7 +52,20 @@ elif [ "$(ps h -o comm 1)" = "systemd" ];then
 
     echo -e "reset failed"
     systemctl reset-failed
+# Install script for openrc / sysvinit
 elif [ "$(ps h -o comm 1)" = "init" ];then
+   ls /etc/inittab
+    if [ -e "/etc/inittab" ]; then 
+        echo -e "\n* Stopping auto-cpufreq daemon (sysvinit) service"
+        service auto-cpufreq stop
+
+        echo -e "\n* disabling auto-cpufreq daemon (sysvinit) service at boot"
+        update-rc.d -f auto-cpufreq
+
+        echo -e "\n* Removing auto-cpufreq sysvinit unit file"
+        rm /etc/init.d/auto-cpufreq
+
+      else
 	echo -e "\n* Stopping auto-cpufreq daemon (openrc) service"
 	rc-service auto-cpufreq stop
 
@@ -61,6 +74,7 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
 
 	echo -e "\n* Removing auto-cpufreq daemon (openrc) unit file"
 	rm /etc/init.d/auto-cpufreq
+fi
 # Remove service for s6
 elif [ "$(ps h -o comm 1)" = "s6-svscan" ];then
 	echo -e "\n* Disabling auto-cpufreq daemon (s6) at boot"
@@ -73,3 +87,4 @@ else
   echo -e "\n* Unsupported init system detected, could not remove the daemon\n"
   echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
 fi
+
