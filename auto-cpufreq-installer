@@ -3,9 +3,7 @@
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
 
-SCRIPT_PATH=$(readlink -f "$0")
-SCRIPT_DIR=$(dirname "${SCRIPT_PATH}")
-cd "${SCRIPT_DIR}"
+cd "$(dirname "$(readlink -f "$0")")" || exit 1
 
 # check if lsb_release exists on the system before using it
 if command -v lsb_release > /dev/null
@@ -47,16 +45,6 @@ function header {
 	return
 }
 
-# python packages install
-function setup_venv {
-    venv_dir=/opt/auto-cpufreq/venv
-    mkdir -p "${venv_dir}"
-    python3 -m venv "${venv_dir}"
-
-    source "${venv_dir}/bin/activate"
-    python3 -m pip install --upgrade pip wheel
-}
-
 # tool install
 function install {
   git config --global --add safe.directory $(pwd)
@@ -78,133 +66,119 @@ function install {
 }
 
 # First argument is the distro
-function detected_distro() {
+function detected_distro {
   echo -e "\nDetected $1 distribution"
   separator
   echo -e "\nSetting up Python environment\n"
 }
 
-# merged functions pip - install - complete_msg, since it repeats
-function completed () {
-  echo -e "\nInstalling necessary Python packages\n"
-  setup_venv
-  separator
-  echo -e "\ninstalling auto-cpufreq tool\n"
-  install
-}
-
-function complete_msg() {
-  separator
-  cat <<- _EOF_
-
-	auto-cpufreq tool successfully installed.
-
-	For list of options, run:
-	auto-cpufreq --help"
-_EOF_
-  separator
-}
-
 function manual_install {
-	cat <<- _EOF_
+	echo -e "
+    Didn't detect Debian or RedHat or Arch based distro.
 
-	Didn't detect Debian or RedHat based distro.
+    To complete installation, you need to:
+    Install: python3, pip3, python3-setuptools, gobject-introspection, cairo (or cairo-devel), gcc, and gtk3
 
-	To complete installation, you need to:
-	Install: python3, pip3, python3-setuptools, gobject-introspection, cairo (or cairo-devel), gcc, and gtk3
+    Install necessary Python packages:
+    pip3 install psutil click distro power requests PyGObject
+    Run following sequence of lines:
 
-	Install necessary Python packages:
-	pip3 install psutil click distro power requests PyGObject
-	Run following sequence of lines:
+    -----
 
-	-----
+    pip3 install .
+    mkdir -p /usr/local/share/auto-cpufreq/
+    cp -r scripts/ /usr/local/share/auto-cpufreq/
 
-	pip3 install .
-	mkdir -p /usr/local/share/auto-cpufreq/
-	cp -r scripts/ /usr/local/share/auto-cpufreq/
+    -----
 
-	-----
+    After which tool is installed, for full list of options run:
 
-	After which tool is installed, for full list of options run:
-
-  	auto-cpufreq
-_EOF_
+      auto-cpufreq"
   separator
-  cat <<- _EOF_
+  echo -e "
+    Consider creating a feature request to add support for your distro:
+    https://github.com/AdnanHodzic/auto-cpufreq/issues/new
 
-  Consider creating a feature request to add support for your distro:
-  https://github.com/AdnanHodzic/auto-cpufreq/issues/new
+    Make sure to include following information:
 
-  Make sure to include following information:
-
-  Distribution: $distro
-  Release: $release
-  Codename: $codename
-_EOF_
+    Distribution: $distro
+    Release: $release
+    Codename: $codename"
   separator
 }
 
 function tool_install {
-separator
-if [ -f /etc/debian_version ]; then
-	detected_distro "Debian based"
-	apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode libgirepository1.0-dev libcairo2-dev libgtk-3-dev gcc -y
-	completed
-	complete_msg
-elif [ -f /etc/redhat-release ]; then
-	detected_distro "RedHat based"
-	if [ -f /etc/centos-release ]; then
-		yum install platform-python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
-	else
-		yum install python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
-	fi
-	completed
-	complete_msg
-elif [ -f /etc/solus-release ]; then
-	detected_distro "Solus"
-	eopkg install pip python3 python3-devel dmidecode gobject-introspection-devel libcairo-devel gcc libgtk-3
-	eopkg install -c system.devel
-	completed
- 	complete_msg
-elif [ -f /etc/os-release ];then
-	eval "$(cat /etc/os-release)"
-	separator
-	case $ID in
-	opensuse-leap)
-		detected_distro "OpenSUSE"
-		zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
-		completed
-		;;
-	opensuse-tumbleweed)
-		detected_distro "OpenSUSE"
-    		echo -e "\nDetected an OpenSUSE distribution\n\nSetting up Python environment\n"
-		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
-		completed
-		;;
-	arch|manjaro|endeavouros|garuda|artix)
-		detected_distro "Arch Linux based"
-		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
-		completed
-		;;
-	void)
-		detected_distro "Void Linux"
-    		xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode cairo-devel gobject-introspection gcc gtk+3
-		completed
-		;;
-  nixos)
-    echo -e "NixOS detected\n"
-    echo -e "This installer is not supported on NixOS.\nPlease refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
+  separator
+
+  if [ -f /etc/debian_version ]; then
+    detected_distro "Debian based"
+    apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode libgirepository1.0-dev libcairo2-dev libgtk-3-dev gcc -y
+
+  elif [ -f /etc/redhat-release ]; then
+    detected_distro "RedHat based"
+    if [ -f /etc/centos-release ]; then yum install platform-python-devel
+    else yum install python-devel
+    fi
+    yum install dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
+
+  elif [ -f /etc/solus-release ]; then
+    detected_distro "Solus"
+    eopkg install pip python3 python3-devel dmidecode gobject-introspection-devel libcairo-devel gcc libgtk-3
+    eopkg install -c system.devel
+
+  elif [ -f /etc/arch-release ]; then
+    detected_distro "Arch Linux based"
+    pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
+    
+  elif [ -f /etc/os-release ];then
+    eval "$(cat /etc/os-release)"
+    separator
+    case $ID in
+      opensuse-leap)
+        detected_distro "OpenSUSE"
+        zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+      ;;
+      opensuse-tumbleweed)
+        detected_distro "OpenSUSE"
+        zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+      ;;
+      void)
+        detected_distro "Void Linux"
+        xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode cairo-devel gobject-introspection gcc gtk+3
+      ;;
+      nixos)
+        echo -e "NixOS detected\n"
+        echo -e "This installer is not supported on NixOS.\nPlease refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
+        exit 1
+      ;;
+      *) manual_install;;
+    esac
+  else # In case /etc/os-release doesn't exist
+    manual_install
     exit 1
-    ;;
-	*) #Any other distro
-	manual_install
-	completed
-		;;
-	esac
- 	complete_msg
-else # In case /etc/os-release doesn't exist
-	manual_install
-fi
+  fi
+
+  echo -e "\nInstalling necessary Python packages\n"
+
+  venv_dir=/opt/auto-cpufreq/venv
+  mkdir -p "${venv_dir}"
+  python3 -m venv "${venv_dir}"
+
+  source "${venv_dir}/bin/activate"
+  python3 -m pip install --upgrade pip wheel
+
+  separator
+  echo -e "\ninstalling auto-cpufreq tool\n"
+  install
+
+  separator
+  echo -e "
+    auto-cpufreq tool successfully installed.
+
+    For list of options, run:
+    
+      auto-cpufreq --help"
+  separator
 }
 
 function tool_remove {
@@ -293,33 +267,26 @@ Select a key: [i/r/q]: " answer
 
 root_check
 
-if [[ -z "${1}" ]]; then
-  ask_operation
+if [[ -z "${1}" ]]; then ask_operation
 else
   case "${1}" in
-  "--install")
-    answer="i"
-    ;;
-  "--remove")
-    answer="r"
-    ;;
-  *)
-    answer="n"
-    ;;
+    "--install") answer="i";;
+    "--remove") answer="r";;
+    *) answer="n";;
   esac
 fi
 
 case $answer in
-	I|i)
-	tool_install ;;
-	R|r)
-	tool_remove ;;
+	I|i) tool_install;;
+	R|r) tool_remove;;
 	Q|q)
-	separator
-	echo ""
-	exit 0 ;;
+    separator
+    echo ""
+    exit 0
+  ;;
 	*)
-	separator
-	echo -e "\nUnknown key, aborting ...\n"
-	exit 1 ;;
+    separator
+    echo -e "\nUnknown key, aborting ...\n"
+    exit 1
+  ;;
 esac
