@@ -43,5 +43,3 @@ def battery_get_thresholds():
 
     else:
         return
-
-

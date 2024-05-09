@@ -5,11 +5,12 @@ from auto_cpufreq.utils.config import config
 
 
 def set_battery(value, mode, bat):
-    try:
+    path = f"/sys/class/power_supply/BAT{bat}/charge_{mode}_threshold"
+    if os.path.exists(path):
         subprocess.check_output(
             f"echo {value} | tee /sys/class/power_supply/BAT{bat}/charge_{mode}_threshold", shell=True, text=True)
-    except Exception as e:
-        print(f"Error writing to file_path: {e}")
+    else:
+        print(f"WARNING: {path} does NOT exist")
 
 
 def get_threshold_value(mode):
@@ -84,16 +85,17 @@ def ideapad_laptop_print_thresholds():
 
     battery_count = len([name for name in os.listdir(
         "/sys/class/power_supply/") if name.startswith('BAT')])
-    print(f"number of batteries = {battery_count}")
+    print("\n-------------------------------- Battery Info ---------------------------------\n")
+    print(f"battery count = {battery_count}")
     for b in range(battery_count):
         try:
             with open(f'/sys/class/power_supply/BAT{b}/charge_start_threshold', 'r') as f:
-                print(f'battery{b} start threshold is set to {f.read()}')
+                print(f'battery{b} start threshold = {f.read()}', end="")
                 f.close()
 
             with open(f'/sys/class/power_supply/BAT{b}/charge_stop_threshold', 'r') as f:
-                print(f'battery{b} stop threshold is set to {f.read()}')
+                print(f'battery{b} stop threshold = {f.read()}', end="")
                 f.close()
 
-        except Exception as e:
-            print(f"Error reading battery thresholds: {e}")
+        except Exception:
+            print(f"ERROR: failed to read battery thresholds: {e}")

@@ -154,6 +154,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             else:
                 gnome_power_detect()
                 tlp_service_detect()
+            battery_get_thresholds()
             read_stats()
         elif log:
             deprecated_log_msg()
@@ -165,6 +166,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             # ToDo: add status of GNOME Power Profile service status
             config_info_dialog()
             root_check()
+            battery_get_thresholds()
             cpufreqctl()
             footer()
             distro_info()
