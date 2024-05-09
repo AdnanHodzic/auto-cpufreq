@@ -166,6 +166,10 @@ elif [ -f /etc/solus-release ]; then
 	eopkg install -c system.devel
 	completed
  	complete_msg
+elif [ -f /etc/arch-release ]; then
+  detected_distro "Arch Linux based"
+  pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
+  completed
 elif [ -f /etc/os-release ];then
 	eval "$(cat /etc/os-release)"
 	separator
@@ -179,11 +183,6 @@ elif [ -f /etc/os-release ];then
 		detected_distro "OpenSUSE"
     		echo -e "\nDetected an OpenSUSE distribution\n\nSetting up Python environment\n"
 		zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
-		completed
-		;;
-	arch|manjaro|endeavouros|garuda|artix)
-		detected_distro "Arch Linux based"
-		pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
 		completed
 		;;
 	void)

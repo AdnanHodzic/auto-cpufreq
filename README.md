@@ -35,7 +35,7 @@ Example of `auto-cpufreq --stats` CLI output
 * [Installing auto-cpufreq](#installing-auto-cpufreq)
     * [auto-cpufreq-installer](#auto-cpufreq-installer)
     * [Snap Store](#snap-store)
-    * [AUR package (Arch/Manjaro Linux)](#aur-package-archmanjaro-linux)
+    * [AUR package (Arch based distributions)](#aur-package-arch-based-distributions)
     * [NixOS](#nixos)
     * [For developers](#installation-development-mode-only)
 * [Post-installation](#post-installation)
@@ -128,7 +128,7 @@ sudo snap install auto-cpufreq
 
 * Fedora users will [encounter the following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
 
-### AUR package (Arch/Manjaro Linux)
+### AUR package (Arch based distributions)
 
 The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was last updated on version 2.2.0 and is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12), [liljaylj](https://github.com/liljaylj), and [parmjotsinghrobot](https://github.com/Parmjot-Singh). 
 
