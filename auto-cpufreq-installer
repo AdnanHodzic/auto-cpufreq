@@ -170,7 +170,7 @@ elif [ -f /etc/arch-release ]; then
   detected_distro "Arch Linux based"
   pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
   completed
- 	complete_msg
+  complete_msg
 elif [ -f /etc/os-release ];then
 	eval "$(cat /etc/os-release)"
 	separator
