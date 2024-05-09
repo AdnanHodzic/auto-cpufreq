@@ -24,46 +24,46 @@ Example of `auto-cpufreq --stats` CLI output
 
 ## Looking for developers and co-maintainers
 
-* If you would like to discuss anything regarding auto-cpufreq or its development, please join the [auto-cpufreq Discord server!](https://discord.gg/Sjauxtj6kH)
-* auto-cpufreq is looking for [co-maintainers & open source developers to help shape the future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
+- If you would like to discuss anything regarding auto-cpufreq or its development, please join the [auto-cpufreq Discord server!](https://discord.gg/Sjauxtj6kH)
+- auto-cpufreq is looking for [co-maintainers & open source developers to help shape the future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)
 
 ## Index
 
-* [Why do I need auto-cpufreq?](#why-do-i-need-auto-cpufreq)
-    * [Supported architectures and devices](#supported-architectures-and-devices)
-* [Features](#features)
-* [Installing auto-cpufreq](#installing-auto-cpufreq)
-    * [auto-cpufreq-installer](#auto-cpufreq-installer)
-    * [Snap Store](#snap-store)
-    * [AUR package (Arch based distributions)](#aur-package-arch-based-distributions)
-    * [NixOS](#nixos)
-    * [For developers](#installation-development-mode-only)
-* [Post-installation](#post-installation)
-* [Configuring auto-cpufreq](#configuring-auto-cpufreq)
-    * [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
-    * [2: `--force` governor override](#2---force-governor-override)
-    * [3: auto-cpufreq config file](#3-auto-cpufreq-config-file)
-        * [Example config file contents](#example-config-file-contents)
-* [How to run auto-cpufreq](#how-to-run-auto-cpufreq)
-* [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options)
-    * [monitor](#monitor)
-    * [live](#live)
-    * [overriding governor](#overriding-governor)
-    * [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
-    * [Update - auto-cpufreq update](#update---auto-cpufreq-update)
-    * [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
-    * [stats](#stats)
-* [Battery charging thresholds](#battery-charging-thresholds)
-  * [Supported Devices](#supported-devices)
-  * [Battery config](#battery-config)
-* [Troubleshooting](#troubleshooting)
-    * [AUR](#aur)
-* [Discussion](#discussion)
-* [Donate](#donate)
-    * [Financial donation](#financial-donation)
-        * [Paypal](#paypal)
-        * [BitCoin](#bitcoin)
-    * [Code contribution](#code-contribution)
+- [Why do I need auto-cpufreq?](#why-do-i-need-auto-cpufreq)
+  - [Supported architectures and devices](#supported-architectures-and-devices)
+- [Features](#features)
+- [Installing auto-cpufreq](#installing-auto-cpufreq)
+  - [auto-cpufreq-installer](#auto-cpufreq-installer)
+  - [Snap Store](#snap-store)
+  - [AUR package (Arch based distributions)](#aur-package-arch-based-distributions)
+  - [NixOS](#nixos)
+  - [For developers](#installation-development-mode-only)
+- [Post-installation](#post-installation)
+- [Configuring auto-cpufreq](#configuring-auto-cpufreq)
+  - [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
+  - [2: `--force` governor override](#2---force-governor-override)
+  - [3: auto-cpufreq config file](#3-auto-cpufreq-config-file)
+    - [Example config file contents](#example-config-file-contents)
+- [How to run auto-cpufreq](#how-to-run-auto-cpufreq)
+- [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options)
+  - [monitor](#monitor)
+  - [live](#live)
+  - [overriding governor](#overriding-governor)
+  - [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
+  - [Update - auto-cpufreq update](#update---auto-cpufreq-update)
+  - [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
+  - [stats](#stats)
+- [Battery charging thresholds](#battery-charging-thresholds)
+  - [Supported Devices](#supported-devices)
+  - [Battery config](#battery-config)
+- [Troubleshooting](#troubleshooting)
+  - [AUR](#aur)
+- [Discussion](#discussion)
+- [Donate](#donate)
+  - [Financial donation](#financial-donation)
+    - [Paypal](#paypal)
+    - [BitCoin](#bitcoin)
+  - [Code contribution](#code-contribution)
 
 ## Why do I need auto-cpufreq?
 
@@ -85,20 +85,20 @@ Only devices with an Intel, AMD, or ARM CPU are supported. This tool was develop
 
 ## Features
 
-* Monitoring
-  * Basic system information
-  * CPU frequency (system total & per core)
-  * CPU usage (system total & per core)
-  * CPU temperature (total average & per core)
-  * Battery state
-  * System load
-* CPU frequency scaling, governor, and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on
-  * Battery state
-  * CPU usage (total & per core)
-  * CPU temperature in combination with CPU utilization/load (to prevent overheating)
-  * System load
-* Automatic CPU & power optimization (temporary and persistent)
-* Settings battery charging thresholds (limited support)
+- Monitoring
+  - Basic system information
+  - CPU frequency (system total & per core)
+  - CPU usage (system total & per core)
+  - CPU temperature (total average & per core)
+  - Battery state
+  - System load
+- CPU frequency scaling, governor, and [turbo boost](https://en.wikipedia.org/wiki/Intel_Turbo_Boost) management based on
+  - Battery state
+  - CPU usage (total & per core)
+  - CPU temperature in combination with CPU utilization/load (to prevent overheating)
+  - System load
+- Automatic CPU & power optimization (temporary and persistent)
+- Settings battery charging thresholds (limited support)
 
 ## Installing auto-cpufreq
 
@@ -124,9 +124,9 @@ sudo snap install auto-cpufreq
 ```
 
 **Please note:**
-* Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
+- Make sure [snapd](https://snapcraft.io/docs/installing-snapd) is installed and `snap version` is >= 2.44 for `auto-cpufreq` to fully work due to [recent snapd changes](https://github.com/snapcore/snapd/pull/8127).
 
-* Fedora users will [encounter the following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
+- Fedora users will [encounter the following error](https://twitter.com/killyourfm/status/1291697985236144130) due to `cgroups v2` [being in development](https://github.com/snapcore/snapd/pull/7825). This problem can be resolved by either running `sudo snap run auto-cpufreq` after the snap installation or by using the [auto-cpufreq-installer](#auto-cpufreq-installer) which doesn't have this issue.
 
 ### AUR package (Arch based distributions)
 
@@ -134,15 +134,15 @@ The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) was l
 
 **Notices**
 
-* The [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git) is seperately maintained and was last updated on version 1.9.6. 
-* The build process links to `/usr/share/` instead of `/usr/local/share/`
-* The daemon installer provided does not work, instead start the daemon with 
+- The [Git Package](https://aur.archlinux.org/packages/auto-cpufreq-git) is seperately maintained and was last updated on version 1.9.6. 
+- The build process links to `/usr/share/` instead of `/usr/local/share/`
+- The daemon installer provided does not work, instead start the daemon with 
 
 ``` 
 # systemctl enable --now auto-cpufreq 
 ```
-* The GNOME Power Profiles daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However, this doesn't happen with AUR installs, which can lead to problems (e.g., [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
-    * Open a terminal and run `sudo systemctl mask power-profiles-daemon.service` (then `enable` and `start` the auto-cpufreq.service if you haven't already).
+- The GNOME Power Profiles daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However, this doesn't happen with AUR installs, which can lead to problems (e.g., [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
+  - Open a terminal and run `sudo systemctl mask power-profiles-daemon.service` (then `enable` and `start` the auto-cpufreq.service if you haven't already).
 
 
 ### NixOS
@@ -350,47 +350,47 @@ turbo = auto
 ## How to run auto-cpufreq
 auto-cpufreq should be run with with one of the following options:
 
-* [monitor](#monitor)
-    - Monitor and see suggestions for CPU optimizations
+- [monitor](#monitor)
+  - Monitor and see suggestions for CPU optimizations
 
-* [live](#live)
-    - Monitor and automatically make (temporary) CPU optimizations
+- [live](#live)
+  - Monitor and automatically make (temporary) CPU optimizations
 
-* [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
-    - Install/remove daemon for (permanent) automatic CPU optimizations
+- [install](#install---auto-cpufreq-daemon) / [remove](#remove---auto-cpufreq-daemon)
+  - Install/remove daemon for (permanent) automatic CPU optimizations
  
-* [install (GUI)](#install---auto-cpufreq-daemon)
-    - Install daemon via GUI for (permanent) automatic CPU optimizations
+- [install (GUI)](#install---auto-cpufreq-daemon)
+  - Install daemon via GUI for (permanent) automatic CPU optimizations
 
-* [update](#update---auto-cpufreq-update)
-    - Update auto-cpufreq to the latest release
+- [update](#update---auto-cpufreq-update)
+  - Update auto-cpufreq to the latest release
 
-* [install_performance](#1-power_helperpy-script)
-    - Install daemon in "performance" mode
+- [install_performance](#1-power_helperpy-script)
+  - Install daemon in "performance" mode
 
-* [stats](#stats)
-    - View live stats of CPU optimizations made by daemon
+- [stats](#stats)
+  - View live stats of CPU optimizations made by daemon
 
-* [force=TEXT](#overriding-governor)
-    - Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode
+- [force=TEXT](#overriding-governor)
+  - Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode
 
-* config=TEXT
-    - Use config file at designated path
+- config=TEXT
+  - Use config file at designated path
 
-* debug
-    - Show debug info (include when submitting bugs)
+- debug
+  - Show debug info (include when submitting bugs)
 
-* version
-    - Show currently installed version
+- version
+  - Show currently installed version
 
-* [donate](#financial-donation)
-    - To support the project
+- [donate](#financial-donation)
+  - To support the project
 
-* help
-    - Shows all of the above options
+- help
+  - Shows all of the above options
 
-* completions=TEXT
-    - To support shell completions (current options are "bash", "zsh", or "fish")
+- completions=TEXT
+  - To support shell completions (current options are "bash", "zsh", or "fish")
 
 Running `auto-cpufreq --help` will print the same list of options as above. Read [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options) for more details.
 
@@ -487,8 +487,8 @@ As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0),
 
 ### Supported devices
 
-* **Lenovo ThinkPad** (thinkpad_acpi)*
-* **Lenovo IdeaPad** (ideapad_acpi)*
+- **Lenovo ThinkPad** (thinkpad_acpi)*
+- **Lenovo IdeaPad** (ideapad_acpi)*
 
 ***Please note, your laptop must have an installed ACPI kernel driver specific to the manufacturer.** To check if you have the correct module installed and loaded run `lsmod [module]`
 
@@ -514,10 +514,10 @@ add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 ## Troubleshooting
 
 **Q:** If after installing auto-cpufreq you're (still) experiencing:
-* high CPU temperatures
-* CPU not scaling to minimum/maximum frequencies
-* suboptimal CPU performance
-* turbo mode not available
+- high CPU temperatures
+- CPU not scaling to minimum/maximum frequencies
+- suboptimal CPU performance
+- turbo mode not available
 
 **A:** If you're using the `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
 
@@ -578,18 +578,18 @@ Once you have made the necessary changes to the `cmdline` file, you can update i
 
 ### AUR
 
-* If the AUR installer does not work for your system, fallback to `auto-cpufreq-installer` and open an issue. 
+- If the AUR installer does not work for your system, fallback to `auto-cpufreq-installer` and open an issue. 
 
 ## Discussion:
 
-* Blogpost: [auto-cpufreq - Automatic CPU speed & power optimizer for Linux](http://foolcontrol.org/?p=3124)
+- Blogpost: [auto-cpufreq - Automatic CPU speed & power optimizer for Linux](http://foolcontrol.org/?p=3124)
 
 ## Donate
 
 Showing your support and appreciation for the auto-cpufreq project can be done in two ways:
 
-* Financial donation
-* Code contribution
+- Financial donation
+- Code contribution
 
 ### Financial donation
 
