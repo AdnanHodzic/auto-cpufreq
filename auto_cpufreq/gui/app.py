@@ -26,7 +26,6 @@ else:
 HBOX_PADDING = 20
 PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
 
-
 class ToolWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="auto-cpufreq")
@@ -39,7 +38,6 @@ class ToolWindow(Gtk.Window):
         self.build()
 
     def main(self):
-
         # Main HBOX
         self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=HBOX_PADDING)
        
@@ -61,7 +59,6 @@ class ToolWindow(Gtk.Window):
 
         self.hbox.pack_start(self.vbox_right, False, False, 0)
 
-
         GLib.timeout_add_seconds(5, self.refresh_in_thread)
 
     def snap(self):
@@ -81,15 +78,12 @@ class ToolWindow(Gtk.Window):
     def handle_update(self):
         new_stdout = StringIO()
         with redirect_stdout(new_stdout):
-            is_new_update = check_for_update()
-            if not is_new_update:
-                return
+            if not check_for_update(): return
         captured_output = new_stdout.getvalue().splitlines()
         dialog = UpdateDialog(self, captured_output[1], captured_output[2])
         response = dialog.run()
         dialog.destroy()
-        if response != Gtk.ResponseType.YES:
-            return
+        if response != Gtk.ResponseType.YES: return
         updater = run(["pkexec", "auto-cpufreq", "--update"], input="y\n", encoding="utf-8", stderr=PIPE)
         if updater.stderr == PKEXEC_ERROR:
             error = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Error updating")
@@ -108,12 +102,9 @@ class ToolWindow(Gtk.Window):
         self.add(self.box)
 
     def build(self):
-        if os.getenv("PKG_MARKER") == "SNAP":
-            self.snap()
-        elif is_running("auto-cpufreq", "--daemon"):
-            self.main()
-        else:
-            self.daemon_not_running()
+        if os.getenv("PKG_MARKER") == "SNAP": self.snap()
+        elif is_running("auto-cpufreq", "--daemon"): self.main()
+        else: self.daemon_not_running()
 
     def load_css(self):
         screen = Gdk.Screen.get_default()

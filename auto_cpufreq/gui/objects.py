@@ -17,37 +17,27 @@ from io import StringIO
 
 PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
 
-if os.getenv("PKG_MARKER") == "SNAP":
-    auto_cpufreq_stats_path = "/var/snap/auto-cpufreq/current/auto-cpufreq.stats"
-else:
-    auto_cpufreq_stats_path = "/var/run/auto-cpufreq.stats"
-
+auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if os.getenv("PKG_MARKER") == "SNAP" else "/var/run") + "/auto-cpufreq.stats"
 
 def get_stats():
     if os.path.isfile(auto_cpufreq_stats_path):
-        with open(auto_cpufreq_stats_path, "r") as file:
-            stats = [line for line in (file.readlines() [-50:])]
+        with open(auto_cpufreq_stats_path, "r") as file: stats = [line for line in (file.readlines() [-50:])]
         return "".join(stats)
 
 def get_version():
     # snap package
-    if os.getenv("PKG_MARKER") == "SNAP":
-        return getoutput(r"echo \(Snap\) $SNAP_VERSION")
+    if os.getenv("PKG_MARKER") == "SNAP": return getoutput(r"echo \(Snap\) $SNAP_VERSION")
     # aur package
     elif dist_name in ["arch", "manjaro", "garuda"]:
         aur_pkg_check = run("pacman -Qs auto-cpufreq > /dev/null", shell=True)
-        if aur_pkg_check == 1:
-            return get_formatted_version()
-        else:
-            return getoutput("pacman -Qi auto-cpufreq | grep Version")
+        if aur_pkg_check == 1: return get_formatted_version()
+        else: return getoutput("pacman -Qi auto-cpufreq | grep Version")
     else:
         # source code (auto-cpufreq-installer)
-        try:
-            return get_formatted_version()
+        try: return get_formatted_version()
         except Exception as e:
             print(repr(e))
             pass
-
 
 class RadioButtonView(Gtk.Box):
     def __init__(self):
@@ -67,7 +57,6 @@ class RadioButtonView(Gtk.Box):
         self.performance = Gtk.RadioButton.new_with_label_from_widget(self.default, "Performance")
         self.performance.connect("toggled", self.on_button_toggled, "performance")
         self.performance.set_halign(Gtk.Align.END)
-        
 
         # this keeps track of whether or not the button was toggled by the app or the user to prompt for authorization
         self.set_by_app = True
@@ -82,24 +71,17 @@ class RadioButtonView(Gtk.Box):
         if button.get_active():
             if not self.set_by_app:
                 result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
-                if result.stderr.decode() == PKEXEC_ERROR:
-                    self.set_selected()
-            else:
-                self.set_by_app = False
-
-                
+                if result.stderr.decode() == PKEXEC_ERROR: self.set_selected()
+            else: self.set_by_app = False
 
     def set_selected(self):
         override = get_override()
         match override:
-            case "powersave":
-                self.powersave.set_active(True)
-            case "performance":
-                self.performance.set_active(True)
+            case "powersave": self.powersave.set_active(True)
+            case "performance": self.performance.set_active(True)
             case "default":
                 # because this is the default button, it does not trigger the callback when set by the app
-                if self.set_by_app:
-                    self.set_by_app = False
+                if self.set_by_app: self.set_by_app = False
                 self.default.set_active(True)
 
 class CurrentGovernorBox(Gtk.Box):
@@ -117,7 +99,6 @@ class CurrentGovernorBox(Gtk.Box):
 class SystemStatsLabel(Gtk.Label):
     def __init__(self):
         super().__init__()
-
         self.refresh()
 
     def refresh(self):
@@ -130,7 +111,6 @@ class SystemStatsLabel(Gtk.Label):
         self.set_label(text.getvalue())
         sys.stdout = old_stdout
     
-
 class CPUFreqStatsLabel(Gtk.Label):
     def __init__(self):
         super().__init__()
@@ -188,8 +168,7 @@ class DropDownMenu(Gtk.MenuButton):
                     kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
                     future = executor.submit(run, "pkexec auto-cpufreq --remove", **kwargs)
                     result = future.result()
-                if result.stderr.decode() == PKEXEC_ERROR:
-                    raise Exception("Authorization was cancelled")
+                assert result.stderr.decode() != PKEXEC_ERROR, Exception("Authorization was cancelled")
                 dialog = Gtk.MessageDialog(
                     transient_for=parent,
                     message_type=Gtk.MessageType.INFO,
@@ -211,7 +190,6 @@ class DropDownMenu(Gtk.MenuButton):
                 dialog.run()
                 dialog.destroy()
 
-
 class AboutDialog(Gtk.Dialog):
     def __init__(self, parent):
         super().__init__(title="About", transient_for=parent)
@@ -221,10 +199,11 @@ class AboutDialog(Gtk.Dialog):
         self.add_button("Close", Gtk.ResponseType.CLOSE)
         self.set_default_size(400, 350)
         img_buffer = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-                    filename="/usr/local/share/auto-cpufreq/images/icon.png",
-                    width=150,
-                    height=150,
-                    preserve_aspect_ratio=True)
+            filename="/usr/local/share/auto-cpufreq/images/icon.png",
+            width=150,
+            height=150,
+            preserve_aspect_ratio=True
+        )
         self.image = Gtk.Image.new_from_pixbuf(img_buffer)
         self.title = Gtk.Label(label="auto-cpufreq", name="bold")
         self.version = Gtk.Label(label=app_version)
@@ -258,7 +237,6 @@ class UpdateDialog(Gtk.Dialog):
 
         self.show_all()
 
-
 class ConfirmDialog(Gtk.Dialog):
     def __init__(self, parent, message: str):
         super().__init__(title="Confirmation", transient_for=parent)
@@ -290,8 +268,7 @@ class DaemonNotRunningView(Gtk.Box):
                 kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
                 future = executor.submit(run, "pkexec auto-cpufreq --install", **kwargs)
                 result = future.result()
-            if result.stderr.decode() == PKEXEC_ERROR:
-                raise Exception("Authorization was cancelled")
+            assert result.stderr.decode() != PKEXEC_ERROR, Exception("Authorization was cancelled")
             # enable for debug. causes issues if kept
             # elif result.stderr is not None:
             #     raise Exception(result.stderr.decode())
