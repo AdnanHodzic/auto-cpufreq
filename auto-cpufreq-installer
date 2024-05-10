@@ -5,110 +5,76 @@
 
 cd "$(dirname "$(readlink -f "$0")")" || exit 1
 
-# check if lsb_release exists on the system before using it
-if command -v lsb_release > /dev/null
-then
-  distro="$(lsb_release -is)"
-  release="$(lsb_release -rs)"
-  codename="$(lsb_release -cs)"
-fi
+COLOUMNS="`tput cols`"
+MID="$((COLOUMNS / 2))"
 
+APPLICATIONS_PATH="/usr/share/applications"
+VENV_PATH="/opt/auto-cpufreq"
 
-# functions
+SHARE_DIR="/usr/local/share/auto-cpufreq/"
 
-#separator
-function separator {
-  local COLOUMNS="`tput cols`"
-  echo -e "\n"
-  printf "%0.s─" $(seq $COLOUMNS)
-  echo -e "\n"
-}
+AUTO_CPUFREQ_FILE="/usr/local/bin/auto-cpufreq"
+AUTO_CPUFREQ_GTK_FILE=$AUTO_CPUFREQ_FILE-gtk
+AUTO_CPUFREQ_GTK_DESKTOP_FILE="$(basename $AUTO_CPUFREQ_GTK_FILE).desktop"
 
-# root check
-function root_check {
-  if ((EUID != 0)); then
-    separator
-    echo -e "\nMust be run as root (i.e: 'sudo $0')."
-    separator
-    exit 1
-  fi
-}
+IMG_FILE="/usr/share/pixmaps/auto-cpufreq.png"
+ORG_FILE="/usr/share/polkit-1/actions/org.auto-cpufreq.pkexec.policy"
 
 function header {
-	local COLOUMNS="`tput cols`"
-	MID="$((COLOUMNS / 2))"
-	HEADER="$1"
-	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
-	echo -n " $HEADER "
-	printf "%0.s─" $(seq $((MID-(${#HEADER}/2)- 1)))
-	echo -e "\n"
-	return
+  echo
+	printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+	printf " $1 "
+	printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+	echo; echo
 }
 
-# tool install
-function install {
-  git config --global --add safe.directory $(pwd)
-  python -m pip install .
-  mkdir -p /usr/local/share/auto-cpufreq/
-  cp -r scripts/ /usr/local/share/auto-cpufreq/
-  cp -r images/ /usr/local/share/auto-cpufreq/
-  cp images/icon.png /usr/share/pixmaps/auto-cpufreq.png
-  cp scripts/org.auto-cpufreq.pkexec.policy /usr/share/polkit-1/actions
-
-  # this is necessary since we need this script before we can run auto-cpufreq itself
-  cp scripts/auto-cpufreq-venv-wrapper /usr/local/bin/auto-cpufreq
-  cp scripts/start_app /usr/local/bin/auto-cpufreq-gtk
-  chmod a+x /usr/local/bin/auto-cpufreq
-  chmod a+x /usr/local/bin/auto-cpufreq-gtk
-
-  desktop-file-install --dir=/usr/share/applications scripts/auto-cpufreq-gtk.desktop
-  update-desktop-database /usr/share/applications
-}
-
-# First argument is the distro
-function detected_distro {
-  echo -e "\nDetected $1 distribution"
-  separator
-  echo -e "\nSetting up Python environment\n"
+function ask_operation {
+	header "auto-cpufreq installer"
+  echo "Welcome to auto-cpufreq tool installer."; echo
+  read -p "Select a key [I]nstall/[R]emove or press ctrl+c to quit: " answer
 }
 
 function manual_install {
-	echo -e "
-    Didn't detect Debian or RedHat or Arch based distro.
+  if command -v lsb_release > /dev/null; then
+    distro="$(lsb_release -is)"
+    release="$(lsb_release -rs)"
+    codename="$(lsb_release -cs)"
+  fi
 
-    To complete installation, you need to:
-    Install: python3, pip3, python3-setuptools, gobject-introspection, cairo (or cairo-devel), gcc, and gtk3
+	echo "Didn't detect Debian or RedHat or Arch based distro."; echo
+  echo "To complete installation, you need to:"
+  echo "Install: python3, pip3, python3-setuptools, gobject-introspection, cairo (or cairo-devel), gcc, and gtk3"; echo
+  echo "Install necessary Python packages:"
+  echo "pip3 install psutil click distro power requests PyGObject"
+  echo "Run following sequence of lines:"; echo
+  echo "-----"; echo
+  echo "pip3 install ."
+  echo "mkdir -p $SHARE_DIR"
+  echo "cp -r scripts/ $SHARE_DIR"; echo
+  echo "-----"; echo
+  echo "After which tool is installed, for full list of options run:";echo
+  echo "auto-cpufreq --help"
 
-    Install necessary Python packages:
-    pip3 install psutil click distro power requests PyGObject
-    Run following sequence of lines:
+  echo; printf "%0.s─" $(seq $COLOUMNS); echo
+  
+  echo "Consider creating a feature request to add support for your distro:"
+  echo "https://github.com/AdnanHodzic/auto-cpufreq/issues/new"; echo
+  echo "Make sure to include following information:"; echo
+  echo "Distribution: $distro"
+  echo "Release: $release"
+  echo "Codename: $codename"
+  echo
 
-    -----
-
-    pip3 install .
-    mkdir -p /usr/local/share/auto-cpufreq/
-    cp -r scripts/ /usr/local/share/auto-cpufreq/
-
-    -----
-
-    After which tool is installed, for full list of options run:
-
-      auto-cpufreq"
-  separator
-  echo -e "
-    Consider creating a feature request to add support for your distro:
-    https://github.com/AdnanHodzic/auto-cpufreq/issues/new
-
-    Make sure to include following information:
-
-    Distribution: $distro
-    Release: $release
-    Codename: $codename"
-  separator
+  exit 1
 }
 
 function tool_install {
-  separator
+  echo
+  # First argument is the distro
+  function detected_distro {
+    header "Detected $1 distribution"
+    header "Setting up Python environment"
+  }
 
   if [ -f /etc/debian_version ]; then
     detected_distro "Debian based"
@@ -131,8 +97,7 @@ function tool_install {
     pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
     
   elif [ -f /etc/os-release ];then
-    eval "$(cat /etc/os-release)"
-    separator
+    . /etc/os-release
     case $ID in
       opensuse-leap)
         detected_distro "OpenSUSE"
@@ -147,146 +112,113 @@ function tool_install {
         xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode cairo-devel gobject-introspection gcc gtk+3
       ;;
       nixos)
-        echo -e "NixOS detected\n"
-        echo -e "This installer is not supported on NixOS.\nPlease refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
+        echo "NixOS detected"
+        echo "This installer is not supported on NixOS."
+        echo "Please refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
         exit 1
       ;;
       *) manual_install;;
     esac
   else # In case /etc/os-release doesn't exist
     manual_install
-    exit 1
   fi
 
-  echo -e "\nInstalling necessary Python packages\n"
+  header "Installing necessary Python packages"
 
-  venv_dir=/opt/auto-cpufreq/venv
-  mkdir -p "${venv_dir}"
-  python3 -m venv "${venv_dir}"
+  venv_dir=$VENV_PATH/venv
+  mkdir -p "$venv_dir"
+  python3 -m venv "$venv_dir"
 
-  source "${venv_dir}/bin/activate"
+  source "$venv_dir/bin/activate"
   python3 -m pip install --upgrade pip wheel
 
-  separator
-  echo -e "\ninstalling auto-cpufreq tool\n"
-  install
+  header "Installing auto-cpufreq tool"
+  
+  git config --global --add safe.directory $(pwd)
+  python -m pip install .
 
-  separator
-  echo -e "
-    auto-cpufreq tool successfully installed.
+  mkdir -p $SHARE_DIR
+  cp -r scripts/ $SHARE_DIR
+  cp -r images/ $SHARE_DIR
+  cp images/icon.png $IMG_FILE
+  cp scripts/$(basename $ORG_FILE) $(dirname $ORG_FILE)
 
-    For list of options, run:
-    
-      auto-cpufreq --help"
-  separator
+  # this is necessary since we need this script before we can run auto-cpufreq itself
+  cp scripts/auto-cpufreq-venv-wrapper $AUTO_CPUFREQ_FILE
+  chmod a+x $AUTO_CPUFREQ_FILE
+  cp scripts/start_app $AUTO_CPUFREQ_GTK_FILE
+  chmod a+x $AUTO_CPUFREQ_GTK_FILE
+
+  desktop-file-install --dir=$APPLICATIONS_PATH scripts/$AUTO_CPUFREQ_GTK_DESKTOP_FILE
+  update-desktop-database $APPLICATIONS_PATH
+  
+  header "auto-cpufreq tool successfully installed"
+  echo "For list of options, run:"
+  echo "auto-cpufreq --help"; echo
 }
 
 function tool_remove {
-  # files="files.txt"
-  share_dir="/usr/local/share/auto-cpufreq/"
-
-  srv_install="/usr/local/bin/auto-cpufreq-install"
-  srv_install_old="/usr/bin/auto-cpufreq-install"
-
-  srv_remove="/usr/local/bin/auto-cpufreq-remove"
-  srv_remove_old="/usr/bin/auto-cpufreq-remove"
-
-  stats_file="/var/run/auto-cpufreq.stats"
-
-  tool_proc_rm="/usr/local/bin/auto-cpufreq --remove"
-  wrapper_script="/usr/local/bin/auto-cpufreq"
-  gui_wrapper_script="/usr/local/bin/auto-cpufreq-gtk"
-  unit_file="/etc/systemd/system/auto-cpufreq.service"
-  venv_path="/opt/auto-cpufreq"
-
-  cpufreqctl="/usr/local/bin/cpufreqctl.auto-cpufreq"
-  cpufreqctl_old="/usr/bin/cpufreqctl.auto-cpufreq"
-
-  desktop_file="/usr/share/applications/auto-cpufreq-gtk.desktop"
-
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
-  for pid in "${tool_arg_pids[@]}"; do
-    if [[ $tool_arg_pids != $$ ]]; then
-      kill "$tool_arg_pids"
-    fi
-  done
+  for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
+
+  function remove_directory {
+    [ -d $1 ] && rm -rf $1
+  }
+  function remove_file {
+    [ -f $1 ] && rm $1
+  }
+
+  srv_remove="$AUTO_CPUFREQ_FILE-remove"
 
   # run uninstall in case of installed daemon
-  if [ -f $srv_remove -o -f $srv_remove_old -o $wrapper_script ]; then
-    eval $tool_proc_rm
+  if [ -f $srv_remove -o -f $AUTO_CPUFREQ_FILE ]; then
+    eval "$AUTO_CPUFREQ_FILE --remove"
   else
-	separator
-	printf "Couldn't remove the auto-cpufreq daemon\n$srv_remove or $srv_remove_old do not exist.\n"
-	exit 1;
-	separator
+    echo; echo "Couldn't remove the auto-cpufreq daemon, $srv_remove do not exist."
   fi
 
   # remove auto-cpufreq and all its supporting files
-  # [ -f $files ] && cat $files | xargs sudo rm -rf && rm -f $files
-  [ -d $share_dir ] && rm -rf $share_dir
+  remove_directory $SHARE_DIR
 
-  # files cleanup
-  [ -f $srv_install ] && rm $srv_install
-  [ -f $srv_install_old ] && rm $srv_install_old
+  remove_file "$AUTO_CPUFREQ_FILE-install"
+  remove_file $srv_remove
+  remove_file $AUTO_CPUFREQ_FILE
+  remove_file $AUTO_CPUFREQ_GTK_FILE
+  remove_file $IMG_FILE
+  remove_file $ORG_FILE
+  remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"
+  remove_file "/var/run/auto-cpufreq.stats"
 
-  [ -f $srv_remove ] && rm $srv_remove
-  [ -f $srv_remove_old ] && rm $srv_remove_old
-
-  [ -f $stats_file ] && rm $stats_file
-  [ -f $unit_file ] && rm $unit_file
-  [ -f $wrapper_script ] && rm $wrapper_script
-  [ -f $gui_wrapper_script ] && rm $gui_wrapper_script
-  
-  [ -f $cpufreqctl ] && rm $cpufreqctl
-  [ -f $cpufreqctl_old ] && rm $cpufreqctl_old
-
-  [ -f $desktop_file ] && rm $desktop_file
-  update-desktop-database /usr/share/applications
+  remove_file "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"
+  update-desktop-database $APPLICATIONS_PATH
 
   # remove python virtual environment
-  rm -rf "${venv_path}"
+  remove_directory $venv_path
 
-  separator
-  echo -e "\nauto-cpufreq tool and all its supporting files successfully removed."
-  separator
+  echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
 }
 
-function ask_operation {
-  header "auto-cpufreq installer"
-  echo -e  "Welcome to auto-cpufreq tool installer.
-  			\nOptions:\n"
-  read -p \
-"[I]nstall
-[R]emove
-[Q]uit
+# root check
+if ((EUID != 0)); then
+  echo; echo "Must be run as root (i.e: 'sudo $0')."; echo
+  exit 1
+fi
 
-Select a key: [i/r/q]: " answer
-}
-# End of functions
-
-root_check
-
-if [[ -z "${1}" ]]; then ask_operation
+if [[ -z "$1" ]]; then ask_operation
 else
-  case "${1}" in
-    "--install") answer="i";;
-    "--remove") answer="r";;
-    *) answer="n";;
+  case "$1" in
+    --install) answer="i";;
+    --remove) answer="r";;
+    *) ask_operation;;
   esac
 fi
 
 case $answer in
 	I|i) tool_install;;
 	R|r) tool_remove;;
-	Q|q)
-    separator
-    echo ""
-    exit 0
-  ;;
 	*)
-    separator
-    echo -e "\nUnknown key, aborting ...\n"
+    echo "Unknown key, aborting ..."; echo
     exit 1
   ;;
 esac

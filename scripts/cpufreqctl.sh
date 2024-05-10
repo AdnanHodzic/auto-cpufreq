@@ -11,24 +11,24 @@ for i in "$@"
 do
 case $i in
   -v|--verbose)
-  VERBOSE=1
-  shift
+    VERBOSE=1
+    shift
   ;;
   --set=*)
-  VALUE="${i#*=}"
-  shift
+    VALUE="${i#*=}"
+    shift
   ;;
   -c=*|--core=*)
-  CORE="${i#*=}"
-  shift
+    CORE="${i#*=}"
+    shift
   ;;
   --available)
-  AVAILABLE=1
-  shift
+    AVAILABLE=1
+    shift
   ;;
   -*)
-  OPTION=$i
-  shift
+    OPTION=$i
+    shift
   ;;
   *) # unknown
   ;;
@@ -90,10 +90,7 @@ function info () {
 }
 
 verbose () {
-  if [ $VERBOSE = 1 ]
-  then
-    echo $1
-  fi
+  if [ $VERBOSE = 1 ]; then echo $1; fi
 }
 
 function driver () {
@@ -101,9 +98,7 @@ function driver () {
 }
 
 function write_value () {
-  if [ -w $FLNM ]; then
-    echo $VALUE > $FLNM
-  fi
+  if [ -w $FLNM ]; then echo $VALUE > $FLNM; fi
 }
 
 function set_driver () {
@@ -119,150 +114,111 @@ function get_governor () {
   then
     i=0
     ag=''
-    while [ $i -ne $cpucount ]
-    do
-      if [ $i = 0 ]
-      then
-        ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
-      else
-        ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
+    while [ $i -ne $cpucount ]; do
+      if [ $i = 0 ]; then ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+      else ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor`
       fi
       i=`expr $i + 1`
     done
     echo $ag
-  else
-    cat /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_governor
+  else cat /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_governor
   fi
 }
 
 function set_governor () {
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
-    while [ $i -ne $cpucount ]
-    do
+    while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_governor"
       write_value
       i=`expr $i + 1`
     done
-  else
-    echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_governor
+  else echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_governor
   fi
 }
 
 function get_frequency () {
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
     V=0
     M=$(cat "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
-    while [ $i -ne $cpucount ]
-    do
+    while [ $i -ne $cpucount ]; do
       V=$(cat "/sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_cur_freq")
-      if [[ $V > $M ]]
-      then
-        M=$V
-      fi
+      if [[ $V > $M ]]; then M=$V; fi
       i=`expr $i + 1`
     done
     echo "$M"
-  else
-    cat /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_cur_freq
+  else cat /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_cur_freq
   fi
 }
 
 function set_frequency () {
   set_driver
-  if [ $DRIVER = 'pstate']
-  then
+  if [ $DRIVER = 'pstate']; then
     echo "Unavailable function for intel_pstate"
     return
   fi
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
-    while [ $i -ne $cpucount ]
-    do
+    while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_setspeed"
       write_value
       i=`expr $i + 1`
     done
-  else
-    echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_setspeed
+  else echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_setspeed
   fi
 }
 
 function get_frequency_min () {
-  if [ -z $CORE ]
-  then
-    CORE=0
-  fi
+  if [ -z $CORE ]; then CORE=0; fi
   cat /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_min_freq
 }
 
 function set_frequency_min () {
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
-    while [ $i -ne $cpucount ]
-    do
+    while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_min_freq"
       write_value
       i=`expr $i + 1`
     done
-  else
-    echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_min_freq
+  else echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_min_freq
   fi
 }
 
 function get_frequency_max () {
-  if [ -z $CORE ]
-  then
-    CORE=0
-  fi
+  if [ -z $CORE ]; then CORE=0; fi
   cat /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_max_freq
 }
 
 function set_frequency_max () {
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
-    while [ $i -ne $cpucount ]
-    do
+    while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/cpufreq/scaling_max_freq"
       write_value
       i=`expr $i + 1`
     done
-  else
-    echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_max_freq
+  else echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/scaling_max_freq
   fi
 }
 
 function get_frequency_min_limit () {
-  if [ -z $CORE ]
-  then
-    CORE=0
-  fi
+  if [ -z $CORE ]; then CORE=0; fi
   cat /sys/devices/system/cpu/cpu$CORE/cpufreq/cpuinfo_min_freq
 }
 
 function get_frequency_max_limit () {
-  if [ -z $CORE ]
-  then
-    CORE=0
-  fi
+  if [ -z $CORE ]; then CORE=0; fi
   cat /sys/devices/system/cpu/cpu$CORE/cpufreq/cpuinfo_max_freq
 }
 
 function get_energy_performance_preference () {
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
     ag=''
-    while [ $i -ne $cpucount ]
-    do
-      if [ $i = 0 ]
-      then
+    while [ $i -ne $cpucount ]; do
+      if [ $i = 0 ]; then
         ag=`cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference`
       else
         ag=$ag' '`cat /sys/devices/system/cpu/cpu$i/cpufreq/energy_performance_preference`
@@ -270,55 +226,45 @@ function get_energy_performance_preference () {
       i=`expr $i + 1`
     done
     echo $ag
-  else
-    cat /sys/devices/system/cpu/cpu$CORE/cpufreq/energy_performance_preference
+  else cat /sys/devices/system/cpu/cpu$CORE/cpufreq/energy_performance_preference
   fi
 }
 
 function set_energy_performance_preference () {
-  if [ -z $CORE ]
-  then
+  if [ -z $CORE ]; then
     i=0
-    while [ $i -ne $cpucount ]
-    do
+    while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/cpufreq/energy_performance_preference"
       write_value
       i=`expr $i + 1`
     done
-  else
-    echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/energy_performance_preference
+  else echo $VALUE > /sys/devices/system/cpu/cpu$CORE/cpufreq/energy_performance_preference
   fi
 }
 
-if [ -z $OPTION ] # No options
-then
+# No options
+if [ -z $OPTION ]; then
   info
   exit
 fi
-if [ $OPTION = "--help" ]
-then
+if [ $OPTION = "--help" ]; then
   help
   exit
 fi
-if [ $OPTION = "--version" ]
-then
+if [ $OPTION = "--version" ]; then
   echo $VERSION
   exit
 fi
-if [ $OPTION = "--driver" ]
-then
+if [ $OPTION = "--driver" ]; then
 	driver
 	exit
 fi
-if [ $OPTION = "--governor" ]
-then
-  if [ ! -z $AVAILABLE ]
-  then
+if [ $OPTION = "--governor" ]; then
+  if [ ! -z $AVAILABLE ]; then
     cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
     exit
   fi
-  if [ -z $VALUE ]
-  then
+  if [ -z $VALUE ]; then
     verbose "Getting CPU"$CORE" governors"
     get_governor
   else
@@ -327,15 +273,12 @@ then
   fi
   exit
 fi
-if [ $OPTION = "--epp" ]
-then
-  if [ ! -z $AVAILABLE ]
-  then
+if [ $OPTION = "--epp" ]; then
+  if [ ! -z $AVAILABLE ]; then
     cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
     exit
   fi
-  if [ -z $VALUE ]
-  then
+  if [ -z $VALUE ]; then
     verbose "Getting CPU"$CORE" EPPs"
     get_energy_performance_preference
   else
@@ -344,10 +287,8 @@ then
   fi
   exit
 fi
-if [ $OPTION = "--frequency" ]
-then
-  if [ ! -z $AVAILABLE ]
-  then
+if [ $OPTION = "--frequency" ]; then
+  if [ ! -z $AVAILABLE ]; then
     cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
     exit
   fi
