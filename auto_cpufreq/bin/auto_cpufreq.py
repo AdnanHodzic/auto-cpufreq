@@ -35,7 +35,6 @@ from auto_cpufreq.utils.config import config as conf, find_config_file
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
 def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
-
     # display info if config file is used
     config_path = find_config_file(config)
     conf.set_path(config_path)
@@ -57,7 +56,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         print("\n-----\n")
 
         run(["auto-cpufreq", "--help"])
-        separator()
+        footer()
     else:
         if daemon:
             config_info_dialog()
@@ -73,7 +72,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             conf.notifier.start()
             while True:
                 try:
-                    separator()
+                    footer()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -99,7 +98,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 try:
                     time.sleep(1)
                     running_daemon_check()
-                    separator()
+                    footer()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -126,7 +125,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             while True:
                 try:
                     running_daemon_check()
-                    separator()
+                    footer()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -161,7 +160,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             root_check()
             battery_get_thresholds()
             cpufreqctl()
-            separator()
+            footer()
             distro_info()
             sysinfo()
             print()
@@ -176,18 +175,18 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             display_load()
             get_current_gov()
             get_turbo()
-            separator()
+            footer()
         elif version:
-            separator()
+            footer()
             distro_info()
             app_version()
-            separator()
+            footer()
         elif donate:
-            separator()
+            footer()
             print("If auto-cpufreq helped you out and you find it useful ...\n")
             print("Show your appreciation by donating!")
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
-            separator()
+            footer()
         elif install:
             root_check()
             if os.getenv("PKG_MARKER") == "SNAP":
