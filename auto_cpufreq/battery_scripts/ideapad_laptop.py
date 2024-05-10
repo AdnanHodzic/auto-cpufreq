@@ -97,5 +97,5 @@ def ideapad_laptop_print_thresholds():
                 print(f'battery{b} stop threshold = {f.read()}', end="")
                 f.close()
 
-        except Exception:
+        except Exception as e:
             print(f"ERROR: failed to read battery thresholds: {e}")
