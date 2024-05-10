@@ -57,7 +57,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         print("\n-----\n")
 
         run(["auto-cpufreq", "--help"])
-        footer()
+        separator()
     else:
         if daemon:
             config_info_dialog()
@@ -73,7 +73,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             conf.notifier.start()
             while True:
                 try:
-                    footer()
+                    separator()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -99,7 +99,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 try:
                     time.sleep(1)
                     running_daemon_check()
-                    footer()
+                    separator()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -126,7 +126,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             while True:
                 try:
                     running_daemon_check()
-                    footer()
+                    separator()
                     gov_check()
                     cpufreqctl()
                     distro_info()
@@ -161,7 +161,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             root_check()
             battery_get_thresholds()
             cpufreqctl()
-            footer()
+            separator()
             distro_info()
             sysinfo()
             print()
@@ -176,18 +176,18 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             display_load()
             get_current_gov()
             get_turbo()
-            footer()
+            separator()
         elif version:
-            footer()
+            separator()
             distro_info()
             app_version()
-            footer()
+            separator()
         elif donate:
-            footer()
+            separator()
             print("If auto-cpufreq helped you out and you find it useful ...\n")
             print("Show your appreciation by donating!")
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
-            footer()
+            separator()
         elif install:
             root_check()
             if os.getenv("PKG_MARKER") == "SNAP":
