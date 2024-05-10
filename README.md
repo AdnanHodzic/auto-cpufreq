@@ -132,7 +132,7 @@ sudo snap install auto-cpufreq
 
 [![AUR package](https://repology.org/badge/version-for-repo/aur/auto-cpufreq.svg)](https://aur.archlinux.org/packages/auto-cpufreq)
 
-The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12), [liljaylj](https://github.com/liljaylj), and [parmjotsinghrobot](https://github.com/Parmjot-Singh). 
+The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) is currently being maintained by [MusicalArtist12](https://github.com/MusicalArtist12), [liljaylj](https://github.com/liljaylj), and [parmjotsinghrobot](https://github.com/parmjotsinghrobot). 
 
 **Notices**
 
