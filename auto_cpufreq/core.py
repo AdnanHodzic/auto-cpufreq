@@ -52,6 +52,8 @@ CPUS = os.cpu_count()
 # ignore these devices under /sys/class/power_supply/
 POWER_SUPPLY_IGNORELIST = ["hidpp_battery"]
 
+IS_SNAP = os.getenv("PKG_MARKER") == "SNAP"
+
 # Note:
 # "load1m" & "cpuload" can't be global vars and to in order to show correct data must be
 # decraled where their execution takes place
@@ -65,94 +67,65 @@ auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
 # track governor override
-if os.getenv("PKG_MARKER") == "SNAP":
+if IS_SNAP:
+    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
     governor_override_state = Path("/var/snap/auto-cpufreq/current/override.pickle")
 else:
-    governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
-
-if os.getenv("PKG_MARKER") == "SNAP":
-    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
-else:
     auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
+    governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
 
 # daemon check
 dcheck = getoutput("snapctl get daemon")
-
 
 def file_stats():
     global auto_cpufreq_stats_file
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
     sys.stdout = auto_cpufreq_stats_file
 
-
 def get_override():
     if os.path.isfile(governor_override_state):
         with open(governor_override_state, "rb") as store:
             return pickle.load(store)
-    else:
-        return "default"
+    else: return "default"
 
 def set_override(override):
     if override in ["powersave", "performance"]:
-        with open(governor_override_state, "wb") as store:
-            pickle.dump(override, store)
+        with open(governor_override_state, "wb") as store: pickle.dump(override, store)
         print(f"Set governor override to {override}")
     elif override == "reset":
-        if os.path.isfile(governor_override_state):
-            os.remove(governor_override_state)
+        if os.path.isfile(governor_override_state): os.remove(governor_override_state)
         print("Governor override removed")
-    elif override is not None:
-        print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
+    elif override is not None: print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
 
-
-
-# get distro name
-try:
-    dist_name = distro.id()
+try: dist_name = distro.id() # get distro name
 except PermissionError:
-    # Current work-around for Pop!_OS where symlink causes permission issues
     print("[!] Warning: Cannot get distro name")
-    if os.path.exists("/etc/pop-os/os-release"):
-            # Check if using a Snap
-            if os.getenv("PKG_MARKER") == "SNAP":
-                print("[!] Snap install on PopOS detected, you must manually run the following"
-                        " commands in another terminal:\n")
-                print("[!] Backup the /etc/os-release file:")
-                print("sudo mv /etc/os-release /etc/os-release-backup\n")
-                print("[!] Create hardlink to /etc/os-release:")
-                print("sudo ln /etc/pop-os/os-release /etc/os-release\n")
-                print("[!] Aborting. Restart auto-cpufreq when you created the hardlink")
-                sys.exit(1)
-            else:
-                # This should not be the case. But better be sure.
-                print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
-                print("[!] Aborting...")
-                sys.exit(1)
-
+    # Current work-around for Pop!_OS where symlink causes permission issues && Check if using a Snap
+    if os.path.exists("/etc/pop-os/os-release") and IS_SNAP :
+        print("[!] Snap install on PopOS detected, you must manually run the following commands in another terminal:\n")
+        print("[!] Backup the /etc/os-release file:")
+        print("sudo mv /etc/os-release /etc/os-release-backup\n")
+        print("[!] Create hardlink to /etc/os-release:")
+        print("sudo ln /etc/pop-os/os-release /etc/os-release\n")
+        print("[!] Aborting. Restart auto-cpufreq when you created the hardlink")
     else:
         print("[!] Check /etc/os-release permissions and make sure it is not a symbolic link")
         print("[!] Aborting...")
-        sys.exit(1)
+    sys.exit(1)
 
 # display running version of auto-cpufreq
 def app_version():
-
     print("auto-cpufreq version: ", end="")
 
     # snap package
-    if os.getenv("PKG_MARKER") == "SNAP":
-        print(getoutput(r"echo \(Snap\) $SNAP_VERSION"))
+    if IS_SNAP: print(getoutput(r"echo \(Snap\) $SNAP_VERSION"))
     # aur package
-    elif dist_name in ["arch", "manjaro", "garuda"]:
+    elif os.path.exists("/etc/arch-release"):
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
-        if aur_pkg_check == 1:
-            print(get_formatted_version())
-        else:
-            print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
-    else:
-        # source code (auto-cpufreq-installer)
-        try:
-            print(get_formatted_version())
+        if aur_pkg_check == 1: print(get_formatted_version())
+        else: print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
+    else: # source code (auto-cpufreq-installer)
+        try: print(get_formatted_version())
         except Exception as e:
             print(repr(e))
             pass
@@ -166,15 +139,13 @@ def check_for_update():
     latest_release_url = f"https://api.github.com/repos/AdnanHodzic/auto-cpufreq/releases/latest"
     try:
         response = requests.get(latest_release_url)
-        if response.status_code == 200:
-            latest_release = response.json()
+        if response.ok: latest_release = response.json()
         else:
             message = response.json().get("message")
             print("Error fetching recent release!")
             if message is not None and message.startswith("API rate limit exceeded"):
                 print("GitHub Rate limit exceeded. Please try again later within 1 hour or use different network/VPN.")
-            else:
-                print("Unexpected status code:", response.status_code)
+            else: print("Unexpected status code:", response.status_code)
             return False
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
             requests.exceptions.RequestException, requests.exceptions.HTTPError) as err:
@@ -187,8 +158,7 @@ def check_for_update():
         # Get the current version of auto-cpufreq
         # Extract version number from the output string
         output = check_output(['auto-cpufreq', '--version']).decode('utf-8')
-        try:
-            version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
+        try: version_line = next((re.search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
         except AttributeError:
             print("Error Retrieving Current Version!")
             exit(1)
@@ -202,11 +172,8 @@ def check_for_update():
             print(f"Updates are available,\nCurrent version: {installed_version}\nLatest version: {latest_version}")
             print("Note that your previous custom settings might be erased with the following update")
             return True
-    else:
-        # Handle the case where "tag_name" key doesn't exist
+    else: # Handle the case where "tag_name" key doesn't exist
         print("Malformed Released data!\nReinstall manually or Open an issue on GitHub for help!")
-
-
 
 def new_update(custom_dir):
     os.chdir(custom_dir)
@@ -221,35 +188,24 @@ def get_literal_version(package_name):
         package_metadata = importlib.metadata.metadata(package_name)
 
         package_name = package_metadata['Name']
-        metadata_version = package_metadata['Version']
+        numbered_version, _, git_version = package_metadata['Version'].partition("+")
 
-        numbered_version, _, git_version = metadata_version.partition("+")
+        return f"{numbered_version}+{git_version}"
 
-        # Construct the literal version string
-        literal_version = f"{numbered_version}+{git_version}"
-
-        return literal_version
-
-    except importlib.metadata.PackageNotFoundError:
-        return f"Package '{package_name}' not found"
+    except importlib.metadata.PackageNotFoundError: return f"Package '{package_name}' not found"
 
 # return formatted version for a better readability
 def get_formatted_version():
     literal_version = get_literal_version("auto-cpufreq")
     splitted_version = literal_version.split("+")
-    formatted_version = splitted_version[0]
 
-    if len(splitted_version) > 1:
-        formatted_version += " (git: " + splitted_version[1] + ")"
-
-    return formatted_version
+    return splitted_version[0] + (" (git: " + splitted_version[1] + ")" if len(splitted_version) > 1 else "")
 
 def app_res_use():
     p = psutil.Process()
     print("auto-cpufreq system resource consumption:")
     print("cpu usage:", p.cpu_percent(), "%")
     print("memory use:", round(p.memory_percent(), 2), "%")
-
 
 # set/change state of turbo
 def turbo(value: bool = None):
@@ -261,8 +217,8 @@ def turbo(value: bool = None):
     amd_pstate = Path("/sys/devices/system/cpu/amd_pstate/status")
 
     if p_state.exists():
-        inverse = True
         f = p_state
+        inverse = True
     elif cpufreq.exists():
         f = cpufreq
         inverse = False
@@ -277,30 +233,23 @@ def turbo(value: bool = None):
         return False
 
     if value is not None:
-        if inverse:
-            value = not value
+        if inverse: value = not value
 
-        try:
-            f.write_text(str(int(value)) + "\n")
+        try: f.write_text(str(int(value)) + "\n")
         except PermissionError:
             print("Warning: Changing CPU turbo is not supported. Skipping.")
             return False
 
-    value = bool(int(f.read_text().strip()))
-    if inverse:
-        value = not value
+    value = bool(int(f.read_text().strip())) ^ inverse
 
     return value
 
-
 # display current state of turbo
-def get_turbo():
+def get_turbo(): print(f"Currently turbo boost is: {'on' if turbo() else 'off'}")
 
-    if turbo():
-        print("Currently turbo boost is: on")
-    else:
-        print("Currently turbo boost is: off")
-
+def set_turbo(value:bool): # set turbo state
+    print(f"setting turbo boost: {'on' if value else 'off'}")
+    turbo(value)
 
 def charging():
     """
@@ -396,7 +345,7 @@ def cpufreqctl():
     """
 
     # detect if running on a SNAP
-    if os.getenv("PKG_MARKER") == "SNAP":
+    if IS_SNAP:
         pass
     else:
         # deploy cpufreqctl.auto-cpufreq script
@@ -409,7 +358,7 @@ def cpufreqctl_restore():
     remove cpufreqctl.auto-cpufreq script
     """
     # detect if running on a SNAP
-    if os.getenv("PKG_MARKER") == "SNAP":
+    if IS_SNAP:
         pass
     else:
         if os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
@@ -730,12 +679,10 @@ def set_powersave():
 
     if auto == "always":
         print("Configuration file enforces turbo boost")
-        print("setting turbo boost: on")
-        turbo(True)
+        set_turbo(True)
     elif auto == "never":
         print("Configuration file disables turbo boost")
-        print("setting turbo boost: off")
-        turbo(False)
+        set_turbo(False)
     else:
         if psutil.cpu_percent(percpu=False, interval=0.01) >= 30.0 or isclose(
             max(psutil.cpu_percent(percpu=True, interval=0.01)), 100
@@ -743,10 +690,7 @@ def set_powersave():
             print("High CPU load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
-            if cpuload >= 20:
-                print("setting turbo boost: on")
-                turbo(True)
-
+            if cpuload >= 20: set_turbo(True)
             # set turbo state based on average of all core temperatures
             elif cpuload <= 20 and avg_all_core_temp >= 70:
                 print(
@@ -756,20 +700,14 @@ def set_powersave():
                     avg_all_core_temp,
                     "°C",
                 )
-                print("setting turbo boost: off")
-                turbo(False)
-            else:
-                print("setting turbo boost: off")
-                turbo(False)
+                set_turbo(False)
+            else: set_turbo(False)
 
         elif load1m > powersave_load_threshold:
             print("High system load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
-            if cpuload >= 20:
-                print("setting turbo boost: on")
-                turbo(True)
-
+            if cpuload >= 20: set_turbo(True)
             # set turbo state based on average of all core temperatures
             elif cpuload <= 20 and avg_all_core_temp >= 65:
                 print(
@@ -779,20 +717,13 @@ def set_powersave():
                     avg_all_core_temp,
                     "°C",
                 )
-                print("setting turbo boost: off")
-                turbo(False)
-            else:
-                print("setting turbo boost: off")
-                turbo(False)
-
+                set_turbo(False)
+            else: set_turbo(False)
         else:
             print("Load optimal", end=""), display_system_load_avg()
 
             # high cpu usage trigger
-            if cpuload >= 20:
-                print("setting turbo boost: on")
-                turbo(True)
-
+            if cpuload >= 20: set_turbo(True)
             # set turbo state based on average of all core temperatures
             elif cpuload <= 20 and avg_all_core_temp >= 60:
                 print(
@@ -802,18 +733,13 @@ def set_powersave():
                     avg_all_core_temp,
                     "°C",
                 )
-                print("setting turbo boost: off")
-                turbo(False)
-            else:
-                print("setting turbo boost: off")
-                turbo(False)
+                set_turbo(False)
+            else: set_turbo(False)
 
     footer()
 
-
 # make turbo suggestions in powersave
 def mon_powersave():
-
     # get CPU utilization as a percentage
     cpuload = psutil.cpu_percent(interval=1)
 
@@ -901,19 +827,11 @@ def mon_powersave():
 # set performance and enable turbo
 def set_performance():
     conf = config.get_config()
-    if conf.has_option("charger", "governor"):
-        gov = conf["charger"]["governor"]
-    else:
-        gov = get_avail_performance()
+    gov = conf["charger"]["governor"] if conf.has_option("charger", "governor") else get_avail_performance()
 
     print(f'Setting to use: "{gov}" governor')
-    if get_override() != "default":
-        print("Warning: governor overwritten using `--force` flag.")
-    run(
-        f"cpufreqctl.auto-cpufreq --governor --set={gov}",
-        shell=True,
-    )
-
+    if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
+    run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
 
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
@@ -925,8 +843,7 @@ def set_performance():
                 os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
             ))
 
-        if dynboost_enabled:
-            print('Not setting EPP (dynamic boosting is enabled)')
+        if dynboost_enabled: print('Not setting EPP (dynamic boosting is enabled)')
         else:
             intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
 
@@ -961,19 +878,14 @@ def set_performance():
     print("Total system load: {:.2f}".format(load1m))
     print("Average temp. of all cores: {:.2f} °C \n".format(avg_all_core_temp))
 
-    if conf.has_option("charger", "turbo"):
-        auto = conf["charger"]["turbo"]
-    else:
-        auto = "auto"
+    auto = conf["charger"]["turbo"] if conf.has_option("charger", "turbo") else "auto"
 
     if auto == "always":
         print("Configuration file enforces turbo boost")
-        print("setting turbo boost: on")
-        turbo(True)
+        set_turbo(True)
     elif auto == "never":
         print("Configuration file disables turbo boost")
-        print("setting turbo boost: off")
-        turbo(False)
+        set_turbo(False)
     else:
         if (
             psutil.cpu_percent(percpu=False, interval=0.01) >= 20.0
@@ -982,10 +894,7 @@ def set_performance():
             print("High CPU load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
-            if cpuload >= 20:
-                print("setting turbo boost: on")
-                turbo(True)
-
+            if cpuload >= 20: set_turbo(True)
             # set turbo state based on average of all core temperatures
             elif avg_all_core_temp >= 70:
                 print(
@@ -995,20 +904,14 @@ def set_performance():
                     avg_all_core_temp,
                     "°C",
                 )
-                print("setting turbo boost: off")
-                turbo(False)
-            else:
-                print("setting turbo boost: on")
-                turbo(True)
+                set_turbo(False)
+            else: set_turbo(True)
 
         elif load1m >= performance_load_threshold:
             print("High system load", end=""), display_system_load_avg()
 
             # high cpu usage trigger
-            if cpuload >= 20:
-                print("setting turbo boost: on")
-                turbo(True)
-
+            if cpuload >= 20: set_turbo(True)
             # set turbo state based on average of all core temperatures
             elif avg_all_core_temp >= 65:
                 print(
@@ -1018,20 +921,14 @@ def set_performance():
                     avg_all_core_temp,
                     "°C",
                 )
-                print("setting turbo boost: off")
-                turbo(False)
-            else:
-                print("setting turbo boost: on")
-                turbo(True)
+                set_turbo(False)
+            else: set_turbo(True)
 
         else:
             print("Load optimal", end=""), display_system_load_avg()
 
             # high cpu usage trigger
-            if cpuload >= 20:
-                print("setting turbo boost: on")
-                turbo(True)
-
+            if cpuload >= 20: set_turbo(True)
             # set turbo state based on average of all core temperatures
             elif avg_all_core_temp >= 60:
                 print(
@@ -1041,18 +938,13 @@ def set_performance():
                     avg_all_core_temp,
                     "°C",
                 )
-                print("setting turbo boost: off")
-                turbo(False)
-            else:
-                print("setting turbo boost: off")
-                turbo(False)
+                set_turbo(False)
+            else: set_turbo(False)
 
     footer()
 
-
 # make turbo suggestions in performance
 def mon_performance():
-
     # get CPU utilization as a percentage
     cpuload = psutil.cpu_percent(interval=1)
 
@@ -1149,17 +1041,14 @@ def set_autofreq():
 
     # determine which governor should be used
     override = get_override()
-    if override == "powersave":
-        set_powersave()
-    elif override == "performance":
-        set_performance()
+    if override == "powersave": set_powersave()
+    elif override == "performance": set_performance()
     elif charging():
         print("Battery is: charging\n")
         set_performance()
     else:
         print("Battery is: discharging\n")
         set_powersave()
-
 
 def mon_autofreq():
     """
@@ -1180,7 +1069,6 @@ def mon_autofreq():
         print(f'Suggesting use of "{get_avail_powersave()}" governor')
         mon_powersave()
 
-
 def python_info():
     print("Python:", pl.python_version())
     print("psutil package:", psutil.__version__)
@@ -1188,17 +1076,15 @@ def python_info():
     print("click package:", click.__version__)
     print("distro package:", distro.__version__)
 
-
 def device_info():
     print("Computer type:", getoutput("dmidecode --string chassis-type"))
-
 
 def distro_info():
     dist = "UNKNOWN distro"
     version = "UNKNOWN version"
 
     # get distro information in snap env.
-    if os.getenv("PKG_MARKER") == "SNAP":
+    if IS_SNAP:
         try:
             with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
                 for line in searchfile:
@@ -1221,12 +1107,10 @@ def distro_info():
     print("Linux distro: " + dist)
     print("Linux kernel: " + pl.release())
 
-
 def sysinfo():
     """
     get system information
     """
-
     # processor_info
     model_name = getoutput("grep -E 'model name' /proc/cpuinfo -m 1").split(":")[-1]
     print(f"Processor:{model_name}")
@@ -1261,18 +1145,15 @@ def sysinfo():
     freq_per_cpu = []
     for i in range(0, len(coreid_info), 3):
         # ensure that indices are within the valid range, before accessing the corresponding elements
-        if i + 1 < len(coreid_info):
-            freq_per_cpu.append(float(coreid_info[i + 1].split(":")[-1]))
-        else:
-            # handle the case where the index is out of range
+        if i + 1 < len(coreid_info): freq_per_cpu.append(float(coreid_info[i + 1].split(":")[-1]))
+        else: # handle the case where the index is out of range
             continue
         # ensure that indices are within the valid range, before accessing the corresponding elements
         cpu = int(coreid_info[i].split(":")[-1])
         if i + 2 < len(coreid_info):
             core = int(coreid_info[i + 2].split(":")[-1])
             cpu_core[cpu] = core
-        else:
-            # handle the case where the index is out of range
+        else: # handle the case where the index is out of range
             continue
 
     online_cpu_count = len(cpu_core)
@@ -1300,8 +1181,7 @@ def sysinfo():
                         if temp.current != 0:
                             temp_per_cpu = [temp.current] * online_cpu_count
                             break
-                else:
-                    continue
+                else: continue
                 break
             else:
                 for sensor in ["acpitz", "k10temp", "zenpower"]:
@@ -1317,8 +1197,7 @@ def sysinfo():
     for (cpu, usage, freq, temp) in zip(cpu_core, usage_per_cpu, freq_per_cpu, temp_per_cpu):
         print(f"CPU{cpu}    {usage:>5.1f}%       {temp:>3.0f} °C     {freq:>5.0f} MHz")
 
-    if offline_cpus:
-        print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
+    if offline_cpus: print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
 
     # get average temperature of all cores
     avg_cores_temp = sum(temp_per_cpu)
@@ -1327,45 +1206,32 @@ def sysinfo():
 
     # print current fan speed
     current_fans = list(psutil.sensors_fans())
-    for current_fan in current_fans:
-        print("\nCPU fan speed:", psutil.sensors_fans()[current_fan][0].current, "RPM")
-
-
+    for current_fan in current_fans: print("\nCPU fan speed:", psutil.sensors_fans()[current_fan][0].current, "RPM")
 
 # read stats func
 def read_stats():
     # read stats
-    if os.path.isfile(auto_cpufreq_stats_path):
-        call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
+    if os.path.isfile(auto_cpufreq_stats_path): call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
     footer()
-
 
 # check if program (argument) is running
 def is_running(program, argument):
     # iterate over all processes found by psutil
     # and find the one with name and args passed to the function
     for p in psutil.process_iter():
-        try:
-            cmd = p.cmdline()
-        except:
-            continue
+        try: cmd = p.cmdline()
+        except: continue
         for s in filter(lambda x: program in x, cmd):
-            if argument in cmd:
-                return True
-
+            if argument in cmd: return True
 
 def daemon_running_msg():
     print("\n" + "-" * 24 + " auto-cpufreq running " + "-" * 30 + "\n")
-    print(
-        "ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the daemon before running with --live or --monitor mode"
-    )
+    print("ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the daemon before running with --live or --monitor mode")
     footer()
 
 def daemon_not_running_msg():
     print("\n" + "-" * 24 + " auto-cpufreq not running " + "-" * 30 + "\n")
-    print(
-        "ERROR: auto-cpufreq is not running in daemon mode.\n\nMake sure to run \"sudo auto-cpufreq --install\" first"
-    )
+    print("ERROR: auto-cpufreq is not running in daemon mode.\n\nMake sure to run \"sudo auto-cpufreq --install\" first")
     footer()
 
 # check if auto-cpufreq --daemon is running
@@ -1373,7 +1239,7 @@ def running_daemon_check():
     if is_running("auto-cpufreq", "--daemon"):
         daemon_running_msg()
         exit(1)
-    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+    elif IS_SNAP and dcheck == "enabled":
         daemon_running_msg()
         exit(1)
 
@@ -1382,6 +1248,6 @@ def not_running_daemon_check():
     if not is_running("auto-cpufreq", "--daemon"):
         daemon_not_running_msg()
         exit(1)
-    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
+    elif IS_SNAP and dcheck == "disabled":
         daemon_not_running_msg()
         exit(1)
