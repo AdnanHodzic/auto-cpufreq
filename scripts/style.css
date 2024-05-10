@@ -1,12 +1,8 @@
-label{
+label {
     /*font-family: Noto Sans;*/
     font-size: 15px;
 }
 
-#bold{
-    font-weight: bold;
-}
+#bold { font-weight: bold; }
 
-#small{
-    font-size: 12px;
-}
+#small { font-size: 12px; }
