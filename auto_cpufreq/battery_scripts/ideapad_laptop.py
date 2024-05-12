@@ -69,4 +69,4 @@ def ideapad_laptop_print_thresholds():
             with open(f'{POWER_SUPPLY_DIR}BAT{b}/charge_stop_threshold', 'r') as f:
                 print(f'battery{b} stop threshold = {f.read()}', end="")
 
-        except Exception: print(f"ERROR: failed to read battery {b} thresholds")
+        except Exception as e: print(f"ERROR: failed to read battery {b} thresholds: {e}")
