@@ -16,18 +16,17 @@ err_exit()
 # invocation handling
 #
 
-
 # load python virtual environment
 venv_dir=/opt/auto-cpufreq/venv
-. "${venv_dir}/bin/activate"
+. "$venv_dir/bin/activate"
 
 # run python code with venv loaded
-if [[ "${#}" -ne 1 ]]; then
+if [[ "$#" -ne 1 ]]; then
    PYTHONPATH=/opt/auto-cpufreq \
             /opt/auto-cpufreq/venv/bin/python \
             /opt/auto-cpufreq/venv/bin/auto-cpufreq 
 else
-    param="${1}"
+    param="$1"
     PYTHONPATH=/opt/auto-cpufreq \
             /opt/auto-cpufreq/venv/bin/python \
             /opt/auto-cpufreq/venv/bin/auto-cpufreq \
