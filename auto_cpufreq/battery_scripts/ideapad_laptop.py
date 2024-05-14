@@ -6,9 +6,9 @@ from auto_cpufreq.utils.config import config
 POWER_SUPPLY_DIR = "/sys/class/power_supply/"
 
 def set_battery(value, mode, bat):
-    path = f"{POWER_SUPPLY_DIR}BAT{bat}/charge_{mode}_threshold"
+    path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
     if os.path.exists(path):
-        subprocess.check_output(f"echo {value} | tee {POWER_SUPPLY_DIR}BAT{bat}/charge_{mode}_threshold", shell=True, text=True)
+        subprocess.check_output(f"echo {value} | tee {POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold", shell=True, text=True)
     else: print(f"WARNING: {path} does NOT exist")
 
 def get_threshold_value(mode):
@@ -39,7 +39,7 @@ def ideapad_laptop_setup():
 
     if not (conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == "true"): return
 
-    battery_count = len([name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith('BAT')])
+    batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")]
 
     if conf.has_option("battery", "ideapad_laptop_conservation_mode"):
         if conf["battery"]["ideapad_laptop_conservation_mode"] == "true":
@@ -48,7 +48,7 @@ def ideapad_laptop_setup():
         if conf["battery"]["ideapad_laptop_conservation_mode"] == "false": conservation_mode(0)
 
     if not check_conservation_mode():
-        for bat in range(battery_count):
+        for bat in batteries:
             set_battery(get_threshold_value("start"), "start", bat)
             set_battery(get_threshold_value("stop"), "stop", bat)
     else: print("conservation mode is enabled unable to set thresholds")
@@ -58,15 +58,16 @@ def ideapad_laptop_print_thresholds():
         print("conservation mode is on")
         return
 
-    battery_count = len([name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith('BAT')])
+    batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")]
+
     print("\n-------------------------------- Battery Info ---------------------------------\n")
-    print(f"battery count = {battery_count}")
-    for b in range(battery_count):
+    print(f"battery count = {len(batteries)}")
+    for bat in batteries:
         try:
-            with open(f'{POWER_SUPPLY_DIR}BAT{b}/charge_start_threshold', 'r') as f:
-                print(f'battery{b} start threshold = {f.read()}', end="")
+            with open(f'{POWER_SUPPLY_DIR}{bat}/charge_start_threshold', 'r') as f:
+                print(f'{bat} start threshold = {f.read()}', end="")
 
-            with open(f'{POWER_SUPPLY_DIR}BAT{b}/charge_stop_threshold', 'r') as f:
-                print(f'battery{b} stop threshold = {f.read()}', end="")
+            with open(f'{POWER_SUPPLY_DIR}{bat}/charge_stop_threshold', 'r') as f:
+                print(f'{bat} stop threshold = {f.read()}', end="")
 
-        except Exception as e: print(f"ERROR: failed to read battery {b} thresholds: {e}")
+        except Exception as e: print(f"ERROR: failed to read {bat} thresholds: {e}")
