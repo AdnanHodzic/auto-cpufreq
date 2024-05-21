@@ -3,6 +3,7 @@
   python3Packages,
   pkgs,
   fetchFromGitHub,
+  fetchPypi,
 }:
 let
 
@@ -21,6 +22,14 @@ let
       repo = "pyinotify-3.12";
       rev = "923cebec3a2a84c7e38c9e68171eb93f5d07ce5d";
       hash = "sha256-714CximEK4YhIqDmvqJYOUGs39gvDkWGrkNrXwxT8iM=";
+    };
+  });
+
+  requests = python3Packages.requests.overrideAttrs (oldAttrs: {
+    src = fetchPypi {
+      pname = "requests";
+      version = "2.32.1";
+      hash = "sha256-65fofmTHnmTluKx1zundH5f0niibCD7mvpYmiTByVoU=";
     };
   });
 
