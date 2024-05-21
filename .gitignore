@@ -138,3 +138,6 @@ dmypy.json
 
 # pycharm
 .idea/
+
+# nix build
+/result
