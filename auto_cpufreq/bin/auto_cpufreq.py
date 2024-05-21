@@ -9,6 +9,7 @@ import sys
 import time
 from click import UsageError
 from subprocess import call, run
+from shutil import rmtree
 
 # sys.path.append("../")
 from auto_cpufreq.core import *
@@ -26,12 +27,7 @@ from auto_cpufreq.utils.config import config as conf, find_config_file
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
 @click.option("--get-state", is_flag=True, hidden=True)
-@click.option(
-    "--config",
-    is_flag=False,
-    required=False,
-    help="Use config file at defined path",
-)
+@click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
@@ -39,7 +35,6 @@ from auto_cpufreq.utils.config import config as conf, find_config_file
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
 def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
-
     # display info if config file is used
     config_path = find_config_file(config)
     conf.set_path(config_path)
@@ -84,8 +79,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     sysinfo()
                     set_autofreq()
                     countdown(2)
-                except KeyboardInterrupt:
-                    break;
+                except KeyboardInterrupt: break
             conf.notifier.stop()
         elif monitor:
             config_info_dialog()
@@ -111,8 +105,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     sysinfo()
                     mon_autofreq()
                     countdown(2)
-                except KeyboardInterrupt:
-                    break
+                except KeyboardInterrupt: break
             conf.notifier.stop()
         elif live:
             root_check()
@@ -141,7 +134,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     countdown(2)
                 except KeyboardInterrupt:
                     gnome_power_start_live()
-                    print("")
+                    print()
                     break
             conf.notifier.stop()
         elif stats:
@@ -156,8 +149,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 tlp_service_detect()
             battery_get_thresholds()
             read_stats()
-        elif log:
-            deprecated_log_msg()
+        elif log: deprecated_log_msg()
         elif get_state:
             not_running_daemon_check()
             override = get_override()
@@ -171,17 +163,14 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             footer()
             distro_info()
             sysinfo()
-            print("")
+            print()
             app_version()
-            print("")
+            print()
             python_info()
-            print("")
+            print()
             device_info()
-            if charging():
-                print("Battery is: charging")
-            else:
-                print("Battery is: discharging")
-            print("")
+            print(f"Battery is: {'' if charging() else 'dis'}charging")
+            print()
             app_res_use()
             display_load()
             get_current_gov()
@@ -199,8 +188,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
             footer()
         elif install:
+            root_check()
             if os.getenv("PKG_MARKER") == "SNAP":
-                root_check()
                 running_daemon_check()
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -208,16 +197,14 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
                 run("snapctl start --enable auto-cpufreq", shell=True)
-                deploy_complete_msg()
             else:
-                root_check()
                 running_daemon_check()
                 gov_check()
                 deploy_daemon()
-                deploy_complete_msg()
+            deploy_complete_msg()
         elif remove:
+            root_check()
             if os.getenv("PKG_MARKER") == "SNAP":
-                root_check()
                 run("snapctl set daemon=disabled", shell=True)
                 run("snapctl stop --disable auto-cpufreq", shell=True)
                 if auto_cpufreq_stats_path.exists():
@@ -229,11 +216,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 # {the following snippet also used in --update, update it there too(if required)}
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
-                remove_complete_msg()
-            else:
-                root_check()
-                remove_daemon()
-                remove_complete_msg()
+            else: remove_daemon()
+            remove_complete_msg()
         elif update:
             root_check()
             custom_dir = "/opt/auto-cpufreq/source"
@@ -245,8 +229,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             if "--update" in sys.argv:
                 update = True
                 sys.argv.remove("--update")
-                if len(sys.argv) == 2:
-                    custom_dir = sys.argv[1] 
+                if len(sys.argv) == 2: custom_dir = sys.argv[1] 
                     
             if os.getenv("PKG_MARKER") == "SNAP":
                 print("Detected auto-cpufreq was installed using snap")
@@ -259,13 +242,10 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 is_new_update = check_for_update()
-                if not is_new_update:
-                    return
+                if not is_new_update: return
                 ans = input("Do you want to update auto-cpufreq to the latest release? [Y/n]: ").strip().lower()
-                if not os.path.exists(custom_dir):
-                    os.makedirs(custom_dir)
-                if os.path.exists(os.path.join(custom_dir, "auto-cpufreq")):
-                    shutil.rmtree(os.path.join(custom_dir, "auto-cpufreq"))
+                if not os.path.exists(custom_dir): os.makedirs(custom_dir)
+                if os.path.exists(os.path.join(custom_dir, "auto-cpufreq")): rmtree(os.path.join(custom_dir, "auto-cpufreq"))
                 if ans in ['', 'y', 'yes']:
                     remove_daemon()
                     remove_complete_msg()
@@ -274,9 +254,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     run(["auto-cpufreq", "--install"])
                     print("auto-cpufreq is installed with the latest version")
                     run(["auto-cpufreq", "--version"])
-                else:
-                    print("Aborted")
-
+                else: print("Aborted")
         elif completions:
             if completions == "bash":
                 print("Run the below command in your current shell!\n")
@@ -289,10 +267,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             elif completions == "fish":
                 print("Run the below command in your current shell!\n")
                 print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
-            else:
-                print("Invalid Option, try bash|zsh|fish as argument to --completions")
+            else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
                 
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()

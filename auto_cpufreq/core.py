@@ -143,7 +143,7 @@ def app_version():
     if os.getenv("PKG_MARKER") == "SNAP":
         print(getoutput(r"echo \(Snap\) $SNAP_VERSION"))
     # aur package
-    elif dist_name in ["arch", "manjaro", "garuda"]:
+    elif os.path.exists("/etc/arch-release"):
         aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
         if aur_pkg_check == 1:
             print(get_formatted_version())
@@ -1308,7 +1308,7 @@ def sysinfo():
                     if sensor in temp_sensors:
                         if temp_sensors[sensor][0].current != 0:
                             temp_per_cpu = [temp_sensors[sensor][0].current] * online_cpu_count
-                            break;
+                            break
     except Exception as e:
         print(repr(e))
         pass
@@ -1346,7 +1346,7 @@ def is_running(program, argument):
     # and find the one with name and args passed to the function
     for p in psutil.process_iter():
         try:
-            cmd = p.cmdline();
+            cmd = p.cmdline()
         except:
             continue
         for s in filter(lambda x: program in x, cmd):

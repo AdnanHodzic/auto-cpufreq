@@ -25,8 +25,6 @@ def build_menu():
     menu.show_all()
     return menu
 
-def open_app(MenuItem):
-    run("sudo -E python app.py", shell=True)
+def open_app(MenuItem): run("sudo -E python app.py", shell=True)
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()
