@@ -58,7 +58,7 @@ case "$(ps h -o comm 1)" in
     }
 
     if [ -f /etc/os-release ];then
-      ./etc/os-release
+      eval "$(cat /etc/os-release)"
       case $ID in
         void) runit_ln /etc /var;;
         artix) runit_ln /etc/runit /run/runit;;
