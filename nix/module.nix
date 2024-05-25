@@ -31,15 +31,21 @@ in {
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [defaultPackage];
+    environment.systemPackages = [ defaultPackage ];
 
-    services.auto-cpufreq.enable = true;
-    systemd.services.auto-cpufreq = {
-      overrideStrategy = "asDropin";
-      serviceConfig.ExecStart = mkForce [
-        ""
-        "${defaultPackage}/bin/auto-cpufreq --daemon --config ${cfgFile}"
-      ];
+    systemd = {
+      packages =  [ defaultPackage ];
+      services.auto-cpufreq = {
+        wantedBy = [ "multi-user.target" ];
+        path = with pkgs; [ bash coreutils ];
+        overrideStrategy = "asDropin";
+
+        serviceConfig.WorkingDirectory = "";
+        serviceConfig.ExecStart = mkForce [
+          ""
+          "${defaultPackage}/bin/auto-cpufreq --daemon --config ${cfgFile}"
+        ];
+      };
     };
   };
 }
