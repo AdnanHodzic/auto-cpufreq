@@ -5,12 +5,14 @@
 # Thanks to https://github.com/errornonamer for openrc fix
 
 MID="$((`tput cols` / 2))"
-
-echo
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
-printf " Running auto-cpufreq daemon removal script "
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
-echo; echo
+function header {
+  echo
+	printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+	printf " $1 "
+	printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+	echo
+}
+header "Running auto-cpufreq daemon removal script"
 
 # root check
 if ((EUID != 0)); then
@@ -20,12 +22,12 @@ fi
 
 # First argument is the init name, second argument is the stop command, third argument is the disable command and the fourth is the "service" path
 function auto_cpufreq_remove {
-    echo -e "\n* Stopping auto-cpufreq daemon ($1) service"
-    $2
-    echo -e "\n* Disabling auto-cpufreq daemon ($1) at boot"
-    $3
-    echo -e "\n* Removing auto-cpufreq daemon ($1) unit file"
-    rm $4
+  echo -e "\n* Stopping auto-cpufreq daemon ($1) service"
+  $2
+  echo -e "\n* Disabling auto-cpufreq daemon ($1) at boot"
+  $3
+  echo -e "\n* Removing auto-cpufreq daemon ($1) unit file"
+  rm $4
 }
 
 case "$(ps h -o comm 1)" in

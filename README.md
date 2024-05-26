@@ -289,7 +289,7 @@ You can configure separate profiles for the battery and power supply. These prof
 By default, auto-cpufreq does not use a config file. If you wish to configure auto-cpufreq statically, we look for a configuration file in the following order:
 
 1. Commandline argument: `--config <FILE>` if passed as commandline argument to `auto-cpufreq`
-2. User-specific configuration: `$XDG_CONFIG_HOME/auto-cpufreq/auto-cpufreq.conf`
+2. User-specific configuration: `$XDG_CONFIG_HOME/auto-cpufreq.conf` or `$XDG_CONFIG_HOME/auto-cpufreq/auto-cpufreq.conf`
 3. System-wide configuration: `/etc/auto-cpufreq.conf`
 
 #### Example config file contents

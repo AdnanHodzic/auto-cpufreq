@@ -5,12 +5,14 @@
 # Thanks to https://github.com/errornonamer for openrc fix
 
 MID="$((`tput cols` / 2))"
-
-echo
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
-printf " Running auto-cpufreq daemon install script "
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
-echo; echo
+function header {
+  echo
+	printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+	printf " $1 "
+	printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+	echo
+}
+header "Running auto-cpufreq daemon install script"
 
 # root check
 if ((EUID != 0)); then
@@ -20,10 +22,10 @@ fi
 
 # First argument is the init name, second argument is the start command, third argument is the enable command
 function auto_cpufreq_install {
-    echo -e "\n* Starting auto-cpufreq daemon ($1) service"
-    $2
-    echo -e "\n* Enabling auto-cpufreq daemon ($1) at boot"
-    $3
+  echo -e "\n* Starting auto-cpufreq daemon ($1) service"
+  $2
+  echo -e "\n* Enabling auto-cpufreq daemon ($1) at boot"
+  $3
 }
 
 case "$(ps h -o comm 1)" in
@@ -58,13 +60,13 @@ case "$(ps h -o comm 1)" in
     }
 
     if [ -f /etc/os-release ];then
-      eval "$(cat /etc/os-release)"
+      . /etc/os-release
       case $ID in
+        artix|debian|devuan) runit_ln /etc/runit /run/runit;;
         void) runit_ln /etc /var;;
-        artix) runit_ln /etc/runit /run/runit;;
         *)
-          echo -e "\n* Runit init detected but your distro is not supported\n"
-          echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
+          echo -e "\n* Runit init system detected but your distro is not supported\n"
+          echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq/issues\n"
       esac
     fi
   ;;
@@ -91,6 +93,6 @@ case "$(ps h -o comm 1)" in
   ;;
   *)
     echo -e "\n* Unsupported init system detected, could not install the daemon\n"
-    echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
+    echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq/issues\n"
   ;;
 esac
