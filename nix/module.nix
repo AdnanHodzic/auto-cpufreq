@@ -22,7 +22,7 @@ in {
         Configuration for `auto-cpufreq`.
 
         See its [example configuration file] for supported settings.
-        [example configuration file]: https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto-cpufreq.conf-example
+        [example configuration file]: https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto-cpufreq.conf
       '';
 
       default = {};

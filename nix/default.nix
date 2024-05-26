@@ -46,7 +46,7 @@ python3Packages.buildPythonPackage {
 
   buildInputs = with pkgs; [gtk3 python3Packages.poetry-core];
 
-  propagatedBuildInputs = with python3Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify pkgs.getent];
+  propagatedBuildInputs = with python3Packages; [requests pygobject3 click psutil setuptools poetry-dynamic-versioning pyinotify pkgs.getent];
 
   doCheck = false;
   pythonImportsCheck = ["auto_cpufreq"];

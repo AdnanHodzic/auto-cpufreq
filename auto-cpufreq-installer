@@ -17,6 +17,7 @@ AUTO_CPUFREQ_FILE="/usr/local/bin/auto-cpufreq"
 AUTO_CPUFREQ_GTK_FILE=$AUTO_CPUFREQ_FILE-gtk
 AUTO_CPUFREQ_GTK_DESKTOP_FILE="$(basename $AUTO_CPUFREQ_GTK_FILE).desktop"
 
+CONFIG_FILE="/etc/auto-cpufreq.conf"
 IMG_FILE="/usr/share/pixmaps/auto-cpufreq.png"
 ORG_FILE="/usr/share/polkit-1/actions/org.auto-cpufreq.pkexec.policy"
 
@@ -82,10 +83,9 @@ function tool_install {
 
   elif [ -f /etc/redhat-release ]; then
     detected_distro "RedHat based"
-    if [ -f /etc/centos-release ]; then yum install platform-python-devel
-    else yum install python-devel
-    fi
-    yum install dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
+    pkg="python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel"
+    if [ -f /etc/centos-release ]; then yum install platform-$pkg
+    else yum install $pkg; fi
 
   elif [ -f /etc/solus-release ]; then
     detected_distro "Solus"
@@ -95,7 +95,7 @@ function tool_install {
   elif [ -f /etc/arch-release ]; then
     detected_distro "Arch Linux based"
     pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
-    
+      
   elif [ -f /etc/os-release ];then
     . /etc/os-release
     case $ID in
@@ -119,9 +119,7 @@ function tool_install {
       ;;
       *) manual_install;;
     esac
-  else # In case /etc/os-release doesn't exist
-    manual_install
-  fi
+  else manual_install; fi # In case /etc/os-release doesn't exist
 
   header "Installing necessary Python packages"
 
@@ -138,15 +136,17 @@ function tool_install {
   python -m pip install .
 
   mkdir -p $SHARE_DIR
-  cp -r scripts/ $SHARE_DIR
   cp -r images/ $SHARE_DIR
+  cp -r scripts/ $SHARE_DIR
+
+  cp $(basename $CONFIG_FILE) $CONFIG_FILE
   cp images/icon.png $IMG_FILE
   cp scripts/$(basename $ORG_FILE) $(dirname $ORG_FILE)
 
   # this is necessary since we need this script before we can run auto-cpufreq itself
   cp scripts/auto-cpufreq-venv-wrapper $AUTO_CPUFREQ_FILE
   chmod a+x $AUTO_CPUFREQ_FILE
-  cp scripts/start_app $AUTO_CPUFREQ_GTK_FILE
+  cp scripts/start_app.sh $AUTO_CPUFREQ_GTK_FILE
   chmod a+x $AUTO_CPUFREQ_GTK_FILE
 
   desktop-file-install --dir=$APPLICATIONS_PATH scripts/$AUTO_CPUFREQ_GTK_DESKTOP_FILE
@@ -158,67 +158,57 @@ function tool_install {
 }
 
 function tool_remove {
-  # stop any running auto-cpufreq argument (daemon/live/monitor)
-  tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
-  for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
+    # stop any running auto-cpufreq argument (daemon/live/monitor)
+    tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
+    for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
 
-  function remove_directory {
-    [ -d $1 ] && rm -rf $1
-  }
-  function remove_file {
-    [ -f $1 ] && rm $1
-  }
+    function remove_directory { [ -d $1 ] && rm -rf $1; }
+    function remove_file { [ -f $1 ] && rm $1; }
 
-  srv_remove="$AUTO_CPUFREQ_FILE-remove"
+    # run uninstall in case of installed daemon
+    if [ -f $AUTO_CPUFREQ_FILE ]; then eval "$AUTO_CPUFREQ_FILE --remove"
+    else echo; echo "Couldn't remove the auto-cpufreq daemon, $AUTO_CPUFREQ_FILE do not exist."; fi
 
-  # run uninstall in case of installed daemon
-  if [ -f $srv_remove -o -f $AUTO_CPUFREQ_FILE ]; then
-    eval "$AUTO_CPUFREQ_FILE --remove"
-  else
-    echo; echo "Couldn't remove the auto-cpufreq daemon, $srv_remove do not exist."
-  fi
+    # remove auto-cpufreq and all its supporting files
+    remove_directory $SHARE_DIR
+    remove_directory $VENV_PATH
 
-  # remove auto-cpufreq and all its supporting files
-  remove_directory $SHARE_DIR
+    remove_file "$AUTO_CPUFREQ_FILE-install"
+    remove_file "$AUTO_CPUFREQ_FILE-remove"
+    remove_file $AUTO_CPUFREQ_FILE
+    remove_file $AUTO_CPUFREQ_GTK_FILE
+    remove_file $CONFIG_FILE
+    remove_file $IMG_FILE
+    remove_file $ORG_FILE
+    remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"
+    remove_file "/var/run/auto-cpufreq.stats"
 
-  remove_file "$AUTO_CPUFREQ_FILE-install"
-  remove_file $srv_remove
-  remove_file $AUTO_CPUFREQ_FILE
-  remove_file $AUTO_CPUFREQ_GTK_FILE
-  remove_file $IMG_FILE
-  remove_file $ORG_FILE
-  remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"
-  remove_file "/var/run/auto-cpufreq.stats"
+    remove_file "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"
+    update-desktop-database $APPLICATIONS_PATH
 
-  remove_file "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"
-  update-desktop-database $APPLICATIONS_PATH
-
-  # remove python virtual environment
-  remove_directory $venv_path
-
-  echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
+    echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
 }
 
 # root check
 if ((EUID != 0)); then
-  echo; echo "Must be run as root (i.e: 'sudo $0')."; echo
-  exit 1
+    echo; echo "Must be run as root (i.e: 'sudo $0')."; echo
+    exit 1
 fi
 
 if [[ -z "$1" ]]; then ask_operation
 else
-  case "$1" in
-    --install) answer="i";;
-    --remove) answer="r";;
-    *) ask_operation;;
-  esac
+    case "$1" in
+        -i|--install) answer="i";;
+        -r|--remove) answer="r";;
+        *) ask_operation;;
+    esac
 fi
 
-case $answer in
+case "$answer" in
 	I|i) tool_install;;
 	R|r) tool_remove;;
 	*)
-    echo "Unknown key, aborting ..."; echo
-    exit 1
-  ;;
+        echo "Unknown key, aborting ..."; echo
+        exit 1
+    ;;
 esac
