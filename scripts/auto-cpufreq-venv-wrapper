@@ -5,7 +5,7 @@ set -eu
 
 # bailout function
 err_exit() {
-  echo "$(basename $0): ${1:-wrong invocation. try --help for help.}" 1>&2
+  echo "$(basename "$0"): ${1:-wrong invocation. try --help for help.}" 1>&2
   exit 1
 }
 
