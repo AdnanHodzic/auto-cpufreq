@@ -42,11 +42,11 @@ case "$(ps h -o comm 1)" in
     if [ -f /etc/os-release ]; then
       . /etc/os-release
       case $ID in
+        artix|debian|devuan) rm_sv /etc/runit /run/runit;;
         void) rm_sv /etc /var;;
-        artix) rm_sv /etc/runit /run/runit;;
         *)
           echo -e "\n* Runit init detected but your distro is not supported\n"
-          echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
+          echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq/issues\n"
         ;;
       esac
     fi
