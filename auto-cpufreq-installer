@@ -158,57 +158,54 @@ function tool_install {
 }
 
 function tool_remove {
-    # stop any running auto-cpufreq argument (daemon/live/monitor)
-    tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
-    for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
+  # stop any running auto-cpufreq argument (daemon/live/monitor)
+  tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
+  for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
 
-    function remove_directory { [ -d $1 ] && rm -rf $1; }
-    function remove_file { [ -f $1 ] && rm $1; }
+  function remove_directory { [ -d $1 ] && rm -rf $1; }
+  function remove_file { [ -f $1 ] && rm $1; }
 
-    # run uninstall in case of installed daemon
-    if [ -f $AUTO_CPUFREQ_FILE ]; then eval "$AUTO_CPUFREQ_FILE --remove"
-    else echo; echo "Couldn't remove the auto-cpufreq daemon, $AUTO_CPUFREQ_FILE do not exist."; fi
+  # run uninstall in case of installed daemon
+  if [ -f $AUTO_CPUFREQ_FILE ]; then eval "$AUTO_CPUFREQ_FILE --remove"
+  else echo; echo "Couldn't remove the auto-cpufreq daemon, $AUTO_CPUFREQ_FILE do not exist."; fi
 
-    # remove auto-cpufreq and all its supporting files
-    remove_directory $SHARE_DIR
-    remove_directory $VENV_PATH
+  # remove auto-cpufreq and all its supporting files
+  remove_directory $SHARE_DIR
+  remove_directory $VENV_PATH
 
-    remove_file "$AUTO_CPUFREQ_FILE-install"
-    remove_file "$AUTO_CPUFREQ_FILE-remove"
-    remove_file $AUTO_CPUFREQ_FILE
-    remove_file $AUTO_CPUFREQ_GTK_FILE
-    remove_file $CONFIG_FILE
-    remove_file $IMG_FILE
-    remove_file $ORG_FILE
-    remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"
-    remove_file "/var/run/auto-cpufreq.stats"
+  remove_file "$AUTO_CPUFREQ_FILE-install"
+  remove_file "$AUTO_CPUFREQ_FILE-remove"
+  remove_file $AUTO_CPUFREQ_FILE
+  remove_file $AUTO_CPUFREQ_GTK_FILE
+  remove_file $CONFIG_FILE
+  remove_file $IMG_FILE
+  remove_file $ORG_FILE
+  remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"
+  remove_file "/var/run/auto-cpufreq.stats"
 
-    remove_file "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"
-    update-desktop-database $APPLICATIONS_PATH
+  remove_file "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"
+  update-desktop-database $APPLICATIONS_PATH
 
-    echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
+  echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
 }
 
 # root check
 if ((EUID != 0)); then
-    echo; echo "Must be run as root (i.e: 'sudo $0')."; echo
-    exit 1
+  sudo "$0" "$@"
+  exit "$?"
 fi
 
-if [[ -z "$1" ]]; then ask_operation
-else
-    case "$1" in
-        -i|--install) answer="i";;
-        -r|--remove) answer="r";;
-        *) ask_operation;;
-    esac
-fi
+case "$1" in
+  -i|--install) answer="i";;
+  -r|--remove) answer="r";;
+  *) ask_operation;;
+esac
 
 case "$answer" in
 	I|i) tool_install;;
 	R|r) tool_remove;;
 	*)
-        echo "Unknown key, aborting ..."; echo
-        exit 1
-    ;;
+    echo "Unknown key, aborting ..."; echo
+    exit 1
+  ;;
 esac
