@@ -32,7 +32,7 @@ from auto_cpufreq.globals import AVAILABLE_GOVERNORS, AVAILABLE_SHELLS
 @click.option('--donate', is_flag=True, help='Support the project')
 def main(monitor, live, daemon, install, update, remove, force, config, color, stats, get_state, completions, debug, version, donate):
     prints.COLOR = color
-    if len(argv) == 1:
+    if len(argv) == 1+int(color):
         help_command()
         return
     
