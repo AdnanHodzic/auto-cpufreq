@@ -133,7 +133,7 @@ function tool_install {
   header "Installing auto-cpufreq tool"
   
   git config --global --add safe.directory $(pwd)
-  python -m pip install .
+  python3 -m pip install .
 
   mkdir -p $SHARE_DIR
   cp -r images/ $SHARE_DIR
