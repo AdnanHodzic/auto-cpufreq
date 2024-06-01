@@ -6,7 +6,7 @@ from auto_cpufreq.config.event_handler import ConfigEventHandler
 from auto_cpufreq.globals import USER_HOME_DIR
 from auto_cpufreq.prints import print_info, print_error
 
-def find_config_file(args_config_file:str|None) -> str:
+def find_config_file(args_config_file) -> str:
     if args_config_file is not None:
         if path.isfile(args_config_file): return args_config_file   # (1) Command line argument was specified
         print_error(f'Config file specified with "--config {args_config_file}" not found.')
@@ -24,7 +24,7 @@ def find_config_file(args_config_file:str|None) -> str:
 
 class Config:
     file:str = ''
-    config:ConfigParser|None = None
+    config:ConfigParser = None
 
     def __init__(self) -> None:
         self.watch_manager:pyinotify.WatchManager = pyinotify.WatchManager()
@@ -34,11 +34,11 @@ class Config:
 
     def has_option(self, section:str, option:str) -> bool: return self.config.has_option(section, option)
 
-    def setup(self, args_config_file:str|None) -> None:
+    def setup(self, args_config_file:str) -> None:
         self.set_file(args_config_file)
         self.notifier.start()
         
-    def set_file(self, args_config_file:str|None) -> None:
+    def set_file(self, args_config_file:str) -> None:
         self.file = find_config_file(args_config_file)
         print_info('Using settings defined in', self.file)
         self.watch_manager.add_watch(self.file, pyinotify.IN_DELETE_SELF | pyinotify.IN_MODIFY | pyinotify.IN_MOVE_SELF)
