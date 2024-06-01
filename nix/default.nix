@@ -57,11 +57,11 @@ python3Packages.buildPythonPackage {
   ];
 
   postPatch = ''
-    substituteInPlace auto_cpufreq/core.py --replace '/opt/auto-cpufreq/override.pickle' /var/run/override.pickle
-    substituteInPlace scripts/org.auto-cpufreq.pkexec.policy --replace "/opt/auto-cpufreq/venv/bin/auto-cpufreq" $out/bin/auto-cpufreq
+    substituteInPlace auto_cpufreq/core.py --replace-fail '/opt/auto-cpufreq/override.pickle' /var/run/override.pickle
+    substituteInPlace scripts/org.auto-cpufreq.pkexec.policy --replace-fail "/opt/auto-cpufreq/venv/bin/auto-cpufreq" $out/bin/auto-cpufreq
 
-    substituteInPlace auto_cpufreq/gui/app.py auto_cpufreq/gui/objects.py --replace "/usr/local/share/auto-cpufreq/images/icon.png" $out/share/pixmaps/auto-cpufreq.png
-    substituteInPlace auto_cpufreq/gui/app.py --replace "/usr/local/share/auto-cpufreq/scripts/style.css" $out/share/auto-cpufreq/scripts/style.css
+    substituteInPlace auto_cpufreq/gui/app.py auto_cpufreq/gui/objects.py --replace-fail "/usr/local/share/auto-cpufreq/images/icon.png" $out/share/pixmaps/auto-cpufreq.png
+    substituteInPlace auto_cpufreq/gui/app.py --replace-fail "/usr/local/share/auto-cpufreq/scripts/style.css" $out/share/auto-cpufreq/scripts/style.css
   '';
 
   postInstall = ''
@@ -75,7 +75,7 @@ python3Packages.buildPythonPackage {
     # systemd service
     mkdir -p $out/lib/systemd/system
     cp scripts/auto-cpufreq.service $out/lib/systemd/system
-    substituteInPlace $out/lib/systemd/system/auto-cpufreq.service --replace "/usr/local" $out
+    substituteInPlace $out/lib/systemd/system/auto-cpufreq.service --replace-fail "/usr/local" $out
 
     # desktop icon
     mkdir -p $out/share/applications
@@ -88,12 +88,12 @@ python3Packages.buildPythonPackage {
     cp scripts/org.auto-cpufreq.pkexec.policy $out/share/polkit-1/actions
   '';
 
-  meta = with lib; {
+  meta = {
     homepage = "https://github.com/AdnanHodzic/auto-cpufreq";
     description = "Automatic CPU speed & power optimizer for Linux";
-    license = licenses.lgpl3Plus;
-    platforms = platforms.linux;
-    maintainers = [maintainers.Technical27];
+    license = lib.licenses.lgpl3Plus;
+    platforms = lib.platforms.linux;
+    maintainers = with lib.maintainers; [Technical27];
     mainProgram = "auto-cpufreq";
   };
 }
