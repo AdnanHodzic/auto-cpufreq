@@ -64,10 +64,6 @@ def ideapad_laptop_print_thresholds():
     print(f"battery count = {len(batteries)}")
     for bat in batteries:
         try:
-            with open(f'{POWER_SUPPLY_DIR}{bat}/charge_start_threshold', 'r') as f:
-                print(f'{bat} start threshold = {f.read()}', end="")
-
-            with open(f'{POWER_SUPPLY_DIR}{bat}/charge_stop_threshold', 'r') as f:
-                print(f'{bat} stop threshold = {f.read()}', end="")
-
-        except Exception as e: print(f"ERROR: failed to read {bat} thresholds: {e}")
+            print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold")}')
+            print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold")}')
+        except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds: ", repr(e))
