@@ -1,6 +1,5 @@
 from enum import Enum
 from subprocess import getoutput
-from typing import Callable
 
 from auto_cpufreq.globals import GITHUB, ID, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.prints import print_info, print_warning_block
@@ -44,7 +43,7 @@ def s6(service_command:ServiceCommand, service:str) -> None:
     elif service_command is ServiceCommand.status:
         print_info(getoutput('s6-svstat /run/service/'+service))
 
-def _get_init_system() -> Callable|None:
+def _get_init_system():
     warning_msg = 'Unsupported init system detected'
     if IS_INSTALLED_WITH_SNAP: return None
     init_system = getoutput('ps h -o comm 1')

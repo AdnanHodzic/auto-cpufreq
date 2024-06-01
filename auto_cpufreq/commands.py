@@ -85,7 +85,7 @@ def update_command() -> None:
         print('Please update using your AUR helper.')
     elif check_for_update(): update()
 
-def run_command(setup:bool, config_file:str|None = None) -> None:
+def run_command(setup:bool, config_file=None) -> None:
     head()
     warning_power_profiles_daemon_service()
     warning_tlp_service()
@@ -94,7 +94,7 @@ def run_command(setup:bool, config_file:str|None = None) -> None:
         CONFIG.setup(config_file)
         BATTERIES.setup()
 
-def daemon_command(config_file:str|None) -> None:
+def daemon_command(config_file) -> None:
     run_command(True, config_file)
     print_info('Daemon started')
     file_stats()
@@ -140,7 +140,7 @@ def install_command():
         'To disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove'
     )
 
-def live_command(config_file:str|None) -> None:
+def live_command(config_file) -> None:
     run_command(True, config_file)
     if not IS_INSTALLED_WITH_SNAP: gnome_power_stop_live()
     while True:
@@ -157,7 +157,7 @@ def live_command(config_file:str|None) -> None:
             break
     CONFIG.notifier.stop()
 
-def monitor_command(config_file:str|None) -> None:
+def monitor_command(config_file) -> None:
     run_command(True, config_file)
     while True:
         try:

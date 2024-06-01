@@ -38,7 +38,7 @@ def get_override() -> str:
     else: return 'default'
 
 # get and set state of turbo
-def turbo(value:bool|None = None) -> bool:
+def turbo(value=None) -> bool:
     amd_pstate = Path('/sys/devices/system/cpu/amd_pstate/status')
     cpufreq = Path('/sys/devices/system/cpu/cpufreq/boost')
     p_state = Path('/sys/devices/system/cpu/intel_pstate/no_turbo')
