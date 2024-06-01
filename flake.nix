@@ -15,6 +15,10 @@
       default = pkgsForEach.${system}.callPackage ./nix/shell.nix {};
     });
 
+    overlays.default = final: _: {
+      auto-cpufreq = final.callPackage ./nix/default.nix {};
+    };
+
     nixosModules.default = import ./nix/module.nix inputs;
   };
 }
