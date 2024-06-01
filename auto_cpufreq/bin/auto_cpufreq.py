@@ -17,7 +17,7 @@ from auto_cpufreq.globals import AVAILABLE_GOVERNORS, AVAILABLE_SHELLS
 @click.command()
 @click.option('-m', '--monitor', is_flag=True, help='Monitor and see suggestions for CPU optimizations')
 @click.option('-l', '--live', is_flag=True, help='Monitor and make (temp.) suggested CPU optimizations')
-@click.option('-d', '--daemon', is_flag=True, help='Run daemon for (temp.) automatic CPU optimizations')
+@click.option('--daemon', is_flag=True, help='Run daemon for (temp.) automatic CPU optimizations')
 @click.option('-i', '--install', is_flag=True, help='Install daemon for (permanent) automatic CPU optimizations')
 @click.option('-u', '--update', is_flag=True, help='Update daemon and package for (permanent) automatic CPU optimizations')
 @click.option('-r', '--remove', is_flag=True, help='Remove daemon for (permanent) automatic CPU optimizations')
