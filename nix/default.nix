@@ -75,7 +75,6 @@ python3Packages.buildPythonPackage {
     # systemd service
     mkdir -p $out/lib/systemd/system
     cp scripts/auto-cpufreq.service $out/lib/systemd/system
-    substituteInPlace $out/lib/systemd/system/auto-cpufreq.service --replace-fail "/usr/local" $out
 
     # desktop icon
     mkdir -p $out/share/applications
