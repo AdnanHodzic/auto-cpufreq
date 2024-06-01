@@ -26,11 +26,10 @@ def _get_app_version() -> str:
 
 APP_VERSION = _get_app_version()
 
-def _service_is_running(service:str) -> bool: return bool(getoutput(f'ps -ef | grep -E "{service}" | sed "/grep/d"'))
+def _service_is_running(service:str) -> bool: return bool(getoutput(f'ps -ef | grep "{service}" | sed "/grep/d"'))
 
 AUTO_CPUFREQ_DAEMON_IS_RUNNING = (
-    _service_is_running('|'.join(map(lambda opt:'auto-cpufreq -'+opt, ('d', '-daemon')))) or
-    (IS_INSTALLED_WITH_SNAP and getoutput('snapctl get daemon') == 'enabled')
+    _service_is_running('auto-cpufreq --daemon') or (IS_INSTALLED_WITH_SNAP and getoutput('snapctl get daemon') == 'enabled')
 )
 POWER_PROFILES_DAEMON_IS_RUNNING = _service_is_running('power-profiles-daemon')
 
