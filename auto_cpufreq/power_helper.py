@@ -12,11 +12,8 @@ from auto_cpufreq.globals import APP_NAME, GITHUB, IS_INSTALLED_WITH_SNAP, POWER
 from auto_cpufreq.init_system import INIT_SYSTEM, ServiceCommand
 from auto_cpufreq.prints import print_error, print_info, print_warning, print_warning_block
 
-# used to check if binary exists on the system
-def does_command_exists(cmd): return which(cmd) is not None
-
 bluetooth_conf_file = '/etc/bluetooth/main.conf'
-powerprofilesctl_exists = does_command_exists('powerprofilesctl')
+powerprofilesctl_exists = which('powerprofilesctl') is not None
 
 # stops gnome >= 40 power profiles (live)
 def gnome_power_stop_live():
