@@ -5,7 +5,7 @@ from subprocess import run, PIPE
 import os
 import sys
 
-def find_config_file(args_config_file: str | None) -> str:
+def find_config_file(args_config_file) -> str:
     """
     Find the config file to use.
 
