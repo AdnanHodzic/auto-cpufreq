@@ -507,6 +507,8 @@ start_threshold = 20
 stop_threshold = 80
 ```
 
+Use `auto-cpufreq --fullcharge` to temporarily set thresholds 99
+
 ### Lenovo_laptop conservation mode
 
 this works only with `lenovo_laptop` kernel module compatable laptops.  
