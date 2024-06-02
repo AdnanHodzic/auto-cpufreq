@@ -10,6 +10,15 @@ def set_battery(value, mode, bat):
     if os.path.isfile(path): subprocess.check_output(f"echo {value} | tee {path}", shell=True, text=True)
     else: print(f"WARNING: {path} does NOT exist")
 
+def ideapad_acpi_set_fullcharge():
+    if os.path.exists(POWER_SUPPLY_DIR):
+        batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith('BAT')]
+
+        for bat in batteries:
+            set_battery(98, "start", bat)
+            set_battery(99, "stop", bat)
+    else: print(f"WARNING {POWER_SUPPLY_DIR} does NOT esixt")
+
 def get_threshold_value(mode):
     conf = config.get_config()
     return conf["battery"][f"{mode}_threshold"] if conf.has_option("battery", f"{mode}_threshold") else (0 if mode == "start" else 100)

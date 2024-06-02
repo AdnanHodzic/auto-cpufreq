@@ -24,6 +24,9 @@ from auto_cpufreq.utils.config import config as conf, find_config_file
 @click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 
+@click.option("--fullcharge", is_flag=True, help="Temporarily set charge thresholds to vedor presets until next boot.")
+#@click.option("--setcharge")
+
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
 @click.option("--get-state", is_flag=True, hidden=True)
@@ -34,7 +37,7 @@ from auto_cpufreq.utils.config import config as conf, find_config_file
 @click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
 @click.option("--log", is_flag=True, hidden=True)
 @click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
+def main(config, daemon, debug, update, install, remove, fullcharge, live, log, monitor, stats, version, donate, force, get_state, completions):
     # display info if config file is used
     config_path = find_config_file(config)
     conf.set_path(config_path)
@@ -268,5 +271,8 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 print("Run the below command in your current shell!\n")
                 print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
             else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
+        elif fullcharge:
+            print("--- FEATURE IN PROGRESS --- ")
+            fullcharge_thresholds()
                 
 if __name__ == "__main__": main()
