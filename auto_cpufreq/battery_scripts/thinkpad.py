@@ -15,8 +15,8 @@ def thinkpad_set_fullcharge():
         batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith('BAT')]
 
         for bat in batteries:
-            set_battery(98, "start", bat)
-            set_battery(99, "stop", bat)
+            set_battery("98", "start", bat)
+            set_battery("99", "stop", bat)
     else: print(f"WARNING {POWER_SUPPLY_DIR} does NOT esixt")
 
 def get_threshold_value(mode):
