@@ -20,7 +20,6 @@ def battery_setup():
     elif lsmod("ideapad_laptop"): ideapad_laptop_setup()
     else: return
 
-# print both current thresholds and config thresholds
 def battery_get_thresholds():
     if lsmod("thinkpad_acpi"): thinkpad_print_thresholds()
     elif lsmod("ideapad_acpi"): ideapad_acpi_print_thresholds()
