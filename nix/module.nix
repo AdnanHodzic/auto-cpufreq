@@ -12,7 +12,7 @@ let
   cfgFile = format.generate cfgFilename cfg.settings;
 
   inherit (lib) types;
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkForce;
   inherit (lib.options) mkOption mkEnableOption;
 
   format = pkgs.formats.ini {};
