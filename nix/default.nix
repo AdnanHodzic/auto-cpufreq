@@ -57,7 +57,7 @@ python3Packages.buildPythonPackage {
   ];
 
   postPatch = ''
-    substituteInPlace auto_cpufreq/core.py --replace-fail '/opt/auto-cpufreq/override.pickle' /var/run/override.pickle
+    substituteInPlace auto_cpufreq/globals.py --replace-fail 'opt/auto-cpufreq' var/run
     substituteInPlace scripts/org.auto-cpufreq.pkexec.policy --replace-fail "/opt/auto-cpufreq/venv/bin/auto-cpufreq" $out/bin/auto-cpufreq
 
     substituteInPlace auto_cpufreq/gui/app.py auto_cpufreq/gui/objects.py --replace-fail "/usr/local/share/auto-cpufreq/images/icon.png" $out/share/pixmaps/auto-cpufreq.png
