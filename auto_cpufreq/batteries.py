@@ -14,7 +14,7 @@ class Batteries:
             if len(charge_threshold_files) == 2: self.charge_threshold_files.append(tuple(charge_threshold_files))
         self.conservation_mode_files:tuple[str] = tuple(getoutput('find /sys/devices/ -type f -name conservation_mode').splitlines())
 
-    def charging(self) -> bool: return any(map(lambda bat: getoutput(f'cat {bat}/status') == 'Charging', self.batteries))
+    def charging(self) -> bool: return any(map(lambda bat: getoutput(f'cat {bat}/status') != 'Discharging', self.batteries))
 
     def setup(self) -> None:
         self.set_charge_threshold()
