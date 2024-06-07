@@ -3,32 +3,15 @@
 
 set -eu
 
-# get script name
-PROGNAME=$(basename "${0}")
-
 # bailout function
-err_exit()
-{
-    echo "${PROGNAME}: ${1:-wrong invocation. try --help for help.}" 1>&2
-    exit 1
+err_exit() {
+  echo "$(basename $0): ${1:-wrong invocation. try --help for help.}" 1>&2
+  exit 1
 }
 
-# invocation handling
-#
-
 # load python virtual environment
-venv_dir=/opt/auto-cpufreq/venv
-. "$venv_dir/bin/activate"
+opt_path=/opt/auto-cpufreq
+venv_bin_dir=$opt_path/venv/bin
+. "$venv_bin_dir/activate"
 
-# run python code with venv loaded
-if [[ "$#" -ne 1 ]]; then
-   PYTHONPATH=/opt/auto-cpufreq \
-            /opt/auto-cpufreq/venv/bin/python \
-            /opt/auto-cpufreq/venv/bin/auto-cpufreq 
-else
-    param="$1"
-    PYTHONPATH=/opt/auto-cpufreq \
-            /opt/auto-cpufreq/venv/bin/python \
-            /opt/auto-cpufreq/venv/bin/auto-cpufreq \
-            "${param}"
-fi
+PYTHONPATH=$opt_path $venv_bin_dir/python $venv_bin_dir/auto-cpufreq "$@"
