@@ -1,22 +1,20 @@
 diff --git a/auto_cpufreq/core.py b/auto_cpufreq/core.py
-index 48d6c48..6693038 100755
+index 172a16b..1201191 100755
 --- a/auto_cpufreq/core.py
 +++ b/auto_cpufreq/core.py
-@@ -75,63 +75,21 @@ def current_gov_msg():
+@@ -75,8 +75,8 @@ def current_gov_msg():
  
  # deploy cpufreqctl script
  def cpufreqctl():
 -    if not (IS_INSTALLED_WITH_SNAP or os.path.isfile('/usr/local/bin/cpufreqctl.auto-cpufreq')):
 -        copy(SCRIPTS_DIR / 'cpufreqctl.sh', '/usr/local/bin/cpufreqctl.auto-cpufreq')
-+    # scripts are already in the correct place
++    #no need to restore
 +    pass
  
  # remove cpufreqctl.auto-cpufreq script
  def cpufreqctl_restore():
--    if not IS_INSTALLED_WITH_SNAP and os.path.isfile('/usr/local/bin/cpufreqctl.auto-cpufreq'):
--        os.remove('/usr/local/bin/cpufreqctl.auto-cpufreq')
-+    #no need to restore
-+    pass
+@@ -84,54 +84,12 @@ def cpufreqctl_restore():
+         os.remove('/usr/local/bin/cpufreqctl.auto-cpufreq')
  
  def deploy_daemon():
 -    print_header('Deploying auto-cpufreq as a daemon')
