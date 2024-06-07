@@ -2,15 +2,18 @@ inputs: {
   config,
   lib,
   pkgs,
-  options,
   ...
 }:
-with lib; let
+let
   cfg = config.programs.auto-cpufreq;
   inherit (pkgs.stdenv.hostPlatform) system;
   defaultPackage = inputs.self.packages.${system}.default;
   cfgFilename = "auto-cpufreq.conf";
   cfgFile = format.generate cfgFilename cfg.settings;
+
+  inherit (lib) types;
+  inherit (lib.modules) mkIf mkForce;
+  inherit (lib.options) mkOption mkEnableOption;
 
   format = pkgs.formats.ini {};
 in {
@@ -18,7 +21,7 @@ in {
     enable = mkEnableOption "Automatic CPU speed & power optimizer for Linux";
 
     settings = mkOption {
-      description = mdDoc ''
+      description = ''
         Configuration for `auto-cpufreq`.
 
         See its [example configuration file] for supported settings.
