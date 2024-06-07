@@ -1,22 +1,23 @@
 diff --git a/auto_cpufreq/core.py b/auto_cpufreq/core.py
-index 172a16b..1201191 100755
+index 172a16b..3976515 100755
 --- a/auto_cpufreq/core.py
 +++ b/auto_cpufreq/core.py
-@@ -75,8 +75,8 @@ def current_gov_msg():
+@@ -74,64 +74,15 @@ def current_gov_msg():
+     print('Currently using:', getoutput('cpufreqctl.auto-cpufreq --governor').strip().split(' ')[0], 'governor')
  
  # deploy cpufreqctl script
- def cpufreqctl():
+-def cpufreqctl():
 -    if not (IS_INSTALLED_WITH_SNAP or os.path.isfile('/usr/local/bin/cpufreqctl.auto-cpufreq')):
 -        copy(SCRIPTS_DIR / 'cpufreqctl.sh', '/usr/local/bin/cpufreqctl.auto-cpufreq')
-+    #no need to restore
-+    pass
++def cpufreqctl(): pass # scripts are already in the correct place
  
  # remove cpufreqctl.auto-cpufreq script
- def cpufreqctl_restore():
-@@ -84,54 +84,12 @@ def cpufreqctl_restore():
-         os.remove('/usr/local/bin/cpufreqctl.auto-cpufreq')
+-def cpufreqctl_restore():
+-    if not IS_INSTALLED_WITH_SNAP and os.path.isfile('/usr/local/bin/cpufreqctl.auto-cpufreq'):
+-        os.remove('/usr/local/bin/cpufreqctl.auto-cpufreq')
++def cpufreqctl_restore(): pass # no need to restore
  
- def deploy_daemon():
+-def deploy_daemon():
 -    print_header('Deploying auto-cpufreq as a daemon')
 -    
 -    cpufreqctl() # deploy cpufreqctl script func call
@@ -33,11 +34,10 @@ index 172a16b..1201191 100755
 -    gnome_power_svc_disable()
 -
 -    run(['/usr/local/bin/auto-cpufreq-install'])
-+    # prevent needless copying and system changes
-+    pass
++def deploy_daemon(): pass # prevent needless copying and system changes
  
  # remove auto-cpufreq daemon
- def remove_daemon():
+-def remove_daemon():
 -    # check if auto-cpufreq is installed
 -    if not os.path.exists('/usr/local/bin/auto-cpufreq-remove'):
 -        print_error('auto-cpufreq daemon is not installed')
@@ -67,7 +67,7 @@ index 172a16b..1201191 100755
 -
 -    # restore original cpufrectl script
 -    cpufreqctl_restore()
-+    pass
++def remove_daemon(): pass
  
  # refresh countdown
  def countdown(s:int):
