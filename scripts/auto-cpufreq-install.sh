@@ -74,7 +74,7 @@ elif [ "$(ps h -o comm 1)" = "init" ];then
     if [ -e "/etc/inittab" ]; then 
         echo -e "\n* Deploy auto-cpufreq sysvinit unit file"
         cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-sysvinit /etc/init.d/auto-cpufreq
-        chmod +x /etc/init.d/auto-cpufreq
+	chmod +x /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-s6/
         
         echo -e "\n* Starting auto-cpufreq daemon (sysvinit) service"
         service auto-cpufreq start
