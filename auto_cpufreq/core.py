@@ -912,30 +912,51 @@ def set_performance():
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
     else:
-        dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
+        if Path("/sys/devices/system/cpu/intel_pstate").exists():
+            dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
 
-        if dynboost_enabled:
-            dynboost_enabled = bool(int(
-                os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
-            ))
+            if dynboost_enabled:
+                dynboost_enabled = bool(int(
+                    os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
+                ))
 
-        if dynboost_enabled:
-            print('Not setting EPP (dynamic boosting is enabled)')
-        else:
-            intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
+            if dynboost_enabled:
+                print('Not setting EPP (dynamic boosting is enabled)')
+            else:
+                intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
+
+                if conf.has_option("charger", "energy_performance_preference"):
+                    epp = conf["charger"]["energy_performance_preference"]
+
+                    if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance":
+                        print(f'Warning "{epp}" EPP cannot be used in performance governor')
+                        print('Overriding EPP to "performance"')
+                        epp = "performance"
+
+                    run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+                    print(f'Setting to use: "{epp}" EPP')
+                else:
+                    if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active":
+                        run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
+                        print('Setting to use: "performance" EPP')
+                    else:
+                        run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
+                        print('Setting to use: "balance_performance" EPP')
+        elif Path("/sys/devices/system/cpu/amd_pstate").exists():
+            amd_pstate_status_path = "/sys/devices/system/cpu/amd_pstate/status"
 
             if conf.has_option("charger", "energy_performance_preference"):
                 epp = conf["charger"]["energy_performance_preference"]
 
-                if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance":
-                    print(f'Warning "{epp}" EPP is not allowed in Intel CPU')
+                if Path(amd_pstate_status_path).exists() and open(amd_pstate_status_path, 'r').read().strip() == "active" and epp != "performance":
+                    print(f'Warning "{epp} EPP cannot be used in performance governor')
                     print('Overriding EPP to "performance"')
                     epp = "performance"
 
                 run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
                 print(f'Setting to use: "{epp}" EPP')
             else:
-                if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active":
+                if Path(amd_pstate_status_path).exists() and open(amd_pstate_status_path, 'r').read().strip() == "active":
                     run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
                     print('Setting to use: "performance" EPP')
                 else:
