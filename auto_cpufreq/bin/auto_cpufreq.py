@@ -16,6 +16,7 @@ from auto_cpufreq.core import *
 from auto_cpufreq.power_helper import *
 from auto_cpufreq.battery_scripts.battery import *
 from auto_cpufreq.utils.config import config as conf, find_config_file
+from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 # cli
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -62,10 +63,10 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             config_info_dialog()
             root_check()
             file_stats()
-            if os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+            if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
-            elif os.getenv("PKG_MARKER") != "SNAP":
+            elif not IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect()
                 tlp_service_detect()
             battery_setup()
@@ -88,7 +89,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             battery_setup()
             battery_get_thresholds()
             conf.notifier.start()
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
@@ -115,7 +116,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             battery_setup()
             battery_get_thresholds()
             conf.notifier.start()
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
@@ -141,7 +142,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             not_running_daemon_check()
             config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
@@ -185,11 +186,11 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             footer()
             print("If auto-cpufreq helped you out and you find it useful ...\n")
             print("Show your appreciation by donating!")
-            print("https://github.com/AdnanHodzic/auto-cpufreq/#donate")
+            print(GITHUB+"#donate")
             footer()
         elif install:
             root_check()
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 running_daemon_check()
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -204,7 +205,7 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
             deploy_complete_msg()
         elif remove:
             root_check()
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 run("snapctl set daemon=disabled", shell=True)
                 run("snapctl stop --disable auto-cpufreq", shell=True)
                 if auto_cpufreq_stats_path.exists():
@@ -231,15 +232,14 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 sys.argv.remove("--update")
                 if len(sys.argv) == 2: custom_dir = sys.argv[1] 
                     
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 print("Detected auto-cpufreq was installed using snap")
                 # refresh snap directly using this command
                 # path wont work in this case
 
                 print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
                 #check for AUR 
-            elif subprocess.run(["bash", "-c", "command -v pacman >/dev/null 2>&1"]).returncode == 0 and subprocess.run(["bash", "-c", "pacman -Q auto-cpufreq >/dev/null 2>&1"]).returncode == 0:
-                print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
+            elif IS_INSTALLED_WITH_AUR: print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 is_new_update = check_for_update()
                 if not is_new_update: return

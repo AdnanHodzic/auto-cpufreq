@@ -9,6 +9,7 @@ from subprocess import getoutput, call, run, check_output, DEVNULL
 sys.path.append("../")
 from auto_cpufreq.core import *
 from auto_cpufreq.tlp_stat_parser import TLPStatusParser
+from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
 
 # app_name var
 app_name = "python3 power_helper.py" if sys.argv[0] == "power_helper.py" else "auto-cpufreq"
@@ -27,13 +28,13 @@ tlp_stat_exists = does_command_exists("tlp-stat")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
 
 # detect if gnome power profile service is running
-if os.getenv("PKG_MARKER") != "SNAP":
+if not IS_INSTALLED_WITH_SNAP:
     if systemctl_exists:
         try: gnome_power_status = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
         except:
             print("\nUnable to determine init system")
             print("If this causes any problems, please submit an issue:")
-            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+            print(GITHUB+"/issues")
 
 # alert in case TLP service is running
 def tlp_service_detect():
@@ -60,10 +61,10 @@ def gnome_power_detect():
         print("Detected running GNOME Power Profiles daemon service!")
         print("This daemon might interfere with auto-cpufreq and should be disabled.")
         print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-        print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
+        print(f"git clone {GITHUB}.git")
         print("cd auto-cpufreq/auto_cpufreq")
         print("python3 power_helper.py --gnome_power_disable")
-        print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
+        print(f"\nReference: {GITHUB}#configuring-auto-cpufreq")
 
 # automatically disable gnome power profile service in case it's running during install
 def gnome_power_detect_install():
@@ -79,15 +80,15 @@ def gnome_power_detect_install():
 def gnome_power_detect_snap():
     warning()
     print("Due to Snap package confinement limitations please consider installing auto-cpufreq using")
-    print("auto-cpufreq-installer: https://github.com/AdnanHodzic/auto-cpufreq/#auto-cpufreq-installer")
+    print(f"auto-cpufreq-installer: {GITHUB}#auto-cpufreq-installer")
     print()
     print("Unable to detect state of GNOME Power Profiles daemon service!")
     print("This daemon might interfere with auto-cpufreq and should be disabled.")
     print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-    print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
+    print(f"git clone {GITHUB}.git")
     print("cd auto-cpufreq/auto_cpufreq")
     print("python3 power_helper.py --gnome_power_disable")
-    print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
+    print(f"\nReference: {GITHUB}#configuring-auto-cpufreq")
 
 # stops gnome >= 40 power profiles (live)
 def gnome_power_stop_live():
@@ -111,7 +112,7 @@ def gnome_power_svc_enable():
         except:
             print("\nUnable to enable GNOME power profiles")
             print("If this causes any problems, please submit an issue:")
-            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+            print(GITHUB+"/issues")
 
 # gnome power profiles current status
 def gnome_power_svc_status():
@@ -122,11 +123,11 @@ def gnome_power_svc_status():
         except:
             print("\nUnable to see GNOME power profiles status")
             print("If this causes any problems, please submit an issue:")
-            print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+            print(GITHUB+"/issues")
 
 # disable bluetooth on boot
 def bluetooth_disable():
-    if os.getenv("PKG_MARKER") == "SNAP": bluetooth_notif_snap()
+    if IS_INSTALLED_WITH_SNAP: bluetooth_notif_snap()
     elif bluetoothctl_exists:
         print("* Turn off bluetooth on boot")
         btconf = Path("/etc/bluetooth/main.conf")
@@ -143,7 +144,7 @@ def bluetooth_disable():
 
 # enable bluetooth on boot
 def bluetooth_enable():
-    if os.getenv("PKG_MARKER") == "SNAP": bluetooth_on_notif_snap()
+    if IS_INSTALLED_WITH_SNAP: bluetooth_on_notif_snap()
     if bluetoothctl_exists:
         print("* Turn on bluetooth on boot")
         btconf = "/etc/bluetooth/main.conf"
@@ -183,10 +184,10 @@ def gnome_power_rm_reminder_snap():
     print("Unable to detect state of GNOME Power Profiles daemon service!")
     print("Now it's recommended to enable this service.")
     print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
-    print("git clone https://github.com/AdnanHodzic/auto-cpufreq.git")
+    print(f"git clone {GITHUB}.git")
     print("cd auto-cpufreq/auto_cpufreq")
     print("python3 power_helper.py --gnome_power_enable")
-    print("\nReference: https://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
+    print(f"\nReference: {GITHUB}#configuring-auto-cpufreq")
 
 def valid_options():
     print("--gnome_power_enable\t\tEnable GNOME Power Profiles daemon")
@@ -203,7 +204,7 @@ def disable_power_profiles_daemon():
     except:
         print("\nUnable to disable GNOME power profiles")
         print("If this causes any problems, please submit an issue:")
-        print("https://github.com/AdnanHodzic/auto-cpufreq/issues")
+        print(GITHUB+"/issues")
 
 # default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():

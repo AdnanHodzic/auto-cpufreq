@@ -27,6 +27,7 @@ from datetime import datetime
 sys.path.append("../")
 from auto_cpufreq.power_helper import *
 from auto_cpufreq.utils.config import config
+from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 
 warnings.filterwarnings("ignore")
 
@@ -65,15 +66,12 @@ auto_cpufreq_stats_path = None
 auto_cpufreq_stats_file = None
 
 # track governor override
-if os.getenv("PKG_MARKER") == "SNAP":
+if IS_INSTALLED_WITH_SNAP:
+    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
     governor_override_state = Path("/var/snap/auto-cpufreq/current/override.pickle")
 else:
-    governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
-
-if os.getenv("PKG_MARKER") == "SNAP":
-    auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
-else:
     auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
+    governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
 
 # daemon check
 dcheck = getoutput("snapctl get daemon")
@@ -114,7 +112,7 @@ except PermissionError:
     print("[!] Warning: Cannot get distro name")
     if os.path.exists("/etc/pop-os/os-release"):
             # Check if using a Snap
-            if os.getenv("PKG_MARKER") == "SNAP":
+            if IS_INSTALLED_WITH_SNAP:
                 print("[!] Snap install on PopOS detected, you must manually run the following"
                         " commands in another terminal:\n")
                 print("[!] Backup the /etc/os-release file:")
@@ -140,15 +138,9 @@ def app_version():
     print("auto-cpufreq version: ", end="")
 
     # snap package
-    if os.getenv("PKG_MARKER") == "SNAP":
-        print(getoutput(r"echo \(Snap\) $SNAP_VERSION"))
+    if IS_INSTALLED_WITH_SNAP: print(getoutput(r"echo \(Snap\) $SNAP_VERSION"))
     # aur package
-    elif os.path.exists("/etc/arch-release"):
-        aur_pkg_check = call("pacman -Qs auto-cpufreq > /dev/null", shell=True)
-        if aur_pkg_check == 1:
-            print(get_formatted_version())
-        else:
-            print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
+    elif IS_INSTALLED_WITH_AUR: print(getoutput("pacman -Qi auto-cpufreq | grep Version"))
     else:
         # source code (auto-cpufreq-installer)
         try:
@@ -163,7 +155,7 @@ def check_for_update():
     # Specify the repository and package name
     # IT IS IMPORTANT TO  THAT IF THE REPOSITORY STRUCTURE IS CHANGED, THE FOLLOWING FUNCTION NEEDS TO BE UPDATED ACCORDINGLY
     # Fetch the latest release information from GitHub API
-    latest_release_url = f"https://api.github.com/repos/AdnanHodzic/auto-cpufreq/releases/latest"
+    latest_release_url = GITHUB.replace("github.com", "api.github.com/repos") + "/releases/latest"
     try:
         response = requests.get(latest_release_url)
         if response.status_code == 200:
@@ -211,7 +203,7 @@ def check_for_update():
 def new_update(custom_dir):
     os.chdir(custom_dir)
     print(f"Cloning the latest release to {custom_dir}")
-    run(["git", "clone", "https://github.com/AdnanHodzic/auto-cpufreq.git"])
+    run(["git", "clone", GITHUB+".git"])
     os.chdir("auto-cpufreq")
     print(f"package cloned to directory {custom_dir}")
     run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
@@ -390,9 +382,7 @@ def cpufreqctl():
     """
 
     # detect if running on a SNAP
-    if os.getenv("PKG_MARKER") == "SNAP":
-        pass
-    else:
+    if not IS_INSTALLED_WITH_SNAP:
         # deploy cpufreqctl.auto-cpufreq script
         if not os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
             shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
@@ -403,9 +393,7 @@ def cpufreqctl_restore():
     remove cpufreqctl.auto-cpufreq script
     """
     # detect if running on a SNAP
-    if os.getenv("PKG_MARKER") == "SNAP":
-        pass
-    else:
+    if not IS_INSTALLED_WITH_SNAP:
         if os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
             os.remove("/usr/local/bin/cpufreqctl.auto-cpufreq")
 
@@ -1213,7 +1201,7 @@ def distro_info():
     version = "UNKNOWN version"
 
     # get distro information in snap env.
-    if os.getenv("PKG_MARKER") == "SNAP":
+    if IS_INSTALLED_WITH_SNAP:
         try:
             with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
                 for line in searchfile:
@@ -1388,7 +1376,7 @@ def running_daemon_check():
     if is_running("auto-cpufreq", "--daemon"):
         daemon_running_msg()
         exit(1)
-    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "enabled":
+    elif IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
         daemon_running_msg()
         exit(1)
 
@@ -1397,6 +1385,6 @@ def not_running_daemon_check():
     if not is_running("auto-cpufreq", "--daemon"):
         daemon_not_running_msg()
         exit(1)
-    elif os.getenv("PKG_MARKER") == "SNAP" and dcheck == "disabled":
+    elif IS_INSTALLED_WITH_SNAP and dcheck == "disabled":
         daemon_not_running_msg()
         exit(1)

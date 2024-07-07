@@ -15,9 +15,11 @@ from auto_cpufreq.core import sysinfo, distro_info, set_override, get_override, 
 
 from io import StringIO
 
+from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
+
 PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
 
-auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if os.getenv("PKG_MARKER") == "SNAP" else "/var/run") + "/auto-cpufreq.stats"
+auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
 
 def get_stats():
     if os.path.isfile(auto_cpufreq_stats_path):
@@ -26,12 +28,9 @@ def get_stats():
 
 def get_version():
     # snap package
-    if os.getenv("PKG_MARKER") == "SNAP": return getoutput(r"echo \(Snap\) $SNAP_VERSION")
+    if IS_INSTALLED_WITH_SNAP: return getoutput(r"echo \(Snap\) $SNAP_VERSION")
     # aur package
-    elif dist_name in ["arch", "manjaro", "garuda"]:
-        aur_pkg_check = run("pacman -Qs auto-cpufreq > /dev/null", shell=True)
-        if aur_pkg_check == 1: return get_formatted_version()
-        else: return getoutput("pacman -Qi auto-cpufreq | grep Version")
+    elif IS_INSTALLED_WITH_AUR: return getoutput("pacman -Qi auto-cpufreq | grep Version")
     else:
         # source code (auto-cpufreq-installer)
         try: return get_formatted_version()
@@ -208,7 +207,7 @@ class AboutDialog(Gtk.Dialog):
         self.title = Gtk.Label(label="auto-cpufreq", name="bold")
         self.version = Gtk.Label(label=app_version)
         self.python = Gtk.Label(label=f"Python {pl.python_version()}")
-        self.github = Gtk.Label(label="https://github.com/AdnanHodzic/auto-cpufreq")
+        self.github = Gtk.Label(label=GITHUB)
         self.license = Gtk.Label(label="Licensed under LGPL3", name="small")
         self.love = Gtk.Label(label="Made with <3", name="small")
 

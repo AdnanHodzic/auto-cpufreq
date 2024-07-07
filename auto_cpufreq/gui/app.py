@@ -15,8 +15,9 @@ from threading import Thread
 sys.path.append("../")
 from auto_cpufreq.core import is_running, check_for_update, remove_daemon, new_update
 from auto_cpufreq.gui.objects import RadioButtonView, SystemStatsLabel, CPUFreqStatsLabel, CurrentGovernorBox, DropDownMenu, DaemonNotRunningView, UpdateDialog
+from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
 
-if os.getenv("PKG_MARKER") == "SNAP":
+if IS_INSTALLED_WITH_SNAP:
     ICON_FILE = "/snap/auto-cpufreq/current/icon.png"
     CSS_FILE = "/snap/auto-cpufreq/current/style.css"
 else:
@@ -67,7 +68,7 @@ class ToolWindow(Gtk.Window):
         label = Gtk.Label(label="GUI not available due to Snap package confinement limitations.\nPlease install auto-cpufreq using auto-cpufreq-installer\nVisit the GitHub repo for more info")
         label.set_justify(Gtk.Justification.CENTER)
         button = Gtk.LinkButton.new_with_label(
-            uri="https://github.com/AdnanHodzic/auto-cpufreq",
+            uri=GITHUB,
             label="GitHub Repo"
         )
         
@@ -102,7 +103,7 @@ class ToolWindow(Gtk.Window):
         self.add(self.box)
 
     def build(self):
-        if os.getenv("PKG_MARKER") == "SNAP": self.snap()
+        if IS_INSTALLED_WITH_SNAP: self.snap()
         elif is_running("auto-cpufreq", "--daemon"): self.main()
         else: self.daemon_not_running()
 
