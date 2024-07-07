@@ -1,8 +1,8 @@
 diff --git a/auto_cpufreq/core.py b/auto_cpufreq/core.py
-index 99397a9..16869ab 100755
+index ba11f52..f7a43d8 100755
 --- a/auto_cpufreq/core.py
 +++ b/auto_cpufreq/core.py
-@@ -350,29 +350,12 @@ def get_current_gov():
+@@ -377,25 +377,13 @@ def get_current_gov():
  
  
  def cpufreqctl():
@@ -11,24 +11,20 @@ index 99397a9..16869ab 100755
 -    """
 -
 -    # detect if running on a SNAP
--    if os.getenv("PKG_MARKER") == "SNAP":
--        pass
--    else:
+-    if not IS_INSTALLED_WITH_SNAP:
 -        # deploy cpufreqctl.auto-cpufreq script
 -        if not os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
 -            shutil.copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
--
 +    # scripts are already in the correct place
 +    pass
+ 
  
  def cpufreqctl_restore():
 -    """
 -    remove cpufreqctl.auto-cpufreq script
 -    """
 -    # detect if running on a SNAP
--    if os.getenv("PKG_MARKER") == "SNAP":
--        pass
--    else:
+-    if not IS_INSTALLED_WITH_SNAP:
 -        if os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq"):
 -            os.remove("/usr/local/bin/cpufreqctl.auto-cpufreq")
 +    #no need to restore
@@ -36,7 +32,7 @@ index 99397a9..16869ab 100755
  
  
  def footer(l=79):
-@@ -400,30 +383,8 @@ def remove_complete_msg():
+@@ -423,30 +411,8 @@ def remove_complete_msg():
  
  
  def deploy_daemon():
@@ -69,10 +65,11 @@ index 99397a9..16869ab 100755
  
  
  def deploy_daemon_performance():
-@@ -463,40 +424,7 @@ def deploy_daemon_performance():
+@@ -485,41 +451,7 @@ def deploy_daemon_performance():
+ 
  
  # remove auto-cpufreq daemon
- def remove_daemon():
+-def remove_daemon():
 -
 -    # check if auto-cpufreq is installed
 -    if not os.path.exists("/usr/local/bin/auto-cpufreq-remove"):
@@ -107,7 +104,7 @@ index 99397a9..16869ab 100755
 -
 -    # restore original cpufrectl script
 -    cpufreqctl_restore()
-+    pass
++def remove_daemon(): pass
  
  
  def gov_check():
