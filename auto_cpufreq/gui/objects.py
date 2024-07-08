@@ -12,6 +12,7 @@ from subprocess import getoutput, PIPE, run
 from auto_cpufreq.core import sysinfo, get_override
 from auto_cpufreq.dialogs import hardware_info
 from auto_cpufreq.globals import APP_VERSION, GITHUB, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.prints import print_header
 
 PKEXEC_ERROR = 'Error executing command as another user: Not authorized\n\nThis incident has been reported.\n'
 
@@ -101,7 +102,7 @@ class CPUFreqStatsLabel(Gtk.Label):
         stats = get_stats().split('\n')
         start = None
         for i, line in enumerate(stats):
-            if line == ('───────────── CPU frequency scaling ─────────────'):
+            if line == print_header('CPU frequency scaling'):
                 start = i
                 break
         if start is not None:
