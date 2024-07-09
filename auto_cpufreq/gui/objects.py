@@ -1,20 +1,15 @@
 import gi
-
 gi.require_version("Gtk", "3.0")
-
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import GdkPixbuf, Gtk
 
 import sys
-import os
-import platform as pl
 from concurrent.futures import ThreadPoolExecutor
-
-sys.path.append("../../")
-from subprocess import getoutput, run, PIPE
-from auto_cpufreq.core import sysinfo, distro_info, set_override, get_override, get_formatted_version, dist_name, deploy_daemon, remove_daemon
-
 from io import StringIO
+from os.path import isfile
+from platform import python_version
+from subprocess import getoutput, PIPE, run
 
+from auto_cpufreq.core import distro_info, get_formatted_version, get_override, sysinfo
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 
 PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
@@ -22,7 +17,7 @@ PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis 
 auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
 
 def get_stats():
-    if os.path.isfile(auto_cpufreq_stats_path):
+    if isfile(auto_cpufreq_stats_path):
         with open(auto_cpufreq_stats_path, "r") as file: stats = [line for line in (file.readlines() [-50:])]
         return "".join(stats)
 
@@ -206,7 +201,7 @@ class AboutDialog(Gtk.Dialog):
         self.image = Gtk.Image.new_from_pixbuf(img_buffer)
         self.title = Gtk.Label(label="auto-cpufreq", name="bold")
         self.version = Gtk.Label(label=app_version)
-        self.python = Gtk.Label(label=f"Python {pl.python_version()}")
+        self.python = Gtk.Label(label=f"Python {python_version()}")
         self.github = Gtk.Label(label=GITHUB)
         self.license = Gtk.Label(label="Licensed under LGPL3", name="small")
         self.love = Gtk.Label(label="Made with <3", name="small")

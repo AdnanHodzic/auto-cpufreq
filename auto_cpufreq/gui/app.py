@@ -1,28 +1,22 @@
 import gi
-
 gi.require_version("Gtk", "3.0")
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk
 
-from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf
-
-import os
-import sys
 from contextlib import redirect_stdout
 from io import StringIO
-from subprocess import run, PIPE
-import shutil
+from subprocess import PIPE, run
 from threading import Thread
 
-sys.path.append("../")
-from auto_cpufreq.core import is_running, check_for_update, remove_daemon, new_update
-from auto_cpufreq.gui.objects import RadioButtonView, SystemStatsLabel, CPUFreqStatsLabel, CurrentGovernorBox, DropDownMenu, DaemonNotRunningView, UpdateDialog
+from auto_cpufreq.core import check_for_update, is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.gui.objects import CPUFreqStatsLabel, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, RadioButtonView, SystemStatsLabel, UpdateDialog
 
 if IS_INSTALLED_WITH_SNAP:
-    ICON_FILE = "/snap/auto-cpufreq/current/icon.png"
     CSS_FILE = "/snap/auto-cpufreq/current/style.css"
+    ICON_FILE = "/snap/auto-cpufreq/current/icon.png"
 else:
-    ICON_FILE = "/usr/local/share/auto-cpufreq/images/icon.png"
     CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
+    ICON_FILE = "/usr/local/share/auto-cpufreq/images/icon.png"
 
 HBOX_PADDING = 20
 PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"

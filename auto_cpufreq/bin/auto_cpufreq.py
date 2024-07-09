@@ -5,49 +5,38 @@
 # Blog post: https://foolcontrol.org/?p=3124
 
 # core import
-import sys
-import time
-from click import UsageError
-from subprocess import call, run
+import sys, time
+from subprocess import run
 from shutil import rmtree
 
-# sys.path.append("../")
-from auto_cpufreq.core import *
-from auto_cpufreq.power_helper import *
 from auto_cpufreq.battery_scripts.battery import *
-from auto_cpufreq.utils.config import config as conf, find_config_file
+from auto_cpufreq.config.config import config as conf, find_config_file
+from auto_cpufreq.core import *
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
-# cli
+from auto_cpufreq.power_helper import *
+
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
 @click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
+@click.option("--daemon", is_flag=True, hidden=True)
 @click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
 @click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
-
-@click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
-@click.option("--get-state", is_flag=True, hidden=True)
 @click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
+@click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
+@click.option("--get-state", is_flag=True, hidden=True)
+@click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-@click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
-@click.option("--log", is_flag=True, hidden=True)
-@click.option("--daemon", is_flag=True, hidden=True)
-def main(config, daemon, debug, update, install, remove, live, log, monitor, stats, version, donate, force, get_state, completions):
+def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state, completions, debug, version, donate):
     # display info if config file is used
     config_path = find_config_file(config)
     conf.set_path(config_path)
     def config_info_dialog():
         if conf.has_config():
             print("\nUsing settings defined in " + config_path + " file")
-
-    # set governor override unless None or invalid
-    if force is not None:
-        not_running_daemon_check()
-        root_check() # Calling root_check before set_override as it will require sudo access
-        set_override(force) # Calling set override, only if force has some values
 
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
@@ -59,30 +48,13 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
         run(["auto-cpufreq", "--help"])
         footer()
     else:
-        if daemon:
-            config_info_dialog()
-            root_check()
-            file_stats()
-            if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-            elif not IS_INSTALLED_WITH_SNAP:
-                gnome_power_detect()
-                tlp_service_detect()
-            battery_setup()
-            conf.notifier.start()
-            while True:
-                try:
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    set_autofreq()
-                    countdown(2)
-                except KeyboardInterrupt: break
-            conf.notifier.stop()
-        elif monitor:
+        # set governor override unless None or invalid
+        if force is not None:
+            not_running_daemon_check()
+            root_check() # Calling root_check before set_override as it will require sudo access
+            set_override(force) # Calling set override, only if force has some values
+
+        if monitor:
             config_info_dialog()
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
@@ -138,56 +110,29 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     print()
                     break
             conf.notifier.stop()
-        elif stats:
-            not_running_daemon_check()
-            config_info_dialog()
-            print('\nNote: You can quit stats mode by pressing "ctrl+c"')
-            if IS_INSTALLED_WITH_SNAP:
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-            else:
-                gnome_power_detect()
-                tlp_service_detect()
-            battery_get_thresholds()
-            read_stats()
-        elif log: deprecated_log_msg()
-        elif get_state:
-            not_running_daemon_check()
-            override = get_override()
-            print(override)
-        elif debug:
-            # ToDo: add status of GNOME Power Profile service status
+        elif daemon:
             config_info_dialog()
             root_check()
-            battery_get_thresholds()
-            cpufreqctl()
-            footer()
-            distro_info()
-            sysinfo()
-            print()
-            app_version()
-            print()
-            python_info()
-            print()
-            device_info()
-            print(f"Battery is: {'' if charging() else 'dis'}charging")
-            print()
-            app_res_use()
-            display_load()
-            get_current_gov()
-            get_turbo()
-            footer()
-        elif version:
-            footer()
-            distro_info()
-            app_version()
-            footer()
-        elif donate:
-            footer()
-            print("If auto-cpufreq helped you out and you find it useful ...\n")
-            print("Show your appreciation by donating!")
-            print(GITHUB+"#donate")
-            footer()
+            file_stats()
+            if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
+                gnome_power_detect_snap()
+                tlp_service_detect_snap()
+            elif not IS_INSTALLED_WITH_SNAP:
+                gnome_power_detect()
+                tlp_service_detect()
+            battery_setup()
+            conf.notifier.start()
+            while True:
+                try:
+                    footer()
+                    gov_check()
+                    cpufreqctl()
+                    distro_info()
+                    sysinfo()
+                    set_autofreq()
+                    countdown(2)
+                except KeyboardInterrupt: break
+            conf.notifier.stop()
         elif install:
             root_check()
             if IS_INSTALLED_WITH_SNAP:
@@ -203,22 +148,6 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 gov_check()
                 deploy_daemon()
             deploy_complete_msg()
-        elif remove:
-            root_check()
-            if IS_INSTALLED_WITH_SNAP:
-                run("snapctl set daemon=disabled", shell=True)
-                run("snapctl stop --disable auto-cpufreq", shell=True)
-                if auto_cpufreq_stats_path.exists():
-                    if auto_cpufreq_stats_file is not None:
-                        auto_cpufreq_stats_file.close()
-
-                    auto_cpufreq_stats_path.unlink()
-                # ToDo: 
-                # {the following snippet also used in --update, update it there too(if required)}
-                # * undo bluetooth boot disable
-                gnome_power_rm_reminder_snap()
-            else: remove_daemon()
-            remove_complete_msg()
         elif update:
             root_check()
             custom_dir = "/opt/auto-cpufreq/source"
@@ -255,6 +184,38 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                     print("auto-cpufreq is installed with the latest version")
                     run(["auto-cpufreq", "--version"])
                 else: print("Aborted")
+        elif remove:
+            root_check()
+            if IS_INSTALLED_WITH_SNAP:
+                run("snapctl set daemon=disabled", shell=True)
+                run("snapctl stop --disable auto-cpufreq", shell=True)
+                if auto_cpufreq_stats_path.exists():
+                    if auto_cpufreq_stats_file is not None:
+                        auto_cpufreq_stats_file.close()
+
+                    auto_cpufreq_stats_path.unlink()
+                # ToDo: 
+                # {the following snippet also used in --update, update it there too(if required)}
+                # * undo bluetooth boot disable
+                gnome_power_rm_reminder_snap()
+            else: remove_daemon()
+            remove_complete_msg()
+        elif stats:
+            not_running_daemon_check()
+            config_info_dialog()
+            print('\nNote: You can quit stats mode by pressing "ctrl+c"')
+            if IS_INSTALLED_WITH_SNAP:
+                gnome_power_detect_snap()
+                tlp_service_detect_snap()
+            else:
+                gnome_power_detect()
+                tlp_service_detect()
+            battery_get_thresholds()
+            read_stats()
+        elif get_state:
+            not_running_daemon_check()
+            override = get_override()
+            print(override)
         elif completions:
             if completions == "bash":
                 print("Run the below command in your current shell!\n")
@@ -268,5 +229,38 @@ def main(config, daemon, debug, update, install, remove, live, log, monitor, sta
                 print("Run the below command in your current shell!\n")
                 print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
             else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
+        elif debug:
+            # ToDo: add status of GNOME Power Profile service status
+            config_info_dialog()
+            root_check()
+            battery_get_thresholds()
+            cpufreqctl()
+            footer()
+            distro_info()
+            sysinfo()
+            print()
+            app_version()
+            print()
+            python_info()
+            print()
+            device_info()
+            print(f"Battery is: {'' if charging() else 'dis'}charging")
+            print()
+            app_res_use()
+            get_load()
+            get_current_gov()
+            get_turbo()
+            footer()
+        elif version:
+            footer()
+            distro_info()
+            app_version()
+            footer()
+        elif donate:
+            footer()
+            print("If auto-cpufreq helped you out and you find it useful ...\n")
+            print("Show your appreciation by donating!")
+            print(GITHUB+"#donate")
+            footer()
                 
 if __name__ == "__main__": main()

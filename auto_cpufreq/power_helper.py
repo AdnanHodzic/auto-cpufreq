@@ -1,18 +1,17 @@
 # * add status as one of the available options
 # * alert user on snap if detected and how to remove first time live/stats message starts
 # * if daemon is disabled and auto-cpufreq is removed (snap) remind user to enable it back
-from logging import root
-import os, sys, click, subprocess
+import click
 from shutil import which
-from subprocess import getoutput, call, run, check_output, DEVNULL
+from subprocess import call, DEVNULL, getoutput, STDOUT
+from sys import argv
 
-sys.path.append("../")
 from auto_cpufreq.core import *
-from auto_cpufreq.tlp_stat_parser import TLPStatusParser
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.tlp_stat_parser import TLPStatusParser
 
 # app_name var
-app_name = "python3 power_helper.py" if sys.argv[0] == "power_helper.py" else "auto-cpufreq"
+app_name = "python3 power_helper.py" if argv[0] == "power_helper.py" else "auto-cpufreq"
 
 def header(): print("\n------------------------- auto-cpufreq: Power helper -------------------------\n")
 def warning(): print("\n----------------------------------- Warning -----------------------------------\n")
@@ -22,10 +21,10 @@ def helper_opts(): print("\nFor full list of options run: python3 power_helper.p
 # used to check if binary exists on the system
 def does_command_exists(cmd): return which(cmd) is not None
 
-systemctl_exists = does_command_exists("systemctl")
 bluetoothctl_exists = does_command_exists("bluetoothctl")
-tlp_stat_exists = does_command_exists("tlp-stat")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
+systemctl_exists = does_command_exists("systemctl")
+tlp_stat_exists = does_command_exists("tlp-stat")
 
 # detect if gnome power profile service is running
 if not IS_INSTALLED_WITH_SNAP:
@@ -214,8 +213,8 @@ def gnome_power_svc_disable():
             try:
                 # check if snap package installed
                 snap_pkg_check = call(['snap', 'list', '|', 'grep', 'auto-cpufreq'], 
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT)
+                stdout=DEVNULL,
+                stderr=STDOUT)
                 # check if snapd is present and if snap package is installed | 0 is success
                 if not bool(snap_pkg_check):
                     print("GNOME Power Profiles Daemon is already disabled, it can be re-enabled by running:\n"
@@ -263,7 +262,7 @@ def main(
     root_check()
     header()
 
-    if len(sys.argv) == 1: print('Unrecognized option!\n\nRun: "' + app_name + ' --help" for list of available options.')
+    if len(argv) == 1: print('Unrecognized option!\n\nRun: "' + app_name + ' --help" for list of available options.')
     else:
         if gnome_power_enable: gnome_power_svc_enable()
         elif gnome_power_disable: gnome_power_svc_disable()

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import os
-import subprocess
-from auto_cpufreq.utils.config import config
+import os, subprocess
 
-POWER_SUPPLY_DIR = "/sys/class/power_supply/"
+from auto_cpufreq.config.config import config
+from auto_cpufreq.globals import POWER_SUPPLY_DIR
 
 def set_battery(value, mode, bat):
     path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
@@ -36,4 +35,4 @@ def thinkpad_print_thresholds():
         try:
             print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold")}')
             print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold")}')
-        except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds: ", repr(e))
+        except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))

@@ -1,7 +1,5 @@
 import gi
-
 gi.require_version("Gtk", "3.0")
-
 from gi.repository import Gtk, AppIndicator3 as appindicator
 
 from subprocess import run
