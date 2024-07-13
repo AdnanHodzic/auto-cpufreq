@@ -1349,9 +1349,37 @@ def sysinfo():
 
 # read stats func
 def read_stats():
-    # read stats
     if os.path.isfile(auto_cpufreq_stats_path):
-        call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
+        proc = subprocess.Popen(["tail", "-n", "50", "-f", str(auto_cpufreq_stats_path)], stdout=subprocess.PIPE, stderr=DEVNULL)
+        
+        # Read the tail output line by line
+        for line in iter(proc.stdout.readline, b''):
+            line = line.decode('utf-8').strip()
+            
+            if line.startswith("Core\t"):
+                # Color each column header in green for easier visual parsing
+                line = line.replace("Core", "\033[32mCore\033[0m")
+                line = line.replace("Usage", "\033[32mUsage\033[0m")
+                line = line.replace("Temperature", "\033[32mTemperature\033[0m")
+                line = line.replace("Frequency", "\033[32mFrequency\033[0m")
+            if line.startswith("CPU") and "max" not in line and "min" not in line and "fan" not in line:
+                split_line = line.split()
+
+                # If temperature is above 85°C print temperature in red
+                if int(split_line[2]) > 85:
+                    split_line[2] = split_line[2].replace(split_line[2], f"   \033[31m{split_line[2]}°C\033[0m")
+
+                formatted_line = "{:<{}} {:<{}} {:>{}} {} {:>{}} {}".format(
+                    split_line[0], 7,
+                    split_line[1], 7,
+                    split_line[2], 5,
+                    split_line[3],
+                    split_line[4], 12,
+                    split_line[5]
+                )
+                line = formatted_line.replace(" °C", "°C").replace("°C\033[0m°C", "°C\033[0m")
+            print(line)
+    
     footer()
 
 
