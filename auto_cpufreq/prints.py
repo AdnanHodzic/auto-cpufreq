@@ -5,7 +5,7 @@ try: terminal_width = min(get_terminal_size(0)[0], 50)
 except: terminal_width = 50
 
 def colored(*values:str, color) -> str:
-    return f'\x1b[38;5;{color}m{" ".join(values)}\x1b[0m' if COLOR and color else ' '.join(values)
+    return f'\x1b[38;5;{color}m{" ".join(values)}\x1b[0m' if COLOR and color is not None else ' '.join(values)
 
 def print_separator(color=None) -> None: print('\n'+colored('─'*terminal_width, color=color))
 
