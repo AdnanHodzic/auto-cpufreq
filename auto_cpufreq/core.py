@@ -928,7 +928,7 @@ def set_performance():
                 if conf.has_option("charger", "energy_performance_preference"):
                     epp = conf["charger"]["energy_performance_preference"]
 
-                    if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance":
+                    if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance" and gov == "performance":
                         print(f'Warning "{epp}" EPP cannot be used in performance governor')
                         print('Overriding EPP to "performance"')
                         epp = "performance"
