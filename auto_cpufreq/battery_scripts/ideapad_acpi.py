@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import os
-import subprocess
-from auto_cpufreq.utils.config import config
+import os, subprocess
 
-POWER_SUPPLY_DIR = "/sys/class/power_supply/"
+from auto_cpufreq.config.config import config
+from auto_cpufreq.globals import POWER_SUPPLY_DIR
 
 def set_battery(value, mode, bat):
     path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
@@ -25,7 +24,7 @@ def ideapad_acpi_setup():
         for bat in batteries:
             set_battery(get_threshold_value("start"), "start", bat)
             set_battery(get_threshold_value("stop"), "stop", bat)
-    else: print(f"WARNING: could NOT access {POWER_SUPPLY_DIR}")
+    else: print("WARNING: could NOT access", POWER_SUPPLY_DIR)
 
 def ideapad_acpi_print_thresholds():
     batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith('BAT')]
@@ -35,4 +34,4 @@ def ideapad_acpi_print_thresholds():
         try:
             print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold")}')
             print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold")}')
-        except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds: ", repr(e))
+        except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
