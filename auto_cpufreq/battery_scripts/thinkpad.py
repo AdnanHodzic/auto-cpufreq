@@ -34,6 +34,6 @@ def thinkpad_print_thresholds():
     print(f"battery count = {len(batteries)}")
     for bat in batteries:
         try:
-            print(f'{bat} start threshold = {check_output(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold")}')
-            print(f'{bat} start threshold = {check_output(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold")}')
+            print(bat, "start threshold =", check_output(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold"))
+            print(bat, "stop threshold =", check_output(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold"))
         except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
