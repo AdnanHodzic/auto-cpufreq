@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import os, subprocess
+import os
+from subprocess import check_output
 
 from auto_cpufreq.config.config import config
 from auto_cpufreq.globals import POWER_SUPPLY_DIR
 
 def set_battery(value, mode, bat):
     path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
-    if os.path.isfile(path): subprocess.check_output(f"echo {value} | tee {path}", shell=True, text=True)
+    if os.path.isfile(path): check_output(f"echo {value} | tee {path}", shell=True, text=True)
     else: print(f"WARNING: {path} does NOT exist")
 
 def get_threshold_value(mode):
@@ -32,6 +33,6 @@ def ideapad_acpi_print_thresholds():
     print(f"battery count = {len(batteries)}")
     for bat in batteries:
         try:
-            print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold")}')
-            print(f'{bat} start threshold = {subprocess.getoutput(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold")}')
+            print(f'{bat} start threshold = {check_output(f"cat {POWER_SUPPLY_DIR}{bat}/charge_start_threshold")}')
+            print(f'{bat} start threshold = {check_output(f"cat {POWER_SUPPLY_DIR}{bat}/charge_stop_threshold")}')
         except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
