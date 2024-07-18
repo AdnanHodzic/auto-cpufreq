@@ -1,9 +1,8 @@
+import os, pyinotify, sys
 from configparser import ConfigParser, ParsingError
-from auto_cpufreq.utils.config_event_handler import ConfigEventHandler
-import pyinotify
 from subprocess import run, PIPE
-import os
-import sys
+
+from auto_cpufreq.config.config_event_handler import ConfigEventHandler
 
 def find_config_file(args_config_file) -> str:
     """
@@ -56,16 +55,14 @@ class _Config:
         self.watch_manager.add_watch(os.path.dirname(path), mask=mask)
         if os.path.isfile(path): self.update_config()
 
-    def has_config(self) -> bool:
-        return os.path.isfile(self.path)
+    def has_config(self) -> bool: return os.path.isfile(self.path)
     
-    def get_config(self) -> ConfigParser:
-        return self._config
+    def get_config(self) -> ConfigParser: return self._config
     
     def update_config(self) -> None:
         # create new ConfigParser to prevent old data from remaining
         self._config = ConfigParser()
         try: self._config.read(self.path)
-        except ParsingError as e: print(f"The following error occured while parsing the config file: \n{e}")
+        except ParsingError as e: print(f"The following error occured while parsing the config file: \n{repr(e)}")
 
 config = _Config()
