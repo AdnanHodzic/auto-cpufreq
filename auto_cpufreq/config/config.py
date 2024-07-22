@@ -25,20 +25,27 @@ class Config:
     conf:ConfigParser = None
     file:str = ""
 
-    def __init__(self) -> None:
-        # check for file changes using threading
-        self.watch_manager: WatchManager = WatchManager()
-        self.notifier: ThreadedNotifier = ThreadedNotifier(self.watch_manager, ConfigEventHandler(self))
-
     def get_option(self, section:str, option:str) -> str: return self.conf[section][option]
 
     def has_option(self, section:str, option:str) -> bool: return self.conf.has_option(section, option)
-        
-    def set_path(self, args_config_file:str) -> None:
-        self.file = find_config_file(args_config_file)
-        print(f"Info: Using settings defined in {self.file} file")
-        self.watch_manager.add_watch(path.dirname(self.file), mask=MASK)
+
+    def set_file(self, file:str):
+        self.file = file
+        print(f"Info: Using settings defined in {file} file")
         self.update_config()
+        if self.auto_reload: self.watch_manager.add_watch(path.dirname(file), mask=MASK)
+        
+    def setup(self, args_config_file:str, auto_reload:bool) -> None:
+        self.auto_reload = auto_reload
+        if self.auto_reload:    # check for file changes using threading
+            self.watch_manager: WatchManager = WatchManager()
+            self.notifier: ThreadedNotifier = ThreadedNotifier(self.watch_manager, ConfigEventHandler(self))
+            self.notifier.start()
+
+        self.set_file(find_config_file(args_config_file))
+
+    def stop_notifier(self) -> None:
+        if self.auto_reload: self.notifier.stop()
     
     def update_config(self) -> None:
         self.conf = ConfigParser()      # create new ConfigParser to prevent old data from remaining
