@@ -10,9 +10,8 @@ from subprocess import run
 from shutil import rmtree
 
 from auto_cpufreq.battery_scripts.battery import *
-from auto_cpufreq.config.config import config as conf, find_config_file
 from auto_cpufreq.core import *
-from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.globals import CONFIG, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.power_helper import *
 
 @click.command()
@@ -32,11 +31,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--donate", is_flag=True, help="Support the project")
 def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state, completions, debug, version, donate):
     # display info if config file is used
-    config_path = find_config_file(config)
-    conf.set_path(config_path)
-    def config_info_dialog():
-        if conf.has_config():
-            print("\nUsing settings defined in " + config_path + " file")
+    CONFIG.set_path(config)
 
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
@@ -55,12 +50,11 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             set_override(force) # Calling set override, only if force has some values
 
         if monitor:
-            config_info_dialog()
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
             battery_setup()
             battery_get_thresholds()
-            conf.notifier.start()
+            CONFIG.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -79,15 +73,14 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     mon_autofreq()
                     countdown(2)
                 except KeyboardInterrupt: break
-            conf.notifier.stop()
+            CONFIG.notifier.stop()
         elif live:
             root_check()
-            config_info_dialog()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
             time.sleep(1)
             battery_setup()
             battery_get_thresholds()
-            conf.notifier.start()
+            CONFIG.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -109,9 +102,8 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     gnome_power_start_live()
                     print()
                     break
-            conf.notifier.stop()
+            CONFIG.notifier.stop()
         elif daemon:
-            config_info_dialog()
             root_check()
             file_stats()
             if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
@@ -121,7 +113,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 gnome_power_detect()
                 tlp_service_detect()
             battery_setup()
-            conf.notifier.start()
+            CONFIG.notifier.start()
             while True:
                 try:
                     footer()
@@ -132,7 +124,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     set_autofreq()
                     countdown(2)
                 except KeyboardInterrupt: break
-            conf.notifier.stop()
+            CONFIG.notifier.stop()
         elif install:
             root_check()
             if IS_INSTALLED_WITH_SNAP:
@@ -202,7 +194,6 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             remove_complete_msg()
         elif stats:
             not_running_daemon_check()
-            config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
@@ -231,7 +222,6 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
         elif debug:
             # ToDo: add status of GNOME Power Profile service status
-            config_info_dialog()
             root_check()
             battery_get_thresholds()
             cpufreqctl()

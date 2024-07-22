@@ -1,11 +1,13 @@
-from pyinotify import Event, ProcessEvent
+from pyinotify import Event, IN_CREATE, IN_DELETE, IN_MODIFY, IN_MOVED_FROM, IN_MOVED_TO, ProcessEvent
+
+MASK = IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_FROM | IN_MOVED_TO
 
 class ConfigEventHandler(ProcessEvent):
     def __init__(self, config) -> None:
         self.config = config
 
     def _process_update(self, event: Event):
-        if event.pathname.rstrip("~") == self.config.path: self.config.update_config()
+        if event.pathname.rstrip("~") == self.config.file: self.config.update_config()
 
     # activates when auto-cpufreq config file is modified
     def process_IN_MODIFY(self, event: Event) -> None: self._process_update(event)
