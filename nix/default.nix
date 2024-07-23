@@ -23,6 +23,7 @@ let
       rev = "923cebec3a2a84c7e38c9e68171eb93f5d07ce5d";
       hash = "sha256-714CximEK4YhIqDmvqJYOUGs39gvDkWGrkNrXwxT8iM=";
     };
+    patches = [];
   });
 
   requests = python3Packages.requests.overrideAttrs (oldAttrs: {
