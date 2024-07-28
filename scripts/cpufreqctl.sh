@@ -3,6 +3,7 @@
 VERSION='20'
 cpucount=`cat /proc/cpuinfo | grep processor | wc -l`
 FLROOT=/sys/devices/system/cpu
+FWROOT=/sys/firmware
 DRIVER=auto
 VERBOSE=0
 
@@ -261,6 +262,16 @@ case $OPTION in
     else
       verbose "Setting CPU"$CORE" EPPs to "$VALUE
       set_energy_performance_preference
+    fi
+  ;;
+  -p|--pp)
+    if [ ! -z $AVAILABLE ]; then cat $FWROOT/acpi/platform_profile_choices
+    elif [ -z $VALUE ]; then
+      verbose "Getting Platform Profile"
+      cat $FWROOT/acpi/platform_profile
+    else
+      verbose "Getting Platform Profile to "$VALUE
+      echo $VALUE > $FWROOT/acpi/platform_profile
     fi
   ;;
   -f|--frequency)

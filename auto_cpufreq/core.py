@@ -476,6 +476,15 @@ def set_frequencies():
         # set the frequency
         run(f"cpufreqctl.auto-cpufreq {frequency[freq_type]['cmdargs']} --set={frequency[freq_type]['value']}", shell=True)
 
+def set_platform_profile(conf, profile):
+    if conf.has_option(profile, "platform_profile"):
+        if not Path("/sys/firmware/acpi/platform_profile").exists():
+            print('Not setting Platform Profile (not supported by system)')
+        else:
+            pp = conf[profile]["platform_profile"]
+            print(f'Setting to use: "{pp}" Platform Profile')
+            run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
+
 def set_powersave():
     conf = config.get_config()
     gov = conf["battery"]["governor"] if conf.has_option("battery", "governor") else AVAILABLE_GOVERNORS_SORTED[-1]
@@ -503,6 +512,7 @@ def set_powersave():
                 run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
                 print('Setting to use: "balance_power" EPP')
 
+    set_platform_profile(conf, "battery")
     set_frequencies()
 
     cpuload, load1m= get_load()
@@ -608,6 +618,8 @@ def set_performance():
                 else:
                     run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
                     print('Setting to use: "balance_performance" EPP')
+
+    set_platform_profile(conf, "charger")
     set_frequencies()
 
     cpuload, load1m = get_load()
