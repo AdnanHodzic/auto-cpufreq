@@ -23,7 +23,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
 @click.option("--config", is_flag=False, required=False, help="Use config file at defined path")
-@click.option("--reload", is_flag=True, help="Reload when the configuration has been modified")
+@click.option("--config-reload", is_flag=True, help="Reload auto-cpufreq daemon to pick up changes made in auto-cpufreq config file")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--get-state", is_flag=True, hidden=True)
 @click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
