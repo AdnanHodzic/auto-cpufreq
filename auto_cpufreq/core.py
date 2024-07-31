@@ -22,7 +22,7 @@ from auto_cpufreq.power_helper import *
 filterwarnings("ignore")
 
 # add path to auto-cpufreq executables for GUI
-os.environ["PATH"] += ":/usr/local/bin"
+os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + "/usr/local/bin"
 
 # ToDo:
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
