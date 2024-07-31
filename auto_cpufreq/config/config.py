@@ -31,7 +31,6 @@ class Config:
 
     def set_file(self, file:str):
         self.file = file
-        print(f"Info: Using settings defined in {file} file")
         self.update_config()
         if self.auto_reload: self.watch_manager.add_watch(path.dirname(file), mask=MASK)
         
@@ -49,5 +48,6 @@ class Config:
     
     def update_config(self) -> None:
         self.conf = ConfigParser()      # create new ConfigParser to prevent old data from remaining
+        print(f"Info: Using settings defined in {self.file} file")
         try: self.conf.read(self.file)
         except ParsingError as e: print(f"The following error occured while parsing the config file: \n{repr(e)}")
