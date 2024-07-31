@@ -30,7 +30,7 @@ from auto_cpufreq.power_helper import *
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, config, reload, stats, get_state, completions, debug, version, donate):
+def main(monitor, live, daemon, install, update, remove, force, config, config_reload, stats, get_state, completions, debug, version, donate):
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -50,7 +50,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, reload, 
         if monitor:
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
-            CONFIG.setup(config, reload)
+            CONFIG.setup(config, config_reload)
             battery_setup()
             battery_get_thresholds()
             if IS_INSTALLED_WITH_SNAP:
@@ -75,7 +75,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, reload, 
         elif live:
             root_check()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
-            CONFIG.setup(config, reload)
+            CONFIG.setup(config, config_reload)
             time.sleep(1)
             battery_setup()
             battery_get_thresholds()
@@ -103,7 +103,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, reload, 
             CONFIG.stop_notifier()
         elif daemon:
             root_check()
-            CONFIG.setup(config, reload)
+            CONFIG.setup(config, config_reload)
             file_stats()
             if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
                 gnome_power_detect_snap()
