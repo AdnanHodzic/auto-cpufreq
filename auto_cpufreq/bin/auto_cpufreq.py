@@ -31,8 +31,6 @@ from auto_cpufreq.power_helper import *
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
 def main(monitor, live, daemon, install, update, remove, force, config, config_reload, stats, get_state, completions, debug, version, donate):
-    if config_reload and not (monitor or live or daemon): print('Error: Use --config-reload command with --monitor|live|daemon')
-
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -48,6 +46,8 @@ def main(monitor, live, daemon, install, update, remove, force, config, config_r
             not_running_daemon_check()
             root_check() # Calling root_check before set_override as it will require sudo access
             set_override(force) # Calling set override, only if force has some values
+        
+        if config_reload and not (monitor or live or daemon): print('Error: Use --config-reload command with --monitor|live|daemon')
 
         if monitor:
             root_check()
