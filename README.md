@@ -56,6 +56,7 @@ Example of `auto-cpufreq --stats` CLI output
 - [Battery charging thresholds](#battery-charging-thresholds)
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
+  - [Ignoring power supplies](#Ignoring-power-supplies)
 - [Troubleshooting](#troubleshooting)
   - [AUR](#aur)
 - [Discussion](#discussion)
@@ -512,6 +513,26 @@ stop_threshold = 80
 this works only with `lenovo_laptop` kernel module compatable laptops.  
 
 add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
+
+### Ignoring power supplies
+
+you may have a controler or headphones and when ever they may be on battery they might cause auto-cpufreq
+to limit preformence to ignore them add to you config file the name of the power supply, under `[power_supply_ignore_list]`
+
+the name of the power supply can be found with  `ls /sys/class/power_supply/`
+
+```
+[power_supply_ignore_list]
+
+name1 = this
+name2 = is 
+name3 = an
+name4 = example
+
+# like this
+xboxctrl = {the xbox controler power supply name}
+
+```
 
 ## Troubleshooting
 
