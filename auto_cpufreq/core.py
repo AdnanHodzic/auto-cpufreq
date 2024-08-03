@@ -224,11 +224,9 @@ def get_power_supply_ignore_list():
 
     list = []
 
-    if conf.has_option("battery","power_supply_ignore_list"):
-        for i in conf["battery"]["power_supply_ignore_list"]:
-            list.append(i)
-
-        print(f"ignoring {list}\n")
+    if conf.has_section("power_supply_ignore_list"):
+        for i in conf["power_supply_ignore_list"]:
+            list.append(conf["power_supply_ignore_list"][i])
 
     # these are hard coded power supplies that will always be ignored
     list.append("hidpp_battery")
