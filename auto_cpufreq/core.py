@@ -21,7 +21,7 @@ from auto_cpufreq.power_helper import *
 
 filterwarnings("ignore")
 
-# add path to auto-cpufreq executables for GUI
+# add path to auto-cpufreq executables for UI
 os.environ["PATH"] += ":/usr/local/bin"
 
 # ToDo:
@@ -30,8 +30,7 @@ os.environ["PATH"] += ":/usr/local/bin"
 SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
 CPUS = os.cpu_count()
 
-# ignore these devices under /sys/class/power_supply/
-POWER_SUPPLY_IGNORELIST = ["hidpp_battery"]
+
 
 # Note:
 # "load1m" & "cpuload" can't be global vars and to in order to show correct data must be
@@ -217,12 +216,32 @@ def set_turbo(value:bool):
     print("Setting turbo boost:", "on" if value else "off")
     turbo(value)
 
+
+# ignore these devices under /sys/class/power_supply/
+def get_power_supply_ignore_list():
+
+    conf = config.get_config()
+
+    list = []
+
+    if conf.has_option("battery","power_supply_ignore_list"):
+        for i in conf["battery"]["power_supply_ignore_list"]:
+            list.append(i)
+
+        print(f"ignoring {list}\n")
+
+    # these are hard coded power supplies that will always be ignored
+    list.append("hidpp_battery")
+    return list
+
+
 def charging():
     """
     get charge state: is battery charging or discharging
     """
     # sort it so AC is 'always' first
     power_supplies = sorted(os.listdir(Path(POWER_SUPPLY_DIR)))
+    POWER_SUPPLY_IGNORELIST = get_power_supply_ignore_list()
 
     # check if we found power supplies. on a desktop these are not found and we assume we are on a powercable.
     if len(power_supplies) == 0: return True # nothing found, so nothing to check
