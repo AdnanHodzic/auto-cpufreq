@@ -303,6 +303,12 @@ governor = performance
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = performance
 
+# Platform Profiles
+# https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
+# See available options by running:
+# cat /sys/firmware/acpi/platform_profile_choices
+# platform_profile = performance
+
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
 # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
@@ -326,6 +332,12 @@ governor = powersave
 
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = power
+
+# Platform Profiles
+# https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
+# See available options by running:
+# cat /sys/firmware/acpi/platform_profile_choices
+# platform_profile = low-power
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
