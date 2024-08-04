@@ -29,7 +29,7 @@ energy_performance_preference = performance
 turbo = auto
 
 
-# this is for ignoring controlers and other connected devices battery from effecting
+# this is for ignoring controllers and other connected devices battery from affecting 
 # laptop preformence
 # [power_supply_ignore_list]
 
