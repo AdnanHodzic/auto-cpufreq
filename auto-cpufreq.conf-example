@@ -28,6 +28,17 @@ energy_performance_preference = performance
 # turbo boost setting. possible values: always, auto, never
 turbo = auto
 
+
+# this is for ignoring controlers and other connected devices battery from effecting
+# laptop preformence
+# [power_supply_ignore_list]
+
+# name1 = this
+# name2 = is
+# name3 = an
+# name4 = example
+
+
 # settings for when using battery power
 [battery]
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
