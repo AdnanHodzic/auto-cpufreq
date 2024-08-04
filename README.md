@@ -16,11 +16,11 @@ For tl;dr folks:
 
 Example of auto-cpufreq GUI (available >= v2.0)
 
-<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-v2-gui.png" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq desktop entry (icon)" />
 
 Example of `auto-cpufreq --stats` CLI output
 
-<img src="https://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-CLI.png" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
 
 ## Looking for developers and co-maintainers
 
@@ -435,15 +435,15 @@ After the daemon is installed, `auto-cpufreq` is available as a binary and runs 
 
 Starting with >= v2.0 [after installing auto-cpufreq](#installing-auto-cpufreq), an auto-cpufreq desktop entry (icon) is available, i.e.:
 
-<img src="https://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-desktop-entry-icon.png" width="640" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="https://github.com/user-attachments/assets/f426d62b-00b0-4fa5-a72e-b352016ed448" width="640" alt="Example of auto-cpufreq desktop entry (icon)"/>
 
 After selecting it to open the GUI, the auto-cpufreq daemon can be installed by clicking the "Install" button:
 
-<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-daemon-install-gui.png" width="480" alt="The auto-cpufreq GUI's 'Install' button"/>
+<img src="https://github.com/user-attachments/assets/5af47e5e-8b9e-4ff6-9ffc-e78acb623ce4" width="480" alt="The auto-cpufreq GUI's 'Install' button"/>
 
 After that, the full auto-cpufreq GUI is available:
 
-<img src="http://foolcontrol.org/wp-content/uploads/2023/09/auto-cpufreq-v2-gui.png" width="640" alt="The full auto-cpufreq GUI"/>
+<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="640" alt="The full auto-cpufreq GUI"/>
 
 *Please note:* after the daemon is installed (by any method), its stats and options are accessible via both CLI and GUI.
 
