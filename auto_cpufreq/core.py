@@ -13,9 +13,8 @@ from subprocess import call, check_output, DEVNULL, getoutput, run
 from time import sleep
 from warnings import filterwarnings
 
-from auto_cpufreq.config.config import config
 from auto_cpufreq.globals import (
-    ALL_GOVERNORS, AVAILABLE_GOVERNORS, AVAILABLE_GOVERNORS_SORTED, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP, POWER_SUPPLY_DIR
+    ALL_GOVERNORS, AVAILABLE_GOVERNORS, AVAILABLE_GOVERNORS_SORTED, CONFIG, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP, POWER_SUPPLY_DIR
 )
 from auto_cpufreq.power_helper import *
 
@@ -467,11 +466,9 @@ def set_frequencies():
     if not hasattr(set_frequencies, "min_limit"):
         set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
 
-    conf = config.get_config()
-
     for freq_type in frequency.keys():
         value = None
-        if not conf.has_option(power_supply, freq_type):
+        if not CONFIG.has_option(power_supply, freq_type):
             # fetch and use default frequencies
             if freq_type == "scaling_max_freq":
                 curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
@@ -481,7 +478,7 @@ def set_frequencies():
                 value = set_frequencies.min_limit
             if curr_freq == value: continue
 
-        try: frequency[freq_type]["value"] = value if value else int(conf[power_supply][freq_type].strip())
+        try: frequency[freq_type]["value"] = value if value else int(CONFIG.get_option(power_supply, freq_type).strip())
         except ValueError:
             print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
             exit(1)
@@ -506,8 +503,8 @@ def set_platform_profile(conf, profile):
             run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
 
 def set_powersave():
-    conf = config.get_config()
-    gov = conf["battery"]["governor"] if conf.has_option("battery", "governor") else AVAILABLE_GOVERNORS_SORTED[-1]
+    option = ("battery", "governor")
+    gov = CONFIG.get_option(*option) if CONFIG.has_option(*option) else AVAILABLE_GOVERNORS_SORTED[-1]
     print(f'Setting to use: "{gov}" governor')
     if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
@@ -524,8 +521,9 @@ def set_powersave():
 
         if dynboost_enabled: print('Not setting EPP (dynamic boosting is enabled)')
         else:
-            if conf.has_option("battery", "energy_performance_preference"):
-                epp = conf["battery"]["energy_performance_preference"]
+            option = ("battery", "energy_performance_preference")
+            if CONFIG.has_option(*option):
+                epp = CONFIG.get_option(*option)
                 run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
                 print(f'Setting to use: "{epp}" EPP')
             else:
@@ -537,7 +535,8 @@ def set_powersave():
 
     cpuload, load1m= get_load()
 
-    auto = conf["battery"]["turbo"] if conf.has_option("battery", "turbo") else "auto"
+    option = ("battery", "turbo")
+    auto = CONFIG.get_option(*option) if CONFIG.has_option(*option) else "auto"
 
     if auto == "always":
         print("Configuration file enforces turbo boost")
@@ -579,8 +578,8 @@ def mon_powersave():
     footer()
 
 def set_performance():
-    conf = config.get_config()
-    gov = conf["charger"]["governor"] if conf.has_option("charger", "governor") else AVAILABLE_GOVERNORS_SORTED[0]
+    option = ("charger", "governor")
+    gov = CONFIG.get_option(*option) if CONFIG.has_option(*option) else AVAILABLE_GOVERNORS_SORTED[0]
 
     print(f'Setting to use: "{gov}" governor')
     if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
@@ -601,8 +600,9 @@ def set_performance():
             else:
                 intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
 
-                if conf.has_option("charger", "energy_performance_preference"):
-                    epp = conf["charger"]["energy_performance_preference"]
+                option = ("charger", "energy_performance_preference")
+                if CONFIG.has_option(*option):
+                    epp = CONFIG.get_option(*option)
 
                     if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance" and gov == "performance":
                         print(f'Warning "{epp}" EPP cannot be used in performance governor')
@@ -621,8 +621,9 @@ def set_performance():
         elif Path("/sys/devices/system/cpu/amd_pstate").exists():
             amd_pstate_status_path = "/sys/devices/system/cpu/amd_pstate/status"
 
-            if conf.has_option("charger", "energy_performance_preference"):
-                epp = conf["charger"]["energy_performance_preference"]
+            option = ("charger", "energy_performance_preference")
+            if CONFIG.has_option(*option):
+                epp = CONFIG.get_option(*option)
 
                 if Path(amd_pstate_status_path).exists() and open(amd_pstate_status_path, 'r').read().strip() == "active" and epp != "performance" and gov == "performance":
                     print(f'Warning "{epp} EPP cannot be used in performance governor')
@@ -643,7 +644,8 @@ def set_performance():
     set_frequencies()
 
     cpuload, load1m = get_load()
-    auto = conf["charger"]["turbo"] if conf.has_option("charger", "turbo") else "auto"
+    option = ("charger", "turbo")
+    auto = CONFIG.get_option(*option) if CONFIG.has_option(*option) else "auto"
 
     if auto == "always":
         print("Configuration file enforces turbo boost")

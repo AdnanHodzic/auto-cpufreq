@@ -17,6 +17,7 @@ AUTO_CPUFREQ_FILE="/usr/local/bin/auto-cpufreq"
 AUTO_CPUFREQ_GTK_FILE=$AUTO_CPUFREQ_FILE-gtk
 AUTO_CPUFREQ_GTK_DESKTOP_FILE="$(basename $AUTO_CPUFREQ_GTK_FILE).desktop"
 
+CONFIG_FILE="/etc/auto-cpufreq.conf"
 IMG_FILE="/usr/share/pixmaps/auto-cpufreq.png"
 ORG_FILE="/usr/share/polkit-1/actions/org.auto-cpufreq.pkexec.policy"
 
@@ -140,6 +141,8 @@ function tool_install {
   mkdir -p $SHARE_DIR
   cp -r scripts/ $SHARE_DIR
   cp -r images/ $SHARE_DIR
+
+  cp "$(basename $CONFIG_FILE)-example" $CONFIG_FILE
   cp images/icon.png $IMG_FILE
   cp scripts/$(basename $ORG_FILE) $(dirname $ORG_FILE)
 
@@ -185,6 +188,7 @@ function tool_remove {
   remove_file $srv_remove
   remove_file $AUTO_CPUFREQ_FILE
   remove_file $AUTO_CPUFREQ_GTK_FILE
+  remove_file $CONFIG_FILE
   remove_file $IMG_FILE
   remove_file $ORG_FILE
   remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"

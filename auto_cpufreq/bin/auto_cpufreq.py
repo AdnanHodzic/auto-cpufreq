@@ -10,9 +10,8 @@ from subprocess import run
 from shutil import rmtree
 
 from auto_cpufreq.battery_scripts.battery import *
-from auto_cpufreq.config.config import config as conf, find_config_file
 from auto_cpufreq.core import *
-from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.globals import CONFIG, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.power_helper import *
 
 @click.command()
@@ -23,21 +22,15 @@ from auto_cpufreq.power_helper import *
 @click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
-@click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
+@click.option("--config", is_flag=False, required=False, help="Use config file at defined path")
+@click.option("--config-reload", is_flag=True, help="Reload auto-cpufreq monitor|live|daemon to pick up changes made in auto-cpufreq config file")
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--get-state", is_flag=True, hidden=True)
 @click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state, completions, debug, version, donate):
-    # display info if config file is used
-    config_path = find_config_file(config)
-    conf.set_path(config_path)
-    def config_info_dialog():
-        if conf.has_config():
-            print("\nUsing settings defined in " + config_path + " file")
-
+def main(monitor, live, daemon, install, update, remove, force, config, config_reload, stats, get_state, completions, debug, version, donate):
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
@@ -53,14 +46,15 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             not_running_daemon_check()
             root_check() # Calling root_check before set_override as it will require sudo access
             set_override(force) # Calling set override, only if force has some values
+        
+        if config_reload and not (monitor or live or daemon): print('Error: Use --config-reload command with --monitor|live|daemon')
 
         if monitor:
-            config_info_dialog()
             root_check()
             print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
+            CONFIG.setup(config, config_reload)
             battery_setup()
             battery_get_thresholds()
-            conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -79,15 +73,14 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     mon_autofreq()
                     countdown(2)
                 except KeyboardInterrupt: break
-            conf.notifier.stop()
+            CONFIG.stop_notifier()
         elif live:
             root_check()
-            config_info_dialog()
             print('\nNote: You can quit live mode by pressing "ctrl+c"')
+            CONFIG.setup(config, config_reload)
             time.sleep(1)
             battery_setup()
             battery_get_thresholds()
-            conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
@@ -109,10 +102,10 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     gnome_power_start_live()
                     print()
                     break
-            conf.notifier.stop()
+            CONFIG.stop_notifier()
         elif daemon:
-            config_info_dialog()
             root_check()
+            CONFIG.setup(config, config_reload)
             file_stats()
             if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
                 gnome_power_detect_snap()
@@ -121,7 +114,6 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 gnome_power_detect()
                 tlp_service_detect()
             battery_setup()
-            conf.notifier.start()
             while True:
                 try:
                     footer()
@@ -132,7 +124,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     set_autofreq()
                     countdown(2)
                 except KeyboardInterrupt: break
-            conf.notifier.stop()
+            CONFIG.stop_notifier()
         elif install:
             root_check()
             if IS_INSTALLED_WITH_SNAP:
@@ -202,7 +194,6 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             remove_complete_msg()
         elif stats:
             not_running_daemon_check()
-            config_info_dialog()
             print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
@@ -231,7 +222,6 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
         elif debug:
             # ToDo: add status of GNOME Power Profile service status
-            config_info_dialog()
             root_check()
             battery_get_thresholds()
             cpufreqctl()

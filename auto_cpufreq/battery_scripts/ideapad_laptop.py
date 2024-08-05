@@ -2,8 +2,7 @@
 import os
 from subprocess import check_output
 
-from auto_cpufreq.config.config import config
-from auto_cpufreq.globals import CONSERVATION_MODE_FILE, POWER_SUPPLY_DIR
+from auto_cpufreq.globals import CONFIG, CONSERVATION_MODE_FILE, POWER_SUPPLY_DIR
 
 def set_battery(value, mode, bat):
     path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
@@ -12,8 +11,8 @@ def set_battery(value, mode, bat):
     else: print(f"WARNING: {path} does NOT exist")
 
 def get_threshold_value(mode):
-    conf = config.get_config()
-    return conf["battery"][f"{mode}_threshold"] if conf.has_option("battery", f"{mode}_threshold") else (0 if mode == "start" else 100)
+    option = ("battery", f"{mode}_threshold")
+    return CONFIG.get_option(*option) if CONFIG.has_option(*option) else (0 if mode == "start" else 100)
 
 def conservation_mode(value):
     try:
@@ -35,17 +34,17 @@ def check_conservation_mode():
         return False
 
 def ideapad_laptop_setup():
-    conf = config.get_config()
-
-    if not (conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == "true"): return
+    option = ("battery", "enable_thresholds")
+    if not (CONFIG.has_option(*option) and CONFIG.get_option(*option) == "true"): return
 
     batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")]
 
-    if conf.has_option("battery", "ideapad_laptop_conservation_mode"):
-        if conf["battery"]["ideapad_laptop_conservation_mode"] == "true":
+    option = ("battery", "ideapad_laptop_conservation_mode")
+    if CONFIG.has_option(*option):
+        if CONFIG.get_option(*option) == "true":
             conservation_mode(1)
             return
-        if conf["battery"]["ideapad_laptop_conservation_mode"] == "false": conservation_mode(0)
+        if CONFIG.get_option(*option) == "false": conservation_mode(0)
 
     if not check_conservation_mode():
         for bat in batteries:
