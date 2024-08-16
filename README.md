@@ -147,6 +147,26 @@ The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) is cu
 - The GNOME Power Profiles daemon is [automatically disabled by auto-cpufreq-installer](https://github.com/AdnanHodzic/auto-cpufreq#1-power_helperpy-script-snap-package-install-only) due to it's conflict with auto-cpufreq.service. However, this doesn't happen with AUR installs, which can lead to problems (e.g., [#463](https://github.com/AdnanHodzic/auto-cpufreq/issues/463)) if not masked manually.
   - Open a terminal and run `sudo systemctl mask power-profiles-daemon.service` (then `enable` and `start` the auto-cpufreq.service if you haven't already).
 
+### Gentoo Linux (GURU Repository)
+
+New versions of auto-cpufreq were recently added GURU, one of the largest community maintained ebuild repositories for Gentoo Linux. The [ebuild](https://github.com/gentoo-mirror/guru/tree/master/sys-power/auto-cpufreq) is maintaned by GURU contributors. In order to be able to build it from source using Portage (Gentoo's package manager), it is necessary to add GURU repository first and sync it. Adding ~amd64 keyword to the package is also necessary to unmask it.
+
+``` 
+# echo "sys-power/auto-cpufreq ~amd64" >> /etc/portage/package.accept_keywords
+# eselect repository enable guru
+# emaint sync -r guru
+# emerge --ask auto-cpufreq
+```
+
+**Notices**
+
+- The build process links to `/usr/share/` instead of `/usr/local/share/`
+- The build works on both systemd/OpenRC systems (both systemd and OpenRC will have a service called auto-cpufreq which can be started automatically)
+- The daemon installer provided does work, but it is RECOMMENDED to install the daemon with:
+``` 
+# systemctl enable --now auto-cpufreq 
+# rc-update add auto-cpufreq default && rc-service auto-cpufreq start
+```
 
 ### NixOS
 
