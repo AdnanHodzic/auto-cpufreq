@@ -58,7 +58,7 @@ def gnome_power_detect():
     if systemctl_exists and not bool(gnome_power_status):
         warning()
         print("Detected running GNOME Power Profiles daemon service!")
-        print("This daemon might interfere with auto-cpufreq and should be disabled.")
+        print("This daemon might interfere with auto-cpufreq and will be automatically disabled.")
         print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
         print(f"git clone {GITHUB}.git")
         print("cd auto-cpufreq/auto_cpufreq")
@@ -82,7 +82,7 @@ def gnome_power_detect_snap():
     print(f"auto-cpufreq-installer: {GITHUB}#auto-cpufreq-installer")
     print()
     print("Unable to detect state of GNOME Power Profiles daemon service!")
-    print("This daemon might interfere with auto-cpufreq and should be disabled.")
+    print("This daemon might interfere with auto-cpufreq and should be disabled!")
     print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
     print(f"git clone {GITHUB}.git")
     print("cd auto-cpufreq/auto_cpufreq")
