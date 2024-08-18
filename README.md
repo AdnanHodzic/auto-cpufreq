@@ -149,7 +149,9 @@ The AUR [Release Package](https://aur.archlinux.org/packages/auto-cpufreq) is cu
 
 ### Gentoo Linux (GURU Repository)
 
-New versions of auto-cpufreq were recently added GURU, one of the largest community maintained ebuild repositories for Gentoo Linux. The [ebuild](https://github.com/gentoo-mirror/guru/tree/master/sys-power/auto-cpufreq) is maintaned by GURU contributors. In order to be able to build it from source using Portage (Gentoo's package manager), it is necessary to add GURU repository first and sync it. Adding ~amd64 keyword to the package is also necessary to unmask it.
+New versions of auto-cpufreq were recently added to GURU, Gentoo's official community-maintained ebuild repository. The [ebuild](https://github.com/gentoo-mirror/guru/tree/master/sys-power/auto-cpufreq) is maintaned by [S41G0N](https://github.com/S41G0N) and other [GURU contributors](https://bugs.gentoo.org), who can respond in case of issues.
+
+In order to build auto-cpufreq, it is necessary to add & sync GURU repository first. Adding ~amd64 keyword is also needed to unmask the package.
 
 ``` 
 # echo "sys-power/auto-cpufreq ~amd64" >> /etc/portage/package.accept_keywords
