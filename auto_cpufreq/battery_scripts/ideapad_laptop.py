@@ -24,7 +24,7 @@ def conservation_mode(value):
 
 def check_conservation_mode():
     try:
-        value = check_output(["cat", CONSERVATION_MODE_FILE], text=True)
+        value = check_output(["cat", CONSERVATION_MODE_FILE], text=True).rstrip()
         if value == "1": return True
         elif value == "0": return False
         else:
