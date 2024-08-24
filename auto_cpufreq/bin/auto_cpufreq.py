@@ -114,7 +114,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             config_info_dialog()
             root_check()
             file_stats()
-            if IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
+            if IS_INSTALLED_WITH_SNAP and SNAP_DAEMON_CHECK == "enabled":
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             elif not IS_INSTALLED_WITH_SNAP:

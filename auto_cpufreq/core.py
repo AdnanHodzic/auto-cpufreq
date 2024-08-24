@@ -15,7 +15,7 @@ from warnings import filterwarnings
 
 from auto_cpufreq.config.config import config
 from auto_cpufreq.globals import (
-    ALL_GOVERNORS, AVAILABLE_GOVERNORS, AVAILABLE_GOVERNORS_SORTED, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP, POWER_SUPPLY_DIR
+    ALL_GOVERNORS, AVAILABLE_GOVERNORS, AVAILABLE_GOVERNORS_SORTED, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP, POWER_SUPPLY_DIR, SNAP_DAEMON_CHECK
 )
 from auto_cpufreq.power_helper import *
 
@@ -54,9 +54,6 @@ if IS_INSTALLED_WITH_SNAP:
 else:
     auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
     governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
-
-# daemon check
-dcheck = getoutput("snapctl get daemon")
 
 def file_stats():
     global auto_cpufreq_stats_file
@@ -917,7 +914,7 @@ def running_daemon_check():
     if is_running("auto-cpufreq", "--daemon"):
         daemon_running_msg()
         exit(1)
-    elif IS_INSTALLED_WITH_SNAP and dcheck == "enabled":
+    elif IS_INSTALLED_WITH_SNAP and SNAP_DAEMON_CHECK == "enabled":
         daemon_running_msg()
         exit(1)
 
@@ -926,6 +923,6 @@ def not_running_daemon_check():
     if not is_running("auto-cpufreq", "--daemon"):
         daemon_not_running_msg()
         exit(1)
-    elif IS_INSTALLED_WITH_SNAP and dcheck == "disabled":
+    elif IS_INSTALLED_WITH_SNAP and SNAP_DAEMON_CHECK == "disabled":
         daemon_not_running_msg()
         exit(1)
