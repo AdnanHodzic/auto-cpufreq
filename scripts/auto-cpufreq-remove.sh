@@ -7,9 +7,9 @@
 MID="$((`tput cols` / 2))"
 
 echo
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+printf "%0.s─" $(seq $(( (MID-(${#1}/2)-2) / 2 )))
 printf " Running auto-cpufreq daemon removal script "
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+printf "%0.s─" $(seq $(( (MID-(${#1}/2)-2) / 2 )))
 echo; echo
 
 # root check

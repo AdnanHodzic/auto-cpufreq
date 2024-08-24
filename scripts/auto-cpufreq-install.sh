@@ -7,9 +7,9 @@
 MID="$((`tput cols` / 2))"
 
 echo
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+printf "%0.s─" $(seq $(( (MID-(${#1}/2)-2) / 2 )))
 printf " Running auto-cpufreq daemon install script "
-printf "%0.s─" $(seq $((MID-(${#1}/2)-2)))
+printf "%0.s─" $(seq $(( (MID-(${#1}/2)-2) / 2 )))
 echo; echo
 
 # root check
@@ -69,7 +69,7 @@ case "$(ps h -o comm 1)" in
     fi
   ;;
   systemd)
-    echo -e "\n* Deploying auto-cpufreq systemd unit file"
+    echo -e "Deploying auto-cpufreq systemd unit file"
     cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
 
     echo -e "\n* Reloading systemd manager configuration"
