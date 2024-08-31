@@ -233,8 +233,8 @@ def gnome_power_svc_disable():
                 print("There was a problem, couldn't determine GNOME Power Profiles Daemon")
                 snap_pkg_check = 0
 
-        if snap_pkg_check == 1:
-            if not bool(gnome_power_status) and powerprofilesctl_exists:
+        if not bool(gnome_power_status) and powerprofilesctl_exists:
+            if snap_pkg_check == 1:
                 print("auto-cpufreq snap package not installed.\nGNOME Power Profiles Daemon should be enabled, run:\n\n"
                     "sudo python3 power_helper.py --gnome_power_enable"
                 )
