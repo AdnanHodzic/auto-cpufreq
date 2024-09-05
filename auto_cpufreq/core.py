@@ -295,6 +295,8 @@ def footer(l=79): print("\n" + "-" * l + "\n")
 def deploy_complete_msg():
     print("\n" + "-" * 17 + " auto-cpufreq daemon installed and running " + "-" * 17 + "\n")
     print("To view live stats, run:\nauto-cpufreq --stats")
+    print("\nauto-cpufreq makes all decisions automatically, if you would like to")
+    print("configure certain setting to your own liking, please refer to:\nhttps://github.com/AdnanHodzic/auto-cpufreq#configuring-auto-cpufreq")
     print("\nTo disable and remove auto-cpufreq daemon, run:\nsudo auto-cpufreq --remove")
     footer()
 
