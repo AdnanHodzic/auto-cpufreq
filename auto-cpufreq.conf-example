@@ -7,6 +7,14 @@ governor = performance
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = performance
 
+# EPB (Energy Performance Bias) for the intel_pstate driver
+# see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
+# available EPB options include a numeric value between 0-15
+# (where 0 = maximum performance and 15 = maximum power saving),
+# or one of the following strings:
+# performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
+# energy_perf_bias = balance_performance
+
 # Platform Profiles
 # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
 # See available options by running:
@@ -47,6 +55,14 @@ governor = powersave
 
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = power
+
+# EPB (Energy Performance Bias) for the intel_pstate driver
+# see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
+# available EPB options include a numeric value between 0-15
+# (where 0 = maximum performance and 15 = maximum power saving),
+# or one of the following strings:
+# performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
+# energy_perf_bias = balance_power
 
 # Platform Profiles
 # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html

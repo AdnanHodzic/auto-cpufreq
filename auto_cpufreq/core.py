@@ -504,6 +504,18 @@ def set_platform_profile(conf, profile):
             print(f'Setting to use: "{pp}" Platform Profile')
             run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
 
+def set_energy_perf_bias(conf, profile):
+    if Path("/sys/devices/system/cpu/intel_pstate").exists() is False:
+        print('Not setting EPB (not supported by system)')
+        return
+    epb = "balance_performance" if profile == "charger" else "balance_power"
+    if conf.has_option(profile, "energy_perf_bias"):
+        epb = conf[profile]["energy_perf_bias"]
+
+    run(f"cpufreqctl.auto-cpufreq --epb --set={epb}", shell=True)
+    print(f'Setting to use: "{epb}" EPB')
+
+
 def set_powersave():
     conf = config.get_config()
     gov = conf["battery"]["governor"] if conf.has_option("battery", "governor") else AVAILABLE_GOVERNORS_SORTED[-1]
@@ -530,19 +542,8 @@ def set_powersave():
             else:
                 run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
                 print('Setting to use: "balance_power" EPP')
-    
-    if Path("/sys/devices/system/cpu/intel_pstate").exists():
-        if Path("/sys/devices/system/cpu/cpu0/power/energy_perf_bias").exists() is False:
-            print('Not setting EPB (not supported by system)')
-        else:
-            if conf.has_option("battery", "energy_perf_bias"):
-                epb = conf["battery"]["energy_perf_bias"]
-                run(f"cpufreqctl.auto-cpufreq --epb --set={epb}", shell=True)
-                print(f'Setting to use: "{epb}" EPB')
-            else:
-                run("cpufreqctl.auto-cpufreq --epb --set=balance-power", shell=True)
-                print('Setting to use: "balance-power" EPB')
 
+    set_energy_perf_bias(conf, "battery")
     set_platform_profile(conf, "battery")
     set_frequencies()
 
@@ -629,17 +630,6 @@ def set_performance():
                     else:
                         run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
                         print('Setting to use: "balance_performance" EPP')
-
-            if Path("/sys/devices/system/cpu/cpu0/power/energy_perf_bias").exists() is False:
-                print('Not setting EPB (not supported by system)')
-            else:
-                if conf.has_option("charger", "energy_perf_bias"):
-                    epb = conf["charger"]["energy_perf_bias"]
-                    run(f"cpufreqctl.auto-cpufreq --epb --set={epb}", shell=True)
-                    print(f'Setting to use: "{epb}" EPB')
-                else:
-                    run("cpufreqctl.auto-cpufreq --epb --set=default", shell=True)
-                    print('Setting to use: "default" EPB')
         elif Path("/sys/devices/system/cpu/amd_pstate").exists():
             amd_pstate_status_path = "/sys/devices/system/cpu/amd_pstate/status"
 
@@ -660,7 +650,8 @@ def set_performance():
                 else:
                     run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
                     print('Setting to use: "balance_performance" EPP')
-
+    
+    set_energy_perf_bias(conf, "charger")
     set_platform_profile(conf, "charger")
     set_frequencies()
 

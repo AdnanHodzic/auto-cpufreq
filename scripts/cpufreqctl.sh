@@ -269,9 +269,9 @@ function set_energy_performance_bias () {
   else
     case $VALUE in
       performance) EPB_VALUE=0;;
-      balance-performance) EPB_VALUE=4;;
-      normal| default) EPB_VALUE=6;;
-      balance-power) EPB_VALUE=8;;
+      balance_performance) EPB_VALUE=4;;
+      default) EPB_VALUE=6;;
+      balance_power) EPB_VALUE=8;;
       power) EPB_VALUE=15;;
       *)
         verbose "Invalid value provided for EPB"
