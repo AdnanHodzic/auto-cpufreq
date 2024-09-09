@@ -856,7 +856,7 @@ def sysinfo():
             for sensor in temp_sensors:
                 # iterate over all temperatures in the current sensor
                 for temp in temp_sensors[sensor]:
-                    if 'CPU' in temp.label and temp.current != 0:
+                    if ('CPU' in temp.label or 'Tctl' in temp.label) and temp.current != 0:
                         temp_per_cpu = [temp.current] * online_cpu_count
                         break
                 else: continue
