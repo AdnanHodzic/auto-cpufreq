@@ -332,6 +332,8 @@ energy_performance_preference = performance
 # (where 0 = maximum performance and 15 = maximum power saving),
 # or one of the following strings:
 # performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
+# if the parameter is missing in the config and the hardware supports this setting, the default value will be used
+# the default value is `balance_performance` (for charger)
 # energy_perf_bias = balance_performance
 
 # Platform Profiles
@@ -370,6 +372,8 @@ energy_performance_preference = power
 # (where 0 = maximum performance and 15 = maximum power saving),
 # or one of the following strings:
 # performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
+# if the parameter is missing in the config and the hardware supports this setting, the default value will be used
+# the default value is `balance_power` (for battery)
 # energy_perf_bias = balance_power
 
 # Platform Profiles

@@ -319,10 +319,10 @@ case $OPTION in
   --epb)
     if [ ! -z $AVAILABLE ]; then cat $FLROOT/cpu0/power/energy_perf_bias
     elif [ -z $VALUE ]; then 
-      verbose "Getting CPU"$CORE" EBPs"
+      verbose "Getting CPU"$CORE" EPBs"
       get_energy_performance_bias
     else
-      verbose "Setting CPU"$CORE" EBPs to "$VALUE
+      verbose "Setting CPU"$CORE" EPBs to "$VALUE
       set_energy_performance_bias
     fi
   ;;
