@@ -31,13 +31,14 @@ function auto_cpufreq_remove {
 case "$(ps h -o comm 1)" in
   dinit) auto_cpufreq_remove "dinit" "dinitctl stop auto-cpufreq" "dinitctl disable auto-cpufreq" "/etc/dinit.d/auto-cpufreq";;
   init) 
-  ls /etc/inittab
-   if [ -e "/etc/inittab" ]; then
-    auto_cpufreq_remove "sysvinit" "service auto-cpufreq stop" "update-rc.d -f auto-cpufreq remove" "rm /etc/init.d/auto-cpufreq"
-   else
-    auto_cpufreq_remove "openrc" "rc-service auto-cpufreq stop" "rc-update del auto-cpufreq" "/etc/init.d/auto-cpufreq"
+    ls /etc/inittab
+    if [ -e "/etc/inittab" ]; then
+       rm /etc/init.d/auto-cpufreq
+       auto_cpufreq_remove "sysvinit" "service auto-cpufreq stop" "update-rc.d -f auto-cpufreq remove"
+    else
+       auto_cpufreq_remove "openrc" "rc-service auto-cpufreq stop" "rc-update del auto-cpufreq" "/etc/init.d/auto-cpufreq"
     fi
-   ;;
+;;
     
   runit)
     # First argument is the "sv" path, second argument is the "service" path
