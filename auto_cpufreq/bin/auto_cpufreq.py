@@ -94,6 +94,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else:
                 gnome_power_detect_install()
                 gnome_power_stop_live()
+                tuned_stop_live()
                 tlp_service_detect()
             while True:
                 try:
@@ -107,6 +108,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     countdown(2)
                 except KeyboardInterrupt:
                     gnome_power_start_live()
+                    tuned_start_live()
                     print()
                     break
             conf.notifier.stop()
