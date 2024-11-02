@@ -25,6 +25,7 @@ bluetoothctl_exists = does_command_exists("bluetoothctl")
 powerprofilesctl_exists = does_command_exists("powerprofilesctl")
 systemctl_exists = does_command_exists("systemctl")
 tlp_stat_exists = does_command_exists("tlp-stat")
+tuned_stat_exists = does_command_exists("tuned")
 
 # detect if gnome power profile service is running
 if not IS_INSTALLED_WITH_SNAP:
@@ -99,9 +100,17 @@ def gnome_power_stop_live():
         call(["powerprofilesctl", "set", "balanced"])
         call(["systemctl", "stop", "power-profiles-daemon"])
 
+# stops tuned (live)
+def tuned_stop_live():
+    if systemctl_exists and tuned_stat_exists:
+        call(["systemctl", "stop", "tuned"])
+
 # starts gnome >= 40 power profiles (live)
 def gnome_power_start_live():
     if systemctl_exists: call(["systemctl", "start", "power-profiles-daemon"])
+
+def tuned_start_live():
+    if systemctl_exists: call(["systemctl", "start", "tuned"])
 
 # enable gnome >= 40 power profiles (uninstall)
 def gnome_power_svc_enable():
@@ -112,6 +121,17 @@ def gnome_power_svc_enable():
             call(["systemctl", "start", "power-profiles-daemon"])
             call(["systemctl", "enable", "power-profiles-daemon"])
             call(["systemctl", "daemon-reload"])
+        except:
+            print("\nUnable to enable GNOME power profiles")
+            print("If this causes any problems, please submit an issue:")
+            print(GITHUB+"/issues")
+
+def tuned_svc_enable():
+    if systemctl_exists:
+        try:
+            print("* Enabling TuneD\n")
+            call(["systemctl", "unmask", "tuned"])
+            call(["systemctl", "enable", "--now", "tuned"])
         except:
             print("\nUnable to enable GNOME power profiles")
             print("If this causes any problems, please submit an issue:")
@@ -209,6 +229,17 @@ def disable_power_profiles_daemon():
         print("If this causes any problems, please submit an issue:")
         print(GITHUB+"/issues")
 
+def disable_tuned_daemon():
+    # always disable TuneD daemon
+    try:
+        print("\n* Disabling TuneD daemon")
+        call(["systemctl", "disable", "--now", "tuned"])
+        call(["systemctl", "mask", "tuned"])
+    except:
+        print("\nUnable to disable TuneD daemon")
+        print("If this causes any problems, please submit an issue:")
+        print(GITHUB+"/issues")
+
 # default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():
     snap_pkg_check = 0
@@ -244,6 +275,10 @@ def gnome_power_svc_disable():
                 call(["powerprofilesctl", "set", "balanced"])
 
                 disable_power_profiles_daemon()
+
+def tuned_svc_disable():
+    if systemctl_exists and tuned_stat_exists:
+        disable_tuned_daemon()
 
 # cli
 @click.command()
