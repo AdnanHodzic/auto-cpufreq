@@ -110,7 +110,8 @@ def gnome_power_start_live():
     if systemctl_exists: call(["systemctl", "start", "power-profiles-daemon"])
 
 def tuned_start_live():
-    if systemctl_exists: call(["systemctl", "start", "tuned"])
+    if systemctl_exists and tuned_stat_exists: 
+        call(["systemctl", "start", "tuned"])
 
 # enable gnome >= 40 power profiles (uninstall)
 def gnome_power_svc_enable():
@@ -127,13 +128,13 @@ def gnome_power_svc_enable():
             print(GITHUB+"/issues")
 
 def tuned_svc_enable():
-    if systemctl_exists:
+    if systemctl_exists and tuned_stat_exists:
         try:
             print("* Enabling TuneD\n")
             call(["systemctl", "unmask", "tuned"])
             call(["systemctl", "enable", "--now", "tuned"])
         except:
-            print("\nUnable to enable GNOME power profiles")
+            print("\nUnable to enable TuneD daemon")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB+"/issues")
 
