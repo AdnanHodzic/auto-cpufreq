@@ -1,8 +1,8 @@
 diff --git a/auto_cpufreq/core.py b/auto_cpufreq/core.py
-index 6ee9986..5015982 100755
+index 3475232..2dff5fb 100755
 --- a/auto_cpufreq/core.py
 +++ b/auto_cpufreq/core.py
-@@ -260,18 +260,12 @@ def get_current_gov():
+@@ -277,18 +277,12 @@ def get_current_gov():
      )
  
  def cpufreqctl():
@@ -25,7 +25,7 @@ index 6ee9986..5015982 100755
  
  def footer(l=79): print("\n" + "-" * l + "\n")
  
-@@ -287,27 +281,8 @@ def remove_complete_msg():
+@@ -306,29 +300,8 @@ def remove_complete_msg():
      footer()
  
  def deploy_daemon():
@@ -47,6 +47,8 @@ index 6ee9986..5015982 100755
 -    gnome_power_detect_install()
 -    gnome_power_svc_disable()
 -
+-    tuned_svc_disable()
+-
 -    tlp_service_detect() # output warning if TLP service is detected
 -
 -    call("/usr/local/bin/auto-cpufreq-install", shell=True)
@@ -55,7 +57,7 @@ index 6ee9986..5015982 100755
  
  def deploy_daemon_performance():
      print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
-@@ -339,35 +314,7 @@ def deploy_daemon_performance():
+@@ -360,37 +333,7 @@ def deploy_daemon_performance():
  
      call("/usr/local/bin/auto-cpufreq-install", shell=True)
  
@@ -72,6 +74,8 @@ index 6ee9986..5015982 100755
 -    # output warning if gnome power profile is stopped
 -    gnome_power_rm_reminder()
 -    gnome_power_svc_enable()
+-
+-    tuned_svc_enable()
 -
 -    # run auto-cpufreq daemon remove script
 -    call("/usr/local/bin/auto-cpufreq-remove", shell=True)
