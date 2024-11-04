@@ -119,9 +119,7 @@ def gnome_power_svc_enable():
         try:
             print("* Enabling GNOME power profiles\n")
             call(["systemctl", "unmask", "power-profiles-daemon"])
-            call(["systemctl", "start", "power-profiles-daemon"])
-            call(["systemctl", "enable", "power-profiles-daemon"])
-            call(["systemctl", "daemon-reload"])
+            call(["systemctl", "enable", "--now", "power-profiles-daemon"])
         except:
             print("\nUnable to enable GNOME power profiles")
             print("If this causes any problems, please submit an issue:")
@@ -221,10 +219,8 @@ def disable_power_profiles_daemon():
     # always disable power-profiles-daemon
     try:
         print("\n* Disabling GNOME power profiles")
-        call(["systemctl", "stop", "power-profiles-daemon"])
-        call(["systemctl", "disable", "power-profiles-daemon"])
+        call(["systemctl", "disable", "--now", "power-profiles-daemon"])
         call(["systemctl", "mask", "power-profiles-daemon"])
-        call(["systemctl", "daemon-reload"])
     except:
         print("\nUnable to disable GNOME power profiles")
         print("If this causes any problems, please submit an issue:")
