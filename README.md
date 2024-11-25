@@ -658,6 +658,10 @@ Once you have made the necessary changes to the `cmdline` file, you can update i
 
 - If the AUR installer does not work for your system, fallback to `auto-cpufreq-installer` and open an issue. 
 
+### Read-only Filesystem Workaround
+
+- On immutable operating systems, the standard `auto-cpufreq` installer is prevented from making necessary changes to system directories.  Renaming the provided installation configuration file `pyproject_cli_only` to `pyproject.toml` will allow you to install a CLI-only version of `auto-cpufreq` in your user home directory.
+
 ## Discussion:
 
 - Blogpost: [auto-cpufreq - Automatic CPU speed & power optimizer for Linux](http://foolcontrol.org/?p=3124)
