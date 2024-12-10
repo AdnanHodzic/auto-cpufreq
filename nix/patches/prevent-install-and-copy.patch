@@ -1,8 +1,8 @@
 diff --git a/auto_cpufreq/core.py b/auto_cpufreq/core.py
-index 3475232..2dff5fb 100755
+index f03e7de..2dff5fb 100755
 --- a/auto_cpufreq/core.py
 +++ b/auto_cpufreq/core.py
-@@ -277,18 +277,12 @@ def get_current_gov():
+@@ -277,19 +277,12 @@ def get_current_gov():
      )
  
  def cpufreqctl():
@@ -11,6 +11,7 @@ index 3475232..2dff5fb 100755
 -    """
 -    if not (IS_INSTALLED_WITH_SNAP or os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq")):
 -        copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
+-        call(["chmod", "a+x", "/usr/local/bin/cpufreqctl.auto-cpufreq"])
 +    # scripts are already in the correct place
 +    pass
  
@@ -25,7 +26,7 @@ index 3475232..2dff5fb 100755
  
  def footer(l=79): print("\n" + "-" * l + "\n")
  
-@@ -306,29 +300,8 @@ def remove_complete_msg():
+@@ -307,31 +300,8 @@ def remove_complete_msg():
      footer()
  
  def deploy_daemon():
@@ -39,9 +40,11 @@ index 3475232..2dff5fb 100755
 -
 -    print("\n* Deploy auto-cpufreq install script")
 -    copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
+-    call(["chmod", "a+x", "/usr/local/bin/auto-cpufreq-install"])
 -
 -    print("\n* Deploy auto-cpufreq remove script")
 -    copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/local/bin/auto-cpufreq-remove")
+-    call(["chmod", "a+x", "/usr/local/bin/auto-cpufreq-remove"])
 -
 -    # output warning if gnome power profile is running
 -    gnome_power_detect_install()
@@ -57,7 +60,7 @@ index 3475232..2dff5fb 100755
  
  def deploy_daemon_performance():
      print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
-@@ -360,37 +333,7 @@ def deploy_daemon_performance():
+@@ -363,37 +333,7 @@ def deploy_daemon_performance():
  
      call("/usr/local/bin/auto-cpufreq-install", shell=True)
  

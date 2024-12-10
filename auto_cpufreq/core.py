@@ -282,6 +282,7 @@ def cpufreqctl():
     """
     if not (IS_INSTALLED_WITH_SNAP or os.path.isfile("/usr/local/bin/cpufreqctl.auto-cpufreq")):
         copy(SCRIPTS_DIR / "cpufreqctl.sh", "/usr/local/bin/cpufreqctl.auto-cpufreq")
+        call(["chmod", "a+x", "/usr/local/bin/cpufreqctl.auto-cpufreq"])
 
 def cpufreqctl_restore():
     """
@@ -316,9 +317,11 @@ def deploy_daemon():
 
     print("\n* Deploy auto-cpufreq install script")
     copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
+    call(["chmod", "a+x", "/usr/local/bin/auto-cpufreq-install"])
 
     print("\n* Deploy auto-cpufreq remove script")
     copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/local/bin/auto-cpufreq-remove")
+    call(["chmod", "a+x", "/usr/local/bin/auto-cpufreq-remove"])
 
     # output warning if gnome power profile is running
     gnome_power_detect_install()
