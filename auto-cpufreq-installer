@@ -96,16 +96,16 @@ function tool_install {
     detected_distro "Arch Linux based"
     pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
     
-  elif [ -f /etc/os-release ];then
+elif [ -f /etc/os-release ];then
     . /etc/os-release
     case $ID in
       opensuse-leap)
         detected_distro "OpenSUSE"
-        zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
       ;;
       opensuse-tumbleweed)
         detected_distro "OpenSUSE"
-        zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
       ;;
       void)
         detected_distro "Void Linux"
