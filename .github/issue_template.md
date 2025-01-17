@@ -1,6 +1,6 @@
 ### Fill out information requested in this template, without doing so issue will be ignored & closed!
 
-Before submitting an issue, it is strongly recommended to use the **[auto-cpufreq-genAI-chatbot](https://foolcontrol.org/?p=4903)** to get an immediate answer to your question.
+##### Before submitting an issue, it is strongly recommended to use the **[auto-cpufreq-genAI-chatbot](https://foolcontrol.org/?p=4903)** to get an immediate answer to your question.
 
 ### Have you tried?
 
