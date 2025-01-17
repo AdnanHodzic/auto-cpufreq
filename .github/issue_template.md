@@ -1,5 +1,7 @@
 ### Fill out information requested in this template, without doing so issue will be ignored & closed!
 
+Before submitting an issue, it is strongly recommended to use the **[auto-cpufreq-genAI-chatbot](https://foolcontrol.org/?p=4903)** to get an immediate answer to your question.
+
 ### Have you tried?
 
 - [Searching through existing/closed issues](https://github.com/AdnanHodzic/auto-cpufreq/issues) to see if your bug has already been already submitted? 
