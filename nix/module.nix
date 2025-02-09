@@ -50,5 +50,15 @@ in {
         ];
       };
     };
+
+    assertions = [
+      {
+        assertion = !config.services.power-profiles-daemon.enable;
+        message = ''
+          You have set services.power-profiles-daemon.enable = true;
+          which conflicts with auto-cpufreq
+        '';
+      }
+    ];
   };
 }
