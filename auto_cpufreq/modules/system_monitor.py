@@ -11,7 +11,7 @@ class ViewType(str, Enum):
     STATS = "Stats"
     MONITOR = "Monitor"
     LIVE = "Live"
-    
+
     def __str__(self) -> str:
         return self.value
 
@@ -125,9 +125,7 @@ class SystemMonitor:
             [
                 urwid.AttrMap(aligned_text("System Information"), "header"),
                 aligned_text(""),
-                aligned_text(
-                    f"Linux distro: {report.distro_name} {report.distro_ver}"
-                ),
+                aligned_text(f"Linux distro: {report.distro_name} {report.distro_ver}"),
                 aligned_text(f"Linux kernel: {report.kernel_version}"),
                 aligned_text(f"Processor: {report.processor_model}"),
                 aligned_text(f"Cores: {report.total_core}"),
@@ -175,7 +173,9 @@ class SystemMonitor:
                     urwid.AttrMap(aligned_text("Battery Stats"), "header"),
                     aligned_text(""),
                     aligned_text(f"Battery status: {str(report.battery_info)}"),
-                    aligned_text(f"Battery precentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"),
+                    aligned_text(
+                        f"Battery precentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"
+                    ),
                     aligned_text(
                         f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged != None else "Unknown"}'
                     ),
@@ -265,15 +265,20 @@ class SystemMonitor:
                 )
             )
 
-        self.right_content.append(
-            aligned_text(
-                f'Setting turbo boost: {"on" if report.is_turbo_on else "off"}'
+        turbo_status: str
+        if report.is_turbo_on[0] != None:
+            turbo_status = "On" if report.is_turbo_on[0] else "Off"
+        elif report.is_turbo_on[1] != None:
+            turbo_status = (
+                f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
             )
-        )
+        else:
+            turbo_status = "Unknown"
+        self.right_content.append(aligned_text(f"Setting turbo boost: {turbo_status}"))
         if (
             self.suggestion
-            and report.is_turbo_on != None
-            and system_info.turbo_on_suggestion() != report.is_turbo_on
+            and report.is_turbo_on[0] != None
+            and system_info.turbo_on_suggestion() != report.is_turbo_on[0]
         ):
             self.right_content.append(
                 urwid.AttrMap(

@@ -1,16 +1,19 @@
-from configparser import ConfigParser
 from dataclasses import dataclass
 import os
 from pathlib import Path
 import platform
-import re
 from subprocess import getoutput
 from typing import Tuple, List
 import psutil
 import distro
-
+from pathlib import Path
 from auto_cpufreq.config.config import config
-from auto_cpufreq.globals import AVAILABLE_GOVERNORS_SORTED, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.core import get_power_supply_ignore_list
+from auto_cpufreq.globals import (
+    AVAILABLE_GOVERNORS_SORTED,
+    IS_INSTALLED_WITH_SNAP,
+    POWER_SUPPLY_DIR,
+)
 
 
 @dataclass
@@ -58,7 +61,7 @@ class SystemReport:
     avg_load: Tuple[float, float, float] | None
     cores_info: list[CoreInfo]
     battery_info: BatteryInfo
-    is_turbo_on: bool | None
+    is_turbo_on: Tuple[bool | None, bool | None]
 
 
 class SystemInfo:
@@ -170,16 +173,41 @@ class SystemInfo:
         return int(sum(temps) / len(temps))
 
     @staticmethod
-    def turbo_on() -> bool | None:
-        turbo_path = "/sys/devices/system/cpu/intel_pstate/no_turbo"
-        if Path(turbo_path).exists():
-            with open(turbo_path) as f:
-                return f.read().strip() == "0"
-        return None
+    def turbo_on() -> Tuple[bool | None, bool | None]:
+        """Get CPU turbo mode status.
+
+        Returns: Tuple[bool | None, bool | None]:
+
+        The first value indicates whether turbo mode is enabled, None if unknown
+
+        The second value indicates whether auto mode is enabled (amd_pstate only), None if unknown
+        """
+        intel_pstate = Path("/sys/devices/system/cpu/intel_pstate/no_turbo")
+        cpu_freq = Path("/sys/devices/system/cpu/cpufreq/boost")
+        amd_pstate = Path("/sys/devices/system/cpu/amd_pstate/status")
+
+        if intel_pstate.exists():
+            control_file: Path = intel_pstate
+            inverse_logic = True
+        elif cpu_freq.exists():
+            control_file = cpu_freq
+            inverse_logic = False
+        elif amd_pstate.exists():
+            amd_status: str = amd_pstate.read_text().strip()
+            if amd_status == "active":
+                return None, True
+            return None, False
+        else:
+            return None, None
+
+        try:
+            current_value = int(control_file.read_text().strip())
+            return bool(current_value) ^ inverse_logic, False
+        except Exception as e:
+            return None, None
 
     @staticmethod
     def battery_info() -> BatteryInfo:
-
         def read_file(path: str) -> str | None:
             try:
                 with open(path, "r") as f:
@@ -187,57 +215,77 @@ class SystemInfo:
             except FileNotFoundError:
                 return None
 
-        output = getoutput(
-            "upower -i /org/freedesktop/UPower/devices/battery_BAT0", encoding="utf-8"
-        )
-        state_match: re.Match[str] | None = re.search(r"state:\s+(\w+)", output)
-        rate_match: re.Match[str] | None = re.search(
-            r"energy-rate:\s+([\d.]+) W", output
-        )
-        precentage_match: re.Match[str] | None = re.search(
-            r"percentage:\s+(\w+)", output
-        )
+        power_supplies: List[str] = sorted(os.listdir(POWER_SUPPLY_DIR))
 
-        ac_plugged: bool | None = (
-            value == "1"
-            if (value := read_file("/sys/class/power_supply/AC/online")) != None
-            else None
-        )
-        is_charging: bool | None = (
-            value == "charging"
-            if (value := state_match.group(1) if state_match else None) != None
-            else None
-        )
-        chargeing_start_threshold: int | None = (
-            int(value)
-            if (
-                value := read_file(
-                    "/sys/class/power_supply/BAT0/charge_start_threshold"
+        if not power_supplies:
+            return BatteryInfo(
+                is_charging=None,
+                is_ac_plugged=True,
+                charging_start_threshold=None,
+                charging_stop_threshold=None,
+                battery_level=None,
+                power_consumption=None,
+            )
+
+        is_ac_plugged = None
+        is_charging = None
+        battery_level = None
+        power_consumption = None
+        charging_start_threshold = None
+        charging_stop_threshold = None
+
+        for supply in power_supplies:
+            if any(item in supply for item in get_power_supply_ignore_list()):
+                continue
+
+            supply_type: str | None = read_file(f"{POWER_SUPPLY_DIR}{supply}/type")
+
+            if supply_type == "Mains":
+                power_supply_online: str | None = read_file(
+                    f"{POWER_SUPPLY_DIR}{supply}/online"
                 )
-            )
-            != None
-            else None
-        )
-        chargeing_stop_threshold: int | None = (
-            int(value)
-            if (
-                value := read_file("/sys/class/power_supply/BAT0/charge_stop_threshold")
-            )
-            != None
-            else None
-        )
+                is_ac_plugged = power_supply_online == "1"
+
+            elif supply_type == "Battery":
+                battery_status: str | None = read_file(
+                    f"{POWER_SUPPLY_DIR}{supply}/status"
+                )
+                battery_percentage: str | None = read_file(
+                    f"{POWER_SUPPLY_DIR}{supply}/capacity"
+                )
+                energy_rate: str | None = read_file(
+                    f"{POWER_SUPPLY_DIR}{supply}/power_now"
+                )
+                charge_start_threshold: str | None = read_file(
+                    f"{POWER_SUPPLY_DIR}{supply}/charge_start_threshold"
+                )
+                charge_stop_threshold: str | None = read_file(
+                    f"{POWER_SUPPLY_DIR}{supply}/charge_stop_threshold"
+                )
+
+                is_charging: bool | None = (
+                    battery_status.lower() == "charging" if battery_status else None
+                )
+                battery_level: int | None = (
+                    int(battery_percentage) if battery_percentage else None
+                )
+                power_consumption: float | None = (
+                    float(energy_rate) / 1_000_000 if energy_rate else None
+                )
+                charging_start_threshold: int | None = (
+                    int(charge_start_threshold) if charge_start_threshold else None
+                )
+                charging_stop_threshold: int | None = (
+                    int(charge_stop_threshold) if charge_stop_threshold else None
+                )
 
         return BatteryInfo(
-            is_charging=is_charging,  # type: ignore
-            is_ac_plugged=ac_plugged,  # type: ignore
-            charging_start_threshold=chargeing_start_threshold,
-            charging_stop_threshold=chargeing_stop_threshold,
-            battery_level=(
-                int(precentage_match.group(1)) if precentage_match != None else None
-            ),
-            power_consumption=(
-                float(rate_match.group(1)) if rate_match != None else None
-            ),
+            is_charging=is_charging,
+            is_ac_plugged=is_ac_plugged,
+            charging_start_threshold=charging_start_threshold,
+            charging_stop_threshold=charging_stop_threshold,
+            battery_level=battery_level,
+            power_consumption=power_consumption,
         )
 
     @staticmethod
