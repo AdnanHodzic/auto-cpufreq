@@ -141,3 +141,6 @@ dmypy.json
 
 # nix build
 /result
+
+# vs code 
+.vscode/

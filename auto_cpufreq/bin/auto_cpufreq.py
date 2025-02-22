@@ -13,7 +13,9 @@ from auto_cpufreq.battery_scripts.battery import *
 from auto_cpufreq.config.config import config as conf, find_config_file
 from auto_cpufreq.core import *
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
 from auto_cpufreq.power_helper import *
+from threading import Thread
 
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -55,11 +57,8 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             set_override(force) # Calling set override, only if force has some values
 
         if monitor:
-            config_info_dialog()
             root_check()
-            print('\nNote: You can quit monitor mode by pressing "ctrl+c"')
             battery_setup()
-            battery_get_thresholds()
             conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
@@ -67,26 +66,19 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-            while True:
+                
+            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
                 try:
-                    time.sleep(1)
-                    running_daemon_check()
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    mon_autofreq()
-                    countdown(2)
-                except KeyboardInterrupt: break
-            conf.notifier.stop()
+                    input("press Enter to continue or Ctrl + c to exit...")
+                except KeyboardInterrupt:
+                    conf.notifier.stop()
+                    sys.exit(0)
+            
+            monitor = SystemMonitor(suggestion=True, type=ViewType.MONITOR)
+            monitor.run(on_quit=conf.notifier.stop)
         elif live:
             root_check()
-            config_info_dialog()
-            print('\nNote: You can quit live mode by pressing "ctrl+c"')
-            time.sleep(1)
             battery_setup()
-            battery_get_thresholds()
             conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
@@ -96,22 +88,40 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 gnome_power_stop_live()
                 tuned_stop_live()
                 tlp_service_detect()
-            while True:
+            
+            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
                 try:
-                    running_daemon_check()
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    set_autofreq()
-                    countdown(2)
+                    input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
-                    gnome_power_start_live()
-                    tuned_start_live()
-                    print()
-                    break
-            conf.notifier.stop()
+                    conf.notifier.stop()
+                    sys.exit(0)
+            
+            cpufreqctl()
+            def live_daemon():
+                # Redirect stdout to suppress prints
+                class NullWriter:
+                    def write(self, _): pass
+                    def flush(self): pass
+                try:
+                    sys.stdout = NullWriter()
+                    
+                    while True:
+                        time.sleep(1)
+                        set_autofreq()
+                except:
+                    pass
+            
+            def live_daemon_off():
+                gnome_power_start_live()
+                tuned_start_live()
+                cpufreqctl_restore()
+                conf.notifier.stop()
+            
+            thread = Thread(target=live_daemon, daemon=True)
+            thread.start()
+            
+            monitor = SystemMonitor(type=ViewType.LIVE)
+            monitor.run(on_quit=live_daemon_off)
         elif daemon:
             config_info_dialog()
             root_check()
@@ -205,15 +215,22 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
         elif stats:
             not_running_daemon_check()
             config_info_dialog()
-            print('\nNote: You can quit stats mode by pressing "ctrl+c"')
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-            battery_get_thresholds()
-            read_stats()
+            
+            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+                try:
+                    input("press Enter to continue or Ctrl + c to exit...")
+                except KeyboardInterrupt:
+                    conf.notifier.stop()
+                    sys.exit(0)
+            
+            monitor = SystemMonitor(type=ViewType.STATS)
+            monitor.run()
         elif get_state:
             not_running_daemon_check()
             override = get_override()

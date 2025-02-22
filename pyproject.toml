@@ -27,6 +27,7 @@ click = "^8.1.0"
 distro = "^1.8.0"
 requests = "^2.32.3"
 PyGObject = "^3.46.0"
+urwid = "^2.6.16"
 pyinotify = {git = "https://github.com/shadeyg56/pyinotify-3.12"}
 
 [tool.poetry.group.dev.dependencies]
