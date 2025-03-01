@@ -11,6 +11,7 @@ from auto_cpufreq.config.config import config
 from auto_cpufreq.core import get_power_supply_ignore_list
 from auto_cpufreq.globals import (
     AVAILABLE_GOVERNORS_SORTED,
+    CPU_TEMP_SENSOR_PRIORITY,
     IS_INSTALLED_WITH_SNAP,
     POWER_SUPPLY_DIR,
 )
@@ -104,7 +105,13 @@ class SystemInfo:
 
         try:
             temps = psutil.sensors_temperatures()
-            core_temps = [temp.current for temp in temps.get("coretemp", [])]
+            temp_sensor = []
+            for sensor in CPU_TEMP_SENSOR_PRIORITY:
+                temp_sensor = temps.get(sensor, [])
+                if temp_sensor != []:
+                    break
+
+            core_temps = [temp.current for temp in temp_sensor]
         except AttributeError:
             core_temps = []
 
