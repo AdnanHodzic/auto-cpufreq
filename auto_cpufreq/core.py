@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #
 # auto-cpufreq - core functionality
+import logging
 import click, distro, os, platform, psutil, sys
 from importlib.metadata import metadata, PackageNotFoundError
 from math import isclose
@@ -67,12 +68,27 @@ def get_override():
 
 def set_override(override):
     if override in ["powersave", "performance"]:
+        from auto_cpufreq.modules.controller import SystemController
+        if override == "powersave":
+            if not SystemController.set_powersave_gov(override=True):
+                logging.error("failed to override governor")
+                print(f"governor override to {override} failed!")
+                return
+        elif override == "performance":
+            if not SystemController.set_performance_gov(override=True):
+                logging.error("failed to override governor")
+                print(f"governor override to {override} failed!")
+                return
         with open(governor_override_state, "wb") as store:
             dump(override, store)
+        logging.info("governor override to %s", override)
         print(f"Set governor override to {override}")
     elif override == "reset":
+        from auto_cpufreq.modules.handler import system_events_handler
         if os.path.isfile(governor_override_state):
             os.remove(governor_override_state)
+        system_events_handler.init()
+        logging.info("Governor override removed")
         print("Governor override removed")
     elif override is not None: print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
 

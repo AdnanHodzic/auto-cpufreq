@@ -5,17 +5,22 @@
 # Blog post: https://foolcontrol.org/?p=3124
 
 # core import
+import logging
 import sys, time
 from subprocess import run
 from shutil import rmtree
-
+from gi.repository import GLib
 from auto_cpufreq.battery_scripts.battery import *
 from auto_cpufreq.config.config import config as conf, find_config_file
 from auto_cpufreq.core import *
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.modules.observer import observer
+from auto_cpufreq.modules.handler import system_events_handler
 from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
 from auto_cpufreq.power_helper import *
 from threading import Thread
+
+from auto_cpufreq.types import ObserverEvent
 
 @click.command()
 @click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
@@ -134,17 +139,37 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 tlp_service_detect()
             battery_setup()
             conf.notifier.start()
-            while True:
-                try:
-                    footer()
-                    gov_check()
-                    cpufreqctl()
-                    distro_info()
-                    sysinfo()
-                    set_autofreq()
-                    countdown(2)
-                except KeyboardInterrupt: break
-            conf.notifier.stop()
+            # while True:
+            #     try:
+            #         footer()
+            #         gov_check()
+            #         cpufreqctl()
+            #         distro_info()
+            #         sysinfo()
+            #         set_autofreq()
+            #         countdown(2)
+            #     except KeyboardInterrupt: break
+            observer.listen(
+                event=ObserverEvent.POWER_SOURCE, 
+                callback=system_events_handler.handle_power_source,
+            )
+            observer.listen(
+                event=ObserverEvent.SYS_LOAD, 
+                callback=system_events_handler.handle_sys_load,
+            )
+            observer.listen(
+                event=ObserverEvent.SYS_TEMP, 
+                callback=system_events_handler.handle_sys_temp,
+            )
+            system_events_handler.init()
+            try:
+                thread: Thread = observer.start()
+                logging.info("Daemon started, pid: %s", os.getpid())
+                loop = GLib.MainLoop()
+                loop.run()
+            except (KeyboardInterrupt, SystemExit):
+                observer.stop()
+                conf.notifier.stop()
         elif install:
             root_check()
             if IS_INSTALLED_WITH_SNAP:

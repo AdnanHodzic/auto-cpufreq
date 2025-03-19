@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import os
 from pathlib import Path
+from pickle import load
 import platform
 from subprocess import getoutput
 from typing import Tuple, List
@@ -15,6 +16,7 @@ from auto_cpufreq.globals import (
     IS_INSTALLED_WITH_SNAP,
     POWER_SUPPLY_DIR,
 )
+from auto_cpufreq.tools import get_gov_override_path
 
 
 @dataclass
@@ -141,6 +143,14 @@ class SystemInfo:
                 return f.read().strip()
         except:
             return None
+    
+    @staticmethod
+    def gov_override() -> str:
+        if os.path.isfile(get_gov_override_path()):
+            with open(get_gov_override_path(), "rb") as store: 
+                return load(store)
+        else: 
+            return "default"
 
     @staticmethod
     def current_epp() -> str | None:
