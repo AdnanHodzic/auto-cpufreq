@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+import sys
 
 from auto_cpufreq.globals import IS_INSTALLED_WITH_SNAP
 
@@ -12,8 +13,8 @@ class ConditionalFormatter(logging.Formatter):
     """
 
     def __init__(self) -> None:
-        self.default_fmt = "%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
-        self.error_fmt = "%(asctime)s [%(levelname)s] [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
+        self.default_fmt = "%(asctime)s [%(levelname)s] [%(module)s] %(message)s"
+        self.error_fmt = "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
 
         super().__init__(fmt=self.default_fmt, datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -32,17 +33,20 @@ class ConditionalFormatter(logging.Formatter):
         return result
 
 
-handler = RotatingFileHandler(
+file_handler = RotatingFileHandler(
     "/var/log/auto-cpufreq/app.log", 
     maxBytes=10*1024*1024, # 10MB
     encoding="utf-8"
 )
-handler.setFormatter(ConditionalFormatter())
+file_handler.setFormatter(ConditionalFormatter())
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(logging.Formatter("[%(levelname)s] [%(module)s] %(message)s"))
 
 logging.basicConfig(
     level=logging.INFO,
     handlers=[
-        handler,
+        file_handler,
+        stream_handler
     ],
 )
 
