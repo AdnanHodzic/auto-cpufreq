@@ -1,6 +1,8 @@
 import logging
 from logging.handlers import RotatingFileHandler
+import os
 from pathlib import Path
+from subprocess import run
 import sys
 
 from auto_cpufreq.globals import IS_INSTALLED_WITH_SNAP
@@ -52,7 +54,17 @@ def setup_logger() -> None:
             stream_handler
         ],
     )
-    
+
+def create_log_dir() -> bool:
+    try:
+        if not os.path.isdir('/var/log/auto-cpufreq'):
+            os.mkdir('/var/log/auto-cpufreq')
+            run(["chmod", "644", "-R", "/var/log/auto-cpufreq"], shell=True)
+            run(["touch", "/var/log/auto-cpufreq/main.log"])
+            run(["chmod", "644", "/var/log/auto-cpufreq/main.log"])
+        return True
+    except Exception as e:
+        return False
 
 def get_gov_override_path() -> Path:
     if IS_INSTALLED_WITH_SNAP:

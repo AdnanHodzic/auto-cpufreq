@@ -1,12 +1,7 @@
 import logging
-from subprocess import getoutput, run
+from subprocess import getoutput
 import os
 
-if not os.path.isdir('/var/log/auto-cpufreq'):
-    os.mkdir('/var/log/auto-cpufreq')
-    run(["chmod", "644", "-R", "/var/log/auto-cpufreq"], shell=True)
-    run(["touch", "/var/log/auto-cpufreq/main.log"])
-    run(["chmod", "644", "/var/log/auto-cpufreq/main.log"])
 
 ALL_GOVERNORS = ('performance', 'ondemand', 'conservative', 'schedutil', 'userspace', 'powersave') # from the highest performance to the lowest
 AVAILABLE_GOVERNORS = getoutput('cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors').strip().split(' ')

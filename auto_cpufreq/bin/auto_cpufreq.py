@@ -20,7 +20,7 @@ from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
 from auto_cpufreq.power_helper import *
 from threading import Thread
 
-from auto_cpufreq.tools import setup_logger
+from auto_cpufreq.tools import create_log_dir, setup_logger
 from auto_cpufreq.types import ObserverEvent
 
 @click.command()
@@ -174,6 +174,9 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 conf.notifier.stop()
         elif install:
             root_check()
+            if not create_log_dir():
+                print("failed to create log dir")
+                sys.exit(-1)
             if IS_INSTALLED_WITH_SNAP:
                 running_daemon_check()
                 gnome_power_detect_snap()
