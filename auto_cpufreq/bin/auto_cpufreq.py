@@ -20,6 +20,7 @@ from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
 from auto_cpufreq.power_helper import *
 from threading import Thread
 
+from auto_cpufreq.tools import setup_logger
 from auto_cpufreq.types import ObserverEvent
 
 @click.command()
@@ -149,6 +150,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             #         set_autofreq()
             #         countdown(2)
             #     except KeyboardInterrupt: break
+            setup_logger()
             observer.listen(
                 event=ObserverEvent.POWER_SOURCE, 
                 callback=system_events_handler.handle_power_source,

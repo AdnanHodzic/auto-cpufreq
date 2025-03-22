@@ -33,22 +33,26 @@ class ConditionalFormatter(logging.Formatter):
         return result
 
 
-file_handler = RotatingFileHandler(
-    "/var/log/auto-cpufreq/app.log", 
-    maxBytes=10*1024*1024, # 10MB
-    encoding="utf-8"
-)
-file_handler.setFormatter(ConditionalFormatter())
-stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.setFormatter(logging.Formatter("[%(levelname)s] [%(module)s] %(message)s"))
+def setup_logger() -> None:
+    """Setuo logging global
+    """
+    file_handler = RotatingFileHandler(
+        "/var/log/auto-cpufreq/app.log", 
+        maxBytes=10*1024*1024, # 10MB
+        encoding="utf-8"
+    )
+    file_handler.setFormatter(ConditionalFormatter())
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(logging.Formatter("[%(levelname)s] [%(module)s] %(message)s"))
 
-logging.basicConfig(
-    level=logging.INFO,
-    handlers=[
-        file_handler,
-        stream_handler
-    ],
-)
+    logging.basicConfig(
+        level=logging.INFO,
+        handlers=[
+            file_handler,
+            stream_handler
+        ],
+    )
+    
 
 def get_gov_override_path() -> Path:
     if IS_INSTALLED_WITH_SNAP:
