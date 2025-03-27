@@ -546,9 +546,9 @@ If the daemon has been installed, live stats of CPU/system load monitoring and o
 
 ## Battery charging thresholds
 
-***Please note:** This feature is **deprecated**, as its [original implementor](https://github.com/AdnanHodzic/auto-cpufreq/pull/637) is no longer actively working on it. If you would like to further improve this functionality, please refer to [Looking for developers and co-maintainers](https://github.com/AdnanHodzic/auto-cpufreq/#looking-for-developers-and-co-maintainers).*
+***Please note:** [Original implementor](https://github.com/AdnanHodzic/auto-cpufreq/pull/637) is looking for user input & testing to further improve this functionality. If you would like to help in this process, please refer to [Looking for developers and co-maintainers](https://github.com/AdnanHodzic/auto-cpufreq/#looking-for-developers-and-co-maintainers)*.
 
-As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0), battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values
+As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0), battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values.
 
 ### Supported devices
 
