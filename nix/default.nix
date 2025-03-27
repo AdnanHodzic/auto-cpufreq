@@ -52,7 +52,7 @@ python3Packages.buildPythonPackage {
     # copy script manually
     cp scripts/cpufreqctl.sh $out/bin/cpufreqctl.auto-cpufreq
 
-    # move the css to the rihgt place
+    # move the css to the right place
     mkdir -p $out/share/auto-cpufreq/scripts
     cp scripts/style.css $out/share/auto-cpufreq/scripts/style.css
 
