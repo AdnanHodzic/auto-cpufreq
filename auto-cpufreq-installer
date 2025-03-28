@@ -78,7 +78,24 @@ function tool_install {
 
   if [ -f /etc/debian_version ]; then
     detected_distro "Debian based"
-    apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode libgirepository-2.0-dev libcairo2-dev libgtk-3-dev gcc -y
+
+    # Load system info
+    . /etc/os-release  
+
+    # Extract major version number (e.g., "22.1" → "22")
+    VER=${VERSION_ID%%.*}
+
+    # Default to libgirepository-2.0-dev
+    LIB_GI_REPO="libgirepository-2.0-dev"
+
+    # Use the older package for Debian < 13 and Ubuntu < 24.04
+    if [[ "$VER" -lt 13 && "$VERSION_CODENAME" != "trixie" && "$VERSION_CODENAME" != "sid" ]]; then
+        LIB_GI_REPO="libgirepository1.0-dev"
+    fi
+
+    # Install required packages
+    apt install -y python3-dev python3-pip python3-venv python3-setuptools dmidecode \
+        "$LIB_GI_REPO" libcairo2-dev libgtk-3-dev gcc
 
   elif [ -f /etc/redhat-release ]; then
     detected_distro "RedHat based"
