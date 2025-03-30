@@ -78,14 +78,19 @@ function tool_install {
 
   if [ -f /etc/debian_version ]; then  
     VERSION=$(cat /etc/debian_version)  
-
-    if [[ "$VERSION" -ge 13 ]]; then  
-        LIB_GI_REPO="libgirepository-2.0-dev"
-    else  
+    # VERSION="CSCS"
+    if [[ "$VERSION" =~ ^12(\.[0-9]+)?$ || ("$VERSION" =~ ^[0-9]+$ && "$VERSION" -lt 12) ]]; then  
         LIB_GI_REPO="libgirepository1.0-dev"
+    else  
+        LIB_GI_REPO="libgirepository-2.0-dev"
     fi
 
-    
+    echo $LIB_GI_REPO needs to be installed for version $VERSION
+    echo =====================================
+    echo =====================================
+    echo =====================================
+    echo =====================================
+    echo =====================================
     apt install -y python3-dev python3-pip python3-venv python3-setuptools dmidecode \
     "$LIB_GI_REPO" libcairo2-dev libgtk-3-dev gcc
 
@@ -141,7 +146,15 @@ elif [ -f /etc/os-release ];then
   source "$venv_dir/bin/activate"
   python3 -m pip install --upgrade pip wheel
 
-  # required for GUI
+
+  # debian specific PyGObject Installation
+  if [ -f /etc/debian_version ]; then  
+    VERSION=$(cat /etc/debian_version | cut -d'.' -f1)  
+
+    if [[ "$VERSION" =~ ^12(\.[0-9]+)?$ ]]; then 
+        python3 -m pip install PyGObject==3.50.0
+    fi
+  fi
   python3 -m pip install PyGObject
 
   header "Installing auto-cpufreq tool"
