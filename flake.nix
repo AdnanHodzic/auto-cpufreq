@@ -8,7 +8,7 @@
     pkgsForEach = nixpkgs.legacyPackages;
   in {
     packages = forAllSystems (system: {
-      default = pkgsForEach.${system}.python3Packages.callPackage ./nix/default.nix {};
+      default = pkgsForEach.${system}.callPackage ./nix/default.nix {};
     });
 
     devShells = forAllSystems (system: {
