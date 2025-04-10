@@ -77,12 +77,19 @@ function tool_install {
   }
 
   if [ -f /etc/debian_version ]; then  
-    VERSION=$(cat /etc/debian_version)  
-    # VERSION="CSCS"
-    if [[ "$VERSION" =~ ^12(\.[0-9]+)?$ || ("$VERSION" =~ ^[0-9]+$ && "$VERSION" -lt 12) ]]; then  
-        LIB_GI_REPO="libgirepository1.0-dev"
-    else  
-        LIB_GI_REPO="libgirepository-2.0-dev"
+    detected_distro "Debian based"
+    VERSION=$(cat /etc/debian_version) 
+
+    # https://github.com/AdnanHodzic/auto-cpufreq/pull/826
+    # install necessary debian dependencies
+    sudo apt update
+
+    if apt-cache show libgirepository-2.0-dev > /dev/null 2>&1; then
+        echo "Installing libgirepository-2.0-dev ..."
+        sudo apt install -y libgirepository-2.0-dev
+    else
+        echo "Installing libgirepository1.0-dev..."
+        sudo apt install -y libgirepository1.0-dev
     fi
 
     echo $LIB_GI_REPO needs to be installed for version $VERSION
