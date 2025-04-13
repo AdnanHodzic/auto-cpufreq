@@ -67,7 +67,6 @@ def gnome_power_detect():
         print("\nOnly necessary to be manually done on Snap package installs!")
         print("Steps to perform this action using auto-cpufreq: power_helper script:")
         print(f"git clone {GITHUB}.git")
-        print("cd auto-cpufreq/auto_cpufreq")
         print("python3 power_helper.py --gnome_power_disable")
         print(f"\nReference: {GITHUB}#configuring-auto-cpufreq")
 
@@ -91,7 +90,6 @@ def gnome_power_detect_snap():
     print("This daemon might interfere with auto-cpufreq and should be disabled!")
     print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
     print(f"git clone {GITHUB}.git")
-    print("cd auto-cpufreq/auto_cpufreq")
     print("python3 power_helper.py --gnome_power_disable")
     print(f"\nReference: {GITHUB}#configuring-auto-cpufreq")
 
@@ -208,7 +206,6 @@ def gnome_power_rm_reminder_snap():
     print("Now it's recommended to enable this service.")
     print("\nSteps to perform this action using auto-cpufreq: power_helper script:")
     print(f"git clone {GITHUB}.git")
-    print("cd auto-cpufreq/auto_cpufreq")
     print("python3 power_helper.py --gnome_power_enable")
     print(f"\nReference: {GITHUB}#configuring-auto-cpufreq")
 
