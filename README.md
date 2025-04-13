@@ -21,11 +21,11 @@ If you're having a problem with auto-cpufreq, before ([submitting an issue](http
 
 Example of auto-cpufreq GUI (available >= v2.0)
 
-<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq desktop entry (icon)" />
+<img src="https://github.com/user-attachments/assets/4b83b67c-8c1e-4ef0-ad2d-ffc1b9dc16de" width="480" alt="Example of auto-cpufreq GUI (available >= v2.0)" />
 
 Example of `auto-cpufreq --stats` CLI output
 
-<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq CLI output"/>
 
 ## Looking for developers and co-maintainers
 
