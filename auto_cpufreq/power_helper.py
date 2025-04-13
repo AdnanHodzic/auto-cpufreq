@@ -7,9 +7,9 @@ from subprocess import call, DEVNULL, getoutput, STDOUT
 from sys import argv
 
 # ToDo: update README part how to run this script
-from .core import *
-from .globals import GITHUB, IS_INSTALLED_WITH_SNAP
-from .tlp_stat_parser import TLPStatusParser
+from auto_cpufreq.core import *
+from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
+from auto_cpufreq.tlp_stat_parser import TLPStatusParser
 
 # app_name var
 app_name = "python3 power_helper.py" if argv[0] == "power_helper.py" else "auto-cpufreq"
