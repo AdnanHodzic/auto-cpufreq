@@ -29,13 +29,12 @@ from threading import Thread
 @click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--get-state", is_flag=True, hidden=True)
-@click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
 @click.option("--bluetooth_boot_off", is_flag=True, help="Turn off Bluetooth on boot")
 @click.option("--bluetooth_boot_on", is_flag=True, help="Turn on Bluetooth on boot")
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state, completions,
+def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state,
          bluetooth_boot_off,
          bluetooth_boot_on,
          debug, version, donate):
@@ -322,26 +321,14 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             not_running_daemon_check()
             override = get_override()
             print(override)
-        elif completions:
-            # Logic for completions (kept as per previous code)
-            if completions == "bash":
-                print("Run the below command in your current shell!\n")
-                print("echo 'eval \"$(_AUTO_CPUFREQ_COMPLETE=bash_source auto-cpufreq)\"' >> ~/.bashrc")
-                print("source ~/.bashrc")
-            elif completions == "zsh":
-                print("Run the below command in your current shell!\n")
-                print("echo 'eval \"$(_AUTO_CPUFREQ_COMPLETE=zsh_source auto-cpufreq)\"' >> ~/.zshrc")
-                print("source ~/.zshrc")
-            elif completions == "fish":
-                print("Run the below command in your current shell!\n")
-                print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
-            else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
 
         elif bluetooth_boot_off:
+            footer()
             root_check()
             bluetooth_disable()
             footer()
         elif bluetooth_boot_on:
+            footer()
             root_check()
             bluetooth_enable()
             footer()
