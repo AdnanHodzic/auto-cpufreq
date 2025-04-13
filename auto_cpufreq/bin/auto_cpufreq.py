@@ -323,15 +323,25 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             print(override)
 
         elif bluetooth_boot_off:
-            footer()
-            root_check()
-            bluetooth_disable()
-            footer()
+            if IS_INSTALLED_WITH_SNAP:
+                footer()
+                bluetooth_notif_snap()
+                footer()
+            else:
+                footer()
+                root_check()
+                bluetooth_disable()
+                footer()
         elif bluetooth_boot_on:
-            footer()
-            root_check()
-            bluetooth_enable()
-            footer()
+            if IS_INSTALLED_WITH_SNAP:
+                footer()
+                bluetooth_on_notif_snap()
+                footer()
+            else:
+                footer()
+                root_check()
+                bluetooth_enable()
+                footer()
         elif debug:
             config_info_dialog()
             root_check()
