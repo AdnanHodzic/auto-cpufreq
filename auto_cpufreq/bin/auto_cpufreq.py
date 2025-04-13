@@ -14,6 +14,7 @@ from auto_cpufreq.config.config import config as conf, find_config_file
 from auto_cpufreq.core import *
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
+# import everything from power_helper, including bluetooth_disable
 from auto_cpufreq.power_helper import *
 from threading import Thread
 
@@ -29,10 +30,13 @@ from threading import Thread
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--get-state", is_flag=True, hidden=True)
 @click.option("--completions", is_flag=False, help="Enables shell completions for bash, zsh and fish.\n Possible values bash|zsh|fish")
+@click.option("--bluetooth_boot_off", is_flag=True, help="Turn off Bluetooth on boot")
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state, completions, debug, version, donate):
+def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state, completions,
+         bluetooth_boot_off,
+         debug, version, donate):
     # display info if config file is used
     config_path = find_config_file(config)
     conf.set_path(config_path)
@@ -43,13 +47,11 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
- 
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
         run(["auto-cpufreq", "--help"])
         footer()
-    else:
         # set governor override unless None or invalid
         if force is not None:
             not_running_daemon_check()
@@ -66,14 +68,14 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-                
+
             if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
                     conf.notifier.stop()
                     sys.exit(0)
-            
+
             monitor = SystemMonitor(suggestion=True, type=ViewType.MONITOR)
             monitor.run(on_quit=conf.notifier.stop)
         elif live:
@@ -88,14 +90,14 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 gnome_power_stop_live()
                 tuned_stop_live()
                 tlp_service_detect()
-            
+
             if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
                     conf.notifier.stop()
                     sys.exit(0)
-            
+
             cpufreqctl()
             def live_daemon():
                 # Redirect stdout to suppress prints
@@ -104,22 +106,22 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                     def flush(self): pass
                 try:
                     sys.stdout = NullWriter()
-                    
+
                     while True:
                         time.sleep(1)
                         set_autofreq()
                 except:
                     pass
-            
+
             def live_daemon_off():
                 gnome_power_start_live()
                 tuned_start_live()
                 cpufreqctl_restore()
                 conf.notifier.stop()
-            
+
             thread = Thread(target=live_daemon, daemon=True)
             thread.start()
-            
+
             monitor = SystemMonitor(type=ViewType.LIVE)
             monitor.run(on_quit=live_daemon_off)
         elif daemon:
@@ -151,6 +153,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 running_daemon_check()
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
+                # ToDo: add note to say you can use bluetooth flag to enable bluetooth on boot
                 bluetooth_notif_snap()
                 gov_check()
                 run("snapctl set daemon=enabled", shell=True)
@@ -158,6 +161,7 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else:
                 running_daemon_check()
                 gov_check()
+                # ToDo: add note to say you can use bluetooth flag to enable bluetooth on boot
                 deploy_daemon()
             deploy_complete_msg()
         elif update:
@@ -167,19 +171,19 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 if arg.startswith("--update="):
                     custom_dir = arg.split("=")[1]
                     sys.argv.remove(arg)
-                    
+
             if "--update" in sys.argv:
                 update = True
                 sys.argv.remove("--update")
-                if len(sys.argv) == 2: custom_dir = sys.argv[1] 
-                    
+                if len(sys.argv) == 2: custom_dir = sys.argv[1]
+
             if IS_INSTALLED_WITH_SNAP:
                 print("Detected auto-cpufreq was installed using snap")
                 # refresh snap directly using this command
                 # path wont work in this case
 
                 print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
-                #check for AUR 
+                #check for AUR
             elif IS_INSTALLED_WITH_AUR: print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
                 is_new_update = check_for_update()
@@ -206,7 +210,6 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                         auto_cpufreq_stats_file.close()
 
                     auto_cpufreq_stats_path.unlink()
-                # ToDo: 
                 # {the following snippet also used in --update, update it there too(if required)}
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
@@ -221,14 +224,14 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-            
+
             if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
                     conf.notifier.stop()
                     sys.exit(0)
-            
+
             monitor = SystemMonitor(type=ViewType.STATS)
             monitor.run()
         elif get_state:
@@ -248,6 +251,10 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
                 print("Run the below command in your current shell!\n")
                 print("echo '_AUTO_CPUFREQ_COMPLETE=fish_source auto-cpufreq | source' > ~/.config/fish/completions/auto-cpufreq.fish")
             else: print("Invalid Option, try bash|zsh|fish as argument to --completions")
+        elif bluetooth_boot_off:
+            root_check()
+            bluetooth_disable()
+            footer()
         elif debug:
             # ToDo: add status of GNOME Power Profile service status
             config_info_dialog()
@@ -281,5 +288,5 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             print("Show your appreciation by donating!")
             print(GITHUB+"#donate")
             footer()
-                
+
 if __name__ == "__main__": main()
