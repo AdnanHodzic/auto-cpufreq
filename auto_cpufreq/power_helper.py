@@ -150,7 +150,8 @@ def gnome_power_svc_status():
 def bluetooth_disable():
     if IS_INSTALLED_WITH_SNAP: bluetooth_notif_snap()
     elif bluetoothctl_exists:
-        print("* Turn off bluetooth on boot (can be turned on any time later on!)")
+        print("* Turn off Bluetooth on boot (only)!")
+        print("  If you want bluetooth enabled on boot run: auto-cpufreq --bluetooth_boot_on")
         btconf = Path("/etc/bluetooth/main.conf")
         try:
             orig_set = "AutoEnable=true"
