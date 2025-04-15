@@ -11,3 +11,5 @@ IS_INSTALLED_WITH_AUR = path.isfile("/etc/arch-release") and bool(getoutput("pac
 IS_INSTALLED_WITH_SNAP = getenv("PKG_MARKER") == "SNAP"
 POWER_SUPPLY_DIR = "/sys/class/power_supply/"
 SNAP_DAEMON_CHECK = getoutput("snapctl get daemon")
+
+CPU_TEMP_SENSOR_PRIORITY = ("coretemp", "acpitz", "k10temp", "zenpower")

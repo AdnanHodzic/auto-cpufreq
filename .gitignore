@@ -110,6 +110,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.direnv
 
 # Spyder project settings
 .spyderproject
@@ -141,3 +142,6 @@ dmypy.json
 
 # nix build
 /result
+
+# vs code 
+.vscode/

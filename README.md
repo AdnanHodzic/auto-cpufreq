@@ -14,13 +14,18 @@ For tl;dr folks:
 
 [![](https://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
+
+If you're having a problem with auto-cpufreq, before ([submitting an issue](https://github.com/AdnanHodzic/auto-cpufreq/issues)), it is strongly recommended to use the **[auto-cpufreq-genAI-chatbot](https://foolcontrol.org/?p=4903)** to get an immediate answer to your question.
+
+[![](https://img.youtube.com/vi/a-UcwAAXOoc/0.jpg)](https://www.youtube.com/watch?v=a-UcwAAXOoc)
+
 Example of auto-cpufreq GUI (available >= v2.0)
 
-<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq desktop entry (icon)" />
+<img src="https://github.com/user-attachments/assets/4b83b67c-8c1e-4ef0-ad2d-ffc1b9dc16de" width="480" alt="Example of auto-cpufreq GUI (available >= v2.0)" />
 
 Example of `auto-cpufreq --stats` CLI output
 
-<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq desktop entry (icon)"/>
+<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq CLI output"/>
 
 ## Looking for developers and co-maintainers
 
@@ -53,6 +58,8 @@ Example of `auto-cpufreq --stats` CLI output
   - [Update - auto-cpufreq update](#update---auto-cpufreq-update)
   - [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
   - [stats](#stats)
+  - [bluetooth_boot_off](#bluetooth_boot_off)
+  - [bluetooth_boot_on](#bluetooth_boot_on)
 - [Battery charging thresholds](#battery-charging-thresholds)
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
@@ -286,17 +293,23 @@ the repository:
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq`
 
-Navigate to the directory where `power_helper.py` resides:
+Make sure to have `psutil` & `pyinotify` Python library installed before next step:
 
-`cd auto-cpufreq/auto_cpufreq`
+If you're using Debian based distro install them by running:
 
-Make sure to have `psutil` Python library installed before next step:
+`sudo apt install python3-psutil python3-pyinotify` 
 
-`sudo python3 -m pip install psutil`
+or manually using pip, e.g: 
+
+`sudo pip3 install psutil pyinotify --break-system-packages`
 
 Then disable the GNOME Power Profiles daemon:
 
-`sudo python3 power_helper.py --gnome_power_disable`
+`sudo python3 -m auto_cpufreq.power_helper --gnome_power_disable`
+
+for full list of options run --help, e.g:
+
+`sudo python3 -m auto_cpufreq.power_helper --help`
 
 ### 2: `--force` governor override
 
@@ -429,6 +442,12 @@ auto-cpufreq should be run with with one of the following options:
 - [stats](#stats)
   - View live stats of CPU optimizations made by daemon
 
+- [bluetooth_boot_off](#bluetooth_boot_off)
+  - Turn off Bluetooth on boot (only)! Can be turned on any time later on.
+
+- [bluetooth_boot_on](#bluetooth_boot_on)
+  - Turn on Bluetooth on boot.
+
 - [force=TEXT](#overriding-governor)
   - Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode
 
@@ -539,9 +558,21 @@ If the daemon has been installed, live stats of CPU/system load monitoring and o
 
 `auto-cpufreq --stats`
 
+### bluetooth_boot_off
+
+Turn off Bluetooth on boot (only)! Bluetooth can still be turned on manually when needed. This option is executed during the installation of the auto-cpufreq daemon, but it can also be run independently without installing the daemon.
+
+It prevents GNOME from automatically enabling Bluetooth on every reboot or after suspend/wake up even if you manually disable it, GNOME will turn it back on unless this option is used.
+
+### bluetooth_boot_on
+
+Useful if you prefer Bluetooth to be enabled at boot time, especially after installing the auto-cpufreq daemon, which will disable it by default.
+
 ## Battery charging thresholds
 
-As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0), battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values
+***Please note:** [Original implementor](https://github.com/AdnanHodzic/auto-cpufreq/pull/637) is looking for user input & testing to further improve this functionality. If you would like to help in this process, please refer to [Looking for developers and co-maintainers](https://github.com/AdnanHodzic/auto-cpufreq/#looking-for-developers-and-co-maintainers)*.
+
+As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0), battery charging thresholds can be set in the config file. This enforces your battery to start and stop charging at defined values.
 
 ### Supported devices
 

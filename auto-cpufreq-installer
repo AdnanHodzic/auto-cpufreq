@@ -76,9 +76,42 @@ function tool_install {
     header "Setting up Python environment"
   }
 
-  if [ -f /etc/debian_version ]; then
+  if [ -f /etc/debian_version ]; then  
     detected_distro "Debian based"
-    apt install python3-dev python3-pip python3-venv python3-setuptools dmidecode libgirepository1.0-dev libcairo2-dev libgtk-3-dev gcc -y
+    VERSION=$(cat /etc/debian_version) 
+
+    # install necessary libgirepository debian package dependencies
+    # https://github.com/AdnanHodzic/auto-cpufreq/pull/826#issuecomment-2794549837
+    apt update
+
+    if apt-cache show libgirepository-2.0-dev > /dev/null 2>&1; then
+        LIB_GI_REPO="libgirepository-2.0-dev"
+        PYGOBJECT_VER="^3.50.0"
+    else
+        LIB_GI_REPO="libgirepository1.0-dev"
+        # pin PYGOBJECT_VER to libgirepository1.0-dev
+        # https://github.com/AdnanHodzic/auto-cpufreq/issues/813#issuecomment-2712543486
+        PYGOBJECT_VER="3.50.0"
+    fi
+
+    # Update PyGObject in pyproject.toml
+    # https://github.com/AdnanHodzic/auto-cpufreq/pull/826#issuecomment-2794549837
+    if [ -f ./pyproject.toml ]; then
+        if grep -q 'PyGObject *= *{[^}]*version *= *"' pyproject.toml; then
+            sed -i "s/\(PyGObject *= *{[^}]*version *= *\"\)[^\"]*\(.*\)/\1$PYGOBJECT_VER\2/" pyproject.toml
+            echo "PyGObject version updated to $PYGOBJECT_VER in pyproject.toml"
+        else
+            echo "Warning: Could not find PyGObject version entry in pyproject.toml!"
+        fi
+    else
+        echo "Error: pyproject.toml not found and PyGObject version not updated!"
+    fi
+
+
+    echo "$LIB_GI_REPO needs to be installed for version $VERSION"
+    echo '---- '
+    apt install -y python3-dev python3-pip python3-venv python3-setuptools dmidecode \
+    "$LIB_GI_REPO" libcairo2-dev libgtk-3-dev gcc
 
   elif [ -f /etc/redhat-release ]; then
     detected_distro "RedHat based"
@@ -96,16 +129,16 @@ function tool_install {
     detected_distro "Arch Linux based"
     pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
     
-  elif [ -f /etc/os-release ];then
+elif [ -f /etc/os-release ];then
     . /etc/os-release
     case $ID in
       opensuse-leap)
         detected_distro "OpenSUSE"
-        zypper install -y python3 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
       ;;
       opensuse-tumbleweed)
         detected_distro "OpenSUSE"
-        zypper install -y python38 python3-pip python3-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
       ;;
       void)
         detected_distro "Void Linux"
@@ -131,6 +164,17 @@ function tool_install {
 
   source "$venv_dir/bin/activate"
   python3 -m pip install --upgrade pip wheel
+
+
+  # debian specific PyGObject Installation
+  if [ -f /etc/debian_version ]; then  
+    VERSION=$(cat /etc/debian_version | cut -d'.' -f1)  
+
+    if [[ "$VERSION" =~ ^12(\.[0-9]+)?$ ]]; then 
+        python3 -m pip install PyGObject==3.50.0
+    fi
+  fi
+  python3 -m pip install PyGObject
 
   header "Installing auto-cpufreq tool"
   
