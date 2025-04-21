@@ -600,6 +600,22 @@ this works only with `lenovo_laptop` kernel module compatable laptops.
 
 add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
+### Lenovo_ideapad special cases
+
+As you may know, for some laptop models you can only decide to use limit battery charging but can not set the limit value. The limit value is set by the manufacturer in the system (generally 60% or 80%). Also, you can not set the value of start charging.
+
+This is the config to apply at /etc/auto-cpufreq.conf
+
+```
+[battery]
+enable_thresholds = true
+start_threshold = 20
+stop_threshold = 1
+
+```
+
+This config stops battery charging at 60% or 80% depending on the value set in the system by the manufacturer.
+
 ### Ignoring power supplies
 
 you may have a controler or headphones and when ever they may be on battery they might cause auto-cpufreq
