@@ -23,7 +23,7 @@ python3Packages.buildPythonPackage {
   format = "pyproject";
 
   pname = "auto-cpufreq";
-  version = "2.5.0";
+  version = "2.6.0";
   src = ../.;
 
   nativeBuildInputs = with pkgs; [wrapGAppsHook gobject-introspection];

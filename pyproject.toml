@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "auto-cpufreq"
-version = "2.5.0"
+version = "2.6.0"
 description = "Automatic CPU speed & power optimizer for Linux"
 authors = ["Adnan Hodzic <adnan@hodzic.org>"]
 license = "GPL-3.0-or-later"
