@@ -15,6 +15,7 @@ from auto_cpufreq.globals import (
     IS_INSTALLED_WITH_SNAP,
     POWER_SUPPLY_DIR,
 )
+from typing import Optional
 
 
 @dataclass
@@ -214,77 +215,80 @@ class SystemInfo:
             return None, None
 
     @staticmethod
+    def read_file(path: str) -> Optional[str]:
+
+        try:
+            with open(path, "r") as f:
+                return f.read().strip()
+        except (FileNotFoundError, OSError):
+            return None
+
+    @staticmethod
+    def get_battery_path() -> Optional[str]:
+
+        try:
+            for entry in os.listdir(POWER_SUPPLY_DIR):
+                path = os.path.join(POWER_SUPPLY_DIR, entry)
+                type_path = os.path.join(path, "type")
+                if os.path.isfile(type_path):
+                    content = SystemInfo.read_file(type_path)
+                    if content and content.lower() == "battery":
+                        return path
+        except Exception:
+            return None
+        return None
+
+    @staticmethod
     def battery_info() -> BatteryInfo:
-        def read_file(path: str) -> str | None:
-            try:
-                with open(path, "r") as f:
-                    return f.read().strip()
-            except FileNotFoundError:
-                return None
 
-        power_supplies: List[str] = sorted(os.listdir(POWER_SUPPLY_DIR))
+        battery_path = SystemInfo.get_battery_path()
 
-        if not power_supplies:
-            return BatteryInfo(
-                is_charging=None,
-                is_ac_plugged=True,
-                charging_start_threshold=None,
-                charging_stop_threshold=None,
-                battery_level=None,
-                power_consumption=None,
-            )
-
-        is_ac_plugged = None
+        # By default, AC is considered connected if no battery is detected
+        is_ac_plugged = True
         is_charging = None
         battery_level = None
         power_consumption = None
         charging_start_threshold = None
         charging_stop_threshold = None
 
-        for supply in power_supplies:
-            if any(item in supply for item in get_power_supply_ignore_list()):
-                continue
+        if not battery_path:
 
-            supply_type: str | None = read_file(f"{POWER_SUPPLY_DIR}{supply}/type")
+            # No battery detected
+            return BatteryInfo(
+                is_charging=None,
+                is_ac_plugged=is_ac_plugged,
+                charging_start_threshold=None,
+                charging_stop_threshold=None,
+                battery_level=None,
+                power_consumption=None,
+            )
 
+        # Reading AC info (Hands)
+        for supply in os.listdir(POWER_SUPPLY_DIR):
+            supply_path = os.path.join(POWER_SUPPLY_DIR, supply)
+            supply_type = SystemInfo.read_file(os.path.join(supply_path, "type"))
             if supply_type == "Mains":
-                power_supply_online: str | None = read_file(
-                    f"{POWER_SUPPLY_DIR}{supply}/online"
-                )
-                is_ac_plugged = power_supply_online == "1"
+                online = SystemInfo.read_file(os.path.join(supply_path, "online"))
+                is_ac_plugged = online == "1"
 
-            elif supply_type == "Battery":
-                battery_status: str | None = read_file(
-                    f"{POWER_SUPPLY_DIR}{supply}/status"
-                )
-                battery_percentage: str | None = read_file(
-                    f"{POWER_SUPPLY_DIR}{supply}/capacity"
-                )
-                energy_rate: str | None = read_file(
-                    f"{POWER_SUPPLY_DIR}{supply}/power_now"
-                )
-                charge_start_threshold: str | None = read_file(
-                    f"{POWER_SUPPLY_DIR}{supply}/charge_start_threshold"
-                )
-                charge_stop_threshold: str | None = read_file(
-                    f"{POWER_SUPPLY_DIR}{supply}/charge_stop_threshold"
-                )
+        # Reading battery information
+        battery_status = SystemInfo.read_file(os.path.join(battery_path, "status"))
+        battery_capacity = SystemInfo.read_file(os.path.join(battery_path, "capacity"))
+        energy_rate = (
+            SystemInfo.read_file(os.path.join(battery_path, "power_now"))
+            or SystemInfo.read_file(os.path.join(battery_path, "current_now"))
+        )
+        charge_start_threshold = SystemInfo.read_file(os.path.join(battery_path, "charge_start_threshold"))
+        charge_stop_threshold = SystemInfo.read_file(os.path.join(battery_path, "charge_stop_threshold"))
 
-                is_charging: bool | None = (
-                    battery_status.lower() == "charging" if battery_status else None
-                )
-                battery_level: int | None = (
-                    int(battery_percentage) if battery_percentage else None
-                )
-                power_consumption: float | None = (
-                    float(energy_rate) / 1_000_000 if energy_rate else None
-                )
-                charging_start_threshold: int | None = (
-                    int(charge_start_threshold) if charge_start_threshold else None
-                )
-                charging_stop_threshold: int | None = (
-                    int(charge_stop_threshold) if charge_stop_threshold else None
-                )
+        is_charging = battery_status.lower() == "charging" if battery_status else None
+        battery_level = int(battery_capacity) if battery_capacity and battery_capacity.isdigit() else None
+        power_consumption = float(energy_rate) / 1_000_000 if energy_rate \
+            and energy_rate.replace('.', '', 1).isdigit() else None
+        charging_start_threshold = int(charge_start_threshold) if charge_start_threshold \
+            and charge_start_threshold.isdigit() else None
+        charging_stop_threshold = int(charge_stop_threshold) if charge_stop_threshold \
+            and charge_stop_threshold.isdigit() else None
 
         return BatteryInfo(
             is_charging=is_charging,
