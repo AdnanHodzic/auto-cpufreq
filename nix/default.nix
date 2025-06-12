@@ -17,6 +17,15 @@ let
     patches = [];
   });
 
+  requests = python3Packages.requests.overrideAttrs (oldAttrs: rec {
+    version = "2.32.4";
+    src = fetchPypi {
+      pname = "requests";
+      inherit version;
+      hash = "sha256-J9AxZoLIopg00yZIIAJLYqNpQgg9Usry8UwFkTNtNCI=";
+    };
+  });
+
 in
 python3Packages.buildPythonPackage {
   # use pyproject.toml instead of setup.py
