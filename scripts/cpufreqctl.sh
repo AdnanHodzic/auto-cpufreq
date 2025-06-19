@@ -96,7 +96,7 @@ function driver () {
 }
 
 function write_value () {
-  if [ -w $FLNM ]; then echo $VALUE > $FLNM; fi
+  if [ -w $FLNM ]; then echo $VALUE > $FLNM 2>/dev/null; fi
 }
 
 function set_driver () {
