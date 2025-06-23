@@ -24,6 +24,7 @@ let
       inherit version;
       hash = "sha256-J9AxZoLIopg00yZIIAJLYqNpQgg9Usry8UwFkTNtNCI=";
     };
+    patches = [];
   });
 
 in
