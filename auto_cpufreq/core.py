@@ -47,13 +47,15 @@ powersave_load_threshold = (75 * CPUS) / 100
 auto_cpufreq_stats_file = None
 auto_cpufreq_stats_path = None
 
-# track governor override
+# track governor override and turbo boost override
 if IS_INSTALLED_WITH_SNAP:
     auto_cpufreq_stats_path = Path("/var/snap/auto-cpufreq/current/auto-cpufreq.stats")
     governor_override_state = Path("/var/snap/auto-cpufreq/current/override.pickle")
+    turbo_override_state    = Path("/var/snap/auto-cpufreq/current/turbo-override.pickle")
 else:
     auto_cpufreq_stats_path = Path("/var/run/auto-cpufreq.stats")
     governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
+    turbo_override_state    = Path("/opt/auto-cpufreq/turbo-override.pickle")
 
 def file_stats():
     global auto_cpufreq_stats_file
@@ -75,6 +77,22 @@ def set_override(override):
             os.remove(governor_override_state)
         print("Governor override removed")
     elif override is not None: print("Invalid option.\nUse force=performance, force=powersave, or force=reset")
+
+def get_turbo_override():
+    if os.path.isfile(turbo_override_state):
+        with open(turbo_override_state, "rb") as store: return load(store)
+    else: return "auto"
+
+def set_turbo_override(override):
+    if override in ["never", "always"]:
+        with open(turbo_override_state, "wb") as store:
+            dump(override, store)
+        print(f"Set turbo boost override to {override}")
+    elif override == "auto":
+        if os.path.isfile(turbo_override_state):
+            os.remove(turbo_override_state)
+        print("Turbo override removed")
+    elif override is not None: print("Invalid option.\nUse turbo=always, turbo=never, or turbo=auto")
 
 # get distro name
 try: dist_name = distro.id()
@@ -202,6 +220,14 @@ def turbo(value: bool = None):
     else:
         print("Warning: CPU turbo is not available")
         return False
+    
+    turbo_override = get_turbo_override()
+    if turbo_override != "auto":
+        # Set the value in respect to if turbo override is enabled or not.
+        if turbo_override == "always":
+            value = True
+        elif turbo_override == "never":
+            value = False
 
     if value is not None:
         try: f.write_text(f"{int(value ^ inverse)}\n")
@@ -559,6 +585,7 @@ def set_powersave():
     cpuload, load1m= get_load()
 
     auto = conf["battery"]["turbo"] if conf.has_option("battery", "turbo") else "auto"
+    auto = get_turbo_override() if (get_turbo_override() != "auto") else auto # Override turbo if override file is present, otherwise stick to config.
 
     if auto == "always":
         print("Configuration file enforces turbo boost")
@@ -670,6 +697,7 @@ def set_performance():
 
     cpuload, load1m = get_load()
     auto = conf["charger"]["turbo"] if conf.has_option("charger", "turbo") else "auto"
+    auto = get_turbo_override() if (get_turbo_override() != "auto") else auto # Override turbo if override file is present, otherwise stick to config.
 
     if auto == "always":
         print("Configuration file enforces turbo boost")

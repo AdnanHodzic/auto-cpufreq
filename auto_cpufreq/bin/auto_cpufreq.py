@@ -26,6 +26,7 @@ from threading import Thread
 @click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
 @click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
 @click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
+@click.option("--turbo", is_flag=False, help="Force use of CPU turbo mode, if supported, with \"never\" or \"always\". Setting to \"auto\" automatically handles turbo mode")
 @click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
 @click.option("--get-state", is_flag=True, hidden=True)
@@ -34,7 +35,7 @@ from threading import Thread
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, config, stats, get_state,
+def main(monitor, live, daemon, install, update, remove, force, turbo, config, stats, get_state,
           bluetooth_boot_off, bluetooth_boot_on, debug, version, donate):
     # display info if config file is used
     config_path = find_config_file(config)
@@ -58,6 +59,11 @@ def main(monitor, live, daemon, install, update, remove, force, config, stats, g
             not_running_daemon_check()
             root_check() # Calling root_check before set_override as it will require sudo access
             set_override(force) # Calling set override, only if force has some values
+        
+        if turbo is not None:
+            not_running_daemon_check()
+            root_check()
+            set_turbo_override(turbo)
 
         if monitor:
             root_check()
