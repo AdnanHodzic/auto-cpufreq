@@ -144,21 +144,23 @@ class SystemInfo:
             return None
 
     @staticmethod
-    def current_epp() -> str | None:
+    def current_epp(is_ac_plugged: bool) -> str | None:
         epp_path = "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"
         if not Path(epp_path).exists():
             return None
-        return config.get_config().get(
-            "battery", "energy_performance_preference", fallback="balance_power"
+            
+        return config.get_config().get( 
+            "charger" if is_ac_plugged else "battery", "energy_performance_preference", fallback="balance_power"
         )
 
     @staticmethod
-    def current_epb() -> str | None:
+    def current_epb(is_ac_plugged: bool) -> str | None:
         epb_path = "/sys/devices/system/cpu/intel_pstate"
         if not Path(epb_path).exists():
             return None
+
         return config.get_config().get(
-            "battery", "energy_perf_bias", fallback="balance_power"
+            "charger" if is_ac_plugged else "battery", "energy_perf_bias", fallback="balance_power"
         )
 
     @staticmethod
@@ -315,6 +317,8 @@ class SystemInfo:
         return AVAILABLE_GOVERNORS_SORTED[-1]
 
     def generate_system_report(self) -> SystemReport:
+        battery_info = self.battery_info()
+
         return SystemReport(
             distro_name=self.distro_name,
             distro_ver=self.distro_version,
@@ -324,8 +328,8 @@ class SystemInfo:
             cpu_driver=self.cpu_driver,
             kernel_version=self.kernel_version,
             current_gov=self.current_gov(),
-            current_epp=self.current_epp(),
-            current_epb=self.current_epb(),
+            current_epp=self.current_epp(battery_info.is_ac_plugged),
+            current_epb=self.current_epb(battery_info.is_ac_plugged),
             cpu_fan_speed=self.cpu_fan_speed(),
             cpu_usage=self.cpu_usage(),
             cpu_max_freq=self.cpu_max_freq(),
@@ -334,7 +338,7 @@ class SystemInfo:
             avg_load=self.avg_load(),
             cores_info=self.get_cpu_info(),
             is_turbo_on=self.turbo_on(),
-            battery_info=self.battery_info(),
+            battery_info=battery_info,
         )
 
 
