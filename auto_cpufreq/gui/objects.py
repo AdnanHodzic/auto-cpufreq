@@ -9,7 +9,7 @@ from os.path import isfile
 from platform import python_version
 from subprocess import getoutput, PIPE, run
 
-from auto_cpufreq.core import distro_info, get_formatted_version, get_override, sysinfo
+from auto_cpufreq.core import distro_info, get_formatted_version, get_override, get_turbo_override, sysinfo
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 
 PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
@@ -77,6 +77,50 @@ class RadioButtonView(Gtk.Box):
                 # because this is the default button, it does not trigger the callback when set by the app
                 if self.set_by_app: self.set_by_app = False
                 self.default.set_active(True)
+
+class CPUTurboOverride(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.set_hexpand(True)
+        self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.label = Gtk.Label("CPU Turbo Override", name="bold")
+
+        self.auto = Gtk.RadioButton.new_with_label_from_widget(None, "Auto")
+        self.auto.connect("toggled", self.on_button_toggled,  "auto")
+        self.auto.set_halign(Gtk.Align.END)
+        self.never = Gtk.RadioButton.new_with_label_from_widget(self.auto, "Never")
+        self.never.connect("toggled", self.on_button_toggled,  "never")
+        self.never.set_halign(Gtk.Align.END)
+        self.always = Gtk.RadioButton.new_with_label_from_widget(self.auto, "Always")
+        self.always.connect("toggled", self.on_button_toggled, "always")
+        self.always.set_halign(Gtk.Align.END)
+
+        self.set_by_app = True
+        self.set_selected()
+
+        self.pack_start(self.label, False, False, 0)
+        self.pack_start(self.auto, True, True, 0)
+        self.pack_start(self.never, True, True, 0)
+        self.pack_start(self.always, True, True, 0)
+
+    def on_button_toggled(self, button, override):
+        if button.get_active():
+            if not self.set_by_app:
+                result = run(f"pkexec auto-cpufreq --turbo={override}", shell=True, stdout=PIPE, stderr=PIPE)
+                if result.stderr.decode() == PKEXEC_ERROR: self.set_selected()
+            else: self.set_by_app = False
+
+    def set_selected(self):
+        override = get_turbo_override()
+        match override:
+            case "never": self.never.set_active(True)
+            case "always": self.always.set_active(True)
+            case "auto":
+                # because this is the default button, it does not trigger the callback when set by the app
+                if self.set_by_app: self.set_by_app = False
+                self.auto.set_active(True)
 
 class CurrentGovernorBox(Gtk.Box):
     def __init__(self):

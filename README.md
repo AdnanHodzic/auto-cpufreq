@@ -47,13 +47,15 @@ Example of `auto-cpufreq --stats` CLI output
 - [Configuring auto-cpufreq](#configuring-auto-cpufreq)
   - [1: power_helper.py script (Snap package install only)](#1-power_helperpy-script-snap-package-install-only)
   - [2: `--force` governor override](#2---force-governor-override)
-  - [3: auto-cpufreq config file](#3-auto-cpufreq-config-file)
+  - [3: `--turbo` mode override](#3---turbo-mode-override)
+  - [4: auto-cpufreq config file](#4-auto-cpufreq-config-file)
     - [Example config file contents](#example-config-file-contents)
 - [How to run auto-cpufreq](#how-to-run-auto-cpufreq)
 - [auto-cpufreq modes and options](#auto-cpufreq-modes-and-options)
   - [monitor](#monitor)
   - [live](#live)
   - [overriding governor](#overriding-governor)
+  - [overriding turbo mode](#overriding-turbo-mode)
   - [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
   - [Update - auto-cpufreq update](#update---auto-cpufreq-update)
   - [Remove - auto-cpufreq daemon](#remove---auto-cpufreq-daemon)
@@ -319,7 +321,15 @@ However, you can override this behaviour by switching to `performance` or `power
 
 See [`--force` flag](#overriding-governor) for more info.
 
-### 3: auto-cpufreq config file
+### 3: `--turbo` mode override
+
+By default, auto-cpufreq handles CPU turbo mode automatically, enabling it under load and disabling it otherwise to balance performance and efficiency.
+
+However, you can override this behavior by forcing CPU turbo's mode to `always` or `never`. Setting to `always` keeps turbo mode always enabled, allowing the CPU to reach its maximum frequency at the cost of higher energy use (battery consumption). `never`, on the other hand, keeps turbo mode always disabled, limiting the CPU's maximum frequency to extend battery life.
+
+See [`--turbo` flag](#overriding-turbo-mode) for more info.
+
+### 4: auto-cpufreq config file
 
 You can configure separate profiles for the battery and power supply. These profiles will let you pick which governor to use, as well as how and when turbo boost is enabled. The possible values for turbo boost behavior are `always`, `auto`, and `never`. The default behavior is `auto`, which only activates turbo during high load.
 
@@ -451,6 +461,9 @@ auto-cpufreq should be run with with one of the following options:
 - [force=TEXT](#overriding-governor)
   - Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode
 
+- [turbo=TEXT](#overriding-turbo-mode)
+  - Force use of CPU turbo mode, if supported, with "never" or "always", or set to "auto" to automatically handle turbo mode
+
 - config=TEXT
   - Use config file at designated path
 
@@ -490,6 +503,13 @@ Necessary changes are temporarily made to the system over time, but this process
 `sudo auto-cpufreq --force=governor`
 
 Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode.
+Please note that any set override will persist even after reboot.
+
+### Overriding Turbo mode
+
+`sudo auto-cpufreq --turbo=mode`
+
+Force use of CPU turbo mode, if supported, with "never" or "always", or set to "auto" to automatically handle turbo mode.
 Please note that any set override will persist even after reboot.
 
 ### Install - auto-cpufreq daemon
