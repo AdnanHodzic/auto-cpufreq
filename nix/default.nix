@@ -17,13 +17,23 @@ let
     patches = [];
   });
 
+  requests = python3Packages.requests.overrideAttrs (oldAttrs: rec {
+    version = "2.32.4";
+    src = fetchPypi {
+      pname = "requests";
+      inherit version;
+      hash = "sha256-J9AxZoLIopg00yZIIAJLYqNpQgg9Usry8UwFkTNtNCI=";
+    };
+    patches = [];
+  });
+
 in
 python3Packages.buildPythonPackage {
   # use pyproject.toml instead of setup.py
   format = "pyproject";
 
   pname = "auto-cpufreq";
-  version = "2.5.0";
+  version = "2.6.0";
   src = ../.;
 
   nativeBuildInputs = with pkgs; [wrapGAppsHook gobject-introspection];

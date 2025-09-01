@@ -9,7 +9,8 @@ from threading import Thread
 
 from auto_cpufreq.core import check_for_update, is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
-from auto_cpufreq.gui.objects import CPUFreqStatsLabel, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, RadioButtonView, SystemStatsLabel, UpdateDialog
+from auto_cpufreq.gui.objects import CPUFreqStatsLabel, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, RadioButtonView, CPUTurboOverride, SystemStatsLabel, UpdateDialog
+from auto_cpufreq.gui.objects import get_stats
 
 if IS_INSTALLED_WITH_SNAP:
     CSS_FILE = "/snap/auto-cpufreq/current/style.css"
@@ -48,6 +49,8 @@ class ToolWindow(Gtk.Window):
         self.currentgovernor = CurrentGovernorBox()
         self.vbox_right.pack_start(self.currentgovernor, False, False, 0)
         self.vbox_right.pack_start(RadioButtonView(), False, False, 0)
+        if "Warning: CPU turbo is not available" not in get_stats():
+            self.vbox_right.pack_start(CPUTurboOverride(), False, False, 0)
 
         self.cpufreqstats = CPUFreqStatsLabel()
         self.vbox_right.pack_start(self.cpufreqstats, False, False, 0)
