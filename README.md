@@ -595,6 +595,7 @@ As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0),
 
 - **Lenovo ThinkPad** (thinkpad_acpi)*
 - **Lenovo IdeaPad** (ideapad_acpi)*
+- **ASUS :Laptops** (asus_wmi)*
 
 ***Please note, your laptop must have an installed ACPI kernel driver specific to the manufacturer.** To check if you have the correct module installed and loaded run `lsmod [module]`
 
