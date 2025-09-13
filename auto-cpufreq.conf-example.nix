@@ -1,0 +1,108 @@
+services.auto-cpufreq.enable = true; # enable the service
+
+services.auto-cpufreq.settings = {
+  # settings for when connected to a power source
+  charger = {
+    # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    # preferred governor.
+    governor = "performance";
+
+    # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+    energy_performance_preference = "performance";
+
+    # EPB (Energy Performance Bias) for the intel_pstate driver
+    # see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
+    # available EPB options include a numeric value between 0-15
+    # (where 0 = maximum performance and 15 = maximum power saving),
+    # or one of the following strings:
+    # performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
+    # if the parameter is missing in the config and the hardware supports this setting, the default value will be used
+    # the default value is `balance_performance` (for charger)
+    # energy_perf_bias = "balance_performance";
+
+    # Platform Profiles
+    # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
+    # See available options by running:
+    # cat /sys/firmware/acpi/platform_profile_choices
+    # platform_profile = "performance";
+
+    # minimum cpu frequency (in kHz)
+    # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
+    # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+    # to use this feature, uncomment the following line and set the value accordingly
+    # scaling_min_freq = 800000;
+
+    # maximum cpu frequency (in kHz)
+    # example: for 1GHz = 1000 MHz = 1000000 kHz -> scaling_max_freq = 1000000
+    # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+    # to use this feature, uncomment the following line and set the value accordingly
+    # scaling_max_freq = 1000000;
+
+    # turbo boost setting. possible values: always, auto, never
+    turbo = "auto";
+  };
+
+  # this is for ignoring controllers and other connected devices battery from affecting
+  # laptop performance
+  # power_supply_ignore_list = {
+  #   name1 = "this";
+  #   name2 = "is";
+  #   name3 = "an";
+  #   name4 = "example";
+  # };
+
+  # settings for when using battery power
+  battery = {
+    # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    # preferred governor
+    governor = "powersave";
+
+    # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
+    energy_performance_preference = "power";
+
+    # EPB (Energy Performance Bias) for the intel_pstate driver
+    # see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
+    # available EPB options include a numeric value between 0-15
+    # (where 0 = maximum performance and 15 = maximum power saving),
+    # or one of the following strings:
+    # performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
+    # if the parameter is missing in the config and the hardware supports this setting, the default value will be used
+    # the default value is `balance_power` (for battery)
+    # energy_perf_bias = "balance_power";
+
+    # Platform Profiles
+    # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
+    # See available options by running:
+    # cat /sys/firmware/acpi/platform_profile_choices
+    # platform_profile = "low-power";
+
+    # minimum cpu frequency (in kHz)
+    # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
+    # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+    # to use this feature, uncomment the following line and set the value accordingly
+    # scaling_min_freq = 800000;
+
+    # maximum cpu frequency (in kHz)
+    # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
+    # example: for 1GHz = 1000 MHz = 1000000 kHz -> scaling_max_freq = 1000000
+    # to use this feature, uncomment the following line and set the value accordingly
+    # scaling_max_freq = 1000000;
+
+    # turbo boost setting. possible values: always, auto, never
+    turbo = "auto";
+
+    # experimental
+
+    # Add battery charging threshold (currently only available to Lenovo)
+    # checkout README.md for more info
+
+    # enable thresholds true or false
+    # enable_thresholds = true;
+    #
+    # start threshold (0 is off ) can be 0-99
+    # start_threshold = 0;
+    #
+    # stop threshold (100 is off) can be 1-100
+    # stop_threshold = 100;
+  };
+};
