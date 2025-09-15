@@ -45,6 +45,8 @@ python3Packages.buildPythonPackage {
   doCheck = false;
   pythonImportsCheck = ["auto_cpufreq"];
 
+  pythonRelaxDeps = [ "urwid" ];
+
   patches = [
     # patch to prevent script copying and to disable install
     ./patches/prevent-install-and-copy.patch
