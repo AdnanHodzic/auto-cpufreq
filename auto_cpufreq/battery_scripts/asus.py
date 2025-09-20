@@ -7,7 +7,10 @@ from auto_cpufreq.globals import POWER_SUPPLY_DIR
 
 def set_battery(value, mode, bat):
     path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
+    fallback_mode = "start" if mode == "start" else "end"
+    fallback_path = f"{POWER_SUPPLY_DIR}{bat}/charge_control_{fallback_mode}_threshold"
     if os.path.isfile(path): check_output(f"echo {value} | tee {path}", shell=True, text=True)
+    elif os.path.isfile(fallback_path): check_output(f"echo {value} | tee {fallback_path}", shell=True, text=True)
     else: print(f"WARNING: {path} does NOT exist")
 
 def get_threshold_value(mode):
@@ -34,6 +37,14 @@ def asus_print_thresholds():
     print(f"battery count = {len(batteries)}")
     for bat in batteries:
         try:
-            print(bat, "start threshold =", check_output(["cat", POWER_SUPPLY_DIR+bat+"/charge_start_threshold"]))
-            print(bat, "stop threshold =", check_output(["cat", POWER_SUPPLY_DIR+bat+"/charge_stop_threshold"]))
+            primary_start = f"{POWER_SUPPLY_DIR}{bat}/charge_start_threshold"
+            primary_stop = f"{POWER_SUPPLY_DIR}{bat}/charge_stop_threshold"
+            fallback_start = f"{POWER_SUPPLY_DIR}{bat}/charge_control_start_threshold"
+            fallback_stop = f"{POWER_SUPPLY_DIR}{bat}/charge_control_end_threshold"
+            if os.path.isfile(primary_start): print(bat, "start threshold =", check_output(["cat", primary_start]))
+            elif os.path.isfile(fallback_start): print(bat, "start threshold =", check_output(["cat", fallback_start]))
+            else: print(f"{bat} start threshold: file not found")
+            if os.path.isfile(primary_stop): print(bat, "stop threshold =", check_output(["cat", primary_stop]))
+            elif os.path.isfile(fallback_stop): print(bat, "stop threshold =", check_output(["cat", fallback_stop]))
+            else: print(f"{bat} stop threshold: file not found")
         except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
