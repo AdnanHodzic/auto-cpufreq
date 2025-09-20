@@ -280,9 +280,14 @@ class SystemInfo:
             SystemInfo.read_file(os.path.join(battery_path, "power_now"))
             or SystemInfo.read_file(os.path.join(battery_path, "current_now"))
         )
-        charge_start_threshold = SystemInfo.read_file(os.path.join(battery_path, "charge_start_threshold"))
-        charge_stop_threshold = SystemInfo.read_file(os.path.join(battery_path, "charge_stop_threshold"))
-
+        charge_start_threshold = (
+            SystemInfo.read_file(os.path.join(battery_path, "charge_start_threshold"))
+            or SystemInfo.read_file(os.path.join(battery_path, "charge_control_start_threshold"))
+        )
+        charge_stop_threshold = (
+            SystemInfo.read_file(os.path.join(battery_path, "charge_stop_threshold"))
+            or SystemInfo.read_file(os.path.join(battery_path, "charge_control_end_threshold"))
+        )
         is_charging = battery_status.lower() == "charging" if battery_status else None
         battery_level = int(battery_capacity) if battery_capacity and battery_capacity.isdigit() else None
         power_consumption = float(energy_rate) / 1_000_000 if energy_rate \
