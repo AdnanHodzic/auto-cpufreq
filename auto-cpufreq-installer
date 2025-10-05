@@ -138,7 +138,7 @@ elif [ -f /etc/os-release ];then
       ;;
       opensuse-tumbleweed)
         detected_distro "OpenSUSE"
-        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
+        zypper install -y python313 python313-pip python311-setuptools python313-devel gcc dmidecode gobject-introspection-devel python313-pycairo-devel libgtk-3-0 gtk3-devel
       ;;
       void)
         detected_distro "Void Linux"
