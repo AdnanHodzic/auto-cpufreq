@@ -221,7 +221,7 @@ tool_remove() {
 
   # run uninstall in case of installed daemon
   if [[ -f "$srv_remove" || -f "$AUTO_CPUFREQ_FILE" ]]; then
-    "$AUTO_CPUFREQ_FILE" --remove || exit 1
+    "$AUTO_CPUFREQ_FILE" --remove || echo -e "\nWARNING: Removal of auto-cpufreq binary failed (exit status $?).\n Continuing..." >&2
   else
     echo; echo "Couldn't remove the auto-cpufreq daemon, [$srv_remove] does not exist."
   fi
