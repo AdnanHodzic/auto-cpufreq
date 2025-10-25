@@ -208,7 +208,7 @@ tool_install() {
 tool_remove() {
   # stop any running auto-cpufreq argument (daemon/live/monitor)
   mapfile -t tool_arg_pids < <(pgrep -f 'auto-cpufreq --' | grep -vFx "$$")
-  kill "${tool_arg_pids[@]}"
+  [[ ${#tool_arg_pids[@]} -gt 0 ]] && kill "${tool_arg_pids[@]}"
 
   remove_directory() {
     [[ -d "$1" ]] && rm -rf "$1"
