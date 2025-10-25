@@ -172,7 +172,7 @@ tool_install() {
 
   # debian specific PyGObject Installation
   if [[ -s /etc/debian_version ]]; then
-    VERSION=$(cat /etc/debian_version | cut -d'.' -f1)
+    VERSION=$(cut -d'.' -f1 < /etc/debian_version)
 
     if [[ "$VERSION" =~ ^12(\.[0-9]+)?$ ]]; then
         python3 -m pip install PyGObject==3.50.0 || exit 1
