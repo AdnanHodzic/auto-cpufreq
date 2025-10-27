@@ -149,19 +149,36 @@ class SystemInfo:
         if not Path(epp_path).exists():
             return None
             
-        return config.get_config().get( 
-            "charger" if is_ac_plugged else "battery", "energy_performance_preference", fallback="balance_power"
-        )
+        try:
+            with open(epp_path, "r") as f:
+                return f.read().strip()
+        except:
+            return None
 
     @staticmethod
     def current_epb(is_ac_plugged: bool) -> str | None:
-        epb_path = "/sys/devices/system/cpu/intel_pstate"
+        epb_path = "/sys/devices/system/cpu/cpu0/power/energy_perf_bias"
         if not Path(epb_path).exists():
             return None
 
-        return config.get_config().get(
-            "charger" if is_ac_plugged else "battery", "energy_perf_bias", fallback="balance_power"
-        )
+        try:
+            with open(epb_path, "r") as f:
+                value = int(f.read().strip())
+                # Convert numeric value to string representation
+                if value == 0:
+                    return "performance"
+                elif value == 4:
+                    return "balance_performance"
+                elif value == 6:
+                    return "default"
+                elif value == 8:
+                    return "balance_power"
+                elif value == 15:
+                    return "power"
+                else:
+                    return str(value)
+        except:
+            return None
 
     @staticmethod
     def cpu_usage() -> float:
