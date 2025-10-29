@@ -36,7 +36,7 @@ python3Packages.buildPythonPackage {
   version = "2.6.0";
   src = ../.;
 
-  nativeBuildInputs = with pkgs; [wrapGAppsHook gobject-introspection];
+  nativeBuildInputs = with pkgs; [wrapGAppsHook3 gobject-introspection];
 
   buildInputs = with pkgs; [gtk3 python3Packages.poetry-core];
 
