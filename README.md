@@ -730,7 +730,7 @@ Once you have made the necessary changes to the `cmdline` file, you can update i
 
 **Q:** If auto-cpufreq-gtk doesn't launch with exit code 1 (Workaround)
 
-**A:** Try launching it with `env -i XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR auto-cpufreq-gtk` and add it to your .desktop if it works.
+**A:** Try launching it with `env -i XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR auto-cpufreq-gtk` and add it to `/usr/share/applications/auto-cpufreq-gtk.desktop` if it works.
 
 ### AUR
 
