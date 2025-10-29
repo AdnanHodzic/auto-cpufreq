@@ -53,6 +53,10 @@ services.auto-cpufreq.settings = {
 
   # settings for when using battery power
   battery = {
+    # Specify which battery device to use for reading battery information. see available batteries by running: ls /sys/class/power_supply/
+    # If not set, auto-cpufreq will automatically detect and use the first battery found
+    # battery_device = BAT1
+
     # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
     # preferred governor
     governor = "powersave";
