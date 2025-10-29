@@ -728,9 +728,13 @@ quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0
 
 Once you have made the necessary changes to the `cmdline` file, you can update it by running `sudo reinstall-kernels`.
 
+**Q:** If auto-cpufreq-gtk doesn't launch with exit code 1 (Workaround)
+
+**A:** Try launching it with `env -i XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR auto-cpufreq-gtk` and add it to `/usr/share/applications/auto-cpufreq-gtk.desktop` if it works.
+
 ### AUR
 
-- If the AUR installer does not work for your system, fallback to `auto-cpufreq-installer` and open an issue. 
+- If the AUR installer does not work for your system, fallback to `auto-cpufreq-installer` and open an issue.
 
 ## Discussion:
 
