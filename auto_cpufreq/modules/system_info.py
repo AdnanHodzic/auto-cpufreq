@@ -228,6 +228,21 @@ class SystemInfo:
     @staticmethod
     def get_battery_path() -> Optional[str]:
 
+        # Check if user has specified a custom battery device in config
+        if config.has_config():
+            conf = config.get_config()
+            if conf.has_option("battery", "battery_device"):
+                battery_device = conf.get("battery", "battery_device").strip()
+                if battery_device:
+                    custom_path = os.path.join(POWER_SUPPLY_DIR, battery_device)
+                    type_path = os.path.join(custom_path, "type")
+                    # Validate that the specified device exists and is a battery
+                    if os.path.isfile(type_path):
+                        content = SystemInfo.read_file(type_path)
+                        if content and content.lower() == "battery":
+                            return custom_path
+
+        # Fall back to auto-detection if no custom device specified or if it's invalid
         try:
             for entry in os.listdir(POWER_SUPPLY_DIR):
                 path = os.path.join(POWER_SUPPLY_DIR, entry)
