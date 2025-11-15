@@ -203,12 +203,12 @@ function set_frequency_max () {
 
 function get_frequency_min_limit () {
   if [ -z $CORE ]; then CORE=0; fi
-  cat $FLROOT/cpu$CORE/cpufreq/cpuinfo_min_freq
+  echo $(awk '{a[NR]=$1} END{if(a[1]<a[2]) print a[1]; else print a[2]}' $FLROOT/cpu$CORE/cpufreq/cpuinfo_min_freq $FLROOT/cpu$CORE/cpufreq/scaling_min_freq)
 }
 
 function get_frequency_max_limit () {
   if [ -z $CORE ]; then CORE=0; fi
-  cat $FLROOT/cpu$CORE/cpufreq/scaling_max_freq
+  echo $(awk '{a[NR]=$1} END{if(a[1]>a[2]) print a[1]; else print a[2]}' $FLROOT/cpu$CORE/cpufreq/cpuinfo_max_freq $FLROOT/cpu$CORE/cpufreq/scaling_max_freq)
 }
 
 function get_energy_performance_preference () {
