@@ -10,9 +10,13 @@ from auto_cpufreq.globals import POWER_SUPPLY_DIR
 class BatteryDevice:
     def __init__(self):
         self.config = config.get_config()
-        self.batteries = [
-            name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")
-        ]
+        if os.path.isdir(POWER_SUPPLY_DIR):
+            self.batteries = [
+                name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")
+            ]
+        else:
+            print(f"WARNING: POWER_SUPPLY_DIR '{POWER_SUPPLY_DIR}' does not exist.")
+            self.batteries = []
         self.start_paths = {
             bat: [os.path.join(POWER_SUPPLY_DIR, bat, "charge_start_threshold")]
             for bat in self.batteries
@@ -33,10 +37,10 @@ class BatteryDevice:
         )
 
     def sanity_check_config_values(self) -> bool:
-        if 0 <= self.start_config_value <= 100:
+        if not (0 <= self.start_config_value <= 100):
             print(f'WARNING: Charge start value "{self.start_config_value}" is invalid')
             return False
-        elif 0 <= self.stop_config_value <= 100:
+        elif not (0 <= self.stop_config_value <= 100):
             print(f'WARNING: Charge stop value "{self.stop_config_value}" is invalid')
             return False
         elif self.start_config_value > self.stop_config_value:
@@ -97,9 +101,9 @@ class BatteryDevice:
         for bat in self.batteries:
             try:
                 print(
-                    bat, "start threshold =", self.get_current_threshold("start", bat)
+                    bat, "start threshold =", self.get_current_threshold(bat, "start")
                 )
-                print(bat, "stop threshold =", self.get_current_threshold("stop", bat))
+                print(bat, "stop threshold =", self.get_current_threshold(bat, "stop"))
             except Exception as e:
                 print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
 
@@ -110,7 +114,7 @@ class BatteryDevice:
         ):
             return
         elif not os.path.exists(POWER_SUPPLY_DIR):
-            print(f"WARNIN: {POWER_SUPPLY_DIR} does NOT exist")
+            print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
             return
 
         batteries = [
