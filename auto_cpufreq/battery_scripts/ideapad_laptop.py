@@ -24,7 +24,7 @@ class IdeapadBatteryDevice(BatteryDevice):
             print(f"WARNING: could not get value from conservation mode: {e.output}")
             return False
 
-    def set_conservation_mode(value):
+    def set_conservation_mode(self, value):
         try:
             check_output(
                 f"echo {value} | tee {CONSERVATION_MODE_FILE}", shell=True, text=True

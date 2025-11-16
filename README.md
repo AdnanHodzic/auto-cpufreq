@@ -608,6 +608,7 @@ As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0),
 
 - **Lenovo ThinkPad** (thinkpad_acpi)*
 - **Lenovo IdeaPad** (ideapad_acpi)*
+- **Lenovo Laptop** (ideapad_laptop)*
 - **ASUS :Laptops** (asus_wmi)*
 
 ***Please note, your laptop must have an installed ACPI kernel driver specific to the manufacturer.** To check if you have the correct module installed and loaded run `lsmod [module]`
@@ -623,6 +624,17 @@ Example config for battery ([already part of example config file](https://github
 enable_thresholds = true
 start_threshold = 20
 stop_threshold = 80
+```
+
+#### A few notes about these config options
+
+When auto-cpufreq applies these values, it initially first sets `start_threshold = 0` and `stop_threshold = 100` before applying the actual settings. This is because in some cases, our start from a previous config, might be higher than our stop, which drivers disallow resulting in auto-cpufreq failing to apply these settings. 
+
+Additionally, when you remove/uninstall the auto-cpufreq daemon, the last applied settings for battery thresholds will still apply. You might need to manually set these yourself to whatever default they were before. E.g. (as sudo):
+
+```shell
+echo 95 > /sys/class/power_supply/BAT0/charge_start_threshold
+echo 100 > /sys/class/power_supply/BAT0/charge_stop_threshold
 ```
 
 ### Lenovo_laptop conservation mode

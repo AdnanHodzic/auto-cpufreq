@@ -8,10 +8,7 @@ from auto_cpufreq.globals import POWER_SUPPLY_DIR
 
 class AsusBatteryDevice(BatteryDevice):
     def __init__(self):
-        self.config = config.get_config()
-        self.batteries = [
-            name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")
-        ]
+        super().__init__()
         self.start_paths = {
             bat: [
                 os.path.join(POWER_SUPPLY_DIR, bat, "charge_start_threshold"),
@@ -30,6 +27,3 @@ class AsusBatteryDevice(BatteryDevice):
             ]
             for bat in self.batteries
         }
-
-        self.start_config_value = self.get_threshold_config_value("start")
-        self.stop_config_value = self.get_threshold_config_value("stop")

@@ -20,7 +20,7 @@ def battery_get_thresholds():
     elif lsmod("thinkpad_acpi"):
         BatteryDevice().print_thresholds()
     elif lsmod("asus_wmi"):
-        AsusBatteryDevice.print_thresholds()
+        AsusBatteryDevice().print_thresholds()
     else:
         return
 
@@ -33,6 +33,6 @@ def battery_setup():
     elif lsmod("thinkpad_acpi"):
         BatteryDevice().setup()
     elif lsmod("asus_wmi"):
-        AsusBatteryDevice.setup()
+        AsusBatteryDevice().setup()
     else:
         return
