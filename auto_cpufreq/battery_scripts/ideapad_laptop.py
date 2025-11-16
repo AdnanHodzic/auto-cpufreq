@@ -51,9 +51,10 @@ class IdeapadBatteryDevice(BatteryDevice):
         if self.check_conservation_mode():
             print("WARNING: conservation mode is enabled unable to set thresholds")
             return
-
-        if not os.path.exists(POWER_SUPPLY_DIR):
+        elif not os.path.exists(POWER_SUPPLY_DIR):
             print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
+            return
+        elif not self.is_config_values_valid():
             return
 
         batteries = [

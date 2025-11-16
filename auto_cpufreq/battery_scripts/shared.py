@@ -33,11 +33,14 @@ class BatteryDevice:
         return (
             self.config["battery"][f"{mode}_threshold"]
             if self.config.has_option("battery", f"{mode}_threshold")
-            else (0 if mode == "start" else 100)
+            else None
         )
 
-    def sanity_check_config_values(self) -> bool:
-        if not (0 <= self.start_config_value <= 100):
+    def is_config_values_valid(self) -> bool:
+        if (self.start_config_value is None or self.stop_config_value is None):
+            print(f'WARNING: Charge both start AND stop value need to be configured for battery thresholding to work')
+            return False
+        elif not (0 <= self.start_config_value <= 100):
             print(f'WARNING: Charge start value "{self.start_config_value}" is invalid')
             return False
         elif not (0 <= self.stop_config_value <= 100):
@@ -115,6 +118,8 @@ class BatteryDevice:
             return
         elif not os.path.exists(POWER_SUPPLY_DIR):
             print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
+            return
+        elif not self.is_config_values_valid():
             return
 
         batteries = [
