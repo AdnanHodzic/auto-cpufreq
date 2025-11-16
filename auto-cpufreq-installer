@@ -238,7 +238,7 @@ function tool_remove {
   update-desktop-database $APPLICATIONS_PATH
 
   # remove python virtual environment
-  remove_directory $venv_path
+  remove_directory $VENV_PATH
 
   echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
 }
