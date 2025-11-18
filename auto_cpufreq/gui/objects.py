@@ -12,8 +12,6 @@ from subprocess import getoutput, PIPE, run
 from auto_cpufreq.core import distro_info, get_formatted_version, get_override, get_turbo_override, sysinfo
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 
-PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
-
 auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
 
 def get_stats():
@@ -43,10 +41,10 @@ class RadioButtonView(Gtk.Box):
         self.label = Gtk.Label("Governor Override", name="bold")
 
         self.default = Gtk.RadioButton.new_with_label_from_widget(None, "Default")
-        self.default.connect("toggled", self.on_button_toggled,  "reset")
+        self.default.connect("toggled", self.on_button_toggled, "reset")
         self.default.set_halign(Gtk.Align.END)
         self.powersave = Gtk.RadioButton.new_with_label_from_widget(self.default, "Powersave")
-        self.powersave.connect("toggled", self.on_button_toggled,  "powersave")
+        self.powersave.connect("toggled", self.on_button_toggled, "powersave")
         self.powersave.set_halign(Gtk.Align.END)
         self.performance = Gtk.RadioButton.new_with_label_from_widget(self.default, "Performance")
         self.performance.connect("toggled", self.on_button_toggled, "performance")
@@ -65,7 +63,9 @@ class RadioButtonView(Gtk.Box):
         if button.get_active():
             if not self.set_by_app:
                 result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
-                if result.stderr.decode() == PKEXEC_ERROR: self.set_selected()
+                if result.returncode in (126, 127):
+                    self.set_by_app = True
+                    self.set_selected()
             else: self.set_by_app = False
 
     def set_selected(self):
@@ -75,8 +75,8 @@ class RadioButtonView(Gtk.Box):
             case "performance": self.performance.set_active(True)
             case "default":
                 # because this is the default button, it does not trigger the callback when set by the app
-                if self.set_by_app: self.set_by_app = False
                 self.default.set_active(True)
+                if self.set_by_app: self.set_by_app = False
 
 class CPUTurboOverride(Gtk.Box):
     def __init__(self):
@@ -109,7 +109,9 @@ class CPUTurboOverride(Gtk.Box):
         if button.get_active():
             if not self.set_by_app:
                 result = run(f"pkexec auto-cpufreq --turbo={override}", shell=True, stdout=PIPE, stderr=PIPE)
-                if result.stderr.decode() == PKEXEC_ERROR: self.set_selected()
+                if result.returncode in (126, 127):
+                    self.set_by_app = True
+                    self.set_selected()
             else: self.set_by_app = False
 
     def set_selected(self):
@@ -119,8 +121,8 @@ class CPUTurboOverride(Gtk.Box):
             case "always": self.always.set_active(True)
             case "auto":
                 # because this is the default button, it does not trigger the callback when set by the app
-                if self.set_by_app: self.set_by_app = False
                 self.auto.set_active(True)
+                if self.set_by_app: self.set_by_app = False
 
 class CurrentGovernorBox(Gtk.Box):
     def __init__(self):
@@ -206,7 +208,7 @@ class DropDownMenu(Gtk.MenuButton):
                     kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
                     future = executor.submit(run, "pkexec auto-cpufreq --remove", **kwargs)
                     result = future.result()
-                assert result.stderr.decode() != PKEXEC_ERROR, Exception("Authorization was cancelled")
+                assert result.returncode not in (126, 127), Exception("Authorization was cancelled")
                 dialog = Gtk.MessageDialog(
                     transient_for=parent,
                     message_type=Gtk.MessageType.INFO,
@@ -306,7 +308,7 @@ class DaemonNotRunningView(Gtk.Box):
                 kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
                 future = executor.submit(run, "pkexec auto-cpufreq --install", **kwargs)
                 result = future.result()
-            assert result.stderr.decode() != PKEXEC_ERROR, Exception("Authorization was cancelled")
+            assert result.returncode not in (126, 127), Exception("Authorization was cancelled")
             # enable for debug. causes issues if kept
             # elif result.stderr is not None:
             #     raise Exception(result.stderr.decode())
