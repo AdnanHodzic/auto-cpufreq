@@ -82,7 +82,7 @@ class ToolWindow(Gtk.Window):
         dialog.destroy()
         if response != Gtk.ResponseType.YES: return
         updater = run(["pkexec", "auto-cpufreq", "--update"], input="y\n", encoding="utf-8", stderr=PIPE)
-        if result.returncode in (126, 127):
+        if updater.returncode in (126, 127):
             error = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Error updating")
             error.format_secondary_text("Authorization Failed")
             error.run()
