@@ -103,6 +103,9 @@ services.auto-cpufreq.settings = {
     # enable thresholds true or false
     # enable_thresholds = true;
     #
+    # whether to check if thresholds are valid (true or false). (THIS SHOULD BE LEFT AS-IS IN MOST CASES)
+    # check_thresholds = true
+    #
     # start threshold (0 is off ) can be 0-99
     # start_threshold = 0;
     #

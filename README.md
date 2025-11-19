@@ -616,26 +616,47 @@ As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0),
 **To request that your device be supported, please open an [issue](https://github.com/AdnanHodzic/auto-cpufreq/issues/new). In your issue, make us aware of the driver that works with your laptop**
 
 ### Battery config
+
 Edit the config at `/etc/auto-cpufreq.conf`
 
 Example config for battery ([already part of example config file](https://github.com/AdnanHodzic/auto-cpufreq/#example-config-file-contents))
-```
+
+```ini
 [battery]
 enable_thresholds = true
+check_thresholds = true
 start_threshold = 20
 stop_threshold = 80
 ```
 
-#### A few notes about these config options
+You will need to specify both `start_threshold` AND `stop_threshold` in most cases.
+For these changes to have an effect, you will need to restart the daemon:
 
-When auto-cpufreq applies these values, it initially first sets `start_threshold = 0` and `stop_threshold = 100` before applying the actual settings. This is because in some cases, our start from a previous config, might be higher than our stop, which drivers disallow resulting in auto-cpufreq failing to apply these settings. 
+```shell
+systemctl restart auto-cpufreq.service
+```
 
-Additionally, when you remove/uninstall the auto-cpufreq daemon, the last applied settings for battery thresholds will still apply. You might need to manually set these yourself to whatever default they were before. E.g. (as sudo):
+Or if that doesn't work, reinstall:
+
+```shell
+auto-cpufreq --remove && auto-cpufreq --install
+```
+
+See more here on the kernel doc pages: [docs.kernel.org](https://docs.kernel.org/admin-guide/laptops/thinkpad-acpi.html#battery-charge-control)
+
+### A few notes about these battery config options
+
+When you remove/uninstall the auto-cpufreq daemon, the last applied settings for battery thresholds will still apply. You might need to manually set these yourself to whatever default they were before. E.g. (as sudo):
 
 ```shell
 echo 95 > /sys/class/power_supply/BAT0/charge_start_threshold
 echo 100 > /sys/class/power_supply/BAT0/charge_stop_threshold
 ```
+
+(the following only applies if `check_thresholds = false`):
+When auto-cpufreq applies these values, it initially first sets `start_threshold = 0` and `stop_threshold = 100` before applying the actual settings.
+This is because in some cases, our `start` from a previous config, might be higher than our `stop`, which drivers disallow resulting in auto-cpufreq failing to apply these settings.
+In cases where you skip threshold checking (`check_thresholds = false`), you might end up with an unapplied config. There are however exceptions (see `Lenovo_ideapad` section).
 
 ### Lenovo_laptop conservation mode
 
@@ -647,23 +668,26 @@ add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
 As you may know, for some laptop models you can only decide to limit battery charging but can not set the limit value. The limit value is set by the manufacturer in the system (generally 60% and sometimes 80%). Also, you can not set the value of start charging.
 
-This limit value is not always accessible for users to avoid changing it, but you can try looking in some of these paths : 
+This limit value is not always accessible for users to avoid changing it, but you can try looking in some of these paths:
 
-```
+```shell
 cat /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/charge_control_end_threshold
 cat /sys/class/power_supply/BAT0/charge_control_end_threshold
 cat /sys/class/power_supply/BAT0/charge_control_start_threshold
 ```
 
 This is the config to apply at /etc/auto-cpufreq.conf in order to stop battery charging at 60% or 80% depending on the value set in the system by the manufacturer.
+For this we need to disable threshold checking as well, otherwise our settings might not apply.
 
-```
+```ini
 [battery]
 enable_thresholds = true
+check_thresholds = false
 start_threshold = 20
 stop_threshold = 1
 
 ```
+
 start_threshold = 20 (should be present with a valid number but it's ignored)
 
 stop_threshold = 1 (to stop charging the battery at the limit value 60% or 80%)
@@ -675,7 +699,7 @@ to limit preformence to ignore them add to you config file the name of the power
 
 the name of the power supply can be found with  `ls /sys/class/power_supply/`
 
-```
+```ini
 [power_supply_ignore_list]
 
 name1 = this
@@ -700,7 +724,7 @@ xboxctrl = {the xbox controler power supply name}
 
 This can be done by editing the `GRUB_CMDLINE_LINUX_DEFAULT` params in `/etc/default/grub`. For instance:
 
-```
+```shell
     sudo nano /etc/default/grub
     # make sure you have nano installed, or you can use your favorite text editor
 ```
@@ -719,35 +743,35 @@ GRUB_CMDLINE_LINUX_DEFAULT="quiet splash initcall_blacklist=amd_pstate_init amd_
 
 Once you have made the necessary changes to the GRUB configuration file, you can update GRUB by running `sudo update-grub` on Debian/Ubuntu, `sudo grub-mkconfig -o /boot/grub/grub.cfg` on Arch Linux, or one of the following on Fedora:
 
-```
+```shell
     sudo grub2-mkconfig -o /etc/grub2.cfg
 ```
 
-```
+```shell
     sudo grub2-mkconfig -o /etc/grub2-efi.cfg
 ```
 
-```
+```shell
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
     # legacy boot method
 ```
 
 For systemd-boot users:
 
-```
+```shell
     sudo nano /etc/kernel/cmdline
     # make sure you have nano installed, or you can use your favorite text editor
 ```
 
 For Intel users:
 
-```
+```shell
 quiet splash intel_pstate=disable
 ```
 
 For AMD users:
 
-```
+```shell
 quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0
 ```
 
