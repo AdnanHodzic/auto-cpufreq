@@ -37,15 +37,20 @@ class BatteryDevice:
         )
 
     def is_config_values_valid(self) -> bool:
+        # https://docs.kernel.org/admin-guide/laptops/thinkpad-acpi.html#battery-charge-control
         if (self.start_config_value is None or self.stop_config_value is None):
-            print(f'WARNING: Charge both start AND stop value need to be configured for battery thresholding to work')
+            print("WARNING: Charge both start AND stop value need to be configured for battery thresholding to work")
             return False
-        elif not (0 <= self.start_config_value <= 100):
-            print(f'WARNING: Charge start value "{self.start_config_value}" is invalid')
+        elif not (0 <= self.start_config_value <= 99):
+            print(f'WARNING: Charge START value "{self.start_config_value}" is invalid (should be: 0-99)')
             return False
-        elif not (0 <= self.stop_config_value <= 100):
-            print(f'WARNING: Charge stop value "{self.stop_config_value}" is invalid')
+        elif not (1 <= self.stop_config_value <= 100):
+            print(f'WARNING: Charge STOP value "{self.stop_config_value}" is invalid (should be: 1-100)')
             return False
+        elif self.config.has_option("battery", "check_thresholds") and self.config["battery"]["check_thresholds"] == "false":
+            # Before the check if start is greater than stop, check if we disabled `check_thresholds`.
+            # Useful for exceptional cases like the Lenovo_ideapad
+            return True
         elif self.start_config_value > self.stop_config_value:
             print(
                 f'WARNING: Charge start value "{self.start_config_value}" is higher than the stop value "{self.stop_config_value}"!'
