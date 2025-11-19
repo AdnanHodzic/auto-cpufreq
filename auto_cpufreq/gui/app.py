@@ -20,7 +20,6 @@ else:
     ICON_FILE = "/usr/local/share/auto-cpufreq/images/icon.png"
 
 HBOX_PADDING = 20
-PKEXEC_ERROR = "Error executing command as another user: Not authorized\n\nThis incident has been reported.\n"
 
 class ToolWindow(Gtk.Window):
     def __init__(self):
@@ -83,7 +82,7 @@ class ToolWindow(Gtk.Window):
         dialog.destroy()
         if response != Gtk.ResponseType.YES: return
         updater = run(["pkexec", "auto-cpufreq", "--update"], input="y\n", encoding="utf-8", stderr=PIPE)
-        if updater.stderr == PKEXEC_ERROR:
+        if updater.returncode in (126, 127):
             error = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Error updating")
             error.format_secondary_text("Authorization Failed")
             error.run()
@@ -119,4 +118,3 @@ class ToolWindow(Gtk.Window):
         self.systemstats.refresh()
         self.currentgovernor.refresh()
         self.cpufreqstats.refresh()
-
