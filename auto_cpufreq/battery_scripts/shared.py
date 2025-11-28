@@ -120,18 +120,22 @@ class BatteryDevice:
             self.config.has_option("battery", "enable_thresholds")
             and self.config["battery"]["enable_thresholds"] == "true"
         ):
+            print("DEBUG: battery thresholding disabled")
             return
         elif not os.path.exists(POWER_SUPPLY_DIR):
             print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
             return
         elif not self.is_config_values_valid():
+            print("DEBUG: config is not valid")
             return
 
         batteries = [
             name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")
         ]
 
+        print("DEBUG: applying battery settings")
         for bat in batteries:
+            print(f"DEBUG: applying battery settings to: {bat}")
             # First set 0 for start and 100 for stop, sometimes we can have conflicting values otherwise which will result in an 'invalid argument' upon writing.
             self.set_battery(bat, "start", 0)
             self.set_battery(bat, "stop", 100)
