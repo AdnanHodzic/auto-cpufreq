@@ -39,11 +39,13 @@ class IdeapadBatteryDevice(BatteryDevice):
             self.config.has_option("battery", "enable_thresholds")
             and self.config["battery"]["enable_thresholds"] == "true"
         ):
+            print("DEBUG: battery thresholding disabled")
             return
 
         if self.config.has_option("battery", "ideapad_laptop_conservation_mode"):
             if self.config["battery"]["ideapad_laptop_conservation_mode"] == "true":
                 self.conservation_mode(1)
+                print("DEBUG: ideapad conversation mode = true, stopping")
                 return
             if self.config["battery"]["ideapad_laptop_conservation_mode"] == "false":
                 self.conservation_mode(0)
@@ -55,6 +57,7 @@ class IdeapadBatteryDevice(BatteryDevice):
             print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
             return
         elif not self.is_config_values_valid():
+            print("DEBUG: config is not valid")
             return
 
         batteries = [
