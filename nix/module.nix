@@ -40,7 +40,7 @@ in {
       packages =  [ defaultPackage ];
       services.auto-cpufreq = {
         wantedBy = [ "multi-user.target" ];
-        path = with pkgs; [ bash coreutils ];
+        path = with pkgs; [ bash coreutils gawk ];
         overrideStrategy = "asDropin";
 
         serviceConfig.WorkingDirectory = "";
