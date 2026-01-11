@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "auto-cpufreq"
-version = "2.6.0"
+version = "3.0.0"
 description = "Automatic CPU speed & power optimizer for Linux"
 authors = ["Adnan Hodzic <adnan@hodzic.org>"]
 license = "GPL-3.0-or-later"
@@ -28,7 +28,7 @@ distro = "^1.8.0"
 requests = "^2.32.4"
 # PyObject version will be updated automatically for Debian based distro based on libgirepository 
 # apt package version: https://github.com/AdnanHodzic/auto-cpufreq/pull/826#issuecomment-2794549837
-PyGObject = {version="3.50.0", optional=true}
+PyGObject = {version="^3.50.0", optional=true}
 urwid = "^3.0.2"
 pyinotify = {git = "https://github.com/shadeyg56/pyinotify-3.12"}
 pyasyncore = "^1.0.4"
