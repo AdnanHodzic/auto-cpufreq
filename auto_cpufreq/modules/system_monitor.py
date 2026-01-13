@@ -174,7 +174,7 @@ class SystemMonitor:
                     aligned_text(""),
                     aligned_text(f"Battery status: {str(report.battery_info)}"),
                     aligned_text(
-                        f"Battery precentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"
+                        f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"
                     ),
                     aligned_text(
                         f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged != None else "Unknown"}'
