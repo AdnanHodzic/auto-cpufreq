@@ -863,6 +863,7 @@ description = "Python interface for cairo"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"gui\""
 files = [
     {file = "pycairo-1.28.0-cp310-cp310-win32.whl", hash = "sha256:53e6dbc98456f789965dad49ef89ce2c62f9a10fc96c8d084e14da0ffb73d8a6"},
     {file = "pycairo-1.28.0-cp310-cp310-win_amd64.whl", hash = "sha256:c8ab91a75025f984bc327ada335c787efb61c929ea0512063793cb36cee503d4"},
@@ -904,6 +905,7 @@ description = "Python bindings for GObject Introspection"
 optional = true
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
+markers = "extra == \"gui\""
 files = [
     {file = "pygobject-3.50.0.tar.gz", hash = "sha256:4500ad3dbf331773d8dedf7212544c999a76fc96b63a91b3dcac1e5925a1d103"},
 ]
@@ -1390,7 +1392,10 @@ enabler = ["pytest-enabler (>=2.2)"]
 test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more_itertools", "pytest (>=6,!=8.1.*)", "pytest-ignore-flaky"]
 type = ["pytest-mypy"]
 
+[extras]
+gui = ["PyGObject"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "632e36f5d506a019119dbf855084ee1a99d9f95211fcbc5fbd3fa9e197581368"
+content-hash = "1a320a80a46edec0b309fb95b6e046e307f83196c7d962f96ea390223529243f"
