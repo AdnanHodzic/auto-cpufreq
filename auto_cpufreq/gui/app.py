@@ -9,7 +9,7 @@ from threading import Thread
 
 from auto_cpufreq.core import check_for_update, is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
-from auto_cpufreq.gui.objects import CPUFreqStatsLabel, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, RadioButtonView, CPUTurboOverride, SystemStatsLabel, UpdateDialog
+from auto_cpufreq.gui.objects import CPUFreqStatsLabel, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, SystemStatsLabel, UpdateDialog
 from auto_cpufreq.gui.objects import get_stats
 
 if IS_INSTALLED_WITH_SNAP:
@@ -97,6 +97,10 @@ class ToolWindow(Gtk.Window):
     def daemon_not_running(self):
         self.box = DaemonNotRunningView(self)
         self.add(self.box)
+
+    def monitor_mode(self):
+        self.monitor_view = MonitorModeView(self)
+        self.add(self.monitor_view)
 
     def build(self):
         if IS_INSTALLED_WITH_SNAP: self.snap()
