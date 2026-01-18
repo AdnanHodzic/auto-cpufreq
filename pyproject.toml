@@ -33,6 +33,9 @@ urwid = "^3.0.2"
 pyinotify = {git = "https://github.com/shadeyg56/pyinotify-3.12"}
 pyasyncore = "^1.0.4"
 
+[tool.poetry.extras]
+gui = ["PyGObject"]
+
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.6.1"
 

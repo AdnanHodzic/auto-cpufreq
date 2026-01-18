@@ -265,6 +265,12 @@ services.auto-cpufreq.enable = true;
   poetry run auto-cpufreq --help
   ```
 
+- To install with GUI support:
+  ```bash
+  poetry install --extras gui
+  poetry run auto-cpufreq-gtk
+  ```
+
 - Alternatively, we can use an editable pip install for development purposes:
   ```bash
   git clone https://github.com/AdnanHodzic/auto-cpufreq.git
