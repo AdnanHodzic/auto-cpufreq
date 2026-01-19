@@ -870,6 +870,13 @@ def sysinfo():
     driver = getoutput("cpufreqctl.auto-cpufreq --driver")
     print("Driver: " + driver)
 
+    config_path = config.path if config.has_config() else None
+    if config_path is None:
+        from auto_cpufreq.config.config import find_config_file
+        config_path = find_config_file(None)
+    if os.path.isfile(config_path):
+        print(f"\nUsing settings defined in {config_path}")
+
     # get usage and freq info of cpus
     usage_per_cpu = psutil.cpu_percent(interval=1, percpu=True)
     # psutil current freq not used, gives wrong values with offline cpu's
@@ -936,9 +943,12 @@ def sysinfo():
 
     if offline_cpus: print(f"\nDisabled CPUs: {','.join(offline_cpus)}")
 
-    # print current fan speed
+    # print current fan speed (only if > 0)
     current_fans = list(psutil.sensors_fans())
-    for current_fan in current_fans: print("\nCPU fan speed:", psutil.sensors_fans()[current_fan][0].current, "RPM")
+    for current_fan in current_fans:
+        fan_speed = psutil.sensors_fans()[current_fan][0].current
+        if fan_speed:
+            print(f"\nCPU fan speed: {fan_speed} RPM")
 
 def read_stats():
     if os.path.isfile(auto_cpufreq_stats_path): call(["tail", "-n 50", "-f", str(auto_cpufreq_stats_path)], stderr=DEVNULL)
