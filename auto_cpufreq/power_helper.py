@@ -146,39 +146,77 @@ def gnome_power_svc_status():
             print("If this causes any problems, please submit an issue:")
             print(GITHUB+"/issues")
 
+def set_bluetooth_auto_enable(value: bool) -> bool:
+    """Set AutoEnable in [Policy] section of /etc/bluetooth/main.conf.
+    Returns True on success, False on failure."""
+    btconf = Path("/etc/bluetooth/main.conf")
+    setting = f"AutoEnable={'true' if value else 'false'}"
+
+    try:
+        lines = btconf.read_text().splitlines(keepends=True)
+    except Exception:
+        return False
+
+    new_lines = []
+    in_policy_section = False
+    found_and_set = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        if stripped.startswith("["):
+            if in_policy_section and not found_and_set:
+                new_lines.append(f"{setting}\n")
+                found_and_set = True
+            in_policy_section = stripped.lower() == "[policy]"
+            new_lines.append(line)
+            continue
+
+        if in_policy_section:
+            if not stripped.startswith("#") and stripped.startswith("AutoEnable="):
+                new_lines.append(f"{setting}\n")
+                found_and_set = True
+                continue
+            if stripped.startswith("#"):
+                uncommented = stripped.lstrip("#").strip()
+                if uncommented.startswith("AutoEnable="):
+                    new_lines.append(f"{setting}\n")
+                    found_and_set = True
+                    continue
+
+        new_lines.append(line)
+
+    if in_policy_section and not found_and_set:
+        new_lines.append(f"{setting}\n")
+        found_and_set = True
+
+    if not found_and_set:
+        new_lines.append("\n[Policy]\n")
+        new_lines.append(f"{setting}\n")
+
+    try:
+        btconf.write_text("".join(new_lines))
+        return True
+    except Exception:
+        return False
+
 # disable bluetooth on boot
 def bluetooth_disable():
     if IS_INSTALLED_WITH_SNAP: bluetooth_notif_snap()
     elif bluetoothctl_exists:
         print("* Turn off Bluetooth on boot (only)!")
         print("  If you want bluetooth enabled on boot run: auto-cpufreq --bluetooth_boot_on")
-        btconf = Path("/etc/bluetooth/main.conf")
-        try:
-            orig_set = "AutoEnable=true"
-            change_set = "AutoEnable=false"
-            with btconf.open(mode="r+") as f:
-                content = f.read()
-                f.seek(0)
-                f.truncate()
-                f.write(content.replace(orig_set, change_set))
-        except Exception as e: print(f"\nERROR:\nWas unable to turn off bluetooth on boot\n{repr(e)}")
+        if not set_bluetooth_auto_enable(False):
+            print("\nERROR:\nWas unable to turn off bluetooth on boot")
     else: print("* Turn off bluetooth on boot [skipping] (package providing bluetooth access is not present)")
 
 # enable bluetooth on boot
 def bluetooth_enable():
     if IS_INSTALLED_WITH_SNAP: bluetooth_on_notif_snap()
-    if bluetoothctl_exists:
+    elif bluetoothctl_exists:
         print("* Turn on bluetooth on boot")
-        btconf = "/etc/bluetooth/main.conf"
-        try:
-            orig_set = "AutoEnable=true"
-            change_set = "AutoEnable=false"
-            with open(btconf, "r+") as f:
-                content = f.read()
-                f.seek(0)
-                f.truncate()
-                f.write(content.replace(change_set, orig_set))
-        except Exception as e: print(f"\nERROR:\nWas unable to turn on bluetooth on boot\n{repr(e)}")
+        if not set_bluetooth_auto_enable(True):
+            print("\nERROR:\nWas unable to turn on bluetooth on boot")
     else: print("* Turn on bluetooth on boot [skipping] (package providing bluetooth access is not present)")
 
 # turn off bluetooth on snap message

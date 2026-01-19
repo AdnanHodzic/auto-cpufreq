@@ -14,6 +14,7 @@ import time
 from auto_cpufreq.core import distro_info, get_formatted_version, get_override, get_turbo_override, sysinfo
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.modules.system_info import system_info
+from auto_cpufreq.power_helper import bluetoothctl_exists
 
 auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
 
@@ -33,6 +34,29 @@ def get_version():
         except Exception as e:
             print(repr(e))
             pass
+
+def get_bluetooth_boot_status():
+    if not bluetoothctl_exists:
+        return None
+    btconf = "/etc/bluetooth/main.conf"
+    try:
+        with open(btconf, "r") as f:
+            in_policy_section = False
+            for line in f:
+                stripped = line.strip()
+                if stripped.startswith("["):
+                    in_policy_section = stripped.lower() == "[policy]"
+                    continue
+                if not in_policy_section:
+                    continue
+                if stripped.startswith("#") or not stripped:
+                    continue
+                if stripped.startswith("AutoEnable="):
+                    value = stripped.split("=", 1)[1].strip().lower()
+                    return "on" if value == "true" else "off"
+            return "on"
+    except Exception:
+        return None
 
 class RadioButtonView(Gtk.Box):
     def __init__(self):
@@ -125,6 +149,50 @@ class CPUTurboOverride(Gtk.Box):
             case "auto":
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.auto.set_active(True)
+                if self.set_by_app: self.set_by_app = False
+
+class BluetoothBootControl(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.set_hexpand(True)
+        self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.label = Gtk.Label("Bluetooth on Boot", name="bold")
+
+        self.on_btn = Gtk.RadioButton.new_with_label_from_widget(None, "On")
+        self.on_btn.connect("toggled", self.on_button_toggled, "on")
+        self.on_btn.set_halign(Gtk.Align.END)
+        self.off_btn = Gtk.RadioButton.new_with_label_from_widget(self.on_btn, "Off")
+        self.off_btn.connect("toggled", self.on_button_toggled, "off")
+        self.off_btn.set_halign(Gtk.Align.END)
+
+        self.set_by_app = True
+        self.set_selected()
+
+        self.pack_start(self.label, False, False, 0)
+        self.pack_start(self.on_btn, True, True, 0)
+        self.pack_start(self.off_btn, True, True, 0)
+
+    def on_button_toggled(self, button, action):
+        if button.get_active():
+            if not self.set_by_app:
+                if action == "on":
+                    result = run("pkexec auto-cpufreq --bluetooth_boot_on", shell=True, stdout=PIPE, stderr=PIPE)
+                else:
+                    result = run("pkexec auto-cpufreq --bluetooth_boot_off", shell=True, stdout=PIPE, stderr=PIPE)
+                if result.returncode in (126, 127):
+                    self.set_by_app = True
+                    self.set_selected()
+            else: self.set_by_app = False
+
+    def set_selected(self):
+        status = get_bluetooth_boot_status()
+        match status:
+            case "off": self.off_btn.set_active(True)
+            case "on" | _:
+                # because this is the default button, it does not trigger the callback when set by the app
+                self.on_btn.set_active(True)
                 if self.set_by_app: self.set_by_app = False
 
 class CurrentGovernorBox(Gtk.Box):
