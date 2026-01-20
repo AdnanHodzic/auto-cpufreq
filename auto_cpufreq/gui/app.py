@@ -9,8 +9,9 @@ from threading import Thread
 
 from auto_cpufreq.core import check_for_update, is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
-from auto_cpufreq.gui.objects import CPUFreqStatsLabel, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, SystemStatsLabel, UpdateDialog
+from auto_cpufreq.gui.objects import BatteryInfoBox, BluetoothBootControl, CPUFreqScalingBox, CurrentGovernorBox, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, SystemStatsLabel, SystemStatisticsBox, UpdateDialog
 from auto_cpufreq.gui.objects import get_stats
+from auto_cpufreq.power_helper import bluetoothctl_exists
 
 if IS_INSTALLED_WITH_SNAP:
     CSS_FILE = "/snap/auto-cpufreq/current/style.css"
@@ -40,7 +41,7 @@ class ToolWindow(Gtk.Window):
         self.hbox.pack_start(self.systemstats, False, False, 0)
         self.add(self.hbox)
 
-        self.vbox_right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=52)
+        self.vbox_right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
         
         self.menu = DropDownMenu(self)
         self.hbox.pack_end(self.menu, False, False, 0)
@@ -51,8 +52,17 @@ class ToolWindow(Gtk.Window):
         if "Warning: CPU turbo is not available" not in get_stats():
             self.vbox_right.pack_start(CPUTurboOverride(), False, False, 0)
 
-        self.cpufreqstats = CPUFreqStatsLabel()
-        self.vbox_right.pack_start(self.cpufreqstats, False, False, 0)
+        self.batteryinfo = BatteryInfoBox()
+        self.vbox_right.pack_start(self.batteryinfo, False, False, 0)
+
+        self.cpufreqscaling = CPUFreqScalingBox()
+        self.vbox_right.pack_start(self.cpufreqscaling, False, False, 0)
+
+        self.systemstats_box = SystemStatisticsBox()
+        self.vbox_right.pack_start(self.systemstats_box, False, False, 0)
+
+        if bluetoothctl_exists:
+            self.vbox_right.pack_start(BluetoothBootControl(), False, False, 0)
 
         self.hbox.pack_start(self.vbox_right, False, False, 0)
 
@@ -121,4 +131,6 @@ class ToolWindow(Gtk.Window):
     def _refresh(self):
         self.systemstats.refresh()
         self.currentgovernor.refresh()
-        self.cpufreqstats.refresh()
+        self.batteryinfo.refresh()
+        self.cpufreqscaling.refresh()
+        self.systemstats_box.refresh()

@@ -11,9 +11,11 @@ from subprocess import getoutput, PIPE, run
 from threading import Thread
 import time
 
+from auto_cpufreq.config.config import config, find_config_file
 from auto_cpufreq.core import distro_info, get_formatted_version, get_override, get_turbo_override, sysinfo
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.modules.system_info import system_info
+from auto_cpufreq.power_helper import bluetoothctl_exists
 
 auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
 
@@ -33,6 +35,29 @@ def get_version():
         except Exception as e:
             print(repr(e))
             pass
+
+def get_bluetooth_boot_status():
+    if not bluetoothctl_exists:
+        return None
+    btconf = "/etc/bluetooth/main.conf"
+    try:
+        with open(btconf, "r") as f:
+            in_policy_section = False
+            for line in f:
+                stripped = line.strip()
+                if stripped.startswith("["):
+                    in_policy_section = stripped.lower() == "[policy]"
+                    continue
+                if not in_policy_section:
+                    continue
+                if stripped.startswith("#") or not stripped:
+                    continue
+                if stripped.startswith("AutoEnable="):
+                    value = stripped.split("=", 1)[1].strip().lower()
+                    return "on" if value == "true" else "off"
+            return "on"
+    except Exception:
+        return None
 
 class RadioButtonView(Gtk.Box):
     def __init__(self):
@@ -127,6 +152,73 @@ class CPUTurboOverride(Gtk.Box):
                 self.auto.set_active(True)
                 if self.set_by_app: self.set_by_app = False
 
+class BluetoothBootControl(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+
+        self.set_hexpand(True)
+
+        self.advanced_btn = Gtk.Button(label="Advanced Settings")
+        self.advanced_btn.connect("clicked", self.on_advanced_clicked)
+        self.advanced_btn.set_halign(Gtk.Align.START)
+
+        self.revealer = Gtk.Revealer()
+        self.revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.revealer.set_transition_duration(200)
+
+        self.inner_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.inner_box.set_hexpand(True)
+
+        self.label = Gtk.Label("Bluetooth on Boot", name="bold")
+
+        self.on_btn = Gtk.RadioButton.new_with_label_from_widget(None, "On")
+        self.on_btn.connect("toggled", self.on_button_toggled, "on")
+        self.on_btn.set_halign(Gtk.Align.END)
+        self.off_btn = Gtk.RadioButton.new_with_label_from_widget(self.on_btn, "Off")
+        self.off_btn.connect("toggled", self.on_button_toggled, "off")
+        self.off_btn.set_halign(Gtk.Align.END)
+
+        self.set_by_app = True
+        self.set_selected()
+
+        self.inner_box.pack_start(self.label, False, False, 0)
+        self.inner_box.pack_start(self.on_btn, True, True, 0)
+        self.inner_box.pack_start(self.off_btn, True, True, 0)
+
+        self.revealer.add(self.inner_box)
+
+        self.pack_start(self.advanced_btn, False, False, 0)
+        self.pack_start(self.revealer, False, False, 0)
+
+    def on_advanced_clicked(self, button):
+        revealed = self.revealer.get_reveal_child()
+        self.revealer.set_reveal_child(not revealed)
+        if revealed:
+            self.advanced_btn.set_label("Advanced Settings")
+        else:
+            self.advanced_btn.set_label("Hide Advanced Settings")
+
+    def on_button_toggled(self, button, action):
+        if button.get_active():
+            if not self.set_by_app:
+                if action == "on":
+                    result = run("pkexec auto-cpufreq --bluetooth_boot_on", shell=True, stdout=PIPE, stderr=PIPE)
+                else:
+                    result = run("pkexec auto-cpufreq --bluetooth_boot_off", shell=True, stdout=PIPE, stderr=PIPE)
+                if result.returncode in (126, 127):
+                    self.set_by_app = True
+                    self.set_selected()
+            else: self.set_by_app = False
+
+    def set_selected(self):
+        status = get_bluetooth_boot_status()
+        match status:
+            case "off": self.off_btn.set_active(True)
+            case "on" | _:
+                # because this is the default button, it does not trigger the callback when set by the app
+                self.on_btn.set_active(True)
+                if self.set_by_app: self.set_by_app = False
+
 class CurrentGovernorBox(Gtk.Box):
     def __init__(self):
         super().__init__(spacing=25)
@@ -138,6 +230,224 @@ class CurrentGovernorBox(Gtk.Box):
 
     def refresh(self):
         self.governor.set_label(getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0])
+
+class BatteryInfoBox(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+
+        self.header = Gtk.Label(label="-" * 20 + " Battery Stats " + "-" * 20)
+        self.header.set_halign(Gtk.Align.START)
+
+        self.status_label = Gtk.Label(label="")
+        self.status_label.set_halign(Gtk.Align.START)
+
+        self.percentage_label = Gtk.Label(label="")
+        self.percentage_label.set_halign(Gtk.Align.START)
+
+        self.ac_label = Gtk.Label(label="")
+        self.ac_label.set_halign(Gtk.Align.START)
+
+        self.start_threshold_label = Gtk.Label(label="")
+        self.start_threshold_label.set_halign(Gtk.Align.START)
+
+        self.stop_threshold_label = Gtk.Label(label="")
+        self.stop_threshold_label.set_halign(Gtk.Align.START)
+
+        self.pack_start(self.header, False, False, 0)
+        self.pack_start(self.status_label, False, False, 0)
+        self.pack_start(self.percentage_label, False, False, 0)
+        self.pack_start(self.ac_label, False, False, 0)
+        self.pack_start(self.start_threshold_label, False, False, 0)
+        self.pack_start(self.stop_threshold_label, False, False, 0)
+
+        self.refresh()
+
+    def refresh(self):
+        try:
+            battery_info = system_info.battery_info()
+
+            self.status_label.set_label(f"Battery status: {str(battery_info)}")
+
+            if battery_info.battery_level is not None:
+                percentage_text = f"{battery_info.battery_level}%"
+            else:
+                percentage_text = "Unknown"
+            self.percentage_label.set_label(f"Battery percentage: {percentage_text}")
+
+            if battery_info.is_ac_plugged is not None:
+                ac_text = "Yes" if battery_info.is_ac_plugged else "No"
+            else:
+                ac_text = "Unknown"
+            self.ac_label.set_label(f"AC plugged: {ac_text}")
+
+            if battery_info.is_ac_plugged is not None:
+                start_text = str(battery_info.charging_start_threshold) if battery_info.charging_start_threshold is not None else "None"
+            else:
+                start_text = "Unknown"
+            self.start_threshold_label.set_label(f"Charging start threshold: {start_text}")
+
+            if battery_info.is_ac_plugged is not None:
+                stop_text = str(battery_info.charging_stop_threshold) if battery_info.charging_stop_threshold is not None else "None"
+            else:
+                stop_text = "Unknown"
+            self.stop_threshold_label.set_label(f"Charging stop threshold: {stop_text}")
+
+        except Exception:
+            self.status_label.set_label("Battery status: Unknown")
+            self.percentage_label.set_label("Battery percentage: Unknown")
+            self.ac_label.set_label("AC plugged: Unknown")
+            self.start_threshold_label.set_label("Charging start threshold: Unknown")
+            self.stop_threshold_label.set_label("Charging stop threshold: Unknown")
+
+class CPUFreqScalingBox(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+
+        self.header = Gtk.Label(label="-" * 20 + " CPU Frequency Scaling " + "-" * 20)
+        self.header.set_halign(Gtk.Align.START)
+
+        self.governor_label = Gtk.Label(label="")
+        self.governor_label.set_halign(Gtk.Align.START)
+
+        self.epp_label = Gtk.Label(label="")
+        self.epp_label.set_halign(Gtk.Align.START)
+
+        self.epb_label = Gtk.Label(label="")
+        self.epb_label.set_halign(Gtk.Align.START)
+        self.epb_label.set_no_show_all(True)
+
+        self.pack_start(self.header, False, False, 0)
+        self.pack_start(self.governor_label, False, False, 0)
+        self.pack_start(self.epp_label, False, False, 0)
+        self.pack_start(self.epb_label, False, False, 0)
+
+        self.refresh()
+
+    def refresh(self):
+        try:
+            report = system_info.generate_system_report()
+
+            gov = report.current_gov if report.current_gov else "Unknown"
+            self.governor_label.set_label(f'Setting to use: "{gov}" governor')
+
+            if report.current_epp:
+                self.epp_label.set_label(f"EPP setting: {report.current_epp}")
+                self.epp_label.show()
+            else:
+                self.epp_label.set_label("Not setting EPP (not supported by system)")
+                self.epp_label.show()
+
+            if report.current_epb:
+                self.epb_label.set_label(f'Setting to use: "{report.current_epb}" EPB')
+                self.epb_label.show()
+            else:
+                self.epb_label.hide()
+
+        except Exception:
+            self.governor_label.set_label('Setting to use: "Unknown" governor')
+            self.epp_label.set_label("EPP setting: Unknown")
+            self.epb_label.hide()
+
+class SystemStatisticsBox(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+
+        self.header = Gtk.Label(label="-" * 20 + " System Statistics " + "-" * 20)
+        self.header.set_halign(Gtk.Align.START)
+
+        self.cpu_usage_label = Gtk.Label(label="")
+        self.cpu_usage_label.set_halign(Gtk.Align.START)
+
+        self.load_label = Gtk.Label(label="")
+        self.load_label.set_halign(Gtk.Align.START)
+
+        self.temp_label = Gtk.Label(label="")
+        self.temp_label.set_halign(Gtk.Align.START)
+        self.temp_label.set_no_show_all(True)
+
+        self.load_status_label = Gtk.Label(label="")
+        self.load_status_label.set_halign(Gtk.Align.START)
+        self.load_status_label.set_no_show_all(True)
+
+        self.usage_status_label = Gtk.Label(label="")
+        self.usage_status_label.set_halign(Gtk.Align.START)
+        self.usage_status_label.set_no_show_all(True)
+
+        self.turbo_label = Gtk.Label(label="")
+        self.turbo_label.set_halign(Gtk.Align.START)
+
+        self.fan_label = Gtk.Label(label="")
+        self.fan_label.set_halign(Gtk.Align.START)
+        self.fan_label.set_no_show_all(True)
+
+        self.pack_start(self.header, False, False, 0)
+        self.pack_start(self.cpu_usage_label, False, False, 0)
+        self.pack_start(self.load_label, False, False, 0)
+        self.pack_start(self.temp_label, False, False, 0)
+        self.pack_start(self.fan_label, False, False, 0)
+        self.pack_start(self.load_status_label, False, False, 0)
+        self.pack_start(self.usage_status_label, False, False, 0)
+        self.pack_start(self.turbo_label, False, False, 0)
+
+        self.refresh()
+
+    def refresh(self):
+        try:
+            report = system_info.generate_system_report()
+
+            self.cpu_usage_label.set_label(f"Total CPU usage: {report.cpu_usage:.1f} %")
+
+            self.load_label.set_label(f"Total system load: {report.load:.2f}")
+
+            avg_temp = 0.0
+            if report.cores_info:
+                avg_temp = sum(core.temperature for core in report.cores_info) / len(report.cores_info)
+                self.temp_label.set_label(f"Average temp. of all cores: {avg_temp:.2f} °C")
+                self.temp_label.show()
+            else:
+                self.temp_label.hide()
+
+            if report.cpu_fan_speed:
+                self.fan_label.set_label(f"CPU fan speed: {report.cpu_fan_speed} RPM")
+                self.fan_label.show()
+            else:
+                self.fan_label.hide()
+
+            if report.avg_load:
+                load_status = "Load optimal" if report.load < 1.0 else "Load high"
+                self.load_status_label.set_label(
+                    f"{load_status} (load average: {report.avg_load[0]:.2f}, {report.avg_load[1]:.2f}, {report.avg_load[2]:.2f})"
+                )
+                self.load_status_label.show()
+            else:
+                self.load_status_label.hide()
+
+            if report.cores_info:
+                usage_status = "Optimal" if report.cpu_usage < 70 else "High"
+                temp_status = "high" if avg_temp > 75 else "normal"
+                self.usage_status_label.set_label(
+                    f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"
+                )
+                self.usage_status_label.show()
+            else:
+                self.usage_status_label.hide()
+
+            if report.is_turbo_on[0] is not None:
+                turbo_status = "On" if report.is_turbo_on[0] else "Off"
+            elif report.is_turbo_on[1] is not None:
+                turbo_status = f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
+            else:
+                turbo_status = "Unknown"
+            self.turbo_label.set_label(f"Setting turbo boost: {turbo_status}")
+
+        except Exception:
+            self.cpu_usage_label.set_label("Total CPU usage: Unknown")
+            self.load_label.set_label("Total system load: Unknown")
+            self.temp_label.hide()
+            self.fan_label.hide()
+            self.load_status_label.hide()
+            self.usage_status_label.hide()
+            self.turbo_label.set_label("Setting turbo boost: Unknown")
 
 class SystemStatsLabel(Gtk.Label):
     def __init__(self):
@@ -398,6 +708,11 @@ class MonitorModeView(Gtk.Box):
         self.left_box.pack_start(self._label(f"Cores: {report.total_core}"), False, False, 0)
         self.left_box.pack_start(self._label(f"Architecture: {report.arch}"), False, False, 0)
         self.left_box.pack_start(self._label(f"Driver: {report.cpu_driver}"), False, False, 0)
+
+        config_path = config.path if config.has_config() else find_config_file(None)
+        if isfile(config_path):
+            self.left_box.pack_start(self._label(f"\nUsing settings defined in {config_path}"), False, False, 0)
+
         self.left_box.pack_start(self._label(""), False, False, 0)
 
         self.left_box.pack_start(self._separator("Current CPU Stats"), False, False, 5)
