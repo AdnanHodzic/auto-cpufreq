@@ -6,14 +6,21 @@ Automatic CPU speed & power optimizer for Linux. Actively monitors laptop batter
 
 For tl;dr folks:
 
-[Youtube: auto-cpufreq v2.0 release & demo of all available features and options](https://www.youtube.com/watch?v=SPGpkZ0AZVU)
+* Youtube: 
+[From 10 day vacation project to 100k users: auto-cpufreq v3 story](https://www.youtube.com/watch?v=VKqNjczvI88)
+* Blog post: [From 10 day vacation project to 100k users: auto-cpufreq v3 story](https://foolcontrol.org/?p=5114)
+
+[![](https://img.youtube.com/vi/VKqNjczvI88/0.jpg)](https://www.youtube.com/watch?v=VKqNjczvI88)
+
+* Youtube: [auto-cpufreq v2.0 release & demo of all available features and options](https://www.youtube.com/watch?v=SPGpkZ0AZVU)
+* Blog post: [auto-cpufreq v2.0](https://foolcontrol.org/?p=4603)
 
 [![](https://img.youtube.com/vi/SPGpkZ0AZVU/0.jpg)](https://www.youtube.com/watch?v=QkYRpVEEIlg)
 
-[Youtube: auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
+* Youtube: [auto-cpufreq - tool demo](https://www.youtube.com/watch?v=QkYRpVEEIlg)
+* Blog post: [auto-cpufreq – Automatic CPU speed & power optimizer for Linux](https://foolcontrol.org/?p=3124)
 
 [![](https://img.youtube.com/vi/QkYRpVEEIlg/0.jpg)](https://www.youtube.com/watch?v=QkYRpVEEIlg)
-
 
 If you're having a problem with auto-cpufreq, before ([submitting an issue](https://github.com/AdnanHodzic/auto-cpufreq/issues)), it is strongly recommended to use the **[auto-cpufreq-genAI-chatbot](https://foolcontrol.org/?p=4903)** to get an immediate answer to your question.
 
@@ -21,11 +28,11 @@ If you're having a problem with auto-cpufreq, before ([submitting an issue](http
 
 Example of auto-cpufreq GUI (available >= v2.0)
 
-<img src="https://github.com/user-attachments/assets/4b83b67c-8c1e-4ef0-ad2d-ffc1b9dc16de" width="480" alt="Example of auto-cpufreq GUI (available >= v2.0)" />
+<img src="https://github.com/user-attachments/assets/3e33bd92-964c-48f0-9825-4a66f9039261" width="480" alt="Example of auto-cpufreq GUI (available >= v2.0)" />
 
 Example of `auto-cpufreq --stats` CLI output
 
-<img src="https://github.com/user-attachments/assets/9c7715c4-16b7-4a5c-86be-4c390276d9e8" width="480" alt="Example of auto-cpufreq CLI output"/>
+<img src="https://github.com/user-attachments/assets/1114e937-35bd-4943-8a74-a932c04c367e" width="480" alt="Example of auto-cpufreq CLI output"/>
 
 ## Looking for developers and co-maintainers
 
