@@ -264,7 +264,9 @@ def charging():
     get charge state: is battery charging or discharging
     """
     # sort it so AC is 'always' first
-    power_supplies = sorted(os.listdir(Path(POWER_SUPPLY_DIR)))
+    if os.path.exists(Path(POWER_SUPPLY_DIR)):
+        power_supplies = sorted(os.listdir(Path(POWER_SUPPLY_DIR)))
+    else: return True # no sysfs entries, nothing to do.
     POWER_SUPPLY_IGNORELIST = get_power_supply_ignore_list()
 
     # check if we found power supplies. on a desktop these are not found and we assume we are on a powercable.
