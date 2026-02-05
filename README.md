@@ -624,7 +624,6 @@ Example config for battery ([already part of example config file](https://github
 ```ini
 [battery]
 enable_thresholds = true
-check_thresholds = true
 start_threshold = 20
 stop_threshold = 80
 ```
@@ -634,12 +633,6 @@ For these changes to have an effect, you will need to restart the daemon:
 
 ```shell
 systemctl restart auto-cpufreq.service
-```
-
-Or if that doesn't work, reinstall:
-
-```shell
-auto-cpufreq --remove && auto-cpufreq --install
 ```
 
 See more here on the kernel doc pages: [docs.kernel.org](https://docs.kernel.org/admin-guide/laptops/thinkpad-acpi.html#battery-charge-control)
@@ -652,11 +645,6 @@ When you remove/uninstall the auto-cpufreq daemon, the last applied settings for
 echo 95 > /sys/class/power_supply/BAT0/charge_start_threshold
 echo 100 > /sys/class/power_supply/BAT0/charge_stop_threshold
 ```
-
-(the following only applies if `check_thresholds = false`):
-When auto-cpufreq applies these values, it initially first sets `start_threshold = 0` and `stop_threshold = 100` before applying the actual settings.
-This is because in some cases, our `start` from a previous config, might be higher than our `stop`, which drivers disallow resulting in auto-cpufreq failing to apply these settings.
-In cases where you skip threshold checking (`check_thresholds = false`), you might end up with an unapplied config. There are however exceptions (see `Lenovo_ideapad` section).
 
 ### Lenovo_laptop conservation mode
 
@@ -677,12 +665,10 @@ cat /sys/class/power_supply/BAT0/charge_control_start_threshold
 ```
 
 This is the config to apply at /etc/auto-cpufreq.conf in order to stop battery charging at 60% or 80% depending on the value set in the system by the manufacturer.
-For this we need to disable threshold checking as well, otherwise our settings might not apply.
 
 ```ini
 [battery]
 enable_thresholds = true
-check_thresholds = false
 start_threshold = 20
 stop_threshold = 1
 

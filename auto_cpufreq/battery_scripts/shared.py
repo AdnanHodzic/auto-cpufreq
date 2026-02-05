@@ -1,105 +1,190 @@
 #!/usr/bin/env python3
 import os
-from subprocess import check_output, CalledProcessError
 import time
+from typing import Any
 
 from auto_cpufreq.config.config import config
 from auto_cpufreq.globals import POWER_SUPPLY_DIR
 
+# The charge_control_{start,end}_threshold files
+# are officially documented and preferred,
+# but some models or older kernels may only have charge_{start,stop}_threshold files
+CHARGE_START_THRESHOLD_FILES = [
+    "charge_control_start_threshold",
+    "charge_start_threshold",
+]
+CHARGE_STOP_THRESHOLD_FILES = [
+    "charge_control_end_threshold",
+    "charge_stop_threshold",
+]
+
 
 class BatteryDevice:
     def __init__(self):
-        self.config = config.get_config()
-        if os.path.isdir(POWER_SUPPLY_DIR):
-            self.batteries = [
-                name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")
-            ]
-        else:
-            print(f"WARNING: POWER_SUPPLY_DIR '{POWER_SUPPLY_DIR}' does not exist.")
-            self.batteries = []
+        self.batteries = self._get_batteries()
         self.start_paths = {
-            bat: [os.path.join(POWER_SUPPLY_DIR, bat, "charge_start_threshold")]
+            bat: path
             for bat in self.batteries
+            if (path := self._choose_threshold_file(bat, CHARGE_START_THRESHOLD_FILES))
+            is not None
         }
         self.stop_paths = {
-            bat: [os.path.join(POWER_SUPPLY_DIR, bat, "charge_stop_threshold")]
+            bat: path
             for bat in self.batteries
+            if (path := self._choose_threshold_file(bat, CHARGE_STOP_THRESHOLD_FILES))
+            is not None
         }
 
-        self.start_config_value = self.get_threshold_config_value("start")
-        self.stop_config_value = self.get_threshold_config_value("stop")
-
-    def get_threshold_config_value(self, mode):
-        return (
-            self.config["battery"][f"{mode}_threshold"]
-            if self.config.has_option("battery", f"{mode}_threshold")
-            else None
-        )
-
-    def is_config_values_valid(self) -> bool:
-        # https://docs.kernel.org/admin-guide/laptops/thinkpad-acpi.html#battery-charge-control
-        if (self.start_config_value is None or self.stop_config_value is None):
-            print("WARNING: Charge both start AND stop value need to be configured for battery thresholding to work")
-            return False
-        elif not (0 <= self.start_config_value <= 99):
-            print(f'WARNING: Charge START value "{self.start_config_value}" is invalid (should be: 0-99)')
-            return False
-        elif not (1 <= self.stop_config_value <= 100):
-            print(f'WARNING: Charge STOP value "{self.stop_config_value}" is invalid (should be: 1-100)')
-            return False
-        elif self.config.has_option("battery", "check_thresholds") and self.config["battery"]["check_thresholds"] == "false":
-            # Before the check if start is greater than stop, check if we disabled `check_thresholds`.
-            # Useful for exceptional cases like the Lenovo_ideapad
-            return True
-        elif self.start_config_value > self.stop_config_value:
-            print(
-                f'WARNING: Charge start value "{self.start_config_value}" is higher than the stop value "{self.stop_config_value}"!'
-            )
-            return False
-        else:
-            return True
-
-    def get_battery_paths(self, bat, mode):
-        paths = None
-        if mode == "start":
-            paths = self.start_paths[bat]
-        else:
-            paths = self.stop_paths[bat]
-        return paths
-
-    def set_battery(self, bat, mode, value) -> bool:
+    def _get_batteries(self) -> list[str]:
         """
+        Get list of battery names from POWER_SUPPLY_DIR
+        Return list of battery names (e.g., ['BAT0', 'BAT1'])
+        """
+        if not os.path.isdir(POWER_SUPPLY_DIR):
+            print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
+            return []
+        return [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")]
+
+    def _choose_threshold_file(self, bat: str, files: list[str]) -> str | None:
+        """
+        Get the charge threshold file path for given battery
+        Return the first found file path from files list, or None if not found
+        """
+
+        for filename in files:
+            path = os.path.join(POWER_SUPPLY_DIR, bat, filename)
+            # File must exist and be writable
+            if os.path.isfile(path) and os.access(path, os.W_OK):
+                return path
+        return None
+
+    def _get_config(self) -> dict[str, str]:
+        conf = config.get_config()
+        return dict(conf.items("battery"))
+
+    def get_parsed_config(self) -> dict[str, int | bool]:
+        """
+        Parse battery configuration from config file
+        Return validated and parsed config as dictionary
+        If invalid, thresholds_enabled will always be False
+        So see valid values and more info about different devices,
+        the TLP documentation is a good reference:
+        https://linrunner.de/tlp/settings/bc-vendors.html
+        """
+        config = self._get_config()
+
+        parsed_config = {
+            "thresholds_enabled": False,
+            "start_threshold": 99,
+            "stop_threshold": 100,
+            "ideapad_conservation_mode": False,
+        }
+
+        if config.get("enable_thresholds") != "true":
+            print("DEBUG: battery thresholding disabled")
+            # Return early without further validation
+            return parsed_config
+
+        try:
+            start_val, stop_val = self._parse_threshold_values(
+                config.get("start_threshold"), config.get("stop_threshold")
+            )
+            parsed_config["start_threshold"] = start_val
+            parsed_config["stop_threshold"] = stop_val
+
+            parsed_config["ideapad_conservation_mode"] = (
+                self._parse_ideapad_conservation_mode(
+                    "ideapad_laptop_conservation_mode"
+                )
+            )
+
+            parsed_config["thresholds_enabled"] = True
+        except ValueError as e:
+            # Thresholds will not be enabled if config is invalid
+            print(f"ERROR: {e}")
+        return parsed_config
+
+    def _parse_threshold_values(
+        self, start: None | str, stop: None | str
+    ) -> tuple[int, int]:
+        """
+        Parse and validate start and stop threshold values
+        This method should is overridden in subclasses if needed
+        Return tuple of (start, stop) as integers if valid
+        Raise ValueError if invalid
+        """
+        if start is None or stop is None:
+            raise ValueError("Start and stop thresholds must be set")
+        if not start.isdigit() or not stop.isdigit():
+            raise ValueError("Start and stop thresholds must be integers")
+        start_val = int(start)
+        stop_val = int(stop)
+        if not (0 <= start_val <= 99):
+            raise ValueError("Start threshold must be between 0 and 99")
+        if not (1 <= stop_val <= 100):
+            raise ValueError("Stop threshold must be between 1 and 100")
+        if start_val >= stop_val:
+            raise ValueError("Start threshold must be less than stop threshold")
+        return start_val, stop_val
+
+    def _parse_ideapad_conservation_mode(self, _: None | str) -> bool:
+        """
+        Parse ideapad conservation mode value from config
+        This method is overridden in IdeapadBatteryDevice subclass
+        """
+        return False
+
+    def set_battery_thresholds(self, bat, start: int, stop: int) -> bool:
+        """
+        Set battery thresholds for given battery
         Return true/false depending on if command is executed and fails (or succeeds)
         """
-        paths = self.get_battery_paths(bat, mode)
 
-        for p in paths:
-            if os.path.isfile(p):
-                try:
-                    check_output(f"echo {value} | tee {p}", shell=True, text=True)
-                    return True
-                except CalledProcessError as e:
-                    print(
-                        f"WARNING: Could not write battery threshold {value} to {p}: {e.output}"
-                    )
-                    return False
-            else:
-                print(f"WARNING: {p} does NOT exist")
+        if bat not in self.start_paths or bat not in self.stop_paths:
+            print(f"WARNING: battery {bat} has no threshold attributes")
+            return False
+
+        # First set stop to 100 to avoid potential 'invalid argument'
+        # errors when start >= stop
+        self._write_value_to_file(self.stop_paths[bat], 100)
+        time.sleep(0.1)
+
+        if not self._write_value_to_file(self.start_paths[bat], start):
+            return False
+        if not self._write_value_to_file(self.stop_paths[bat], stop):
+            return False
+
         return True
 
-    def get_current_threshold(self, bat, mode):
-        paths = self.get_battery_paths(bat, mode)
-        for p in paths:
-            if os.path.isfile(p):
-                try:
-                    return check_output(
-                        ["cat", POWER_SUPPLY_DIR + bat + f"/charge_{mode}_threshold"]
-                    )
-                except CalledProcessError as e:
-                    print(
-                        f"ERROR: failed to read battery {bat} {mode} threshold in file: {p}: {e.output}"
-                    )
-        raise OSError(f"ERROR: failed to get any battery threshold for {bat}, {mode}!")
+    def _write_value_to_file(self, path: str, value: str | int) -> bool:
+        try:
+            with open(path, "w") as f:
+                f.write(str(value))
+            return True
+        except Exception as e:
+            print(f"ERROR: Could not write value {value} to {path}: {e}")
+            return False
+
+    def _read_value_from_file(self, path: str, default: str = "") -> str:
+        try:
+            with open(path, "r") as f:
+                output = f.read()
+            return output.strip()
+        except Exception as e:
+            print(f"ERROR: Could not read value from {path}: {e}")
+            return default
+
+    def get_current_threshold(self, bat: str) -> tuple[int | None, int | None]:
+
+        if bat not in self.start_paths or bat not in self.stop_paths:
+            print(f"WARNING: battery {bat} has no threshold attributes")
+            return None, None
+
+        start = self._read_value_from_file(self.start_paths[bat])
+        stop = self._read_value_from_file(self.stop_paths[bat])
+        start = int(start) if start.isdigit() else None
+        stop = int(stop) if stop.isdigit() else None
+        return start, stop
 
     def print_thresholds(self):
         print(
@@ -107,38 +192,37 @@ class BatteryDevice:
         )
         print(f"battery count = {len(self.batteries)}")
         for bat in self.batteries:
-            try:
-                print(
-                    bat, "start threshold =", self.get_current_threshold(bat, "start")
-                )
-                print(bat, "stop threshold =", self.get_current_threshold(bat, "stop"))
-            except Exception as e:
-                print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
+            self.print_battery_info(bat)
+
+    def print_battery_info(self, bat: str):
+        start_value, stop_value = self.get_current_threshold(bat)
+        if start_value is None or stop_value is None:
+            print(f"ERROR: failed to read battery {bat} thresholds")
+        else:
+            print(f"{bat} start threshold = {start_value}")
+            print(f"{bat} stop threshold = {stop_value}")
+
+    def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
+        print(
+            f"DEBUG: applying battery settings to: {bat}, "
+            f'Start={config["start_threshold"]}, '
+            f'Stop={config["stop_threshold"]}'
+        )
+        return self.set_battery_thresholds(
+            bat,
+            config["start_threshold"],
+            config["stop_threshold"],
+        )
 
     def setup(self):
-        if not (
-            self.config.has_option("battery", "enable_thresholds")
-            and self.config["battery"]["enable_thresholds"] == "true"
-        ):
-            print("DEBUG: battery thresholding disabled")
+        parsed_config = self.get_parsed_config()
+        if not parsed_config["thresholds_enabled"]:
             return
-        elif not os.path.exists(POWER_SUPPLY_DIR):
-            print(f"WARNING: {POWER_SUPPLY_DIR} does NOT exist")
+        if not self.batteries:
+            print("WARNING: no batteries found to set thresholds for")
             return
-        elif not self.is_config_values_valid():
-            print("DEBUG: config is not valid")
-            return
-
-        batteries = [
-            name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")
-        ]
 
         print("DEBUG: applying battery settings")
-        for bat in batteries:
-            print(f"DEBUG: applying battery settings to: {bat}")
-            # First set 0 for start and 100 for stop, sometimes we can have conflicting values otherwise which will result in an 'invalid argument' upon writing.
-            self.set_battery(bat, "start", 0)
-            self.set_battery(bat, "stop", 100)
-            time.sleep(0.1)
-            self.set_battery(bat, "start", self.start_config_value)
-            self.set_battery(bat, "stop", self.stop_config_value)
+        for bat in self.batteries:
+            if not self.apply_threshold_settings_to_bat(bat, parsed_config):
+                print(f"ERROR: failed to set thresholds for battery {bat}")
