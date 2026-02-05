@@ -67,7 +67,6 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
 
         if monitor:
             root_check()
-            battery_setup()
             conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
