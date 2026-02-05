@@ -3,6 +3,8 @@
 from typing import Any
 from auto_cpufreq.battery_scripts.shared import BatteryDevice
 
+# The Arch wiki suggests this path may vary on different models, but TLP uses
+# the same hardcoded value
 CONSERVATION_MODE_FILE = "/sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode"
 
 class IdeapadBatteryDevice(BatteryDevice):

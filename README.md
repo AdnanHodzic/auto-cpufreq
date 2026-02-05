@@ -646,9 +646,9 @@ echo 95 > /sys/class/power_supply/BAT0/charge_start_threshold
 echo 100 > /sys/class/power_supply/BAT0/charge_stop_threshold
 ```
 
-### Lenovo_laptop conservation mode
+### Ideapad conservation mode
 
-this works only with `lenovo_laptop` kernel module compatable laptops.  
+This works only with laptops that have the `ideapad_laptop` kernel module.  
 
 add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
