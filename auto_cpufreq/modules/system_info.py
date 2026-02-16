@@ -291,10 +291,23 @@ class SystemInfo:
         # Reading battery information
         battery_status = SystemInfo.read_file(os.path.join(battery_path, "status"))
         battery_capacity = SystemInfo.read_file(os.path.join(battery_path, "capacity"))
+
+        # first check for wattage in power_now
+        # this is not found on all laptops
         energy_rate = (
             SystemInfo.read_file(os.path.join(battery_path, "power_now"))
-            or SystemInfo.read_file(os.path.join(battery_path, "current_now"))
         )
+
+        # if power_now wasn't found, try calculating wattage using current and voltage
+        if energy_rate is None:
+            current = SystemInfo.read_file(os.path.join(battery_path, "current_now"))
+            voltage = SystemInfo.read_file(os.path.join(battery_path, "voltage_now"))
+
+            if (current and current.isdigit()) and (voltage and voltage.isdigit()):
+                energy_rate = (int(current) * int(voltage)) / 1_000_000
+ 
+
+
         charge_start_threshold = (
             SystemInfo.read_file(os.path.join(battery_path, "charge_start_threshold"))
             or SystemInfo.read_file(os.path.join(battery_path, "charge_control_start_threshold"))
@@ -306,7 +319,7 @@ class SystemInfo:
         is_charging = battery_status.lower() == "charging" if battery_status else None
         battery_level = int(battery_capacity) if battery_capacity and battery_capacity.isdigit() else None
         power_consumption = float(energy_rate) / 1_000_000 if energy_rate \
-            and energy_rate.replace('.', '', 1).isdigit() else None
+            and str(energy_rate).replace('.', '', 1).isdigit() else None
         charging_start_threshold = int(charge_start_threshold) if charge_start_threshold \
             and charge_start_threshold.isdigit() else None
         charging_stop_threshold = int(charge_stop_threshold) if charge_stop_threshold \
