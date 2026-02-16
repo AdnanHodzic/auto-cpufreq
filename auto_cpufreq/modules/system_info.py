@@ -150,7 +150,7 @@ class SystemInfo:
             return None
             
         return config.get_config().get( 
-            "charger" if is_ac_plugged else "battery", "energy_performance_preference", fallback="balance_power"
+            "charger" if is_ac_plugged else "battery", "energy_performance_preference", fallback="balance_performance" if is_ac_plugged else "balance_power"
         )
 
     @staticmethod
@@ -160,7 +160,7 @@ class SystemInfo:
             return None
 
         return config.get_config().get(
-            "charger" if is_ac_plugged else "battery", "energy_perf_bias", fallback="balance_power"
+            "charger" if is_ac_plugged else "battery", "energy_perf_bias", fallback="balance_performance" if is_ac_plugged else "balance_power"
         )
 
     @staticmethod
