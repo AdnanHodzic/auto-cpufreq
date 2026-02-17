@@ -86,7 +86,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             monitor.run(on_quit=conf.notifier.stop)
         elif live:
             root_check()
-            battery_setup()
+            start_battery_daemon()
             conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect_snap()
@@ -140,7 +140,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             elif not IS_INSTALLED_WITH_SNAP:
                 gnome_power_detect()
                 tlp_service_detect()
-            battery_setup()
+            start_battery_daemon()
             conf.notifier.start()
             while True:
                 try:

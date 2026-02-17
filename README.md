@@ -611,7 +611,9 @@ As of [v2.2.0](https://github.com/AdnanHodzic/auto-cpufreq/releases/tag/v2.2.0),
 - **Lenovo Laptop** (ideapad_laptop)*
 - **ASUS :Laptops** (asus_wmi)*
 
-***Please note, your laptop must have an installed ACPI kernel driver specific to the manufacturer.** To check if you have the correct module installed and loaded run `lsmod [module]`
+**Please note, your laptop must have an installed ACPI kernel driver specific to the manufacturer.** To check if you have the correct module installed and loaded run `lsmod [module]`
+
+Additionally, **you should make sure that you have no other software running that may conflict with auto-cpufreq's battery threshold management** (e.g., GNOME's *Preserve Battery Health* option). Using both at the same time will lead to conflicts and to your battery potentially never charging.
 
 **To request that your device be supported, please open an [issue](https://github.com/AdnanHodzic/auto-cpufreq/issues/new). In your issue, make us aware of the driver that works with your laptop**
 

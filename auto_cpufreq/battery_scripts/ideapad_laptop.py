@@ -25,10 +25,8 @@ class IdeapadBatteryDevice(BatteryDevice):
 
     def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
         if config["ideapad_conservation_mode"]:
-            print("DEBUG: ideapad conservation mode enabled")
             return self.set_conservation_mode(1)
         else:
-            print("DEBUG: ideapad conservation mode disabled")
             return self.set_conservation_mode(0)
 
     def print_battery_info(self, bat: str):

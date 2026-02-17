@@ -81,7 +81,6 @@ class BatteryDevice:
         }
 
         if config.get("enable_thresholds") != "true":
-            print("DEBUG: battery thresholding disabled")
             # Return early without further validation
             return parsed_config
 
@@ -203,18 +202,13 @@ class BatteryDevice:
             print(f"{bat} stop threshold = {stop_value}")
 
     def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
-        print(
-            f"DEBUG: applying battery settings to: {bat}, "
-            f'Start={config["start_threshold"]}, '
-            f'Stop={config["stop_threshold"]}'
-        )
         return self.set_battery_thresholds(
             bat,
             config["start_threshold"],
             config["stop_threshold"],
         )
 
-    def setup(self):
+    def apply_threshold_settings(self):
         parsed_config = self.get_parsed_config()
         if not parsed_config["thresholds_enabled"]:
             return
@@ -222,7 +216,6 @@ class BatteryDevice:
             print("WARNING: no batteries found to set thresholds for")
             return
 
-        print("DEBUG: applying battery settings")
         for bat in self.batteries:
             if not self.apply_threshold_settings_to_bat(bat, parsed_config):
                 print(f"ERROR: failed to set thresholds for battery {bat}")
