@@ -60,6 +60,8 @@ class BatteryDevice:
 
     def _get_config(self) -> dict[str, str]:
         conf = config.get_config()
+        if not conf.has_section("battery"):
+            return {}
         return dict(conf.items("battery"))
 
     def get_parsed_config(self) -> dict[str, int | bool]:
@@ -145,7 +147,9 @@ class BatteryDevice:
 
         # First set stop to 100 to avoid potential 'invalid argument'
         # errors when start >= stop
-        self._write_value_to_file(self.stop_paths[bat], 100)
+        if not self._write_value_to_file(self.stop_paths[bat], 100):
+            return False
+
         time.sleep(0.1)
 
         if not self._write_value_to_file(self.start_paths[bat], start):

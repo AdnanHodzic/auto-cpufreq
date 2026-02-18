@@ -654,31 +654,13 @@ This works only with laptops that have the `ideapad_laptop` kernel module.
 
 add `ideapad_laptop_conservation_mode = true` to your `auto-cpufreq.conf` file
 
-### Special cases of Lenovo_ideapad (or some other models with fixed threshold)
-
-As you may know, for some laptop models you can only decide to limit battery charging but can not set the limit value. The limit value is set by the manufacturer in the system (generally 60% and sometimes 80%). Also, you can not set the value of start charging.
-
-This limit value is not always accessible for users to avoid changing it, but you can try looking in some of these paths:
-
-```shell
-cat /sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/charge_control_end_threshold
-cat /sys/class/power_supply/BAT0/charge_control_end_threshold
-cat /sys/class/power_supply/BAT0/charge_control_start_threshold
-```
-
-This is the config to apply at /etc/auto-cpufreq.conf in order to stop battery charging at 60% or 80% depending on the value set in the system by the manufacturer.
-
 ```ini
 [battery]
-enable_thresholds = true
-start_threshold = 20
-stop_threshold = 1
-
+ideapad_laptop_conservation_mode = true
 ```
 
-start_threshold = 20 (should be present with a valid number but it's ignored)
+This is a special mode which limits the maximum charge level of the battery to around 60-80% depending on the model.
 
-stop_threshold = 1 (to stop charging the battery at the limit value 60% or 80%)
 
 ### Ignoring power supplies
 
