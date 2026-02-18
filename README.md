@@ -644,7 +644,7 @@ See more here on the kernel doc pages: [docs.kernel.org](https://docs.kernel.org
 When you remove/uninstall the auto-cpufreq daemon, the last applied settings for battery thresholds will still apply. You might need to manually set these yourself to whatever default they were before. E.g. (as sudo):
 
 ```shell
-echo 95 > /sys/class/power_supply/BAT0/charge_start_threshold
+echo 0 > /sys/class/power_supply/BAT0/charge_start_threshold
 echo 100 > /sys/class/power_supply/BAT0/charge_stop_threshold
 ```
 
