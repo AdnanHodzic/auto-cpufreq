@@ -23,8 +23,30 @@ class IdeapadBatteryDevice(BatteryDevice):
             return False
         return True
 
+    def _parse_threshold_values(
+        self, start: None | str, stop: None | str
+    ) -> tuple[int, int]:
+        # Ideapad laptops don't use start/stop thresholds.
+        # They only use conservation mode, which is either on or off. So we return dummy values here.
+        return 0, 100
+
+    def _parse_ideapad_conservation_mode(self, param: None | str) -> None | bool:
+        if param is None:
+            return None
+        param = param.lower().strip()
+        if param == "true":
+            return True
+        elif param == "false":
+            return False
+        else:
+            raise ValueError(f"Invalid value for ideapad_conservation_mode: {param}")
+
     def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
-        if config["ideapad_conservation_mode"]:
+        mode = config["ideapad_conservation_mode"]
+        if mode is None:
+            # If conservation mode is not explicitly set, we don't change it
+            return True
+        elif mode:
             return self.set_conservation_mode(1)
         else:
             return self.set_conservation_mode(0)

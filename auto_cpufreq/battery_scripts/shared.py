@@ -64,7 +64,7 @@ class BatteryDevice:
             return {}
         return dict(conf.items("battery"))
 
-    def get_parsed_config(self) -> dict[str, int | bool]:
+    def get_parsed_config(self) -> dict[str, Any]:
         """
         Parse battery configuration from config file
         Return validated and parsed config as dictionary
@@ -79,7 +79,7 @@ class BatteryDevice:
             "thresholds_enabled": False,
             "start_threshold": 99,
             "stop_threshold": 100,
-            "ideapad_conservation_mode": False,
+            "ideapad_conservation_mode": None,
         }
 
         if config.get("enable_thresholds") != "true":
@@ -95,7 +95,7 @@ class BatteryDevice:
 
             parsed_config["ideapad_conservation_mode"] = (
                 self._parse_ideapad_conservation_mode(
-                    "ideapad_laptop_conservation_mode"
+                    config.get("ideapad_laptop_conservation_mode")
                 )
             )
 
@@ -128,12 +128,13 @@ class BatteryDevice:
             raise ValueError("Start threshold must be less than stop threshold")
         return start_val, stop_val
 
-    def _parse_ideapad_conservation_mode(self, _: None | str) -> bool:
+    def _parse_ideapad_conservation_mode(self, param: None | str) -> None | bool:
         """
         Parse ideapad conservation mode value from config
         This method is overridden in IdeapadBatteryDevice subclass
+        Returns None when the conservation mode is explicitly not set.
         """
-        return False
+        return None
 
     def set_battery_thresholds(self, bat, start: int, stop: int) -> bool:
         """
