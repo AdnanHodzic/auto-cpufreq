@@ -110,7 +110,7 @@ class BatteryDevice:
     ) -> tuple[int, int]:
         """
         Parse and validate start and stop threshold values
-        This method should is overridden in subclasses if needed
+        This method should be overridden in subclasses if needed
         Return tuple of (start, stop) as integers if valid
         Raise ValueError if invalid
         """
