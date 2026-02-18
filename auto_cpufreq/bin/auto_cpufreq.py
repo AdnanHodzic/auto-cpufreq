@@ -143,7 +143,19 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 tlp_service_detect()
             battery_setup()
             conf.notifier.start()
-            while True:
+
+            # Initialize D-Bus service for power-profiles-daemon compatibility
+            from gi.repository import GLib
+            from auto_cpufreq.dbus import PowerProfilesService
+
+            dbus_service = PowerProfilesService()
+            dbus_service.start()
+
+            # Create GLib main loop
+            main_loop = GLib.MainLoop()
+
+            def periodic_optimization():
+                """Run the periodic CPU optimization."""
                 try:
                     footer()
                     gov_check()
@@ -151,9 +163,23 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                     distro_info()
                     sysinfo()
                     set_autofreq()
-                    countdown(2)
-                except KeyboardInterrupt: break
-            conf.notifier.stop()
+                except Exception as e:
+                    print(f"Error in periodic optimization: {e}")
+                return True  # Continue scheduling
+
+            # Schedule periodic optimization every 2 seconds
+            GLib.timeout_add_seconds(2, periodic_optimization)
+
+            # Run an initial optimization immediately
+            periodic_optimization()
+
+            try:
+                main_loop.run()
+            except KeyboardInterrupt:
+                pass
+            finally:
+                dbus_service.stop()
+                conf.notifier.stop()
         elif install:
             root_check()
             if IS_INSTALLED_WITH_SNAP:
