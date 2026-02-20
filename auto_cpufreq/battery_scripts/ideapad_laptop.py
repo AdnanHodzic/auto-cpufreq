@@ -1,69 +1,58 @@
 #!/usr/bin/env python3
-import os
-from subprocess import check_output
 
-from auto_cpufreq.config.config import config
-from auto_cpufreq.globals import CONSERVATION_MODE_FILE, POWER_SUPPLY_DIR
+from typing import Any
+from auto_cpufreq.battery_scripts.shared import BatteryDevice
 
-def set_battery(value, mode, bat):
-    path = f"{POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold"
-    if os.path.exists(path):
-        check_output(f"echo {value} | tee {POWER_SUPPLY_DIR}{bat}/charge_{mode}_threshold", shell=True, text=True)
-    else: print(f"WARNING: {path} does NOT exist")
+# The Arch wiki suggests this path may vary on different models, but TLP uses
+# the same hardcoded value
+CONSERVATION_MODE_FILE = "/sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode"
 
-def get_threshold_value(mode):
-    conf = config.get_config()
-    return conf["battery"][f"{mode}_threshold"] if conf.has_option("battery", f"{mode}_threshold") else (0 if mode == "start" else 100)
+class IdeapadBatteryDevice(BatteryDevice):
+    def is_conservation_mode(self) -> bool:
+        val = self._read_value_from_file(CONSERVATION_MODE_FILE)
+        if val not in ("0", "1"):
+            print(
+                f"WARNING: could not get value from conservation mode, unexpected value!: {val}"
+            )
+            return False
+        return val == "1"
 
-def conservation_mode(value):
-    try:
-        check_output(f"echo {value} | tee {CONSERVATION_MODE_FILE}", shell=True, text=True)
-        print(f"conservation_mode is {value}")
-    except: print("unable to set conservation mode")
-    return
+    def set_conservation_mode(self, value: int) -> bool:
+        if not self._write_value_to_file(CONSERVATION_MODE_FILE, value):
+            print("WARNING: unable to set conservation mode")
+            return False
+        return True
 
-def check_conservation_mode():
-    try:
-        value = check_output(["cat", CONSERVATION_MODE_FILE], text=True).rstrip()
-        if value == "1": return True
-        elif value == "0": return False
-        else:
-            print("could not get value from conservation mode")
+    def _parse_threshold_values(
+        self, start: None | str, stop: None | str
+    ) -> tuple[int, int]:
+        # Ideapad laptops don't use start/stop thresholds.
+        # They only use conservation mode, which is either on or off. So we return dummy values here.
+        return 0, 100
+
+    def _parse_ideapad_conservation_mode(self, param: None | str) -> None | bool:
+        if param is None:
             return None
-    except:
-        print("could not get the value from conservation mode")
-        return False
+        param = param.lower().strip()
+        if param == "true":
+            return True
+        elif param == "false":
+            return False
+        else:
+            raise ValueError(f"Invalid value for ideapad_conservation_mode: {param}")
 
-def ideapad_laptop_setup():
-    conf = config.get_config()
+    def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
+        mode = config["ideapad_conservation_mode"]
+        if mode is None:
+            # If conservation mode is not explicitly set, we don't change it
+            return True
+        elif mode:
+            return self.set_conservation_mode(1)
+        else:
+            return self.set_conservation_mode(0)
 
-    if not (conf.has_option("battery", "enable_thresholds") and conf["battery"]["enable_thresholds"] == "true"): return
-
-    batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")]
-
-    if conf.has_option("battery", "ideapad_laptop_conservation_mode"):
-        if conf["battery"]["ideapad_laptop_conservation_mode"] == "true":
-            conservation_mode(1)
-            return
-        if conf["battery"]["ideapad_laptop_conservation_mode"] == "false": conservation_mode(0)
-
-    if not check_conservation_mode():
-        for bat in batteries:
-            set_battery(get_threshold_value("start"), "start", bat)
-            set_battery(get_threshold_value("stop"), "stop", bat)
-    else: print("conservation mode is enabled unable to set thresholds")
-
-def ideapad_laptop_print_thresholds():
-    if check_conservation_mode():
-        print("conservation mode is on")
-        return
-
-    batteries = [name for name in os.listdir(POWER_SUPPLY_DIR) if name.startswith("BAT")]
-
-    print("\n-------------------------------- Battery Info ---------------------------------\n")
-    print(f"battery count = {len(batteries)}")
-    for bat in batteries:
-        try:
-            print(bat, "start threshold =", check_output(["cat", POWER_SUPPLY_DIR+bat+"/charge_start_threshold"]))
-            print(bat, "stop threshold =", check_output(["cat", POWER_SUPPLY_DIR+bat+"/charge_stop_threshold"]))
-        except Exception as e: print(f"ERROR: failed to read battery {bat} thresholds:", repr(e))
+    def print_battery_info(self, bat: str):
+        if self.is_conservation_mode():
+            print(f"{bat} conservation mode is on")
+        else:
+            print(f"{bat} conservation mode is off")
