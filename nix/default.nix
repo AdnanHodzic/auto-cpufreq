@@ -40,8 +40,9 @@ python3Packages.buildPythonPackage {
 
   buildInputs = with pkgs; [gtk3 python3Packages.poetry-core];
 
-  propagatedBuildInputs = with python3Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify urwid pyasyncore pkgs.getent] ++
-      [ pkgs.kmod pkgs.dmidecode ];
+  propagatedBuildInputs = with python3Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify urwid pyasyncore pkgs.getent
+    pkgs.kmod pkgs.dmidecode 
+  ];
 
   doCheck = false;
   pythonImportsCheck = ["auto_cpufreq"];
