@@ -226,9 +226,9 @@ Then you can enable the program in your `configuration.nix` file:
 
 {inputs, pkgs, ...}: {
     # ---Snip---
-    programs.auto-cpufreq.enable = true;
+    services.auto-cpufreq.enable = true;
     # optionally, you can configure your auto-cpufreq settings, if you have any
-    programs.auto-cpufreq.settings = {
+    services.auto-cpufreq.settings = {
     charger = {
       governor = "performance";
       turbo = "auto";
