@@ -352,6 +352,18 @@ test = ["certifi", "cryptography-vectors (==43.0.3)", "pretend", "pytest (>=6.2.
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "dasbus"
+version = "1.7"
+description = "DBus library in Python 3"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "dasbus-1.7-py3-none-any.whl", hash = "sha256:0a9433e9e72c2c865fa2d5ef824ac4ef49b540cf57f6396e515c2f314e5c14cd"},
+    {file = "dasbus-1.7.tar.gz", hash = "sha256:a8850d841adfe8ee5f7bb9f82cf449ab9b4950dc0633897071718e0d0036b6f6"},
+]
+
+[[package]]
 name = "distlib"
 version = "0.4.0"
 description = "Distribution utilities"
@@ -1398,4 +1410,4 @@ gui = ["PyGObject"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "1a320a80a46edec0b309fb95b6e046e307f83196c7d962f96ea390223529243f"
+content-hash = "4c1129d4385bf2b4bed0fc8893423f23b7f5db69ab870d49c41072dfbd1dd6b2"
