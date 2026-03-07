@@ -498,10 +498,8 @@ def set_frequencies():
             "minmax": "minimum",
         },
     }
-    if not hasattr(set_frequencies, "max_limit"):
-        set_frequencies.max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
-    if not hasattr(set_frequencies, "min_limit"):
-        set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
+    set_frequencies.max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
+    set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
 
     conf = config.get_config()
 
@@ -582,7 +580,6 @@ def set_powersave():
 
     set_energy_perf_bias(conf, "battery")
     set_platform_profile(conf, "battery")
-    set_frequencies()
 
     cpuload, load1m= get_load()
 
@@ -610,6 +607,7 @@ def set_powersave():
             print(f"Optimal total CPU usage: {cpuload}%, high average core temp: {SystemInfo.avg_temp()}°C")
             set_turbo(False)
 
+    set_frequencies()
     footer()
 
 def mon_powersave():
@@ -695,7 +693,6 @@ def set_performance():
     
     set_energy_perf_bias(conf, "charger")
     set_platform_profile(conf, "charger")
-    set_frequencies()
 
     cpuload, load1m = get_load()
     auto = conf["charger"]["turbo"] if conf.has_option("charger", "turbo") else "auto"
@@ -735,6 +732,7 @@ def set_performance():
             else: # set turbo state based on average of all core temperatures
                 print(f"Optimal total CPU usage: {cpuload}%, high average core temp: {SystemInfo.avg_temp()}°C")
                 set_turbo(False)
+    set_frequencies()
     footer()
 
 def mon_performance():
