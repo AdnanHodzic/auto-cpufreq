@@ -477,16 +477,9 @@ def set_frequencies():
     Sets frequencies:
      - if option is used in auto-cpufreq.conf: use configured value
      - if option is disabled/no conf file used: set default frequencies
-    Frequency setting is performed only once on power supply change
+    Frequency setting is validated on each run and only applied when needed
     """
     power_supply = "charger" if charging() else "battery"
-
-    # don't do anything if the power supply hasn't changed
-    if (
-        hasattr(set_frequencies, "prev_power_supply")
-        and power_supply == set_frequencies.prev_power_supply
-    ): return
-    else: set_frequencies.prev_power_supply = power_supply
 
     frequency = {
         "scaling_max_freq": {
@@ -504,20 +497,21 @@ def set_frequencies():
     conf = config.get_config()
 
     for freq_type in frequency.keys():
-        value = None
-        if not conf.has_option(power_supply, freq_type):
-            # fetch and use default frequencies
-            if freq_type == "scaling_max_freq":
-                curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
-                value = set_frequencies.max_limit
-            else:
-                curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
-                value = set_frequencies.min_limit
-            if curr_freq == value: continue
+        if freq_type == "scaling_max_freq":
+            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
+            value = set_frequencies.max_limit
+        else:
+            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
+            value = set_frequencies.min_limit
 
-        try: frequency[freq_type]["value"] = value if value else int(conf[power_supply][freq_type].strip())
+        try:
+            if conf.has_option(power_supply, freq_type):
+                raw_value = conf[power_supply][freq_type].strip()
+                frequency[freq_type]["value"] = int(raw_value)
+            else:
+                frequency[freq_type]["value"] = value
         except ValueError:
-            print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
+            print(f"Invalid value for '{freq_type}': {raw_value}")
             exit(1)
 
         if not set_frequencies.min_limit <= frequency[freq_type]["value"] <= set_frequencies.max_limit:
@@ -525,6 +519,8 @@ def set_frequencies():
                 f"Given value for '{freq_type}' is not within the allowed frequencies {set_frequencies.min_limit}-{set_frequencies.max_limit} kHz"
             )
             exit(1)
+
+        if curr_freq == frequency[freq_type]["value"]: continue
 
         print(f'Setting {frequency[freq_type]["minmax"]} CPU frequency to {round(frequency[freq_type]["value"]/1000)} Mhz')
         # set the frequency
