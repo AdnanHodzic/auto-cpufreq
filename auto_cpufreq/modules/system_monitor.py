@@ -100,9 +100,13 @@ class SystemMonitor:
 
         # Restore focus positions
         if len(self.left_content) > 0:
-            self.left_listbox.set_focus(min(self.last_focus_left, len(self.left_content) - 1))  # type: ignore
+            self.left_listbox.set_focus(
+                min(self.last_focus_left, len(self.left_content) - 1)
+            )  # type: ignore
         if len(self.right_content) > 0:
-            self.right_listbox.set_focus(min(self.last_focus_right, len(self.right_content) - 1))  # type: ignore
+            self.right_listbox.set_focus(
+                min(self.last_focus_right, len(self.right_content) - 1)
+            )  # type: ignore
 
         self.loop.set_alarm_in(2, self.update)  # type: ignore
 
@@ -167,23 +171,23 @@ class SystemMonitor:
             )
 
         # Right Column - Battery, Frequency Scaling, and System Stats
-        if report.battery_info != None:
+        if report.battery_info is not None:
             self.right_content.extend(
                 [
                     urwid.AttrMap(aligned_text("Battery Stats"), "header"),
                     aligned_text(""),
                     aligned_text(f"Battery status: {str(report.battery_info)}"),
                     aligned_text(
-                        f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"
+                        f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f"AC plugged: {('Yes' if report.battery_info.is_ac_plugged else 'No') if report.battery_info.is_ac_plugged is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f"Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f"Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged is not None else 'Unknown'}"
                     ),
                     aligned_text(""),
                 ]
@@ -195,14 +199,14 @@ class SystemMonitor:
                 urwid.AttrMap(aligned_text("CPU Frequency Scaling"), "header"),
                 aligned_text(""),
                 aligned_text(
-                    f'Setting to use: "{report.current_gov if report.current_gov != None else "Unknown"}" governor'
+                    f'Setting to use: "{report.current_gov if report.current_gov is not None else "Unknown"}" governor'
                 ),
             ]
         )
 
         if (
             self.suggestion
-            and report.current_gov != None
+            and report.current_gov is not None
             and system_info.governor_suggestion() != report.current_gov
         ):
             self.right_content.append(
@@ -266,9 +270,9 @@ class SystemMonitor:
             )
 
         turbo_status: str
-        if report.is_turbo_on[0] != None:
+        if report.is_turbo_on[0] is not None:
             turbo_status = "On" if report.is_turbo_on[0] else "Off"
-        elif report.is_turbo_on[1] != None:
+        elif report.is_turbo_on[1] is not None:
             turbo_status = (
                 f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
             )
@@ -277,13 +281,13 @@ class SystemMonitor:
         self.right_content.append(aligned_text(f"Setting turbo boost: {turbo_status}"))
         if (
             self.suggestion
-            and report.is_turbo_on[0] != None
+            and report.is_turbo_on[0] is not None
             and system_info.turbo_on_suggestion() != report.is_turbo_on[0]
         ):
             self.right_content.append(
                 urwid.AttrMap(
                     aligned_text(
-                        f'Suggesting to set turbo boost: {"on" if system_info.turbo_on_suggestion() else "off"}'
+                        f"Suggesting to set turbo boost: {'on' if system_info.turbo_on_suggestion() else 'off'}"
                     ),
                     "suggestion",
                 )

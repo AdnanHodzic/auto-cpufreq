@@ -1,4 +1,5 @@
 import gi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk
 
@@ -12,29 +13,44 @@ from threading import Thread
 import time
 
 from auto_cpufreq.config.config import config, find_config_file
-from auto_cpufreq.core import distro_info, get_formatted_version, get_override, get_turbo_override, sysinfo
+from auto_cpufreq.core import (
+    distro_info,
+    get_formatted_version,
+    get_override,
+    get_turbo_override,
+    sysinfo,
+)
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.modules.system_info import system_info
 from auto_cpufreq.power_helper import bluetoothctl_exists
 
-auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
+auto_cpufreq_stats_path = (
+    "/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run"
+) + "/auto-cpufreq.stats"
+
 
 def get_stats():
     if isfile(auto_cpufreq_stats_path):
-        with open(auto_cpufreq_stats_path, "r") as file: stats = [line for line in (file.readlines() [-50:])]
+        with open(auto_cpufreq_stats_path, "r") as file:
+            stats = [line for line in (file.readlines()[-50:])]
         return "".join(stats)
+
 
 def get_version():
     # snap package
-    if IS_INSTALLED_WITH_SNAP: return getoutput(r"echo \(Snap\) $SNAP_VERSION")
+    if IS_INSTALLED_WITH_SNAP:
+        return getoutput(r"echo \(Snap\) $SNAP_VERSION")
     # aur package
-    elif IS_INSTALLED_WITH_AUR: return getoutput("pacman -Qi auto-cpufreq | grep Version")
+    elif IS_INSTALLED_WITH_AUR:
+        return getoutput("pacman -Qi auto-cpufreq | grep Version")
     else:
         # source code (auto-cpufreq-installer)
-        try: return get_formatted_version()
+        try:
+            return get_formatted_version()
         except Exception as e:
             print(repr(e))
             pass
+
 
 def get_bluetooth_boot_status():
     if not bluetoothctl_exists:
@@ -59,6 +75,7 @@ def get_bluetooth_boot_status():
     except Exception:
         return None
 
+
 class RadioButtonView(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
@@ -71,10 +88,14 @@ class RadioButtonView(Gtk.Box):
         self.default = Gtk.RadioButton.new_with_label_from_widget(None, "Default")
         self.default.connect("toggled", self.on_button_toggled, "reset")
         self.default.set_halign(Gtk.Align.END)
-        self.powersave = Gtk.RadioButton.new_with_label_from_widget(self.default, "Powersave")
+        self.powersave = Gtk.RadioButton.new_with_label_from_widget(
+            self.default, "Powersave"
+        )
         self.powersave.connect("toggled", self.on_button_toggled, "powersave")
         self.powersave.set_halign(Gtk.Align.END)
-        self.performance = Gtk.RadioButton.new_with_label_from_widget(self.default, "Performance")
+        self.performance = Gtk.RadioButton.new_with_label_from_widget(
+            self.default, "Performance"
+        )
         self.performance.connect("toggled", self.on_button_toggled, "performance")
         self.performance.set_halign(Gtk.Align.END)
 
@@ -90,21 +111,31 @@ class RadioButtonView(Gtk.Box):
     def on_button_toggled(self, button, override):
         if button.get_active():
             if not self.set_by_app:
-                result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
+                result = run(
+                    f"pkexec auto-cpufreq --force={override}",
+                    shell=True,
+                    stdout=PIPE,
+                    stderr=PIPE,
+                )
                 if result.returncode in (126, 127):
                     self.set_by_app = True
                     self.set_selected()
-            else: self.set_by_app = False
+            else:
+                self.set_by_app = False
 
     def set_selected(self):
         override = get_override()
         match override:
-            case "powersave": self.powersave.set_active(True)
-            case "performance": self.performance.set_active(True)
+            case "powersave":
+                self.powersave.set_active(True)
+            case "performance":
+                self.performance.set_active(True)
             case "default":
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.default.set_active(True)
-                if self.set_by_app: self.set_by_app = False
+                if self.set_by_app:
+                    self.set_by_app = False
+
 
 class CPUTurboOverride(Gtk.Box):
     def __init__(self):
@@ -116,10 +147,10 @@ class CPUTurboOverride(Gtk.Box):
         self.label = Gtk.Label("CPU Turbo Override", name="bold")
 
         self.auto = Gtk.RadioButton.new_with_label_from_widget(None, "Auto")
-        self.auto.connect("toggled", self.on_button_toggled,  "auto")
+        self.auto.connect("toggled", self.on_button_toggled, "auto")
         self.auto.set_halign(Gtk.Align.END)
         self.never = Gtk.RadioButton.new_with_label_from_widget(self.auto, "Never")
-        self.never.connect("toggled", self.on_button_toggled,  "never")
+        self.never.connect("toggled", self.on_button_toggled, "never")
         self.never.set_halign(Gtk.Align.END)
         self.always = Gtk.RadioButton.new_with_label_from_widget(self.auto, "Always")
         self.always.connect("toggled", self.on_button_toggled, "always")
@@ -136,21 +167,31 @@ class CPUTurboOverride(Gtk.Box):
     def on_button_toggled(self, button, override):
         if button.get_active():
             if not self.set_by_app:
-                result = run(f"pkexec auto-cpufreq --turbo={override}", shell=True, stdout=PIPE, stderr=PIPE)
+                result = run(
+                    f"pkexec auto-cpufreq --turbo={override}",
+                    shell=True,
+                    stdout=PIPE,
+                    stderr=PIPE,
+                )
                 if result.returncode in (126, 127):
                     self.set_by_app = True
                     self.set_selected()
-            else: self.set_by_app = False
+            else:
+                self.set_by_app = False
 
     def set_selected(self):
         override = get_turbo_override()
         match override:
-            case "never": self.never.set_active(True)
-            case "always": self.always.set_active(True)
+            case "never":
+                self.never.set_active(True)
+            case "always":
+                self.always.set_active(True)
             case "auto":
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.auto.set_active(True)
-                if self.set_by_app: self.set_by_app = False
+                if self.set_by_app:
+                    self.set_by_app = False
+
 
 class BluetoothBootControl(Gtk.Box):
     def __init__(self):
@@ -202,34 +243,54 @@ class BluetoothBootControl(Gtk.Box):
         if button.get_active():
             if not self.set_by_app:
                 if action == "on":
-                    result = run("pkexec auto-cpufreq --bluetooth_boot_on", shell=True, stdout=PIPE, stderr=PIPE)
+                    result = run(
+                        "pkexec auto-cpufreq --bluetooth_boot_on",
+                        shell=True,
+                        stdout=PIPE,
+                        stderr=PIPE,
+                    )
                 else:
-                    result = run("pkexec auto-cpufreq --bluetooth_boot_off", shell=True, stdout=PIPE, stderr=PIPE)
+                    result = run(
+                        "pkexec auto-cpufreq --bluetooth_boot_off",
+                        shell=True,
+                        stdout=PIPE,
+                        stderr=PIPE,
+                    )
                 if result.returncode in (126, 127):
                     self.set_by_app = True
                     self.set_selected()
-            else: self.set_by_app = False
+            else:
+                self.set_by_app = False
 
     def set_selected(self):
         status = get_bluetooth_boot_status()
         match status:
-            case "off": self.off_btn.set_active(True)
+            case "off":
+                self.off_btn.set_active(True)
             case "on" | _:
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.on_btn.set_active(True)
-                if self.set_by_app: self.set_by_app = False
+                if self.set_by_app:
+                    self.set_by_app = False
+
 
 class CurrentGovernorBox(Gtk.Box):
     def __init__(self):
         super().__init__(spacing=25)
         self.static = Gtk.Label(label="Current Governor", name="bold")
-        self.governor = Gtk.Label(label=getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0], halign=Gtk.Align.END)
+        self.governor = Gtk.Label(
+            label=getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0],
+            halign=Gtk.Align.END,
+        )
 
         self.pack_start(self.static, False, False, 0)
         self.pack_start(self.governor, False, False, 0)
 
     def refresh(self):
-        self.governor.set_label(getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0])
+        self.governor.set_label(
+            getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0]
+        )
+
 
 class BatteryInfoBox(Gtk.Box):
     def __init__(self):
@@ -281,13 +342,23 @@ class BatteryInfoBox(Gtk.Box):
             self.ac_label.set_label(f"AC plugged: {ac_text}")
 
             if battery_info.is_ac_plugged is not None:
-                start_text = str(battery_info.charging_start_threshold) if battery_info.charging_start_threshold is not None else "None"
+                start_text = (
+                    str(battery_info.charging_start_threshold)
+                    if battery_info.charging_start_threshold is not None
+                    else "None"
+                )
             else:
                 start_text = "Unknown"
-            self.start_threshold_label.set_label(f"Charging start threshold: {start_text}")
+            self.start_threshold_label.set_label(
+                f"Charging start threshold: {start_text}"
+            )
 
             if battery_info.is_ac_plugged is not None:
-                stop_text = str(battery_info.charging_stop_threshold) if battery_info.charging_stop_threshold is not None else "None"
+                stop_text = (
+                    str(battery_info.charging_stop_threshold)
+                    if battery_info.charging_stop_threshold is not None
+                    else "None"
+                )
             else:
                 stop_text = "Unknown"
             self.stop_threshold_label.set_label(f"Charging stop threshold: {stop_text}")
@@ -298,6 +369,7 @@ class BatteryInfoBox(Gtk.Box):
             self.ac_label.set_label("AC plugged: Unknown")
             self.start_threshold_label.set_label("Charging start threshold: Unknown")
             self.stop_threshold_label.set_label("Charging stop threshold: Unknown")
+
 
 class CPUFreqScalingBox(Gtk.Box):
     def __init__(self):
@@ -347,6 +419,7 @@ class CPUFreqScalingBox(Gtk.Box):
             self.governor_label.set_label('Setting to use: "Unknown" governor')
             self.epp_label.set_label("EPP setting: Unknown")
             self.epb_label.hide()
+
 
 class SystemStatisticsBox(Gtk.Box):
     def __init__(self):
@@ -401,8 +474,12 @@ class SystemStatisticsBox(Gtk.Box):
 
             avg_temp = 0.0
             if report.cores_info:
-                avg_temp = sum(core.temperature for core in report.cores_info) / len(report.cores_info)
-                self.temp_label.set_label(f"Average temp. of all cores: {avg_temp:.2f} °C")
+                avg_temp = sum(core.temperature for core in report.cores_info) / len(
+                    report.cores_info
+                )
+                self.temp_label.set_label(
+                    f"Average temp. of all cores: {avg_temp:.2f} °C"
+                )
                 self.temp_label.show()
             else:
                 self.temp_label.hide()
@@ -435,7 +512,9 @@ class SystemStatisticsBox(Gtk.Box):
             if report.is_turbo_on[0] is not None:
                 turbo_status = "On" if report.is_turbo_on[0] else "Off"
             elif report.is_turbo_on[1] is not None:
-                turbo_status = f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
+                turbo_status = (
+                    f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
+                )
             else:
                 turbo_status = "Unknown"
             self.turbo_label.set_label(f"Setting turbo boost: {turbo_status}")
@@ -448,6 +527,7 @@ class SystemStatisticsBox(Gtk.Box):
             self.load_status_label.hide()
             self.usage_status_label.hide()
             self.turbo_label.set_label("Setting turbo boost: Unknown")
+
 
 class SystemStatsLabel(Gtk.Label):
     def __init__(self):
@@ -463,12 +543,13 @@ class SystemStatsLabel(Gtk.Label):
         sysinfo()
         self.set_label(text.getvalue())
         sys.stdout = old_stdout
-    
+
+
 class CPUFreqStatsLabel(Gtk.Label):
     def __init__(self):
         super().__init__()
         self.refresh()
-  
+
     def refresh(self):
         stats = get_stats().split("\n")
         start = None
@@ -480,13 +561,16 @@ class CPUFreqStatsLabel(Gtk.Label):
             del stats[:i]
             del stats[-4:]
             self.set_label("\n".join(stats))
- 
+
+
 class DropDownMenu(Gtk.MenuButton):
     def __init__(self, parent):
         super().__init__()
         self.set_halign(Gtk.Align.END)
         self.set_valign(Gtk.Align.START)
-        self.image = Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
+        self.image = Gtk.Image.new_from_icon_name(
+            "open-menu-symbolic", Gtk.IconSize.LARGE_TOOLBAR
+        )
         self.add(self.image)
         self.menu = self.build_menu(parent)
         self.set_popup(self.menu)
@@ -507,11 +591,13 @@ class DropDownMenu(Gtk.MenuButton):
 
     def about_dialog(self, MenuItem, parent):
         dialog = AboutDialog(parent)
-        response = dialog.run()
+        dialog.run()
         dialog.destroy()
 
     def _remove_daemon(self, MenuItem, parent):
-        confirm = ConfirmDialog(parent, message="Are you sure you want to remove the daemon?")
+        confirm = ConfirmDialog(
+            parent, message="Are you sure you want to remove the daemon?"
+        )
         response = confirm.run()
         confirm.destroy()
         if response == Gtk.ResponseType.YES:
@@ -519,16 +605,22 @@ class DropDownMenu(Gtk.MenuButton):
                 # run in thread to prevent GUI from hanging
                 with ThreadPoolExecutor() as executor:
                     kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
-                    future = executor.submit(run, "pkexec auto-cpufreq --remove", **kwargs)
+                    future = executor.submit(
+                        run, "pkexec auto-cpufreq --remove", **kwargs
+                    )
                     result = future.result()
-                assert result.returncode not in (126, 127), Exception("Authorization was cancelled")
+                assert result.returncode not in (126, 127), Exception(
+                    "Authorization was cancelled"
+                )
                 dialog = Gtk.MessageDialog(
                     transient_for=parent,
                     message_type=Gtk.MessageType.INFO,
                     buttons=Gtk.ButtonsType.OK,
-                    text="Daemon successfully removed"
+                    text="Daemon successfully removed",
                 )
-                dialog.format_secondary_text("The app will now close. Please reopen to apply changes")
+                dialog.format_secondary_text(
+                    "The app will now close. Please reopen to apply changes"
+                )
                 dialog.run()
                 dialog.destroy()
                 parent.destroy()
@@ -537,11 +629,12 @@ class DropDownMenu(Gtk.MenuButton):
                     transient_for=parent,
                     message_type=Gtk.MessageType.ERROR,
                     buttons=Gtk.ButtonsType.OK,
-                    text="Daemon removal failed"
+                    text="Daemon removal failed",
                 )
                 dialog.format_secondary_text(f"The following error occured:\n{e}")
                 dialog.run()
                 dialog.destroy()
+
 
 class AboutDialog(Gtk.Dialog):
     def __init__(self, parent):
@@ -555,7 +648,7 @@ class AboutDialog(Gtk.Dialog):
             filename="/usr/local/share/auto-cpufreq/images/icon.png",
             width=150,
             height=150,
-            preserve_aspect_ratio=True
+            preserve_aspect_ratio=True,
         )
         self.image = Gtk.Image.new_from_pixbuf(img_buffer)
         self.title = Gtk.Label(label="auto-cpufreq", name="bold")
@@ -574,6 +667,7 @@ class AboutDialog(Gtk.Dialog):
         self.box.pack_start(self.love, False, False, 0)
         self.show_all()
 
+
 class UpdateDialog(Gtk.Dialog):
     def __init__(self, parent, current_version: str, latest_version: str):
         super().__init__(title="Update Available", transient_for=parent)
@@ -589,6 +683,7 @@ class UpdateDialog(Gtk.Dialog):
         self.box.pack_start(self.latest_version, True, False, 0)
 
         self.show_all()
+
 
 class ConfirmDialog(Gtk.Dialog):
     def __init__(self, parent, message: str):
@@ -700,103 +795,232 @@ class MonitorModeView(Gtk.Box):
         current_time = time.strftime("%H:%M:%S")
         self.title.set_text(f"Monitor Mode - {current_time}")
 
-
         self.left_box.pack_start(self._separator("System Information"), False, False, 5)
-        self.left_box.pack_start(self._label(f"Linux distro: {report.distro_name} {report.distro_ver}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Linux kernel: {report.kernel_version}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Processor: {report.processor_model}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Cores: {report.total_core}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Architecture: {report.arch}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Driver: {report.cpu_driver}"), False, False, 0)
+        self.left_box.pack_start(
+            self._label(f"Linux distro: {report.distro_name} {report.distro_ver}"),
+            False,
+            False,
+            0,
+        )
+        self.left_box.pack_start(
+            self._label(f"Linux kernel: {report.kernel_version}"), False, False, 0
+        )
+        self.left_box.pack_start(
+            self._label(f"Processor: {report.processor_model}"), False, False, 0
+        )
+        self.left_box.pack_start(
+            self._label(f"Cores: {report.total_core}"), False, False, 0
+        )
+        self.left_box.pack_start(
+            self._label(f"Architecture: {report.arch}"), False, False, 0
+        )
+        self.left_box.pack_start(
+            self._label(f"Driver: {report.cpu_driver}"), False, False, 0
+        )
 
         config_path = config.path if config.has_config() else find_config_file(None)
         if isfile(config_path):
-            self.left_box.pack_start(self._label(f"\nUsing settings defined in {config_path}"), False, False, 0)
+            self.left_box.pack_start(
+                self._label(f"\nUsing settings defined in {config_path}"),
+                False,
+                False,
+                0,
+            )
 
         self.left_box.pack_start(self._label(""), False, False, 0)
 
         self.left_box.pack_start(self._separator("Current CPU Stats"), False, False, 5)
-        self.left_box.pack_start(self._label(f"CPU max frequency: {report.cpu_max_freq:.0f} MHz" if report.cpu_max_freq else "CPU max frequency: Unknown"), False, False, 0)
-        self.left_box.pack_start(self._label(f"CPU min frequency: {report.cpu_min_freq:.0f} MHz" if report.cpu_min_freq else "CPU min frequency: Unknown"), False, False, 0)
+        self.left_box.pack_start(
+            self._label(
+                f"CPU max frequency: {report.cpu_max_freq:.0f} MHz"
+                if report.cpu_max_freq
+                else "CPU max frequency: Unknown"
+            ),
+            False,
+            False,
+            0,
+        )
+        self.left_box.pack_start(
+            self._label(
+                f"CPU min frequency: {report.cpu_min_freq:.0f} MHz"
+                if report.cpu_min_freq
+                else "CPU min frequency: Unknown"
+            ),
+            False,
+            False,
+            0,
+        )
         self.left_box.pack_start(self._label(""), False, False, 0)
-        self.left_box.pack_start(self._label("Core    Usage   Temperature     Frequency"), False, False, 0)
+        self.left_box.pack_start(
+            self._label("Core    Usage   Temperature     Frequency"), False, False, 0
+        )
 
         for core in report.cores_info:
             self.left_box.pack_start(
-                self._label(f"CPU{core.id:<2}    {core.usage:>4.1f}%    {core.temperature:>6.0f} °C    {core.frequency:>6.0f} MHz"),
-                False, False, 0
+                self._label(
+                    f"CPU{core.id:<2}    {core.usage:>4.1f}%    {core.temperature:>6.0f} °C    {core.frequency:>6.0f} MHz"
+                ),
+                False,
+                False,
+                0,
             )
 
         if report.cpu_fan_speed:
             self.left_box.pack_start(self._label(""), False, False, 0)
-            self.left_box.pack_start(self._label(f"CPU fan speed: {report.cpu_fan_speed} RPM"), False, False, 0)
-
+            self.left_box.pack_start(
+                self._label(f"CPU fan speed: {report.cpu_fan_speed} RPM"),
+                False,
+                False,
+                0,
+            )
 
         if report.battery_info is not None:
             self.right_box.pack_start(self._separator("Battery Stats"), False, False, 5)
-            self.right_box.pack_start(self._label(f"Battery status: {str(report.battery_info)}"), False, False, 0)
-            battery_level = f"{report.battery_info.battery_level}%" if report.battery_info.battery_level is not None else "Unknown"
-            self.right_box.pack_start(self._label(f"Battery percentage: {battery_level}"), False, False, 0)
-            ac_status = "Yes" if report.battery_info.is_ac_plugged else "No" if report.battery_info.is_ac_plugged is not None else "Unknown"
-            self.right_box.pack_start(self._label(f"AC plugged: {ac_status}"), False, False, 0)
-            self.right_box.pack_start(self._label(f"Charging start threshold: {report.battery_info.charging_start_threshold}"), False, False, 0)
-            self.right_box.pack_start(self._label(f"Charging stop threshold: {report.battery_info.charging_stop_threshold}"), False, False, 0)
+            self.right_box.pack_start(
+                self._label(f"Battery status: {str(report.battery_info)}"),
+                False,
+                False,
+                0,
+            )
+            battery_level = (
+                f"{report.battery_info.battery_level}%"
+                if report.battery_info.battery_level is not None
+                else "Unknown"
+            )
+            self.right_box.pack_start(
+                self._label(f"Battery percentage: {battery_level}"), False, False, 0
+            )
+            ac_status = (
+                "Yes"
+                if report.battery_info.is_ac_plugged
+                else "No"
+                if report.battery_info.is_ac_plugged is not None
+                else "Unknown"
+            )
+            self.right_box.pack_start(
+                self._label(f"AC plugged: {ac_status}"), False, False, 0
+            )
+            self.right_box.pack_start(
+                self._label(
+                    f"Charging start threshold: {report.battery_info.charging_start_threshold}"
+                ),
+                False,
+                False,
+                0,
+            )
+            self.right_box.pack_start(
+                self._label(
+                    f"Charging stop threshold: {report.battery_info.charging_stop_threshold}"
+                ),
+                False,
+                False,
+                0,
+            )
             self.right_box.pack_start(self._label(""), False, False, 0)
 
-        self.right_box.pack_start(self._separator("CPU Frequency Scaling"), False, False, 5)
+        self.right_box.pack_start(
+            self._separator("CPU Frequency Scaling"), False, False, 5
+        )
         current_gov = report.current_gov if report.current_gov else "Unknown"
-        self.right_box.pack_start(self._label(f'Setting to use: "{current_gov}" governor'), False, False, 0)
+        self.right_box.pack_start(
+            self._label(f'Setting to use: "{current_gov}" governor'), False, False, 0
+        )
 
         suggested_gov = system_info.governor_suggestion()
         if report.current_gov and suggested_gov != report.current_gov:
-            self.right_box.pack_start(self._suggestion(f'Suggesting use of: "{suggested_gov}" governor'), False, False, 0)
+            self.right_box.pack_start(
+                self._suggestion(f'Suggesting use of: "{suggested_gov}" governor'),
+                False,
+                False,
+                0,
+            )
 
         if report.current_epp:
-            self.right_box.pack_start(self._label(f"EPP setting: {report.current_epp}"), False, False, 0)
+            self.right_box.pack_start(
+                self._label(f"EPP setting: {report.current_epp}"), False, False, 0
+            )
         else:
-            self.right_box.pack_start(self._label("Not setting EPP (not supported by system)"), False, False, 0)
+            self.right_box.pack_start(
+                self._label("Not setting EPP (not supported by system)"),
+                False,
+                False,
+                0,
+            )
 
         if report.current_epb:
-            self.right_box.pack_start(self._label(f'Setting to use: "{report.current_epb}" EPB'), False, False, 0)
+            self.right_box.pack_start(
+                self._label(f'Setting to use: "{report.current_epb}" EPB'),
+                False,
+                False,
+                0,
+            )
 
         self.right_box.pack_start(self._label(""), False, False, 0)
 
         self.right_box.pack_start(self._separator("System Statistics"), False, False, 5)
-        self.right_box.pack_start(self._label(f"Total CPU usage: {report.cpu_usage:.1f} %"), False, False, 0)
-        self.right_box.pack_start(self._label(f"Total system load: {report.load:.2f}"), False, False, 0)
+        self.right_box.pack_start(
+            self._label(f"Total CPU usage: {report.cpu_usage:.1f} %"), False, False, 0
+        )
+        self.right_box.pack_start(
+            self._label(f"Total system load: {report.load:.2f}"), False, False, 0
+        )
 
         avg_temp = 0.0
         if report.cores_info:
-            avg_temp = sum(core.temperature for core in report.cores_info) / len(report.cores_info)
-            self.right_box.pack_start(self._label(f"Average temp. of all cores: {avg_temp:.2f} °C"), False, False, 0)
+            avg_temp = sum(core.temperature for core in report.cores_info) / len(
+                report.cores_info
+            )
+            self.right_box.pack_start(
+                self._label(f"Average temp. of all cores: {avg_temp:.2f} °C"),
+                False,
+                False,
+                0,
+            )
 
         if report.avg_load:
             load_status = "Load optimal" if report.load < 1.0 else "Load high"
             self.right_box.pack_start(
-                self._label(f"{load_status} (load average: {report.avg_load[0]:.2f}, {report.avg_load[1]:.2f}, {report.avg_load[2]:.2f})"),
-                False, False, 0
+                self._label(
+                    f"{load_status} (load average: {report.avg_load[0]:.2f}, {report.avg_load[1]:.2f}, {report.avg_load[2]:.2f})"
+                ),
+                False,
+                False,
+                0,
             )
 
         if report.cores_info:
             usage_status = "Optimal" if report.cpu_usage < 70 else "High"
             temp_status = "high" if avg_temp > 75 else "normal"
             self.right_box.pack_start(
-                self._label(f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"),
-                False, False, 0
+                self._label(
+                    f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"
+                ),
+                False,
+                False,
+                0,
             )
 
         turbo_status = "Unknown"
         if report.is_turbo_on[0] is not None:
             turbo_status = "On" if report.is_turbo_on[0] else "Off"
         elif report.is_turbo_on[1] is not None:
-            turbo_status = f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
-        self.right_box.pack_start(self._label(f"Setting turbo boost: {turbo_status}"), False, False, 0)
+            turbo_status = (
+                f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
+            )
+        self.right_box.pack_start(
+            self._label(f"Setting turbo boost: {turbo_status}"), False, False, 0
+        )
 
         if report.is_turbo_on[0] is not None:
             suggested_turbo = system_info.turbo_on_suggestion()
             if suggested_turbo != report.is_turbo_on[0]:
                 turbo_text = "on" if suggested_turbo else "off"
-                self.right_box.pack_start(self._suggestion(f"Suggesting to set turbo boost: {turbo_text}"), False, False, 0)
+                self.right_box.pack_start(
+                    self._suggestion(f"Suggesting to set turbo boost: {turbo_text}"),
+                    False,
+                    False,
+                    0,
+                )
 
         self.left_box.show_all()
         self.right_box.show_all()
@@ -810,18 +1034,27 @@ class MonitorModeView(Gtk.Box):
 
     def cleanup(self):
         self.running = False
-        if hasattr(self, 'refresh_id') and self.refresh_id:
+        if hasattr(self, "refresh_id") and self.refresh_id:
             GLib.source_remove(self.refresh_id)
 
 
 class DaemonNotRunningView(Gtk.Box):
     def __init__(self, parent):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+        super().__init__(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.CENTER,
+        )
 
         self.label = Gtk.Label(label="auto-cpufreq daemon is not running")
-        self.sublabel = Gtk.Label(label="Install the daemon for permanent optimization, or use Monitor mode to preview")
+        self.sublabel = Gtk.Label(
+            label="Install the daemon for permanent optimization, or use Monitor mode to preview"
+        )
 
-        self.button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10, halign=Gtk.Align.CENTER)
+        self.button_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=10, halign=Gtk.Align.CENTER
+        )
         self.install_button = Gtk.Button.new_with_label("Install Daemon")
         self.monitor_button = Gtk.Button.new_with_label("Monitor Mode")
 
@@ -847,7 +1080,9 @@ class DaemonNotRunningView(Gtk.Box):
                 kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
                 future = executor.submit(run, "pkexec auto-cpufreq --install", **kwargs)
                 result = future.result()
-            assert result.returncode not in (126, 127), Exception("Authorization was cancelled")
+            assert result.returncode not in (126, 127), Exception(
+                "Authorization was cancelled"
+            )
             # enable for debug. causes issues if kept
             # elif result.stderr is not None:
             #     raise Exception(result.stderr.decode())
@@ -855,9 +1090,11 @@ class DaemonNotRunningView(Gtk.Box):
                 transient_for=parent,
                 message_type=Gtk.MessageType.INFO,
                 buttons=Gtk.ButtonsType.OK,
-                text="Daemon successfully installed"
+                text="Daemon successfully installed",
             )
-            dialog.format_secondary_text("The app will now close. Please reopen to apply changes")
+            dialog.format_secondary_text(
+                "The app will now close. Please reopen to apply changes"
+            )
             dialog.run()
             dialog.destroy()
             parent.destroy()
@@ -866,7 +1103,7 @@ class DaemonNotRunningView(Gtk.Box):
                 transient_for=parent,
                 message_type=Gtk.MessageType.ERROR,
                 buttons=Gtk.ButtonsType.OK,
-                text="Daemon install failed"
+                text="Daemon install failed",
             )
             dialog.format_secondary_text(f"The following error occured:\n{e}")
             dialog.run()

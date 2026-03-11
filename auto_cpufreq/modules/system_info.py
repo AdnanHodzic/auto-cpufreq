@@ -6,9 +6,7 @@ from subprocess import getoutput
 from typing import Tuple, List
 import psutil
 import distro
-from pathlib import Path
 from auto_cpufreq.config.config import config
-from auto_cpufreq.core import get_power_supply_ignore_list
 from auto_cpufreq.globals import (
     AVAILABLE_GOVERNORS_SORTED,
     CPU_TEMP_SENSOR_PRIORITY,
@@ -39,7 +37,7 @@ class BatteryInfo:
         if self.is_charging:
             return "charging"
         elif not self.is_ac_plugged:
-            return f"discharging {('(' + '{:.2f}'.format(self.power_consumption) + ' W)') if self.power_consumption != None else ''}"
+            return f"discharging {('(' + '{:.2f}'.format(self.power_consumption) + ' W)') if self.power_consumption is not None else ''}"
         return "Not Charging"
 
 
@@ -140,7 +138,7 @@ class SystemInfo:
                 "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "r"
             ) as f:
                 return f.read().strip()
-        except:
+        except Exception:
             return None
 
     @staticmethod
@@ -148,9 +146,11 @@ class SystemInfo:
         epp_path = "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"
         if not Path(epp_path).exists():
             return None
-            
-        return config.get_config().get( 
-            "charger" if is_ac_plugged else "battery", "energy_performance_preference", fallback="balance_performance" if is_ac_plugged else "balance_power"
+
+        return config.get_config().get(
+            "charger" if is_ac_plugged else "battery",
+            "energy_performance_preference",
+            fallback="balance_performance" if is_ac_plugged else "balance_power",
         )
 
     @staticmethod
@@ -160,7 +160,9 @@ class SystemInfo:
             return None
 
         return config.get_config().get(
-            "charger" if is_ac_plugged else "battery", "energy_perf_bias", fallback="balance_performance" if is_ac_plugged else "balance_power"
+            "charger" if is_ac_plugged else "battery",
+            "energy_perf_bias",
+            fallback="balance_performance" if is_ac_plugged else "balance_power",
         )
 
     @staticmethod
@@ -213,12 +215,11 @@ class SystemInfo:
         try:
             current_value = int(control_file.read_text().strip())
             return bool(current_value) ^ inverse_logic, False
-        except Exception as e:
+        except Exception:
             return None, None
 
     @staticmethod
     def read_file(path: str) -> Optional[str]:
-
         try:
             with open(path, "r") as f:
                 return f.read().strip()
@@ -227,7 +228,6 @@ class SystemInfo:
 
     @staticmethod
     def get_battery_path() -> Optional[str]:
-
         # Check if user has specified a custom battery device in config
         if config.has_config():
             conf = config.get_config()
@@ -257,7 +257,6 @@ class SystemInfo:
 
     @staticmethod
     def battery_info() -> BatteryInfo:
-
         battery_path = SystemInfo.get_battery_path()
 
         # By default, AC is considered connected if no battery is detected
@@ -269,7 +268,6 @@ class SystemInfo:
         charging_stop_threshold = None
 
         if not battery_path:
-
             # No battery detected
             return BatteryInfo(
                 is_charging=None,
@@ -294,9 +292,7 @@ class SystemInfo:
 
         # first check for wattage in power_now
         # this is not found on all laptops
-        energy_rate = (
-            SystemInfo.read_file(os.path.join(battery_path, "power_now"))
-        )
+        energy_rate = SystemInfo.read_file(os.path.join(battery_path, "power_now"))
 
         # if power_now wasn't found, try calculating wattage using current and voltage
         if energy_rate is None:
@@ -305,25 +301,38 @@ class SystemInfo:
 
             if (current and current.isdigit()) and (voltage and voltage.isdigit()):
                 energy_rate = (int(current) * int(voltage)) / 1_000_000
- 
 
-
-        charge_start_threshold = (
-            SystemInfo.read_file(os.path.join(battery_path, "charge_start_threshold"))
-            or SystemInfo.read_file(os.path.join(battery_path, "charge_control_start_threshold"))
+        charge_start_threshold = SystemInfo.read_file(
+            os.path.join(battery_path, "charge_start_threshold")
+        ) or SystemInfo.read_file(
+            os.path.join(battery_path, "charge_control_start_threshold")
         )
-        charge_stop_threshold = (
-            SystemInfo.read_file(os.path.join(battery_path, "charge_stop_threshold"))
-            or SystemInfo.read_file(os.path.join(battery_path, "charge_control_end_threshold"))
+        charge_stop_threshold = SystemInfo.read_file(
+            os.path.join(battery_path, "charge_stop_threshold")
+        ) or SystemInfo.read_file(
+            os.path.join(battery_path, "charge_control_end_threshold")
         )
         is_charging = battery_status.lower() == "charging" if battery_status else None
-        battery_level = int(battery_capacity) if battery_capacity and battery_capacity.isdigit() else None
-        power_consumption = float(energy_rate) / 1_000_000 if energy_rate \
-            and str(energy_rate).replace('.', '', 1).isdigit() else None
-        charging_start_threshold = int(charge_start_threshold) if charge_start_threshold \
-            and charge_start_threshold.isdigit() else None
-        charging_stop_threshold = int(charge_stop_threshold) if charge_stop_threshold \
-            and charge_stop_threshold.isdigit() else None
+        battery_level = (
+            int(battery_capacity)
+            if battery_capacity and battery_capacity.isdigit()
+            else None
+        )
+        power_consumption = (
+            float(energy_rate) / 1_000_000
+            if energy_rate and str(energy_rate).replace(".", "", 1).isdigit()
+            else None
+        )
+        charging_start_threshold = (
+            int(charge_start_threshold)
+            if charge_start_threshold and charge_start_threshold.isdigit()
+            else None
+        )
+        charging_stop_threshold = (
+            int(charge_stop_threshold)
+            if charge_stop_threshold and charge_stop_threshold.isdigit()
+            else None
+        )
 
         return BatteryInfo(
             is_charging=is_charging,
