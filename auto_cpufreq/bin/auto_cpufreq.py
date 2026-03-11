@@ -5,7 +5,9 @@
 # Blog post: https://foolcontrol.org/?p=3124
 
 # core import
-import sys, time, os
+import sys
+import time
+import os
 from subprocess import run
 from shutil import rmtree
 
@@ -182,7 +184,7 @@ def main(
                     while True:
                         time.sleep(1)
                         set_autofreq()
-                except:
+                except Exception:
                     pass
 
             def live_daemon_off():

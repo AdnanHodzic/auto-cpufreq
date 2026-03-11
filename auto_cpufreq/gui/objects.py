@@ -591,7 +591,7 @@ class DropDownMenu(Gtk.MenuButton):
 
     def about_dialog(self, MenuItem, parent):
         dialog = AboutDialog(parent)
-        response = dialog.run()
+        dialog.run()
         dialog.destroy()
 
     def _remove_daemon(self, MenuItem, parent):

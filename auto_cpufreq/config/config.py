@@ -1,4 +1,6 @@
-import os, pyinotify, sys
+import os
+import pyinotify
+import sys
 from configparser import ConfigParser, ParsingError
 from subprocess import run, PIPE
 

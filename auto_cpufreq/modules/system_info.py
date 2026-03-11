@@ -6,9 +6,7 @@ from subprocess import getoutput
 from typing import Tuple, List
 import psutil
 import distro
-from pathlib import Path
 from auto_cpufreq.config.config import config
-from auto_cpufreq.core import get_power_supply_ignore_list
 from auto_cpufreq.globals import (
     AVAILABLE_GOVERNORS_SORTED,
     CPU_TEMP_SENSOR_PRIORITY,
@@ -39,7 +37,7 @@ class BatteryInfo:
         if self.is_charging:
             return "charging"
         elif not self.is_ac_plugged:
-            return f"discharging {('(' + '{:.2f}'.format(self.power_consumption) + ' W)') if self.power_consumption != None else ''}"
+            return f"discharging {('(' + '{:.2f}'.format(self.power_consumption) + ' W)') if self.power_consumption is not None else ''}"
         return "Not Charging"
 
 
@@ -140,7 +138,7 @@ class SystemInfo:
                 "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "r"
             ) as f:
                 return f.read().strip()
-        except:
+        except Exception:
             return None
 
     @staticmethod
@@ -217,7 +215,7 @@ class SystemInfo:
         try:
             current_value = int(control_file.read_text().strip())
             return bool(current_value) ^ inverse_logic, False
-        except Exception as e:
+        except Exception:
             return None, None
 
     @staticmethod

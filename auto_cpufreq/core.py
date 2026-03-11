@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 #
 # auto-cpufreq - core functionality
-import click, distro, os, platform, psutil, sys
+import click
+import distro
+import os
+import platform
+import psutil
+import sys
 from importlib.metadata import metadata, PackageNotFoundError
 from math import isclose
 from pathlib import Path
@@ -405,8 +410,8 @@ def cpufreqctl_restore():
         os.remove("/usr/local/bin/cpufreqctl.auto-cpufreq")
 
 
-def footer(l=79):
-    print("\n" + "-" * l + "\n")
+def footer(length=79):
+    print("\n" + "-" * length + "\n")
 
 
 def deploy_complete_msg():
@@ -622,20 +627,20 @@ def set_frequencies(power_supply):
         },
     }
     set_frequencies.max_limit = int(
-        getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit")
+        getoutput("cpufreqctl.auto-cpufreq --frequency-max-limit")
     )
     set_frequencies.min_limit = int(
-        getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit")
+        getoutput("cpufreqctl.auto-cpufreq --frequency-min-limit")
     )
 
     conf = config.get_config()
 
     for freq_type in frequency.keys():
         if freq_type == "scaling_max_freq":
-            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
+            curr_freq = int(getoutput("cpufreqctl.auto-cpufreq --frequency-max"))
             value = set_frequencies.max_limit
         else:
-            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
+            curr_freq = int(getoutput("cpufreqctl.auto-cpufreq --frequency-min"))
             value = set_frequencies.min_limit
 
         try:
@@ -1234,7 +1239,7 @@ def is_running(program, argument):
     for p in psutil.process_iter():
         try:
             cmd = p.cmdline()
-        except:
+        except Exception:
             continue
         for s in filter(lambda x: program in x, cmd):
             if argument in cmd:

@@ -49,7 +49,7 @@ if not IS_INSTALLED_WITH_SNAP:
             gnome_power_status = call(
                 ["systemctl", "is-active", "--quiet", "power-profiles-daemon"]
             )
-        except:
+        except Exception:
             print("\nUnable to determine init system")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB + "/issues")
@@ -160,7 +160,7 @@ def gnome_power_svc_enable():
             print("* Enabling GNOME power profiles\n")
             call(["systemctl", "unmask", "power-profiles-daemon"])
             call(["systemctl", "enable", "--now", "power-profiles-daemon"])
-        except:
+        except Exception:
             print("\nUnable to enable GNOME power profiles")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB + "/issues")
@@ -172,7 +172,7 @@ def tuned_svc_enable():
             print("* Enabling TuneD\n")
             call(["systemctl", "unmask", "tuned"])
             call(["systemctl", "enable", "--now", "tuned"])
-        except:
+        except Exception:
             print("\nUnable to enable TuneD daemon")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB + "/issues")
@@ -184,7 +184,7 @@ def gnome_power_svc_status():
         try:
             print("* GNOME power profiles status")
             call(["systemctl", "status", "power-profiles-daemon"])
-        except:
+        except Exception:
             print("\nUnable to see GNOME power profiles status")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB + "/issues")
@@ -325,7 +325,7 @@ def disable_power_profiles_daemon():
         print("\n* Disabling GNOME power profiles")
         call(["systemctl", "disable", "--now", "power-profiles-daemon"])
         call(["systemctl", "mask", "power-profiles-daemon"])
-    except:
+    except Exception:
         print("\nUnable to disable GNOME power profiles")
         print("If this causes any problems, please submit an issue:")
         print(GITHUB + "/issues")
@@ -337,7 +337,7 @@ def disable_tuned_daemon():
         print("\n* Disabling TuneD daemon")
         call(["systemctl", "disable", "--now", "tuned"])
         call(["systemctl", "mask", "tuned"])
-    except:
+    except Exception:
         print("\nUnable to disable TuneD daemon")
         print("If this causes any problems, please submit an issue:")
         print(GITHUB + "/issues")
@@ -366,7 +366,7 @@ def gnome_power_svc_disable():
                         "auto-cpufreq snap package not installed\nGNOME Power Profiles Daemon should be enabled. run:\n\n"
                         "sudo python3 -m auto_cpufreq.power_helper --gnome_power_enable"
                     )
-            except:
+            except Exception:
                 # snapd not found on the system
                 print(
                     "There was a problem, couldn't determine GNOME Power Profiles Daemon"
