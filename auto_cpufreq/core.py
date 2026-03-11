@@ -472,15 +472,14 @@ def get_load():
 def display_system_load_avg(): print(" (load average: {:.2f}, {:.2f}, {:.2f})".format(*os.getloadavg()))
 
 # set minimum and maximum CPU frequencies
-def set_frequencies():
+def set_frequencies(power_supply):
     """
     Sets frequencies:
      - if option is used in auto-cpufreq.conf: use configured value
      - if option is disabled/no conf file used: set default frequencies
     Frequency setting is validated on each run and only applied when needed
+    Caller passes the active profile ("battery" or "charger").
     """
-    power_supply = "charger" if charging() else "battery"
-
     frequency = {
         "scaling_max_freq": {
             "cmdargs": "--frequency-max",
@@ -603,7 +602,7 @@ def set_powersave():
             print(f"Optimal total CPU usage: {cpuload}%, high average core temp: {SystemInfo.avg_temp()}°C")
             set_turbo(False)
 
-    set_frequencies()
+    set_frequencies("battery")
     footer()
 
 def mon_powersave():
@@ -728,7 +727,7 @@ def set_performance():
             else: # set turbo state based on average of all core temperatures
                 print(f"Optimal total CPU usage: {cpuload}%, high average core temp: {SystemInfo.avg_temp()}°C")
                 set_turbo(False)
-    set_frequencies()
+    set_frequencies("charger")
     footer()
 
 def mon_performance():
