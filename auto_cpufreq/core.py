@@ -472,22 +472,14 @@ def get_load():
 def display_system_load_avg(): print(" (load average: {:.2f}, {:.2f}, {:.2f})".format(*os.getloadavg()))
 
 # set minimum and maximum CPU frequencies
-def set_frequencies():
+def set_frequencies(power_supply):
     """
     Sets frequencies:
      - if option is used in auto-cpufreq.conf: use configured value
      - if option is disabled/no conf file used: set default frequencies
-    Frequency setting is performed only once on power supply change
+    Frequency setting is validated on each run and only applied when needed
+    Caller passes the active profile ("battery" or "charger").
     """
-    power_supply = "charger" if charging() else "battery"
-
-    # don't do anything if the power supply hasn't changed
-    if (
-        hasattr(set_frequencies, "prev_power_supply")
-        and power_supply == set_frequencies.prev_power_supply
-    ): return
-    else: set_frequencies.prev_power_supply = power_supply
-
     frequency = {
         "scaling_max_freq": {
             "cmdargs": "--frequency-max",
@@ -498,28 +490,27 @@ def set_frequencies():
             "minmax": "minimum",
         },
     }
-    if not hasattr(set_frequencies, "max_limit"):
-        set_frequencies.max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
-    if not hasattr(set_frequencies, "min_limit"):
-        set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
+    set_frequencies.max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
+    set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
 
     conf = config.get_config()
 
     for freq_type in frequency.keys():
-        value = None
-        if not conf.has_option(power_supply, freq_type):
-            # fetch and use default frequencies
-            if freq_type == "scaling_max_freq":
-                curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
-                value = set_frequencies.max_limit
-            else:
-                curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
-                value = set_frequencies.min_limit
-            if curr_freq == value: continue
+        if freq_type == "scaling_max_freq":
+            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
+            value = set_frequencies.max_limit
+        else:
+            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
+            value = set_frequencies.min_limit
 
-        try: frequency[freq_type]["value"] = value if value else int(conf[power_supply][freq_type].strip())
+        try:
+            if conf.has_option(power_supply, freq_type):
+                raw_value = conf[power_supply][freq_type].strip()
+                frequency[freq_type]["value"] = int(raw_value)
+            else:
+                frequency[freq_type]["value"] = value
         except ValueError:
-            print(f"Invalid value for '{freq_type}': {frequency[freq_type]['value']}")
+            print(f"Invalid value for '{freq_type}': {raw_value}")
             exit(1)
 
         if not set_frequencies.min_limit <= frequency[freq_type]["value"] <= set_frequencies.max_limit:
@@ -527,6 +518,8 @@ def set_frequencies():
                 f"Given value for '{freq_type}' is not within the allowed frequencies {set_frequencies.min_limit}-{set_frequencies.max_limit} kHz"
             )
             exit(1)
+
+        if curr_freq == frequency[freq_type]["value"]: continue
 
         print(f'Setting {frequency[freq_type]["minmax"]} CPU frequency to {round(frequency[freq_type]["value"]/1000)} Mhz')
         # set the frequency
@@ -582,7 +575,6 @@ def set_powersave():
 
     set_energy_perf_bias(conf, "battery")
     set_platform_profile(conf, "battery")
-    set_frequencies()
 
     cpuload, load1m= get_load()
 
@@ -610,6 +602,7 @@ def set_powersave():
             print(f"Optimal total CPU usage: {cpuload}%, high average core temp: {SystemInfo.avg_temp()}°C")
             set_turbo(False)
 
+    set_frequencies("battery")
     footer()
 
 def mon_powersave():
@@ -695,7 +688,6 @@ def set_performance():
     
     set_energy_perf_bias(conf, "charger")
     set_platform_profile(conf, "charger")
-    set_frequencies()
 
     cpuload, load1m = get_load()
     auto = conf["charger"]["turbo"] if conf.has_option("charger", "turbo") else "auto"
@@ -735,6 +727,7 @@ def set_performance():
             else: # set turbo state based on average of all core temperatures
                 print(f"Optimal total CPU usage: {cpuload}%, high average core temp: {SystemInfo.avg_temp()}°C")
                 set_turbo(False)
+    set_frequencies("charger")
     footer()
 
 def mon_performance():
