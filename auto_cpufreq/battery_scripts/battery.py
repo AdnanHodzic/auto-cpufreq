@@ -11,9 +11,7 @@ BATTERY_APPLY_INTERVAL = 3600  # 1 hour
 
 
 def lsmod(module):
-    return (
-        module in run(["lsmod"], stdout=PIPE, stderr=PIPE, text=True).stdout
-    )
+    return module in run(["lsmod"], stdout=PIPE, stderr=PIPE, text=True).stdout
 
 
 def battery_get_thresholds():

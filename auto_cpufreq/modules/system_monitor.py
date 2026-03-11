@@ -100,9 +100,13 @@ class SystemMonitor:
 
         # Restore focus positions
         if len(self.left_content) > 0:
-            self.left_listbox.set_focus(min(self.last_focus_left, len(self.left_content) - 1))  # type: ignore
+            self.left_listbox.set_focus(
+                min(self.last_focus_left, len(self.left_content) - 1)
+            )  # type: ignore
         if len(self.right_content) > 0:
-            self.right_listbox.set_focus(min(self.last_focus_right, len(self.right_content) - 1))  # type: ignore
+            self.right_listbox.set_focus(
+                min(self.last_focus_right, len(self.right_content) - 1)
+            )  # type: ignore
 
         self.loop.set_alarm_in(2, self.update)  # type: ignore
 
@@ -177,13 +181,13 @@ class SystemMonitor:
                         f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f"AC plugged: {('Yes' if report.battery_info.is_ac_plugged else 'No') if report.battery_info.is_ac_plugged != None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f"Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged != None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f"Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged != None else 'Unknown'}"
                     ),
                     aligned_text(""),
                 ]
@@ -283,7 +287,7 @@ class SystemMonitor:
             self.right_content.append(
                 urwid.AttrMap(
                     aligned_text(
-                        f'Suggesting to set turbo boost: {"on" if system_info.turbo_on_suggestion() else "off"}'
+                        f"Suggesting to set turbo boost: {'on' if system_info.turbo_on_suggestion() else 'off'}"
                     ),
                     "suggestion",
                 )
