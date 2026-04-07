@@ -11,14 +11,23 @@ MID="$((COLOUMNS / 2))"
 APPLICATIONS_PATH="/usr/share/applications"
 VENV_PATH="/opt/auto-cpufreq"
 
-SHARE_DIR="/usr/local/share/auto-cpufreq/"
+SHARE_DIR="/opt/auto-cpufreq/scripts/"
 
-AUTO_CPUFREQ_FILE="/usr/local/bin/auto-cpufreq"
+AUTO_CPUFREQ_FILE="/opt/auto-cpufreq/bin/auto-cpufreq"
 AUTO_CPUFREQ_GTK_FILE=$AUTO_CPUFREQ_FILE-gtk
 AUTO_CPUFREQ_GTK_DESKTOP_FILE="$(basename $AUTO_CPUFREQ_GTK_FILE).desktop"
 
-IMG_FILE="/usr/share/pixmaps/auto-cpufreq.png"
-ORG_FILE="/usr/share/polkit-1/actions/org.auto-cpufreq.pkexec.policy"
+IMG_FILE="/opt/auto-cpufreq/pixmaps/auto-cpufreq.png"
+ORG_FILE="/etc/polkit-1/polkit-agent/org.auto-cpufreq.pkexec.policy"
+
+# Atomic distro path adjustments
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+  if [ "$VARIANT_ID" = "silverblue" ] || [ "$VARIANT_ID" = "kinoite" ] || [ "$VARIANT_ID" = "sericea" ] || [ "$VARIANT_ID" = "onyx" ]; then
+      APPLICATIONS_PATH="/usr/local/share/applications"
+      IMG_FILE="/usr/local/share/pixmaps/auto-cpufreq.png"
+  fi
+fi
 
 function header {
   echo
@@ -114,11 +123,39 @@ function tool_install {
     "$LIB_GI_REPO" libcairo2-dev libgtk-3-dev gcc python3-gi
 
   elif [ -f /etc/redhat-release ]; then
-    detected_distro "RedHat based"
-    if [ -f /etc/centos-release ]; then yum install platform-python-devel
-    else yum install python-devel
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      if [ "$VARIANT_ID" = "silverblue" ] || [ "$VARIANT_ID" = "kinoite" ] || [ "$VARIANT_ID" = "sericea" ] || [ "$VARIANT_ID" = "onyx" ]; then
+        detected_distro "Fedora Atomic ($VARIANT_ID)"
+        
+        needed_packages="python3-devel gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel dmidecode"
+        to_install=""
+        for pkg in $needed_packages; do
+            if ! rpm -q $pkg > /dev/null 2>&1; then
+                to_install="$to_install $pkg"
+            fi
+        done
+        
+        if [ -n "$to_install" ]; then
+            echo "The following dependencies need to be installed via rpm-ostree:"
+            echo "$to_install"
+            echo "Running: rpm-ostree install $to_install"
+            rpm-ostree install $to_install
+            echo -e "\nA reboot is REQUIRED to apply these changes."
+            echo "Please reboot your system and run the installer again."
+            exit 0
+        fi
+      else
+        detected_distro "RedHat based"
+        if [ -f /etc/centos-release ]; then yum install platform-python-devel
+        else yum install python-devel
+        fi
+        yum install dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
+      fi
+    else
+        detected_distro "RedHat based"
+        yum install python-devel dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
     fi
-    yum install dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
 
   elif [ -f /etc/solus-release ]; then
     detected_distro "Solus"
@@ -182,20 +219,50 @@ elif [ -f /etc/os-release ];then
   python -m pip install .
 
   mkdir -p $SHARE_DIR
-  cp -r scripts/ $SHARE_DIR
+  cp -r scripts/* $SHARE_DIR
   cp -r images/ $SHARE_DIR
-  cp images/icon.png $IMG_FILE
-  cp scripts/$(basename $ORG_FILE) $(dirname $ORG_FILE)
-
-  # this is necessary since we need this script before we can run auto-cpufreq itself
-  cp scripts/auto-cpufreq-venv-wrapper $AUTO_CPUFREQ_FILE
-  chmod a+x $AUTO_CPUFREQ_FILE
-  cp scripts/start_app $AUTO_CPUFREQ_GTK_FILE
-  chmod a+x $AUTO_CPUFREQ_GTK_FILE
-
-  desktop-file-install --dir=$APPLICATIONS_PATH scripts/$AUTO_CPUFREQ_GTK_DESKTOP_FILE
-  update-desktop-database $APPLICATIONS_PATH
   
+  # Create a symlink from /opt/auto-cpufreq/scripts to /opt/auto-cpufreq/scripts 
+  # since auto-cpufreq-install.sh expects /opt/auto-cpufreq/scripts
+  # This is already covered by cp -r scripts/ $SHARE_DIR if SHARE_DIR is /opt/auto-cpufreq/share
+  # Wait, the script uses /opt/auto-cpufreq/scripts. Let's just use that instead of /share/
+
+  # Ensure icon and policy directories exist and are writable
+  mkdir -p "$(dirname "$IMG_FILE")"
+  if [ -w "$(dirname "$IMG_FILE")" ]; then
+    cp images/icon.png "$IMG_FILE"
+  else
+    echo "Warning: $(dirname "$IMG_FILE") is read-only. Skipping icon installation."
+  fi
+
+  if [ -w "$(dirname "$ORG_FILE")" ]; then
+    cp scripts/$(basename "$ORG_FILE") "$(dirname "$ORG_FILE")"
+  else
+    echo "Warning: $(dirname "$ORG_FILE") is read-only. Skipping polkit policy installation."
+    echo "GUI might require 'sudo' to run if polkit is not available."
+  fi
+
+mkdir -p /opt/auto-cpufreq/bin
+cp scripts/auto-cpufreq-venv-wrapper $AUTO_CPUFREQ_FILE
+chmod a+x $AUTO_CPUFREQ_FILE
+cp scripts/start_app $AUTO_CPUFREQ_GTK_FILE
+chmod a+x $AUTO_CPUFREQ_GTK_FILE
+ln -sf $AUTO_CPUFREQ_FILE /usr/local/bin/auto-cpufreq
+ln -sf $AUTO_CPUFREQ_GTK_FILE /usr/local/bin/auto-cpufreq-gtk
+
+  if [ -w "$APPLICATIONS_PATH" ]; then
+    desktop-file-install --dir=$APPLICATIONS_PATH scripts/$AUTO_CPUFREQ_GTK_DESKTOP_FILE
+    update-desktop-database $APPLICATIONS_PATH
+  else
+    echo "Warning: $APPLICATIONS_PATH is read-only. Skipping desktop file installation."
+  fi
+  
+  # SELinux restorecon for Atomic systems
+  if command -v restorecon > /dev/null; then
+    echo "Restoring SELinux contexts..."
+    restorecon -R /usr/local/bin/ /usr/local/share/auto-cpufreq/ /opt/auto-cpufreq/ > /dev/null 2>&1
+  fi
+
   header "auto-cpufreq tool successfully installed"
   echo "For list of options, run:"
   echo "auto-cpufreq --help"; echo
