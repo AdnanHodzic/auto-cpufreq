@@ -29,13 +29,13 @@ function auto_cpufreq_install {
 case "$(ps h -o comm 1)" in
   dinit) 
     echo -e "\n* Deploying auto-cpufreq (dinit) unit file"
-    cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-dinit /etc/dinit.d/auto-cpufreq
+    cp /opt/auto-cpufreq/scripts/auto-cpufreq-dinit /etc/dinit.d/auto-cpufreq
 
     auto_cpufreq_install "dinit" "dinitctl start auto-cpufreq" "dinitctl enable auto-cpufreq"
   ;;
   init) 
     echo -e "\n* Deploying auto-cpufreq openrc unit file"
-    cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
+    cp /opt/auto-cpufreq/scripts/auto-cpufreq-openrc /etc/init.d/auto-cpufreq
     chmod +x /etc/init.d/auto-cpufreq
 
     auto_cpufreq_install "openrc" "rc-service auto-cpufreq start" "rc-update add auto-cpufreq"
@@ -45,7 +45,7 @@ case "$(ps h -o comm 1)" in
     runit_ln() {
       echo -e "\n* Deploying auto-cpufreq (runit) unit file"
       mkdir "$1"/sv/auto-cpufreq
-      cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-runit "$1"/sv/auto-cpufreq/run
+      cp /opt/auto-cpufreq/scripts/auto-cpufreq-runit /var/lib/auto-cpufreq/runit/run
       chmod +x "$1"/sv/auto-cpufreq/run
 
       echo -e "\n* Creating symbolic link ($2/service/auto-cpufreq -> $1/sv/auto-cpufreq)"
@@ -70,7 +70,7 @@ case "$(ps h -o comm 1)" in
   ;;
   systemd)
     echo -e "Deploying auto-cpufreq systemd unit file"
-    cp /usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
+    cp /opt/auto-cpufreq/scripts/auto-cpufreq.service /etc/systemd/system/auto-cpufreq.service
 
     echo -e "\n* Reloading systemd manager configuration"
     systemctl daemon-reload
@@ -79,7 +79,7 @@ case "$(ps h -o comm 1)" in
   ;;
   s6-svscan)
 	  echo -e "\n* Deploying auto-cpufreq (s6) unit file"
-    cp -r /usr/local/share/auto-cpufreq/scripts/auto-cpufreq-s6 /etc/s6/sv/auto-cpufreq
+    cp -r /opt/auto-cpufreq/scripts/auto-cpufreq-s6 /etc/s6/sv/auto-cpufreq
 
     echo -e "\n* Add auto-cpufreq service (s6) to default bundle"
     s6-service add default auto-cpufreq
