@@ -39,6 +39,7 @@ gui = ["PyGObject"]
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.6.1"
 ruff = "^0.11.0"
+pre-commit = ">=4.0,<4.6"
 
 [tool.ruff]
 target-version = "py39"
