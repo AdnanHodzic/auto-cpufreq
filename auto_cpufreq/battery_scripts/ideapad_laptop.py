@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-import os
 from pathlib import Path
 from typing import Any
 from auto_cpufreq.battery_scripts.shared import BatteryDevice
