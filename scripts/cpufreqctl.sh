@@ -332,8 +332,11 @@ case $OPTION in
       verbose "Getting Platform Profile"
       cat $FWROOT/acpi/platform_profile
     else
-      verbose "Getting Platform Profile to "$VALUE
-      echo $VALUE > $FWROOT/acpi/platform_profile
+      verbose "Setting Platform Profile to $VALUE"
+      current_profile=$(cat "$FWROOT/acpi/platform_profile")
+      if [ "$current_profile" != "$VALUE" ]; then 
+        echo "$VALUE" > "$FWROOT/acpi/platform_profile"
+      fi
     fi
   ;;
   -f|--frequency)
