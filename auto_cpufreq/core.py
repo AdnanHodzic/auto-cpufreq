@@ -57,6 +57,8 @@ else:
     governor_override_state = Path("/opt/auto-cpufreq/override.pickle")
     turbo_override_state    = Path("/opt/auto-cpufreq/turbo-override.pickle")
 
+last_applied_config_section = None
+
 def file_stats():
     global auto_cpufreq_stats_file
     auto_cpufreq_stats_file = open(auto_cpufreq_stats_path, "w")
@@ -526,13 +528,20 @@ def set_frequencies(power_supply):
         run(f"cpufreqctl.auto-cpufreq {frequency[freq_type]['cmdargs']} --set={frequency[freq_type]['value']}", shell=True)
 
 def set_platform_profile(conf, profile):
-    if conf.has_option(profile, "platform_profile"):
-        if not Path("/sys/firmware/acpi/platform_profile").exists():
-            print('Not setting Platform Profile (not supported by system)')
-        else:
-            pp = conf[profile]["platform_profile"]
-            print(f'Setting to use: "{pp}" Platform Profile')
-            run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
+    if not conf.has_option(profile, "platform_profile"):
+        return
+    
+    if not Path("/sys/firmware/acpi/platform_profile").exists():
+        print('Not setting Platform Profile (not supported by system)')
+        return
+    
+    global last_applied_config_section
+    if not conf.getboolean(profile, "enforce_platform_profile", fallback=True) and last_applied_config_section == profile:
+        return
+
+    pp = conf[profile]["platform_profile"]
+    print(f'Setting to use: "{pp}" Platform Profile')
+    run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
 
 def set_energy_perf_bias(conf, profile):
     if Path("/sys/devices/system/cpu/intel_pstate").exists() is False:
@@ -575,6 +584,9 @@ def set_powersave():
 
     set_energy_perf_bias(conf, "battery")
     set_platform_profile(conf, "battery")
+    global last_applied_config_section
+    last_applied_config_section = "battery"
+
 
     cpuload, load1m= get_load()
 
@@ -688,6 +700,8 @@ def set_performance():
     
     set_energy_perf_bias(conf, "charger")
     set_platform_profile(conf, "charger")
+    global last_applied_config_section
+    last_applied_config_section = "charger"
 
     cpuload, load1m = get_load()
     auto = conf["charger"]["turbo"] if conf.has_option("charger", "turbo") else "auto"
