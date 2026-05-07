@@ -7,8 +7,8 @@ class IdeapadBatteryDevice(BatteryDevice):
     # Support for most lenovo ideapad/legion/thinkpad conservation mode file.
     # The function finds the conservation_mode file in common paths.
     # This is mandatory because ideapad and legion handle different paths
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
         self.conservation_mode_path = self._find_conservation_mode_path()
 
     def _find_conservation_mode_path(self) -> str | None:
