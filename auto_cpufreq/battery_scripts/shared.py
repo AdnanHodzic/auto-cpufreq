@@ -179,7 +179,6 @@ class BatteryDevice:
             return default
 
     def get_current_threshold(self, bat: str) -> tuple[int | None, int | None]:
-
         if bat not in self.start_paths or bat not in self.stop_paths:
             print(f"WARNING: battery {bat} has no threshold attributes")
             return None, None

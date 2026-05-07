@@ -38,6 +38,12 @@ gui = ["PyGObject"]
 
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.6.1"
+ruff = "^0.11.0"
+pre-commit = ">=4.0,<4.6"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
