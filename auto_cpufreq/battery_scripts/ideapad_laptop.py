@@ -4,7 +4,7 @@ from typing import Any
 from auto_cpufreq.battery_scripts.shared import BatteryDevice
 
 class IdeapadBatteryDevice(BatteryDevice):
-    # Support for most lenovo ideapad/legion/thinkpad conservation mode file.
+    # Support for most Lenovo Ideapad/Legion/Thinkpad conservation mode file(s).
     # The function finds the conservation_mode file in common paths.
     # This is mandatory because ideapad and legion handle different paths
     def __init__(self):
@@ -30,7 +30,7 @@ class IdeapadBatteryDevice(BatteryDevice):
                 for match in base_path.glob("*/conservation_mode"):
                     if match.exists():
                         return str(match)
-            except PermissionError:
+            except OSError:
                 continue
                 
         return None
@@ -41,8 +41,8 @@ class IdeapadBatteryDevice(BatteryDevice):
             
         val = self._read_value_from_file(self.conservation_mode_path)
         if val not in ("0", "1"):
-            if val is not None:
-                print(f"WARNING: unexpected value from conservation mode: {val}")
+            error_type = "Read failure" if val == "" else f"Unexpected value: {val}"
+            print(f"WARNING: {error_type} at {self.conservation_mode_path}")
             return False
         return val == "1"
 
