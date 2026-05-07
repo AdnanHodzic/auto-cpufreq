@@ -25,6 +25,9 @@ services.auto-cpufreq.settings = {
     # See available options by running:
     # cat /sys/firmware/acpi/platform_profile_choices
     # platform_profile = "performance";
+    # Set this to false if you want auto-cpufreq to apply the profile on AC/battery changes,
+    # but allow manual overrides like Legion Fn+Q to persist until the next state change.
+    # enforce_platform_profile = true
 
     # minimum cpu frequency (in kHz)
     # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
@@ -79,6 +82,9 @@ services.auto-cpufreq.settings = {
     # See available options by running:
     # cat /sys/firmware/acpi/platform_profile_choices
     # platform_profile = "low-power";
+    # Set this to false if you want auto-cpufreq to apply the profile on AC/battery changes,
+    # but allow manual overrides like Legion Fn+Q to persist until the next state change.
+    # enforce_platform_profile = true
 
     # minimum cpu frequency (in kHz)
     # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
