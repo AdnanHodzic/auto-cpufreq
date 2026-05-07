@@ -530,18 +530,27 @@ def set_frequencies(power_supply):
 def set_platform_profile(conf, profile):
     if not conf.has_option(profile, "platform_profile"):
         return
-    
+
     if not Path("/sys/firmware/acpi/platform_profile").exists():
         print('Not setting Platform Profile (not supported by system)')
         return
-    
-    global last_applied_config_section
-    if not conf.getboolean(profile, "enforce_platform_profile", fallback=True) and last_applied_config_section == profile:
-        return
 
     pp = conf[profile]["platform_profile"]
+
+    if not hasattr(set_platform_profile, "last_applied_platform_profile"):
+        set_platform_profile.last_applied_platform_profile = {}
+
+    global last_applied_config_section
+    if (
+        not conf.getboolean(profile, "enforce_platform_profile", fallback=True)
+        and last_applied_config_section == profile
+        and set_platform_profile.last_applied_platform_profile.get(profile) == pp
+    ):
+        return
+
     print(f'Setting to use: "{pp}" Platform Profile')
     run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
+    set_platform_profile.last_applied_platform_profile[profile] = pp
 
 def set_energy_perf_bias(conf, profile):
     if Path("/sys/devices/system/cpu/intel_pstate").exists() is False:
