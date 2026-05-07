@@ -94,3 +94,18 @@ case "$(ps h -o comm 1)" in
     echo -e "\n* Please open an issue on https://github.com/AdnanHodzic/auto-cpufreq\n"
   ;;
 esac
+
+# Deploy D-Bus configuration for power-profiles-daemon compatibility
+echo -e "\n* Installing D-Bus configuration for power-profiles-daemon compatibility"
+if [ -d /usr/share/dbus-1/system.d ]; then
+    cp /usr/local/share/auto-cpufreq/scripts/org.freedesktop.UPower.PowerProfiles.conf /usr/share/dbus-1/system.d/
+    echo "  - Installed D-Bus bus policy"
+
+    # Reload D-Bus to pick up new configuration
+    if command -v systemctl &> /dev/null && systemctl is-active dbus &> /dev/null; then
+        systemctl reload dbus 2>/dev/null || true
+        echo "  - Reloaded D-Bus configuration"
+    fi
+else
+    echo "  - Warning: /usr/share/dbus-1/system.d not found, skipping D-Bus configuration"
+fi
