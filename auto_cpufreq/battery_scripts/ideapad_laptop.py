@@ -1,25 +1,58 @@
 #!/usr/bin/env python3
-
+from pathlib import Path
 from typing import Any
 from auto_cpufreq.battery_scripts.shared import BatteryDevice
 
-# The Arch wiki suggests this path may vary on different models, but TLP uses
-# the same hardcoded value
-CONSERVATION_MODE_FILE = "/sys/bus/platform/drivers/ideapad_acpi/VPC2004:00/conservation_mode"
-
 class IdeapadBatteryDevice(BatteryDevice):
+    # Support for most Lenovo Ideapad/Legion/Thinkpad conservation mode file(s).
+    # The function finds the conservation_mode file in common paths.
+    # This is mandatory because ideapad and legion handle different paths
+    def __init__(self):
+        super().__init__()
+        self.conservation_mode_path = self._find_conservation_mode_path()
+
+    def _find_conservation_mode_path(self) -> str | None:
+        search_paths = [
+            "/sys/bus/platform/drivers/ideapad_acpi",
+            "/sys/devices/platform/ideapad_acpi"
+        ]
+        
+        for base in search_paths:
+            base_path = Path(base)
+            if not base_path.exists():
+                continue
+                
+            direct_file = base_path / "conservation_mode"
+            if direct_file.exists():
+                return str(direct_file)
+            
+            try:
+                for match in base_path.glob("*/conservation_mode"):
+                    if match.exists():
+                        return str(match)
+            except OSError:
+                continue
+                
+        return None
+
     def is_conservation_mode(self) -> bool:
-        val = self._read_value_from_file(CONSERVATION_MODE_FILE)
+        if not self.conservation_mode_path:
+            return False
+            
+        val = self._read_value_from_file(self.conservation_mode_path)
         if val not in ("0", "1"):
-            print(
-                f"WARNING: could not get value from conservation mode, unexpected value!: {val}"
-            )
+            error_type = "Read failure" if val == "" else f"Unexpected value: {val}"
+            print(f"WARNING: {error_type} at {self.conservation_mode_path}")
             return False
         return val == "1"
 
     def set_conservation_mode(self, value: int) -> bool:
-        if not self._write_value_to_file(CONSERVATION_MODE_FILE, value):
-            print("WARNING: unable to set conservation mode")
+        if not self.conservation_mode_path:
+            print("ERROR: conservation_mode file path not found")
+            return False
+            
+        if not self._write_value_to_file(self.conservation_mode_path, value):
+            print(f"WARNING: unable to set conservation mode at {self.conservation_mode_path}")
             return False
         return True
 
@@ -33,7 +66,7 @@ class IdeapadBatteryDevice(BatteryDevice):
     def _parse_ideapad_conservation_mode(self, param: None | str) -> None | bool:
         if param is None:
             return None
-        param = param.lower().strip()
+        param = str(param).lower().strip()
         if param == "true":
             return True
         elif param == "false":
@@ -42,16 +75,17 @@ class IdeapadBatteryDevice(BatteryDevice):
             raise ValueError(f"Invalid value for ideapad_conservation_mode: {param}")
 
     def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
-        mode = config["ideapad_conservation_mode"]
+        mode = config.get("ideapad_conservation_mode")
         if mode is None:
             # If conservation mode is not explicitly set, we don't change it
             return True
-        elif mode:
-            return self.set_conservation_mode(1)
-        else:
-            return self.set_conservation_mode(0)
+        return self.set_conservation_mode(1 if mode else 0)
 
     def print_battery_info(self, bat: str):
+        if not self.conservation_mode_path:
+            print(f"{bat}: conservation mode not supported (file not found)")
+            return
+
         if self.is_conservation_mode():
             print(f"{bat} conservation mode is on")
         else:
