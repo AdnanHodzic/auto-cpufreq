@@ -381,7 +381,7 @@ energy_performance_preference = performance
 
 # Controls strict enforcement of the platform profile.
 # - true: Constantly enforces the platform profile defined above.
-# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g Fn + Q on Legion Laptops).
+# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
 # enforce_platform_profile = true
 
 # minimum cpu frequency (in kHz)
@@ -426,7 +426,7 @@ energy_performance_preference = power
 
 # Controls strict enforcement of the platform profile.
 # - true: Constantly enforces the platform profile defined above.
-# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g Fn + Q on Legion Laptops).
+# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
 # enforce_platform_profile = true
 
 # minimum cpu frequency (in kHz)
