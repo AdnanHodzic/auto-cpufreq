@@ -540,9 +540,15 @@ def set_platform_profile(conf, profile):
     if not hasattr(set_platform_profile, "last_applied_platform_profile"):
         set_platform_profile.last_applied_platform_profile = {}
 
+    def is_platform_profile_enforced():
+        try: 
+            return conf.getboolean(profile, "enforce_platform_profile", fallback=True)
+        except ValueError:
+            return True
+
     global last_applied_config_section
     if (
-        not conf.getboolean(profile, "enforce_platform_profile", fallback=True)
+        not is_platform_profile_enforced()
         and last_applied_config_section == profile
         and set_platform_profile.last_applied_platform_profile.get(profile) == pp
     ):
