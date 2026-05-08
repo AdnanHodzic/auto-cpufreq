@@ -555,7 +555,10 @@ def set_platform_profile(conf, profile):
         return
 
     print(f'Setting to use: "{pp}" Platform Profile')
-    run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
+    result = run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
+    if result.returncode != 0:
+        print(f"Failed to set platform profile to {pp}")
+        return
     set_platform_profile.last_applied_platform_profile[profile] = pp
 
 def set_energy_perf_bias(conf, profile):
