@@ -541,9 +541,14 @@ def set_platform_profile(conf, profile):
         set_platform_profile.last_applied_platform_profile = {}
 
     def is_platform_profile_enforced():
-        try: 
+        try:
             return conf.getboolean(profile, "enforce_platform_profile", fallback=True)
         except ValueError:
+            raw_value = conf[profile].get("enforce_platform_profile", "")
+            print(
+                f"Invalid boolean value for 'enforce_platform_profile' in profile '{profile}': "
+                f"{raw_value!r}. Using default value True."
+            )
             return True
 
     global last_applied_config_section
