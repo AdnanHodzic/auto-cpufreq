@@ -26,6 +26,11 @@ services.auto-cpufreq.settings = {
     # cat /sys/firmware/acpi/platform_profile_choices
     # platform_profile = "performance";
 
+    # Controls strict enforcement of the platform profile.
+    # - true: Constantly enforces the platform profile defined above.
+    # - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+    # enforce_platform_profile = true;
+
     # minimum cpu frequency (in kHz)
     # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
     # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
@@ -79,6 +84,11 @@ services.auto-cpufreq.settings = {
     # See available options by running:
     # cat /sys/firmware/acpi/platform_profile_choices
     # platform_profile = "low-power";
+
+    # Controls strict enforcement of the platform profile.
+    # - true: Constantly enforces the platform profile defined above.
+    # - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+    # enforce_platform_profile = true;
 
     # minimum cpu frequency (in kHz)
     # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
