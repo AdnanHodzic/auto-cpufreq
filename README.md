@@ -73,6 +73,7 @@ Example of `auto-cpufreq --stats` CLI output
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
   - [Ignoring power supplies](#Ignoring-power-supplies)
+  - [🌐 Community Projects](#-community-projects)
 - [Troubleshooting](#troubleshooting)
   - [AUR](#aur)
 - [Discussion](#discussion)
@@ -692,6 +693,12 @@ name4 = example
 xboxctrl = {the xbox controler power supply name}
 
 ```
+
+### 🌐 Community Projects 
+
+If you're using auto‑cpufreq in desktop environments, you may find these community integrations helpful and useful:
+
+- GNOME Extension: [auto-cpufreq-swticher](https://extensions.gnome.org/extension/8320/auto-cpufreq-switcher/) (tray icon + governor switcher in quick settings)
 
 ## Troubleshooting
 
