@@ -32,7 +32,7 @@ tuned_stat_exists = does_command_exists("tuned")
 if not IS_INSTALLED_WITH_SNAP:
     if systemctl_exists:
         try: gnome_power_status = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
-        except:
+        except (OSError, FileNotFoundError):
             print("\nUnable to determine init system")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB+"/issues")
@@ -119,7 +119,7 @@ def gnome_power_svc_enable():
             print("* Enabling GNOME power profiles\n")
             call(["systemctl", "unmask", "power-profiles-daemon"])
             call(["systemctl", "enable", "--now", "power-profiles-daemon"])
-        except:
+        except (OSError, FileNotFoundError):
             print("\nUnable to enable GNOME power profiles")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB+"/issues")
@@ -130,7 +130,7 @@ def tuned_svc_enable():
             print("* Enabling TuneD\n")
             call(["systemctl", "unmask", "tuned"])
             call(["systemctl", "enable", "--now", "tuned"])
-        except:
+        except (OSError, FileNotFoundError):
             print("\nUnable to enable TuneD daemon")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB+"/issues")
@@ -141,7 +141,7 @@ def gnome_power_svc_status():
         try:
             print("* GNOME power profiles status")
             call(["systemctl", "status", "power-profiles-daemon"])
-        except:
+        except (OSError, FileNotFoundError):
             print("\nUnable to see GNOME power profiles status")
             print("If this causes any problems, please submit an issue:")
             print(GITHUB+"/issues")
@@ -295,7 +295,7 @@ def gnome_power_svc_disable():
                     print("auto-cpufreq snap package not installed\nGNOME Power Profiles Daemon should be enabled. run:\n\n"
                         "sudo python3 -m auto_cpufreq.power_helper --gnome_power_enable"
                     )
-            except:
+            except (OSError, FileNotFoundError):
                 # snapd not found on the system
                 print("There was a problem, couldn't determine GNOME Power Profiles Daemon")
                 snap_pkg_check = 0

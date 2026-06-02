@@ -847,7 +847,8 @@ class DaemonNotRunningView(Gtk.Box):
                 kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
                 future = executor.submit(run, "pkexec auto-cpufreq --install", **kwargs)
                 result = future.result()
-            assert result.returncode not in (126, 127), Exception("Authorization was cancelled")
+            if result.returncode in (126, 127):
+                raise RuntimeError("Authorization was cancelled")
             # enable for debug. causes issues if kept
             # elif result.stderr is not None:
             #     raise Exception(result.stderr.decode())

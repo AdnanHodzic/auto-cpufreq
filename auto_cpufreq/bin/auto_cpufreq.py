@@ -116,7 +116,9 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                     while True:
                         time.sleep(1)
                         set_autofreq()
-                except:
+                except KeyboardInterrupt:
+                    raise
+                except Exception:
                     pass
             
             def live_daemon_off():

@@ -140,7 +140,7 @@ class SystemInfo:
                 "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "r"
             ) as f:
                 return f.read().strip()
-        except:
+        except OSError:
             return None
 
     @staticmethod
