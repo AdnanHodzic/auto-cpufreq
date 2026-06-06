@@ -29,6 +29,7 @@ tlp_stat_exists = does_command_exists("tlp-stat")
 tuned_stat_exists = does_command_exists("tuned")
 
 # detect if gnome power profile service is running
+gnome_power_status = None
 if not IS_INSTALLED_WITH_SNAP:
     if systemctl_exists:
         try: gnome_power_status = call(["systemctl", "is-active", "--quiet", "power-profiles-daemon"])
