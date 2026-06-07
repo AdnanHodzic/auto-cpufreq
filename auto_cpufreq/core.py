@@ -992,7 +992,7 @@ def is_running(program, argument):
     # and find the one with name and args passed to the function
     for p in psutil.process_iter():
         try: cmd = p.cmdline()
-        except: continue
+        except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess, OSError): continue
         for s in filter(lambda x: program in x, cmd):
             if argument in cmd: return True
 
