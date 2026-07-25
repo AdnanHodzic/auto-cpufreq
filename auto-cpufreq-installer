@@ -167,7 +167,7 @@ elif [ -f /etc/os-release ];then
 
 
   # debian specific PyGObject Installation
-  if [ "$PYGOBJECT_VER" = "3.50.0" ]; then
+  if [ -f /etc/debian_version ] && [ "$PYGOBJECT_VER" = "3.50.0" ]; then
     python3 -m pip install PyGObject==3.50.0
   else
     python3 -m pip install PyGObject
