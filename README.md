@@ -78,8 +78,10 @@ Example of `auto-cpufreq --stats` CLI output
 - [Discussion](#discussion)
 - [Donate](#donate)
   - [Financial donation](#financial-donation)
-    - [Paypal](#paypal)
+    - [Become Github Sponsor](https://github.com/AdnanHodzic/auto-cpufreq/README.md#become-github-sponsor)
+    - [pump.fun](https://github.com/AdnanHodzic/auto-cpufreq/README.md#pumpfun)
     - [BitCoin](#bitcoin)
+    - [Paypal](#paypal)
   - [Code contribution](#code-contribution)
 
 ## Why do I need auto-cpufreq?
@@ -781,17 +783,22 @@ Showing your support and appreciation for the auto-cpufreq project can be done i
 
 If auto-cpufreq helped you out and you find it useful, show your appreciation by donating (any amount) to the project!
 
-##### Become Github Sponsor
+#### Become Github Sponsor
 
 [Become a sponsor to Adnan Hodzic on Github](https://github.com/sponsors/AdnanHodzic) to acknowledge my efforts and help project's further open source development.
 
-##### PayPal
+#### pump.fun
+
+[Auto-cpufreq ($CPUFREQ) on pump.fun](https://pump.fun/coin/6Bo3JHdnsiuJcDmHeApaUhTgtE1NNtBdZ3uyaL4ypump)
+
+Solana address: `6Bo3JHdnsiuJcDmHeApaUhTgtE1NNtBdZ3uyaL4ypump`
+
+#### BitCoin
+
+Bitcoin address: `bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87`
+
+#### PayPal
 [![paypal](https://www.paypalobjects.com/en_US/NL/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=7AHCP5PU95S4Y&item_name=Contribution+for+work+on+auto-cpufreq&currency_code=EUR&source=url)
-
-##### BitCoin
-[bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87](bitcoin:bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87)
-
-[![bitcoin](https://foolcontrol.org/wp-content/uploads/2019/08/btc-donate-displaylink-debian.png)](bitcoin:bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87)
 
 ### Code contribution
 
