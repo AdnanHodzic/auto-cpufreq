@@ -793,6 +793,8 @@ If auto-cpufreq helped you out and you find it useful, show your appreciation by
 
 Solana address: `6Bo3JHdnsiuJcDmHeApaUhTgtE1NNtBdZ3uyaL4ypump`
 
+**Please note:** *This token was created independently by the community, and auto‑cpufreq is not associated with or involved in its creation or management. Please be aware of the risks involved in meme‑coin trading and always do your own research before participating*
+
 #### BitCoin
 
 Bitcoin address: `bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87`
