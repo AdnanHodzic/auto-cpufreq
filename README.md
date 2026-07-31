@@ -791,9 +791,10 @@ If auto-cpufreq helped you out and you find it useful, show your appreciation by
 
 [Auto-cpufreq ($CPUFREQ) on pump.fun](https://pump.fun/coin/6Bo3JHdnsiuJcDmHeApaUhTgtE1NNtBdZ3uyaL4ypump)
 
-Solana address: `6Bo3JHdnsiuJcDmHeApaUhTgtE1NNtBdZ3uyaL4ypump`
+Pump.fun Solana address: `6Bo3JHdnsiuJcDmHeApaUhTgtE1NNtBdZ3uyaL4ypump`
 
-**Please note:** *This token was created independently by the community, and auto‑cpufreq is not associated with or involved in its creation or management. Please be aware of the risks involved in meme‑coin trading and always do your own research before participating*
+**Please note:** *This token was created independently by third-party community members. `auto-cpufreq` and its maintainers are not involved in its creation, management, or price activity. This listing strictly allows the maintainer to collect GitHub protocol-allocated trading rewards as open-source sponsorship. This is not financial advice or an endorsement, please be aware of the high risks involved in meme coin trading and always do your own research.*
+
 
 #### BitCoin
 
