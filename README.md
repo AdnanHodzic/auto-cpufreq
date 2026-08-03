@@ -356,7 +356,7 @@ By default, auto-cpufreq does not use a config file. If you wish to configure au
 
 #### Example config file contents
 
-Configured to run in performance mode when connected to a power source and never drop below 2 GHz. When running on battery, all settings will be configured automatically by auto-cpufreq based on all above mentioned criteria.
+Configured to run in full performance mode when connected to a power source (charger) and never drop below 2 GHz. When running on battery, all settings will be configured automatically by auto-cpufreq based on all above mentioned criteria.
 
 ```python
 # settings for when connected to a power source
@@ -383,6 +383,11 @@ energy_perf_bias = performance
 # See available options by running:
 # cat /sys/firmware/acpi/platform_profile_choices
 platform_profile = performance
+
+# Controls strict enforcement of the platform profile.
+# - true: Constantly enforces the platform profile defined above.
+# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+enforce_platform_profile = true
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
@@ -423,6 +428,11 @@ turbo = always
 # See available options by running:
 # cat /sys/firmware/acpi/platform_profile_choices
 #platform_profile = low-power
+
+# Controls strict enforcement of the platform profile.
+# - true: Constantly enforces the platform profile defined above.
+# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+# enforce_platform_profile = true
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
