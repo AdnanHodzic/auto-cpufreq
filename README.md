@@ -355,6 +355,9 @@ By default, auto-cpufreq does not use a config file. If you wish to configure au
 3. System-wide configuration: `/etc/auto-cpufreq.conf`
 
 #### Example config file contents
+
+Configured to run in performance mode when connected to a power source and never drop below 2 GHz. When running on battery, all settings will be configured automatically by auto-cpufreq based on all above mentioned criteria.
+
 ```python
 # settings for when connected to a power source
 [charger]
@@ -363,7 +366,7 @@ By default, auto-cpufreq does not use a config file. If you wish to configure au
 governor = performance
 
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
-energy_performance_preference = performance
+energy_performance_preference = balance_performance
 
 # EPB (Energy Performance Bias) for the intel_pstate driver
 # see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
@@ -373,24 +376,19 @@ energy_performance_preference = performance
 # performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
 # if the parameter is missing in the config and the hardware supports this setting, the default value will be used
 # the default value is `balance_performance` (for charger)
-# energy_perf_bias = balance_performance
+energy_perf_bias = performance
 
 # Platform Profiles
 # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
 # See available options by running:
 # cat /sys/firmware/acpi/platform_profile_choices
-# platform_profile = performance
-
-# Controls strict enforcement of the platform profile.
-# - true: Constantly enforces the platform profile defined above.
-# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
-# enforce_platform_profile = true
+platform_profile = performance
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
 # see conversion info: https://www.rapidtables.com/convert/frequency/mhz-to-hz.html
 # to use this feature, uncomment the following line and set the value accordingly
-# scaling_min_freq = 800000
+scaling_min_freq = 2000000
 
 # maximum cpu frequency (in kHz)
 # example: for 1GHz = 1000 MHz = 1000000 kHz -> scaling_max_freq = 1000000
@@ -399,16 +397,16 @@ energy_performance_preference = performance
 # scaling_max_freq = 1000000
 
 # turbo boost setting. possible values: always, auto, never
-turbo = auto
+turbo = always
 
 # settings for when using battery power
 [battery]
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 # preferred governor
-governor = powersave
+#governor = powersave
 
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
-energy_performance_preference = power
+#energy_performance_preference = balance_power
 
 # EPB (Energy Performance Bias) for the intel_pstate driver
 # see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
@@ -418,18 +416,13 @@ energy_performance_preference = power
 # performance (0), balance_performance (4), default (6), balance_power (8), or power (15)
 # if the parameter is missing in the config and the hardware supports this setting, the default value will be used
 # the default value is `balance_power` (for battery)
-# energy_perf_bias = balance_power
+#energy_perf_bias = balance_power
 
 # Platform Profiles
 # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
 # See available options by running:
 # cat /sys/firmware/acpi/platform_profile_choices
-# platform_profile = low-power
-
-# Controls strict enforcement of the platform profile.
-# - true: Constantly enforces the platform profile defined above.
-# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
-# enforce_platform_profile = true
+#platform_profile = low-power
 
 # minimum cpu frequency (in kHz)
 # example: for 800 MHz = 800000 kHz --> scaling_min_freq = 800000
@@ -444,12 +437,12 @@ energy_performance_preference = power
 # scaling_max_freq = 1000000
 
 # turbo boost setting (always, auto, or never)
-turbo = auto
+#turbo = auto
 
 # battery charging threshold
 # reference: https://github.com/AdnanHodzic/auto-cpufreq/#battery-charging-thresholds
 #enable_thresholds = true
-#start_threshold = 20
+#start_threshold = end_threshold-1
 #stop_threshold = 80
 ```
 
