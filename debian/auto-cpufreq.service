@@ -1,0 +1,14 @@
+[Unit]
+Description=auto-cpufreq - Automatic CPU speed & power optimizer for Linux
+Documentation=https://github.com/AdnanHodzic/auto-cpufreq
+After=multi-user.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/auto-cpufreq --daemon
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

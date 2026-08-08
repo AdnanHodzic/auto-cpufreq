@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	# Poetry build system not needed for Debian — we install sources directly
+
+override_dh_auto_build:
+	# Sources shipped as-is, no compilation needed
+
+override_dh_auto_test:
+	# Tests would require runtime deps, skip during build
+
+override_dh_install:
+	dh_install
+	# Install wrapper scripts manually (dh_install doesn't rename files)
+	install -d debian/auto-cpufreq/usr/bin/
+	install -m 755 debian/auto-cpufreq.sh debian/auto-cpufreq/usr/bin/auto-cpufreq
+	install -m 755 debian/auto-cpufreq-gtk.sh debian/auto-cpufreq/usr/bin/auto-cpufreq-gtk
+	# Install scripts to upstream-expected path (avoids dh_usrlocal conflict)
+	install -d debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+	install -m 755 scripts/cpufreqctl.sh debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+	install -m 755 scripts/auto-cpufreq-install.sh debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+	install -m 755 scripts/auto-cpufreq-remove.sh debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+	install -m 755 scripts/style.css debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+	install -m 755 scripts/start_app debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+
+override_dh_usrlocal:
+	# Skip dh_usrlocal — we intentionally install to /usr/local for
+	# upstream compatibility (SCRIPTS_DIR is hardcoded in core.py)

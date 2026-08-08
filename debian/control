@@ -1,0 +1,29 @@
+Source: auto-cpufreq
+Section: utils
+Priority: optional
+Maintainer: Claudio Ferreira Filho <filhocf@gmail.com>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all, python3-setuptools
+Standards-Version: 4.7.0
+Homepage: https://github.com/AdnanHodzic/auto-cpufreq
+Rules-Requires-Root: no
+
+Package: auto-cpufreq
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends},
+ python3-psutil (>= 6.0.0),
+ python3-click (>= 8.1.0),
+ python3-distro (>= 1.8.0),
+ python3-requests (>= 2.32.4),
+ python3-gi (>= 3.50.0),
+ python3-urwid (>= 3.0.2),
+ python3-pyinotify (>= 0.9.6),
+ dmidecode,
+ polkitd | policykit-1
+Description: Automatic CPU speed & power optimizer for Linux
+ auto-cpufreq is an automatic CPU speed & power optimizer for Linux
+ based on active monitoring of laptop's battery state, CPU usage,
+ CPU temperature and system load. Ultimately allowing you to improve
+ battery life without making any compromises.
+ .
+ Supported architectures: Intel, AMD, ARM (laptops, desktops, servers).
+ Provides both CLI and GUI (GTK) interfaces.
