@@ -12,7 +12,7 @@ jobs:
   build_deb:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.2.0
 
       - name: Install build dependencies
         run: |
@@ -22,11 +22,11 @@ jobs:
       - name: Build Debian package
         run: |
           dpkg-buildpackage --no-sign -b -d
+          cp ../auto-cpufreq_*.deb auto-cpufreq.deb
 
       - name: Upload .deb artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: auto-cpufreq-deb
-          path: ../auto-cpufreq_*.deb
-          compression-level: 0
+          path: auto-cpufreq.deb
           if-no-files-found: error
