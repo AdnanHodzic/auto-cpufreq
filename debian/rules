@@ -12,6 +12,16 @@ override_dh_auto_build:
 override_dh_auto_test:
 	# Tests would require runtime deps, skip during build
 
+override_dh_auto_install:
+	# Generate dist-info for --version (importlib.metadata)
+	# Create minimal dist-info manually (pip not available in build env)
+	mkdir -p debian/auto-cpufreq/usr/lib/python3/dist-packages/auto_cpufreq-3.1.0.dist-info
+	# Extract version from pyproject.toml
+	printf 'Metadata-Version: 2.1\nName: auto-cpufreq\nVersion: 3.1.0\nSummary: Automatic CPU speed & power optimizer for Linux\n' > \
+	  debian/auto-cpufreq/usr/lib/python3/dist-packages/auto_cpufreq-3.1.0.dist-info/METADATA
+	printf 'auto_cpufreq-3.1.0.dist-info/METADATA\n' > \
+	  debian/auto-cpufreq/usr/lib/python3/dist-packages/auto_cpufreq-3.1.0.dist-info/RECORD
+
 override_dh_install:
 	dh_install
 	# Install wrapper scripts manually (dh_install doesn't rename files)
