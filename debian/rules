@@ -30,6 +30,9 @@ override_dh_install:
 	install -m 755 debian/auto-cpufreq-gtk.sh debian/auto-cpufreq/usr/bin/auto-cpufreq-gtk
 	# Install scripts to upstream-expected path (avoids dh_usrlocal conflict)
 	install -d debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
+	# Override auto-cpufreq.service with the .deb-correct version
+	# (upstream service points to /opt/auto-cpufreq/venv, not the .deb path)
+	install -m 644 debian/auto-cpufreq.service debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/auto-cpufreq.service
 	install -m 755 scripts/cpufreqctl.sh debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
 	install -m 755 scripts/auto-cpufreq-install.sh debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/
 	install -m 755 scripts/auto-cpufreq-remove.sh debian/auto-cpufreq/usr/local/share/auto-cpufreq/scripts/

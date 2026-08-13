@@ -5,3 +5,4 @@ files
 *.debhelper
 build/
 *.log
+auto-cpufreq/
