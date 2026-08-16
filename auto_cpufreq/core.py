@@ -578,12 +578,55 @@ def set_energy_perf_bias(conf, profile):
     print(f'Setting to use: "{epb}" EPB')
 
 
+HWP_DYNAMIC_BOOST_PATH = Path(
+    "/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost"
+)
+
+
+def get_configured_hwp_dynamic_boost(conf, profile):
+    if not conf.has_option(profile, "hwp_dynamic_boost"):
+        return None
+
+    try:
+        return conf.getboolean(profile, "hwp_dynamic_boost")
+    except ValueError:
+        raw_value = conf[profile].get("hwp_dynamic_boost", "")
+        print(
+            f'Invalid boolean value for "hwp_dynamic_boost" '
+            f'in [{profile}]: {raw_value!r}. Ignoring setting.'
+        )
+        return None
+
+
+def set_hwp_dynamic_boost(enabled):
+    if not HWP_DYNAMIC_BOOST_PATH.exists():
+        print("Not setting HWP dynamic boost (not supported by system)")
+        return
+
+    value = "1" if enabled else "0"
+
+    try:
+        if HWP_DYNAMIC_BOOST_PATH.read_text().strip() == value:
+            return
+
+        HWP_DYNAMIC_BOOST_PATH.write_text(value)
+    except OSError as error:
+        print(f"Failed to set HWP dynamic boost to {value}: {error}")
+        return
+
+    print(f"Setting HWP dynamic boost to: {value}")
+
+
 def set_powersave():
     conf = config.get_config()
     gov = conf["battery"]["governor"] if conf.has_option("battery", "governor") else AVAILABLE_GOVERNORS_SORTED[-1]
     print(f'Setting to use: "{gov}" governor')
     if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
     run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
+
+    configured_dynboost = get_configured_hwp_dynamic_boost(conf, "battery")
+    if configured_dynboost is False:
+        set_hwp_dynamic_boost(False)
 
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
@@ -595,7 +638,7 @@ def set_powersave():
                 os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
             ))
 
-        if dynboost_enabled: print('Not setting EPP (dynamic boosting is enabled)')
+        if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
         else:
             if conf.has_option("battery", "energy_performance_preference"):
                 epp = conf["battery"]["energy_performance_preference"]
@@ -604,6 +647,9 @@ def set_powersave():
             else:
                 run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
                 print('Setting to use: "balance_power" EPP')
+
+    if configured_dynboost is True:
+        set_hwp_dynamic_boost(True)
 
     set_energy_perf_bias(conf, "battery")
     set_platform_profile(conf, "battery")
@@ -668,6 +714,10 @@ def set_performance():
     if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
     run("cpufreqctl.auto-cpufreq --governor --set="+gov, shell=True)
 
+    configured_dynboost = get_configured_hwp_dynamic_boost(conf, "charger")
+    if configured_dynboost is False:
+        set_hwp_dynamic_boost(False)
+
     if not Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
         print('Not setting EPP (not supported by system)')
     else:
@@ -679,7 +729,7 @@ def set_performance():
                     os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
                 ))
 
-            if dynboost_enabled: print('Not setting EPP (dynamic boosting is enabled)')
+            if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
             else:
                 intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
 
@@ -720,6 +770,9 @@ def set_performance():
                 else:
                     run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
                     print('Setting to use: "balance_performance" EPP')
+
+    if configured_dynboost is True:
+        set_hwp_dynamic_boost(True)
     
     set_energy_perf_bias(conf, "charger")
     set_platform_profile(conf, "charger")

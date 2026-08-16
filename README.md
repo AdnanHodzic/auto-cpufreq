@@ -368,6 +368,10 @@ governor = performance
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 energy_performance_preference = balance_performance
 
+# Intel HWP Dynamic Boost.
+# Only available with intel_pstate in active mode and HWP enabled.
+# hwp_dynamic_boost = true
+
 # EPB (Energy Performance Bias) for the intel_pstate driver
 # see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
 # available EPB options include a numeric value between 0-15
@@ -412,6 +416,10 @@ turbo = always
 
 # EPP: see available preferences by running: cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences
 #energy_performance_preference = balance_power
+
+# Intel HWP Dynamic Boost.
+# Only available with intel_pstate in active mode and HWP enabled.
+# hwp_dynamic_boost = false
 
 # EPB (Energy Performance Bias) for the intel_pstate driver
 # see conversion info: https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_epb.html
