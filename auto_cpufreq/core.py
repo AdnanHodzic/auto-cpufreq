@@ -598,18 +598,33 @@ def get_configured_hwp_dynamic_boost(conf, profile):
         return None
 
 
+def get_hwp_dynamic_boost():
+    """Return the current HWP Dynamic Boost state, or None if unavailable."""
+    try:
+        value = HWP_DYNAMIC_BOOST_PATH.read_text().strip()
+    except OSError:
+        return None
+
+    if value == "1":
+        return True
+    if value == "0":
+        return False
+    return None
+
+
 def set_hwp_dynamic_boost(enabled):
     if not HWP_DYNAMIC_BOOST_PATH.exists():
         print("Not setting HWP dynamic boost (not supported by system)")
         return
 
+    current_value = get_hwp_dynamic_boost()
+    if current_value == enabled:
+        return
+
     value = "1" if enabled else "0"
 
     try:
-        if HWP_DYNAMIC_BOOST_PATH.read_text().strip() == value:
-            return
-
-        HWP_DYNAMIC_BOOST_PATH.write_text(value)
+        HWP_DYNAMIC_BOOST_PATH.write_text(f"{value}\n")
     except OSError as error:
         print(f"Failed to set HWP dynamic boost to {value}: {error}")
         return
@@ -631,12 +646,7 @@ def set_powersave():
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
     else:
-        dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
-
-        if dynboost_enabled:
-            dynboost_enabled = bool(int(
-                os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
-            ))
+        dynboost_enabled = get_hwp_dynamic_boost()
 
         if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
         else:
@@ -722,12 +732,7 @@ def set_performance():
         print('Not setting EPP (not supported by system)')
     else:
         if Path("/sys/devices/system/cpu/intel_pstate").exists():
-            dynboost_enabled = Path("/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").exists()
-
-            if dynboost_enabled:
-                dynboost_enabled = bool(int(
-                    os.popen("cat /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost").read()
-                ))
+            dynboost_enabled = get_hwp_dynamic_boost()
 
             if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
             else:

@@ -8,7 +8,10 @@ import psutil
 import distro
 from pathlib import Path
 from auto_cpufreq.config.config import config
-from auto_cpufreq.core import get_power_supply_ignore_list
+from auto_cpufreq.core import (
+    get_hwp_dynamic_boost,
+    get_power_supply_ignore_list,
+)
 from auto_cpufreq.globals import (
     AVAILABLE_GOVERNORS_SORTED,
     CPU_TEMP_SENSOR_PRIORITY,
@@ -54,6 +57,7 @@ class SystemReport:
     current_gov: str | None
     current_epp: str | None
     current_epb: str | None
+    current_hwp_dynamic_boost: bool | None
     cpu_driver: str
     cpu_fan_speed: int | None
     cpu_usage: float
@@ -363,6 +367,7 @@ class SystemInfo:
             current_gov=self.current_gov(),
             current_epp=self.current_epp(battery_info.is_ac_plugged),
             current_epb=self.current_epb(battery_info.is_ac_plugged),
+            current_hwp_dynamic_boost=get_hwp_dynamic_boost(),
             cpu_fan_speed=self.cpu_fan_speed(),
             cpu_usage=self.cpu_usage(),
             cpu_max_freq=self.cpu_max_freq(),

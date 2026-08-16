@@ -12,6 +12,7 @@ services.auto-cpufreq.settings = {
 
     # Intel HWP Dynamic Boost.
     # Only available with intel_pstate in active mode and HWP enabled.
+    # Alters value in: /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost
     # hwp_dynamic_boost = true;
 
     # EPB (Energy Performance Bias) for the intel_pstate driver
@@ -75,6 +76,7 @@ services.auto-cpufreq.settings = {
 
     # Intel HWP Dynamic Boost.
     # Only available with intel_pstate in active mode and HWP enabled.
+    # Alters value in: /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost
     # hwp_dynamic_boost = false;
 
     # EPB (Energy Performance Bias) for the intel_pstate driver

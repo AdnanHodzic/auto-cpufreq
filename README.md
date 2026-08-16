@@ -370,6 +370,8 @@ energy_performance_preference = balance_performance
 
 # Intel HWP Dynamic Boost.
 # Only available with intel_pstate in active mode and HWP enabled.
+# Alters value in: /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost
+# Accepted values: true/false, yes/no, on/off, 1/0.
 # hwp_dynamic_boost = true
 
 # EPB (Energy Performance Bias) for the intel_pstate driver
@@ -419,6 +421,8 @@ turbo = always
 
 # Intel HWP Dynamic Boost.
 # Only available with intel_pstate in active mode and HWP enabled.
+# Alters value in: /sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost
+# Accepted values: true/false, yes/no, on/off, 1/0.
 # hwp_dynamic_boost = false
 
 # EPB (Energy Performance Bias) for the intel_pstate driver
