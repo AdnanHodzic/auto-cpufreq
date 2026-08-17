@@ -6,6 +6,7 @@ FLROOT=/sys/devices/system/cpu
 FWROOT=/sys/firmware
 DRIVER=auto
 VERBOSE=0
+WRITE_ERROR=0
 
 ## parse special options
 for i in "$@"; do
@@ -96,7 +97,11 @@ function driver () {
 }
 
 function write_value () {
-  if [ -w $FLNM ]; then echo $VALUE > $FLNM; fi
+  if [ -w $FLNM ]; then
+    if ! echo $VALUE > $FLNM; then
+      WRITE_ERROR=1
+    fi
+  fi
 }
 
 function set_driver () {
@@ -285,7 +290,11 @@ function set_energy_performance_bias () {
     i=0
     while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/power/energy_perf_bias"
-      if [ -w $FLNM ]; then echo $EPB_VALUE > $FLNM; fi
+      if [ -w $FLNM ]; then
+        if ! echo $EPB_VALUE > $FLNM; then
+          WRITE_ERROR=1
+        fi
+      fi
       i=`expr $i + 1`
     done
   else echo $EPB_VALUE > $FLROOT/cpu$CORE/power/energy_perf_bias
@@ -449,5 +458,15 @@ case $OPTION in
     exit 1
   ;;
 esac
+
+COMMAND_STATUS=$?
+
+if [ -n "$VALUE" ] || [ "$OPTION" = "--on" ] || [ "$OPTION" = "--off" ]; then
+  if [ $WRITE_ERROR -ne 0 ]; then
+    exit $WRITE_ERROR
+  fi
+
+  exit $COMMAND_STATUS
+fi
 
 exit 0
