@@ -560,7 +560,7 @@ def set_platform_profile(conf, profile):
         return
 
     print(f'Setting to use: "{pp}" Platform Profile')
-    result = run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
+    result = run(["cpufreqctl.auto-cpufreq", "--pp", f"--set={pp}"])
     if result.returncode != 0:
         print(f"Failed to set platform profile to {pp}")
         return
@@ -574,7 +574,7 @@ def set_energy_perf_bias(conf, profile):
     if conf.has_option(profile, "energy_perf_bias"):
         epb = conf[profile]["energy_perf_bias"]
 
-    run(f"cpufreqctl.auto-cpufreq --epb --set={epb}", shell=True)
+    run(["cpufreqctl.auto-cpufreq", "--epb", f"--set={epb}"])
     print(f'Setting to use: "{epb}" EPB')
 
 
@@ -652,7 +652,7 @@ def set_powersave():
         else:
             if conf.has_option("battery", "energy_performance_preference"):
                 epp = conf["battery"]["energy_performance_preference"]
-                run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+                run(["cpufreqctl.auto-cpufreq", "--epp", f"--set={epp}"])
                 print(f'Setting to use: "{epp}" EPP')
             else:
                 run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
@@ -746,7 +746,7 @@ def set_performance():
                         print('Overriding EPP to "performance"')
                         epp = "performance"
 
-                    run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+                    run(["cpufreqctl.auto-cpufreq", "--epp", f"--set={epp}"])
                     print(f'Setting to use: "{epp}" EPP')
                 else:
                     if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active":
@@ -766,7 +766,7 @@ def set_performance():
                     print('Overriding EPP to "performance"')
                     epp = "performance"
 
-                run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
+                run(["cpufreqctl.auto-cpufreq", "--epp", f"--set={epp}"])
                 print(f'Setting to use: "{epp}" EPP')
             else:
                 if Path(amd_pstate_status_path).exists() and open(amd_pstate_status_path, 'r').read().strip() == "active":
