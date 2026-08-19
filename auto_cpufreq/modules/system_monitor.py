@@ -223,6 +223,13 @@ class SystemMonitor:
                 aligned_text("Not setting EPP (not supported by system)")
             )
 
+        if report.current_hwp_dynamic_boost is not None:
+            self.right_content.append(
+                aligned_text(
+                    f"Intel HWP Dynamic Boost: {'on' if report.current_hwp_dynamic_boost else 'off'}"
+                )
+            )
+
         if report.current_epb:
             self.right_content.append(
                 aligned_text(f'Setting to use: "{report.current_epb}" EPB')
