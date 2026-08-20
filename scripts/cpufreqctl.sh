@@ -425,7 +425,7 @@ case $OPTION in
     fi
   ;;
   --on)
-    if [ -z $CORE ]; then
+    if [ -z "$CORE" ]; then
       verbose "Should be specify --core=NUMBER"
       false
     else
@@ -434,7 +434,7 @@ case $OPTION in
     fi
   ;;
   --off)
-    if [ -z $CORE ]; then
+    if [ -z "$CORE" ]; then
       verbose "Should be specify --core=NUMBER"
       false
     else
