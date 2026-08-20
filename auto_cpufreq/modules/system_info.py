@@ -148,24 +148,49 @@ class SystemInfo:
             return None
 
     @staticmethod
-    def current_epp(is_ac_plugged: bool) -> str | None:
-        epp_path = "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"
-        if not Path(epp_path).exists():
+    def current_epp(_is_ac_plugged: bool) -> str | None:
+        paths = list(Path("/sys/devices/system/cpu").glob(
+            "cpu[0-9]*/cpufreq/energy_performance_preference"
+        ))
+        if not paths:
             return None
-            
-        return config.get_config().get( 
-            "charger" if is_ac_plugged else "battery", "energy_performance_preference", fallback="balance_performance" if is_ac_plugged else "balance_power"
-        )
+
+        values = set()
+        for path in paths:
+            value = SystemInfo.read_file(str(path))
+            if value is None:
+                return None
+            values.add(value)
+
+        if len(values) > 1:
+            return "mixed"
+        return values.pop()
 
     @staticmethod
-    def current_epb(is_ac_plugged: bool) -> str | None:
-        epb_path = "/sys/devices/system/cpu/intel_pstate"
-        if not Path(epb_path).exists():
+    def current_epb(_is_ac_plugged: bool) -> str | None:
+        epb_names = {
+            "0": "performance",
+            "4": "balance_performance",
+            "6": "default",
+            "8": "balance_power",
+            "15": "power",
+        }
+        paths = list(Path("/sys/devices/system/cpu").glob(
+            "cpu[0-9]*/power/energy_perf_bias"
+        ))
+        if not paths:
             return None
 
-        return config.get_config().get(
-            "charger" if is_ac_plugged else "battery", "energy_perf_bias", fallback="balance_performance" if is_ac_plugged else "balance_power"
-        )
+        values = set()
+        for path in paths:
+            value = SystemInfo.read_file(str(path))
+            if value is None:
+                return None
+            values.add(epb_names.get(value, value))
+
+        if len(values) > 1:
+            return "mixed"
+        return values.pop()
 
     @staticmethod
     def cpu_usage() -> float:

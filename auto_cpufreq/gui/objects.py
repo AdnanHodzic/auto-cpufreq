@@ -306,9 +306,6 @@ class CPUFreqScalingBox(Gtk.Box):
         self.header = Gtk.Label(label="-" * 20 + " CPU Frequency Scaling " + "-" * 20)
         self.header.set_halign(Gtk.Align.START)
 
-        self.governor_label = Gtk.Label(label="")
-        self.governor_label.set_halign(Gtk.Align.START)
-
         self.epp_label = Gtk.Label(label="")
         self.epp_label.set_halign(Gtk.Align.START)
 
@@ -317,7 +314,6 @@ class CPUFreqScalingBox(Gtk.Box):
         self.epb_label.set_no_show_all(True)
 
         self.pack_start(self.header, False, False, 0)
-        self.pack_start(self.governor_label, False, False, 0)
         self.pack_start(self.epp_label, False, False, 0)
         self.pack_start(self.epb_label, False, False, 0)
 
@@ -327,25 +323,21 @@ class CPUFreqScalingBox(Gtk.Box):
         try:
             report = system_info.generate_system_report()
 
-            gov = report.current_gov if report.current_gov else "Unknown"
-            self.governor_label.set_label(f'Setting to use: "{gov}" governor')
-
             if report.current_epp:
-                self.epp_label.set_label(f"EPP setting: {report.current_epp}")
+                self.epp_label.set_label(f"Current EPP: {report.current_epp}")
                 self.epp_label.show()
             else:
                 self.epp_label.set_label("Not setting EPP (not supported by system)")
                 self.epp_label.show()
 
             if report.current_epb:
-                self.epb_label.set_label(f'Setting to use: "{report.current_epb}" EPB')
+                self.epb_label.set_label(f"Current EPB: {report.current_epb}")
                 self.epb_label.show()
             else:
                 self.epb_label.hide()
 
         except Exception:
-            self.governor_label.set_label('Setting to use: "Unknown" governor')
-            self.epp_label.set_label("EPP setting: Unknown")
+            self.epp_label.set_label("Current EPP: Unknown")
             self.epb_label.hide()
 
 class SystemStatisticsBox(Gtk.Box):
@@ -752,12 +744,12 @@ class MonitorModeView(Gtk.Box):
             self.right_box.pack_start(self._suggestion(f'Suggesting use of: "{suggested_gov}" governor'), False, False, 0)
 
         if report.current_epp:
-            self.right_box.pack_start(self._label(f"EPP setting: {report.current_epp}"), False, False, 0)
+            self.right_box.pack_start(self._label(f"Current EPP: {report.current_epp}"), False, False, 0)
         else:
             self.right_box.pack_start(self._label("Not setting EPP (not supported by system)"), False, False, 0)
 
         if report.current_epb:
-            self.right_box.pack_start(self._label(f'Setting to use: "{report.current_epb}" EPB'), False, False, 0)
+            self.right_box.pack_start(self._label(f"Current EPB: {report.current_epb}"), False, False, 0)
 
         self.right_box.pack_start(self._label(""), False, False, 0)
 
