@@ -799,6 +799,17 @@ HWP_DYNAMIC_BOOST_PATH = Path(
     "/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost"
 )
 
+INTEL_PSTATE_STATUS_PATH = Path(
+    "/sys/devices/system/cpu/intel_pstate/status"
+)
+
+
+def intel_pstate_active():
+    try:
+        return INTEL_PSTATE_STATUS_PATH.read_text().strip() == "active"
+    except OSError:
+        return False
+
 
 def get_configured_hwp_dynamic_boost(conf, profile):
     if not conf.has_option(profile, "hwp_dynamic_boost"):
@@ -854,7 +865,18 @@ def set_powersave():
     gov = conf["battery"]["governor"] if conf.has_option("battery", "governor") else AVAILABLE_GOVERNORS_SORTED[-1]
     print(f'Setting to use: "{gov}" governor')
     if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
-    run(f"cpufreqctl.auto-cpufreq --governor --set={gov}", shell=True)
+    try:
+        result = run(
+            ["cpufreqctl.auto-cpufreq", "--governor", f"--set={gov}"]
+        )
+    except OSError as error:
+        print(f'Failed to set "{gov}" governor: {error}')
+        footer()
+        return
+    if result.returncode != 0:
+        print(f'Failed to set "{gov}" governor')
+        footer()
+        return
 
     configured_dynboost = get_configured_hwp_dynamic_boost(conf, "battery")
     if configured_dynboost is False:
@@ -864,8 +886,11 @@ def set_powersave():
         print('Not setting EPP (not supported by system)')
     else:
         dynboost_enabled = get_hwp_dynamic_boost()
+        pstate_active = intel_pstate_active()
 
         if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
+        elif pstate_active and gov == "performance":
+            print('Not setting EPP (intel_pstate performance governor controls EPP as "performance")')
         else:
             if conf.has_option("battery", "energy_performance_preference"):
                 epp = conf["battery"]["energy_performance_preference"]
@@ -937,7 +962,18 @@ def set_performance():
 
     print(f'Setting to use: "{gov}" governor')
     if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
-    run("cpufreqctl.auto-cpufreq --governor --set="+gov, shell=True)
+    try:
+        result = run(
+            ["cpufreqctl.auto-cpufreq", "--governor", f"--set={gov}"]
+        )
+    except OSError as error:
+        print(f'Failed to set "{gov}" governor: {error}')
+        footer()
+        return
+    if result.returncode != 0:
+        print(f'Failed to set "{gov}" governor')
+        footer()
+        return
 
     configured_dynboost = get_configured_hwp_dynamic_boost(conf, "charger")
     if configured_dynboost is False:
@@ -948,22 +984,17 @@ def set_performance():
     else:
         if Path("/sys/devices/system/cpu/intel_pstate").exists():
             dynboost_enabled = get_hwp_dynamic_boost()
+            pstate_active = intel_pstate_active()
 
             if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
+            elif pstate_active and gov == "performance":
+                print('Not setting EPP (intel_pstate performance governor controls EPP as "performance")')
             else:
-                intel_pstate_status_path = "/sys/devices/system/cpu/intel_pstate/status"
-
                 if conf.has_option("charger", "energy_performance_preference"):
                     epp = conf["charger"]["energy_performance_preference"]
-
-                    if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active" and epp != "performance" and gov == "performance":
-                        print(f'Warning "{epp}" EPP cannot be used in performance governor')
-                        print('Overriding EPP to "performance"')
-                        epp = "performance"
-
                     set_energy_perf_preference(epp)
                 else:
-                    if Path(intel_pstate_status_path).exists() and open(intel_pstate_status_path, 'r').read().strip() == "active":
+                    if pstate_active:
                         set_energy_perf_preference("performance")
                     else:
                         set_energy_perf_preference("balance_performance")
