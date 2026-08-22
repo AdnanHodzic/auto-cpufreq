@@ -826,6 +826,19 @@ def get_configured_hwp_dynamic_boost(conf, profile):
         return None
 
 
+def get_hwp_dynamic_boost_target(conf, profile):
+    if conf.has_option(profile, "hwp_dynamic_boost"):
+        configured = get_configured_hwp_dynamic_boost(conf, profile)
+        if configured is None or not HWP_DYNAMIC_BOOST_PATH.exists():
+            return None
+        return configured
+
+    if not HWP_DYNAMIC_BOOST_PATH.exists():
+        return None
+
+    return profile == "charger"
+
+
 def get_hwp_dynamic_boost():
     """Return the current HWP Dynamic Boost state, or None if unavailable."""
     try:
@@ -843,11 +856,11 @@ def get_hwp_dynamic_boost():
 def set_hwp_dynamic_boost(enabled):
     if not HWP_DYNAMIC_BOOST_PATH.exists():
         print("Not setting HWP dynamic boost (not supported by system)")
-        return
+        return False
 
     current_value = get_hwp_dynamic_boost()
     if current_value == enabled:
-        return
+        return True
 
     value = "1" if enabled else "0"
 
@@ -855,9 +868,14 @@ def set_hwp_dynamic_boost(enabled):
         HWP_DYNAMIC_BOOST_PATH.write_text(f"{value}\n")
     except OSError as error:
         print(f"Failed to set HWP dynamic boost to {value}: {error}")
-        return
+        return False
+
+    if get_hwp_dynamic_boost() != enabled:
+        print(f"Failed to verify HWP dynamic boost state after setting to {value}")
+        return False
 
     print(f"Setting HWP dynamic boost to: {value}")
+    return True
 
 
 def set_powersave():
@@ -878,9 +896,10 @@ def set_powersave():
         footer()
         return
 
-    configured_dynboost = get_configured_hwp_dynamic_boost(conf, "battery")
-    if configured_dynboost is False:
-        set_hwp_dynamic_boost(False)
+    target_dynboost = get_hwp_dynamic_boost_target(conf, "battery")
+    hwp_disable_failed = False
+    if target_dynboost is False and HWP_DYNAMIC_BOOST_PATH.exists():
+        hwp_disable_failed = not set_hwp_dynamic_boost(False)
 
     if Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists() is False:
         print('Not setting EPP (not supported by system)')
@@ -888,7 +907,9 @@ def set_powersave():
         dynboost_enabled = get_hwp_dynamic_boost()
         pstate_active = intel_pstate_active()
 
-        if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
+        if hwp_disable_failed:
+            print('Not setting EPP (HWP dynamic boost could not be disabled)')
+        elif dynboost_enabled and target_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
         elif pstate_active and gov == "performance":
             print('Not setting EPP (intel_pstate performance governor controls EPP as "performance")')
         else:
@@ -898,7 +919,7 @@ def set_powersave():
             else:
                 set_energy_perf_preference("balance_power")
 
-    if configured_dynboost is True:
+    if target_dynboost is True:
         set_hwp_dynamic_boost(True)
 
     set_energy_perf_bias(conf, "battery")
@@ -975,9 +996,10 @@ def set_performance():
         footer()
         return
 
-    configured_dynboost = get_configured_hwp_dynamic_boost(conf, "charger")
-    if configured_dynboost is False:
-        set_hwp_dynamic_boost(False)
+    target_dynboost = get_hwp_dynamic_boost_target(conf, "charger")
+    hwp_disable_failed = False
+    if target_dynboost is False and HWP_DYNAMIC_BOOST_PATH.exists():
+        hwp_disable_failed = not set_hwp_dynamic_boost(False)
 
     if not Path("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference").exists():
         print('Not setting EPP (not supported by system)')
@@ -986,7 +1008,9 @@ def set_performance():
             dynboost_enabled = get_hwp_dynamic_boost()
             pstate_active = intel_pstate_active()
 
-            if dynboost_enabled and configured_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
+            if hwp_disable_failed:
+                print('Not setting EPP (HWP dynamic boost could not be disabled)')
+            elif dynboost_enabled and target_dynboost is None: print('Not setting EPP (dynamic boosting is enabled)')
             elif pstate_active and gov == "performance":
                 print('Not setting EPP (intel_pstate performance governor controls EPP as "performance")')
             else:
@@ -1016,7 +1040,7 @@ def set_performance():
                 else:
                     set_energy_perf_preference("balance_performance")
 
-    if configured_dynboost is True:
+    if target_dynboost is True:
         set_hwp_dynamic_boost(True)
     
     set_energy_perf_bias(conf, "charger")

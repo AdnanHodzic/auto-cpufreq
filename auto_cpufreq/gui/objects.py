@@ -313,9 +313,14 @@ class CPUFreqScalingBox(Gtk.Box):
         self.epb_label.set_halign(Gtk.Align.START)
         self.epb_label.set_no_show_all(True)
 
+        self.hwp_dynamic_boost_label = Gtk.Label(label="")
+        self.hwp_dynamic_boost_label.set_halign(Gtk.Align.START)
+        self.hwp_dynamic_boost_label.set_no_show_all(True)
+
         self.pack_start(self.header, False, False, 0)
         self.pack_start(self.epp_label, False, False, 0)
         self.pack_start(self.epb_label, False, False, 0)
+        self.pack_start(self.hwp_dynamic_boost_label, False, False, 0)
 
         self.refresh()
 
@@ -336,9 +341,19 @@ class CPUFreqScalingBox(Gtk.Box):
             else:
                 self.epb_label.hide()
 
+            if report.current_hwp_dynamic_boost is not None:
+                state = "on" if report.current_hwp_dynamic_boost else "off"
+                self.hwp_dynamic_boost_label.set_label(
+                    f"Intel HWP Dynamic Boost: {state}"
+                )
+                self.hwp_dynamic_boost_label.show()
+            else:
+                self.hwp_dynamic_boost_label.hide()
+
         except Exception:
             self.epp_label.set_label("Current EPP: Unknown")
             self.epb_label.hide()
+            self.hwp_dynamic_boost_label.hide()
 
 class SystemStatisticsBox(Gtk.Box):
     def __init__(self):
@@ -750,6 +765,15 @@ class MonitorModeView(Gtk.Box):
 
         if report.current_epb:
             self.right_box.pack_start(self._label(f"Current EPB: {report.current_epb}"), False, False, 0)
+
+        if report.current_hwp_dynamic_boost is not None:
+            state = "on" if report.current_hwp_dynamic_boost else "off"
+            self.right_box.pack_start(
+                self._label(f"Intel HWP Dynamic Boost: {state}"),
+                False,
+                False,
+                0,
+            )
 
         self.right_box.pack_start(self._label(""), False, False, 0)
 
