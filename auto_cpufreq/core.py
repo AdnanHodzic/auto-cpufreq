@@ -473,14 +473,101 @@ def get_load():
 
 def display_system_load_avg(): print(" (load average: {:.2f}, {:.2f}, {:.2f})".format(*os.getloadavg()))
 
+CPU_SYSFS_ROOT = Path("/sys/devices/system/cpu")
+EPB_TARGET_VALUES = {
+    "performance": "0",
+    "balance_performance": "4",
+    "default": "6",
+    "balance_power": "8",
+    "power": "15",
+}
+EPB_VALUE_NAMES = {value: name for name, value in EPB_TARGET_VALUES.items()}
+
+
+def get_cpu_setting_state(relative_path):
+    paths = list(CPU_SYSFS_ROOT.glob(f"cpu[0-9]*/{relative_path}"))
+    if not paths:
+        return None
+
+    values = set()
+    for path in paths:
+        try:
+            values.add(path.read_text().strip())
+        except OSError:
+            return None
+
+    if len(values) > 1:
+        return "mixed"
+    return values.pop()
+
+
+def normalize_epb_target(value):
+    value = str(value).strip()
+    if value.isdigit() and 0 <= int(value) <= 15:
+        return str(int(value))
+    return EPB_TARGET_VALUES.get(value)
+
+
+def format_epb_state(value):
+    if value is None:
+        return "unknown"
+    if value == "mixed":
+        return value
+    return EPB_VALUE_NAMES.get(value, value)
+
+
+def get_frequency_request_state(freq_type, target):
+    policy_paths = sorted((CPU_SYSFS_ROOT / "cpufreq").glob("policy[0-9]*"))
+    if not policy_paths:
+        policy_paths = sorted(CPU_SYSFS_ROOT.glob("cpu[0-9]*/cpufreq"))
+    if not policy_paths:
+        return None, []
+
+    values = []
+    in_effect = True
+
+    for policy in policy_paths:
+        try:
+            current = int((policy / freq_type).read_text().strip())
+            hw_min = int((policy / "cpuinfo_min_freq").read_text().strip())
+            hw_max = int((policy / "cpuinfo_max_freq").read_text().strip())
+
+            if freq_type == "scaling_max_freq":
+                expected = min(max(target, hw_min), hw_max)
+            else:
+                current_max = int(
+                    (policy / "scaling_max_freq").read_text().strip()
+                )
+                expected = min(max(target, hw_min), current_max)
+        except (OSError, ValueError):
+            return None, []
+
+        values.append(current)
+        if current != expected:
+            in_effect = False
+
+    return in_effect, values
+
+
+def format_frequency_effective(values):
+    if not values:
+        return "unknown"
+
+    minimum = round(min(values) / 1000)
+    maximum = round(max(values) / 1000)
+
+    if minimum == maximum:
+        return f"{minimum} MHz"
+    return f"{minimum}-{maximum} MHz across CPU policies"
+
+
 # set minimum and maximum CPU frequencies
 def set_frequencies(power_supply):
     """
-    Sets frequencies:
-     - if option is used in auto-cpufreq.conf: use configured value
-     - if option is disabled/no conf file used: set default frequencies
-    Frequency setting is validated on each run and only applied when needed
-    Caller passes the active profile ("battery" or "charger").
+    Set configured frequency limits.
+
+    Effective values are checked per CPUFreq policy because heterogeneous
+    policies may clamp the same request to different hardware limits.
     """
     frequency = {
         "scaling_max_freq": {
@@ -492,46 +579,117 @@ def set_frequencies(power_supply):
             "minmax": "minimum",
         },
     }
-    set_frequencies.max_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max-limit"))
-    set_frequencies.min_limit = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min-limit"))
+
+    set_frequencies.max_limit = int(
+        getoutput("cpufreqctl.auto-cpufreq --frequency-max-limit")
+    )
+    set_frequencies.min_limit = int(
+        getoutput("cpufreqctl.auto-cpufreq --frequency-min-limit")
+    )
 
     conf = config.get_config()
+    targets = {}
 
-    for freq_type in frequency.keys():
-        if freq_type == "scaling_max_freq":
-            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-max"))
-            value = set_frequencies.max_limit
-        else:
-            curr_freq = int(getoutput(f"cpufreqctl.auto-cpufreq --frequency-min"))
-            value = set_frequencies.min_limit
+    for freq_type in frequency:
+        default = (
+            set_frequencies.max_limit
+            if freq_type == "scaling_max_freq"
+            else set_frequencies.min_limit
+        )
 
         try:
-            if conf.has_option(power_supply, freq_type):
-                raw_value = conf[power_supply][freq_type].strip()
-                frequency[freq_type]["value"] = int(raw_value)
-            else:
-                frequency[freq_type]["value"] = value
+            raw_value = (
+                conf[power_supply][freq_type].strip()
+                if conf.has_option(power_supply, freq_type)
+                else str(default)
+            )
+            target = int(raw_value)
         except ValueError:
             print(f"Invalid value for '{freq_type}': {raw_value}")
             exit(1)
 
-        if not set_frequencies.min_limit <= frequency[freq_type]["value"] <= set_frequencies.max_limit:
+        if not set_frequencies.min_limit <= target <= set_frequencies.max_limit:
             print(
-                f"Given value for '{freq_type}' is not within the allowed frequencies {set_frequencies.min_limit}-{set_frequencies.max_limit} kHz"
+                f"Given value for '{freq_type}' is not within the allowed "
+                f"frequencies {set_frequencies.min_limit}-"
+                f"{set_frequencies.max_limit} kHz"
             )
             exit(1)
 
-        if curr_freq == frequency[freq_type]["value"]: continue
+        targets[freq_type] = target
 
-        print(f'Setting {frequency[freq_type]["minmax"]} CPU frequency to {round(frequency[freq_type]["value"]/1000)} Mhz')
-        # set the frequency
-        run(f"cpufreqctl.auto-cpufreq {frequency[freq_type]['cmdargs']} --set={frequency[freq_type]['value']}", shell=True)
+    if targets["scaling_min_freq"] > targets["scaling_max_freq"]:
+        print(
+            "Given value for 'scaling_min_freq' "
+            f"({targets['scaling_min_freq']} kHz) exceeds "
+            "'scaling_max_freq' "
+            f"({targets['scaling_max_freq']} kHz)"
+        )
+        exit(1)
+
+    # Keep maximum before minimum. Lowering max may clamp the current minimum,
+    # while raising max first allows a higher requested minimum to be applied.
+    for freq_type, details in frequency.items():
+        target = targets[freq_type]
+        target_mhz = round(target / 1000)
+
+        in_effect, before = get_frequency_request_state(freq_type, target)
+        if in_effect is True:
+            if auto_cpufreq_stats_file is None:
+                print(
+                    f'{details["minmax"].capitalize()} CPU frequency request '
+                    f"{target_mhz} MHz already in effect "
+                    f"(effective: {format_frequency_effective(before)}, no change)"
+                )
+            continue
+
+        result = run([
+            "cpufreqctl.auto-cpufreq",
+            details["cmdargs"],
+            f"--set={target}",
+        ])
+
+        in_effect, after = get_frequency_request_state(freq_type, target)
+        effective = format_frequency_effective(after)
+
+        if in_effect is True:
+            if result.returncode != 0:
+                print(
+                    f'{details["minmax"].capitalize()} CPU frequency request '
+                    f"{target_mhz} MHz is in effect "
+                    f"(effective: {effective}, "
+                    f"cpufreqctl status: {result.returncode})"
+                )
+            elif before == after:
+                print(
+                    f'{details["minmax"].capitalize()} CPU frequency request '
+                    f"{target_mhz} MHz accepted "
+                    f"(effective: {effective}, no change)"
+                )
+            else:
+                print(
+                    f'Applied {details["minmax"]} CPU frequency request '
+                    f"{target_mhz} MHz (effective: {effective})"
+                )
+        elif result.returncode != 0:
+            print(
+                f'Failed to apply {details["minmax"]} CPU frequency request '
+                f"{target_mhz} MHz (effective: {effective}, "
+                f"cpufreqctl status: {result.returncode})"
+            )
+        else:
+            print(
+                f'{details["minmax"].capitalize()} CPU frequency request '
+                f"{target_mhz} MHz returned success, but the effective state "
+                f"could not be verified (current: {effective})"
+            )
 
 def set_platform_profile(conf, profile):
     if not conf.has_option(profile, "platform_profile"):
         return
 
-    if not Path("/sys/firmware/acpi/platform_profile").exists():
+    platform_profile_path = Path("/sys/firmware/acpi/platform_profile")
+    if not platform_profile_path.exists():
         print('Not setting Platform Profile (not supported by system)')
         return
 
@@ -559,12 +717,33 @@ def set_platform_profile(conf, profile):
     ):
         return
 
-    print(f'Setting to use: "{pp}" Platform Profile')
-    result = run(f"cpufreqctl.auto-cpufreq --pp --set={pp}", shell=True)
-    if result.returncode != 0:
-        print(f"Failed to set platform profile to {pp}")
+    try:
+        current = platform_profile_path.read_text().strip()
+    except OSError:
+        current = None
+
+    if current == pp:
+        print(f'Platform Profile already set to "{pp}" (no change)')
+        set_platform_profile.last_applied_platform_profile[profile] = pp
         return
-    set_platform_profile.last_applied_platform_profile[profile] = pp
+
+    result = run(["cpufreqctl.auto-cpufreq", "--pp", f"--set={pp}"])
+
+    try:
+        current = platform_profile_path.read_text().strip()
+    except OSError:
+        current = None
+
+    if current == pp:
+        print(f'Set Platform Profile to "{pp}"')
+        set_platform_profile.last_applied_platform_profile[profile] = pp
+        return
+
+    current_display = current if current is not None else "unknown"
+    print(
+        f'Failed to set Platform Profile to "{pp}" '
+        f'(current: "{current_display}", cpufreqctl status: {result.returncode})'
+    )
 
 def set_energy_perf_bias(conf, profile):
     if Path("/sys/devices/system/cpu/intel_pstate").exists() is False:
@@ -574,8 +753,46 @@ def set_energy_perf_bias(conf, profile):
     if conf.has_option(profile, "energy_perf_bias"):
         epb = conf[profile]["energy_perf_bias"]
 
-    run(f"cpufreqctl.auto-cpufreq --epb --set={epb}", shell=True)
-    print(f'Setting to use: "{epb}" EPB')
+    target = normalize_epb_target(epb)
+    current = get_cpu_setting_state("power/energy_perf_bias")
+
+    if target is not None and current == target:
+        print(f'EPB already set to "{epb}" (no change)')
+        return
+
+    result = run(["cpufreqctl.auto-cpufreq", "--epb", f"--set={epb}"])
+    current = get_cpu_setting_state("power/energy_perf_bias")
+
+    if target is not None and current == target:
+        print(f'Set EPB to "{epb}"')
+    else:
+        print(
+            f'Failed to set EPB to "{epb}" '
+            f'(current: "{format_epb_state(current)}", cpufreqctl status: {result.returncode})'
+        )
+
+
+def set_energy_perf_preference(epp):
+    current = get_cpu_setting_state("cpufreq/energy_performance_preference")
+
+    if epp != "default" and current == epp:
+        print(f'EPP already set to "{epp}" (no change)')
+        return
+
+    result = run(["cpufreqctl.auto-cpufreq", "--epp", f"--set={epp}"])
+    current = get_cpu_setting_state("cpufreq/energy_performance_preference")
+
+    if epp == "default" and result.returncode == 0:
+        current_display = current if current is not None else "unknown"
+        print(f'Set EPP to "default" (current: "{current_display}")')
+    elif current == epp:
+        print(f'Set EPP to "{epp}"')
+    else:
+        current_display = current if current is not None else "unknown"
+        print(
+            f'Failed to set EPP to "{epp}" '
+            f'(current: "{current_display}", cpufreqctl status: {result.returncode})'
+        )
 
 
 HWP_DYNAMIC_BOOST_PATH = Path(
@@ -677,11 +894,9 @@ def set_powersave():
         else:
             if conf.has_option("battery", "energy_performance_preference"):
                 epp = conf["battery"]["energy_performance_preference"]
-                run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
-                print(f'Setting to use: "{epp}" EPP')
+                set_energy_perf_preference(epp)
             else:
-                run("cpufreqctl.auto-cpufreq --epp --set=balance_power", shell=True)
-                print('Setting to use: "balance_power" EPP')
+                set_energy_perf_preference("balance_power")
 
     if configured_dynboost is True:
         set_hwp_dynamic_boost(True)
@@ -777,16 +992,12 @@ def set_performance():
             else:
                 if conf.has_option("charger", "energy_performance_preference"):
                     epp = conf["charger"]["energy_performance_preference"]
-
-                    run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
-                    print(f'Setting to use: "{epp}" EPP')
+                    set_energy_perf_preference(epp)
                 else:
                     if pstate_active:
-                        run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
-                        print('Setting to use: "performance" EPP')
+                        set_energy_perf_preference("performance")
                     else:
-                        run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
-                        print('Setting to use: "balance_performance" EPP')
+                        set_energy_perf_preference("balance_performance")
         elif Path("/sys/devices/system/cpu/amd_pstate").exists():
             amd_pstate_status_path = "/sys/devices/system/cpu/amd_pstate/status"
 
@@ -798,15 +1009,12 @@ def set_performance():
                     print('Overriding EPP to "performance"')
                     epp = "performance"
 
-                run(f"cpufreqctl.auto-cpufreq --epp --set={epp}", shell=True)
-                print(f'Setting to use: "{epp}" EPP')
+                set_energy_perf_preference(epp)
             else:
                 if Path(amd_pstate_status_path).exists() and open(amd_pstate_status_path, 'r').read().strip() == "active":
-                    run("cpufreqctl.auto-cpufreq --epp --set=performance", shell=True)
-                    print('Setting to use: "performance" EPP')
+                    set_energy_perf_preference("performance")
                 else:
-                    run("cpufreqctl.auto-cpufreq --epp --set=balance_performance", shell=True)
-                    print('Setting to use: "balance_performance" EPP')
+                    set_energy_perf_preference("balance_performance")
 
     if configured_dynboost is True:
         set_hwp_dynamic_boost(True)

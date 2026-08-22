@@ -7,6 +7,7 @@ FWROOT=/sys/firmware
 DRIVER=auto
 VERBOSE=0
 WRITE_ERROR=0
+WRITE_ERROR_REPORTED=0
 
 ## parse special options
 for i in "$@"; do
@@ -97,8 +98,15 @@ function driver () {
 }
 
 function write_value () {
-  if [ -w $FLNM ]; then
-    if ! echo $VALUE > $FLNM; then
+  local TARGET_VALUE="${1:-$VALUE}"
+
+  if [ -w "$FLNM" ]; then
+    if [ $WRITE_ERROR_REPORTED -eq 0 ]; then
+      if ! echo "$TARGET_VALUE" > "$FLNM"; then
+        WRITE_ERROR=1
+        WRITE_ERROR_REPORTED=1
+      fi
+    elif ! echo "$TARGET_VALUE" > "$FLNM" 2>/dev/null; then
       WRITE_ERROR=1
     fi
   fi
@@ -159,7 +167,7 @@ function set_frequency () {
   set_driver
   if [ $DRIVER = 'pstate' ]; then
     echo "Unavailable function for intel_pstate"
-    return
+    return 1
   fi
   if [ -z $CORE ]; then
     i=0
@@ -266,7 +274,7 @@ function get_energy_performance_bias () {
 function set_energy_performance_bias () {
   if [ `driver` != 'intel_pstate' ]; then
     verbose "EPB is not supported by a driver other than intel_pstate"
-    return
+    return 1
   fi
   local EPB_VALUE=6 # default value
   if [[ "$VALUE" =~ ^[0-9]+$ && $VALUE -ge 0 && $VALUE -le 15 ]]; then
@@ -280,8 +288,8 @@ function set_energy_performance_bias () {
       power) EPB_VALUE=15;;
       *)
         verbose "Invalid value provided for EPB"
-        verbose "Acceptable values: performance|balance-power|default|balance-power|power or a number in the range [0-15]"
-        return
+        verbose "Acceptable values: performance|balance_performance|default|balance_power|power or a number in the range [0-15]"
+        return 1
       ;;
     esac
   fi
@@ -290,11 +298,7 @@ function set_energy_performance_bias () {
     i=0
     while [ $i -ne $cpucount ]; do
       FLNM="$FLROOT/cpu"$i"/power/energy_perf_bias"
-      if [ -w $FLNM ]; then
-        if ! echo $EPB_VALUE > $FLNM; then
-          WRITE_ERROR=1
-        fi
-      fi
+      write_value "$EPB_VALUE"
       i=`expr $i + 1`
     done
   else echo $EPB_VALUE > $FLROOT/cpu$CORE/power/energy_perf_bias
@@ -421,14 +425,18 @@ case $OPTION in
     fi
   ;;
   --on)
-    if [ -z $CORE ]; then verbose "Should be specify --core=NUMBER"
+    if [ -z "$CORE" ]; then
+      verbose "Should be specify --core=NUMBER"
+      false
     else
       verbose "Power on CPU Core"$CORE
       echo "1" > $FLROOT/cpu"$CORE"/online
     fi
   ;;
   --off)
-    if [ -z $CORE ]; then verbose "Should be specify --core=NUMBER"
+    if [ -z "$CORE" ]; then
+      verbose "Should be specify --core=NUMBER"
+      false
     else
       verbose "Power off CPU Core$CORE"
       echo "0" > $FLROOT/cpu"$CORE"/online
