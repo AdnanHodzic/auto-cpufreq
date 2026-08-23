@@ -86,7 +86,7 @@ python3Packages.buildPythonPackage {
   meta = {
     homepage = "https://github.com/AdnanHodzic/auto-cpufreq";
     description = "Automatic CPU speed & power optimizer for Linux";
-    license = lib.licenses.lgpl3Plus;
+    license = lib.licenses.gpl3Plus;
     platforms = lib.platforms.linux;
     maintainers = with lib.maintainers; [Technical27];
     mainProgram = "auto-cpufreq";

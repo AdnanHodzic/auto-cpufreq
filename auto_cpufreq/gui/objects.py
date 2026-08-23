@@ -569,7 +569,7 @@ class AboutDialog(Gtk.Dialog):
         self.version = Gtk.Label(label=app_version)
         self.python = Gtk.Label(label=f"Python {python_version()}")
         self.github = Gtk.Label(label=GITHUB)
-        self.license = Gtk.Label(label="Licensed under LGPL3", name="small")
+        self.license = Gtk.Label(label="Licensed under GNU GPL v3 or later", name="small")
         self.love = Gtk.Label(label="Made with <3", name="small")
 
         self.box.pack_start(self.image, False, False, 0)

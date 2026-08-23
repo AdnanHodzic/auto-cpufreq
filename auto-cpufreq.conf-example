@@ -62,8 +62,10 @@ turbo = auto
 
 # settings for when using battery power
 [battery]
-# Specify which battery device to use for reading battery information. see available batteries by running: ls /sys/class/power_supply/
-# If not set, auto-cpufreq will automatically detect and use the first battery found
+# Specify which battery device to use for reading battery information.
+# See available power supplies with: ls /sys/class/power_supply/
+# If not set, auto-cpufreq prefers a battery with scope = System and otherwise
+# falls back to another battery that is not marked with scope = Device.
 # battery_device = BAT1
 
 # see available governors by running: cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
