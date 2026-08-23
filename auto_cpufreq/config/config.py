@@ -1,6 +1,7 @@
 import os, pyinotify, sys
-from configparser import ConfigParser, ParsingError
+from configparser import ConfigParser, Error as ConfigError
 from subprocess import run, PIPE
+from typing import Optional
 
 from auto_cpufreq.config.config_event_handler import ConfigEventHandler
 
@@ -45,24 +46,49 @@ class _Config:
         self._config: ConfigParser = ConfigParser()
         self.watch_manager: pyinotify.WatchManager = pyinotify.WatchManager()
         self.config_handler = ConfigEventHandler(self)
+        self.notifier: pyinotify.ThreadedNotifier = pyinotify.ThreadedNotifier(
+            self.watch_manager,
+            self.config_handler,
+        )
+        self._watched_directory: Optional[str] = None
 
-        # check for file changes using threading
-        self.notifier: pyinotify.ThreadedNotifier = pyinotify.ThreadedNotifier(self.watch_manager, self.config_handler)
-        
     def set_path(self, path: str) -> None:
-        self.path = path
-        mask = pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MODIFY | pyinotify.IN_MOVED_FROM | pyinotify.IN_MOVED_TO
-        self.watch_manager.add_watch(os.path.dirname(path), mask=mask)
-        if os.path.isfile(path): self.update_config()
+        self.path = os.path.abspath(path)
+        directory = os.path.dirname(self.path)
+        if directory != self._watched_directory:
+            mask = (
+                pyinotify.IN_CLOSE_WRITE
+                | pyinotify.IN_DELETE
+                | pyinotify.IN_MOVED_TO
+            )
+            self.watch_manager.add_watch(directory, mask=mask)
+            self._watched_directory = directory
+        self.update_config()
 
-    def has_config(self) -> bool: return os.path.isfile(self.path)
-    
-    def get_config(self) -> ConfigParser: return self._config
-    
-    def update_config(self) -> None:
-        # create new ConfigParser to prevent old data from remaining
-        self._config = ConfigParser()
-        try: self._config.read(self.path)
-        except ParsingError as e: print(f"The following error occured while parsing the config file: \n{repr(e)}")
+    def has_config(self) -> bool:
+        return os.path.isfile(self.path)
+
+    def get_config(self) -> ConfigParser:
+        return self._config
+
+    def update_config(self) -> bool:
+        """Replace the active config only after a complete successful parse."""
+        candidate = ConfigParser()
+        if not self.path or not os.path.isfile(self.path):
+            self._config = candidate
+            return True
+
+        try:
+            with open(self.path, "r") as config_file:
+                candidate.read_file(config_file)
+        except (OSError, ConfigError) as error:
+            print(
+                "The following error occurred while reading the config file: "
+                f"\n{error!r}"
+            )
+            return False
+
+        self._config = candidate
+        return True
 
 config = _Config()
