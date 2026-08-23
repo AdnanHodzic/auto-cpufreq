@@ -692,22 +692,27 @@ This is a special mode which limits the maximum charge level of the battery to a
 
 ### Ignoring power supplies
 
-you may have a controler or headphones and when ever they may be on battery they might cause auto-cpufreq
-to limit preformence to ignore them add to you config file the name of the power supply, under `[power_supply_ignore_list]`
+During automatic detection, auto-cpufreq ignores power supplies marked with
+`scope = Device` when selecting the system battery or determining whether
+the system is externally powered. This prevents peripherals such as controllers
+or headphones from affecting power-profile decisions when the kernel exposes
+their scope correctly.
 
-the name of the power supply can be found with  `ls /sys/class/power_supply/`
+If a power supply that should be ignored does not expose `scope = Device`, or
+if you want to exclude it explicitly, add its name under
+`[power_supply_ignore_list]`.
+
+Available power supplies can be listed with:
+
+```shell
+ls /sys/class/power_supply/
+```
+
+For example:
 
 ```ini
 [power_supply_ignore_list]
-
-name1 = this
-name2 = is 
-name3 = an
-name4 = example
-
-# like this
-xboxctrl = {the xbox controler power supply name}
-
+peripheral = power_supply_name
 ```
 
 ## Troubleshooting
