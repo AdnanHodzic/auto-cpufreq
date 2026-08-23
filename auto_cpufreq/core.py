@@ -798,7 +798,13 @@ def get_configured_hwp_dynamic_boost(conf, profile):
 def get_hwp_dynamic_boost_target(conf, profile):
     if conf.has_option(profile, "hwp_dynamic_boost"):
         configured = get_configured_hwp_dynamic_boost(conf, profile)
-        if configured is None or not HWP_DYNAMIC_BOOST_PATH.exists():
+        if configured is None:
+            return None
+        if not HWP_DYNAMIC_BOOST_PATH.exists():
+            print(
+                f'Not setting HWP dynamic boost for [{profile}] '
+                '(not supported by system)'
+            )
             return None
         return configured
 
