@@ -41,8 +41,10 @@ class BatteryInfo:
     def __repr__(self) -> str:
         if self.is_charging:
             return "charging"
-        elif not self.is_ac_plugged:
+        if self.is_ac_plugged is False:
             return f"discharging {('(' + '{:.2f}'.format(self.power_consumption) + ' W)') if self.power_consumption != None else ''}"
+        if self.is_ac_plugged is None:
+            return "Unknown"
         return "Not Charging"
 
 
@@ -273,15 +275,91 @@ class SystemInfo:
 
         # Fall back to auto-detection if no custom device specified or if it's invalid
         try:
-            for entry in os.listdir(POWER_SUPPLY_DIR):
+            ignore_list = get_power_supply_ignore_list()
+            batteries = []
+            for entry in sorted(os.listdir(POWER_SUPPLY_DIR)):
+                if any(item in entry for item in ignore_list):
+                    continue
+
                 path = os.path.join(POWER_SUPPLY_DIR, entry)
                 type_path = os.path.join(path, "type")
-                if os.path.isfile(type_path):
-                    content = SystemInfo.read_file(type_path)
-                    if content and content.lower() == "battery":
-                        return path
-        except Exception:
+                if not os.path.isfile(type_path):
+                    continue
+
+                content = SystemInfo.read_file(type_path)
+                if not content or content.lower() != "battery":
+                    continue
+
+                scope = SystemInfo.read_file(os.path.join(path, "scope"))
+                if scope and scope.lower() == "device":
+                    continue
+
+                priority = 0 if scope and scope.lower() == "system" else 1
+                batteries.append((priority, entry, path))
+
+            if batteries:
+                return min(batteries)[2]
+        except OSError:
             return None
+        return None
+
+    @staticmethod
+    def external_power_state(
+        battery_path: Optional[str] = None,
+    ) -> bool | None:
+        """Return external-power state without collecting battery telemetry."""
+        if battery_path is None:
+            battery_path = SystemInfo.get_battery_path()
+
+        # Preserve the historical desktop fallback: without a usable system
+        # battery, assume the system is externally powered.
+        if not battery_path:
+            return True
+
+        external_power_states = []
+        ignore_list = get_power_supply_ignore_list()
+
+        try:
+            for supply in sorted(os.listdir(POWER_SUPPLY_DIR)):
+                if any(item in supply for item in ignore_list):
+                    continue
+
+                supply_path = os.path.join(POWER_SUPPLY_DIR, supply)
+                supply_type = SystemInfo.read_file(
+                    os.path.join(supply_path, "type")
+                )
+                if not supply_type or supply_type.lower() == "battery":
+                    continue
+
+                scope = SystemInfo.read_file(
+                    os.path.join(supply_path, "scope")
+                )
+                if scope and scope.lower() == "device":
+                    continue
+
+                online = SystemInfo.read_file(
+                    os.path.join(supply_path, "online")
+                )
+                if online in ("0", "1", "2"):
+                    external_power_states.append(online != "0")
+        except OSError:
+            external_power_states = []
+
+        if external_power_states:
+            return any(external_power_states)
+
+        battery_status = SystemInfo.read_file(
+            os.path.join(battery_path, "status")
+        )
+        if not battery_status:
+            return None
+
+        battery_status = battery_status.lower()
+        if battery_status == "discharging":
+            return False
+        if battery_status in ("charging", "not charging", "full"):
+            return True
+
         return None
 
     @staticmethod
@@ -309,17 +387,11 @@ class SystemInfo:
                 power_consumption=None,
             )
 
-        # Reading AC info (Hands)
-        for supply in os.listdir(POWER_SUPPLY_DIR):
-            supply_path = os.path.join(POWER_SUPPLY_DIR, supply)
-            supply_type = SystemInfo.read_file(os.path.join(supply_path, "type"))
-            if supply_type == "Mains":
-                online = SystemInfo.read_file(os.path.join(supply_path, "online"))
-                is_ac_plugged = online == "1"
-
         # Reading battery information
         battery_status = SystemInfo.read_file(os.path.join(battery_path, "status"))
         battery_capacity = SystemInfo.read_file(os.path.join(battery_path, "capacity"))
+
+        is_ac_plugged = SystemInfo.external_power_state(battery_path)
 
         # first check for wattage in power_now
         # this is not found on all laptops
@@ -374,7 +446,8 @@ class SystemInfo:
 
     @staticmethod
     def governor_suggestion() -> str:
-        if SystemInfo.battery_info().is_ac_plugged:
+        is_ac_plugged = SystemInfo.external_power_state()
+        if is_ac_plugged is not False:
             return AVAILABLE_GOVERNORS_SORTED[0]
         return AVAILABLE_GOVERNORS_SORTED[-1]
 

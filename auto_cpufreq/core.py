@@ -262,42 +262,11 @@ def get_power_supply_ignore_list():
 
 
 def charging():
-    """
-    get charge state: is battery charging or discharging
-    """
-    # sort it so AC is 'always' first
-    if os.path.exists(Path(POWER_SUPPLY_DIR)):
-        power_supplies = sorted(os.listdir(Path(POWER_SUPPLY_DIR)))
-    else: return True # no sysfs entries, nothing to do.
-    POWER_SUPPLY_IGNORELIST = get_power_supply_ignore_list()
+    """Return whether the system should use the charger profile."""
+    from auto_cpufreq.modules.system_info import SystemInfo
 
-    # check if we found power supplies. on a desktop these are not found and we assume we are on a powercable.
-    if len(power_supplies) == 0: return True # nothing found, so nothing to check
-
-    # we found some power supplies, lets check their state
-    for supply in power_supplies:
-        # Check if supply is in ignore list, if found in ignore list, skip it.
-        if any(item in supply for item in POWER_SUPPLY_IGNORELIST): continue
-
-        power_supply_type_path = Path(POWER_SUPPLY_DIR + supply + "/type")
-        if not power_supply_type_path.exists(): continue
-        with open(power_supply_type_path) as f: supply_type = f.read()[:-1]
-
-        if supply_type == "Mains":
-            # we found an AC
-            power_supply_online_path = Path(POWER_SUPPLY_DIR + supply + "/online")
-            if not power_supply_online_path.exists(): continue
-            with open(power_supply_online_path) as f:
-                if int(f.read()[:-1]) == 1: return True # we are definitely charging
-        elif supply_type == "Battery":
-            # we found a battery, check if its being discharged
-            power_supply_status_path = Path(POWER_SUPPLY_DIR + supply + "/status")
-            if not power_supply_status_path.exists(): continue
-            with open(power_supply_status_path) as f:
-                # we found a discharging battery
-                if str(f.read()[:-1]) == "Discharging": return False
-
-    return True # we cannot determine discharging state, assume we are on powercable
+    is_ac_plugged = SystemInfo.external_power_state()
+    return is_ac_plugged is not False
 
 def get_current_gov():
     return print(
