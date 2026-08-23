@@ -265,8 +265,8 @@ def charging():
     """Return whether the system should use the charger profile."""
     from auto_cpufreq.modules.system_info import SystemInfo
 
-    is_ac_plugged = SystemInfo.battery_info().is_ac_plugged
-    return True if is_ac_plugged is None else is_ac_plugged
+    is_ac_plugged = SystemInfo.external_power_state()
+    return is_ac_plugged is not False
 
 def get_current_gov():
     return print(
