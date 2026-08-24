@@ -69,6 +69,7 @@ Example of `auto-cpufreq --stats` CLI output
   - [stats](#stats)
   - [bluetooth_boot_off](#bluetooth_boot_off)
   - [bluetooth_boot_on](#bluetooth_boot_on)
+- [Intel HWP Dynamic Boost](#intel-hwp-dynamic-boost)
 - [Battery charging thresholds](#battery-charging-thresholds)
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
@@ -624,6 +625,14 @@ It prevents GNOME from automatically enabling Bluetooth on every reboot or after
 ### bluetooth_boot_on
 
 Useful if you prefer Bluetooth to be enabled at boot time, especially after installing the auto-cpufreq daemon, which will disable it by default.
+
+## Intel HWP Dynamic Boost
+
+On typical non-server Intel systems, the Linux `intel_pstate` driver starts HWP Dynamic Boost disabled. When `hwp_dynamic_boost` is not explicitly configured, auto-cpufreq keeps it disabled on battery power and enables it on AC/charger power on supported systems. Current upstream kernels may enable Dynamic Boost automatically on systems using the ACPI Enterprise Server or Performance Server profiles.
+
+Dynamic Boost is detected through `/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost`; systems that do not expose this interface are left unchanged.
+
+When disabling Dynamic Boost, auto-cpufreq applies that state before changing EPP. When enabling Dynamic Boost, EPP is applied first. To override the default policy, configure `hwp_dynamic_boost` in the charger and/or battery profiles; see [4: auto-cpufreq config file](#4-auto-cpufreq-config-file).
 
 ## Battery charging thresholds
 
