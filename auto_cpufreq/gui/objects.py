@@ -21,9 +21,10 @@ from auto_cpufreq.power_helper import bluetoothctl_exists
 auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
 
 def get_stats():
-    if isfile(auto_cpufreq_stats_path):
-        with open(auto_cpufreq_stats_path, "r") as file: stats = [line for line in (file.readlines() [-50:])]
-        return "".join(stats)
+    if not isfile(auto_cpufreq_stats_path):
+        return ""
+    with open(auto_cpufreq_stats_path, "r") as file:
+        return "".join(file.readlines()[-50:])
 
 def get_version():
     # snap package
@@ -696,7 +697,7 @@ class DropDownMenu(Gtk.MenuButton):
                 text="Daemon removal failed",
             )
             dialog.format_secondary_text(
-                f"The following error occured:\n{e}"
+                f"The following error occurred:\n{e}"
             )
             dialog.run()
             dialog.destroy()
@@ -883,7 +884,7 @@ class MonitorModeView(Gtk.Box):
             Gtk.PolicyType.NEVER,
             Gtk.PolicyType.AUTOMATIC,
         )
-        self.scrolled.set_can_focus(False)
+        self.scrolled.set_can_focus(True)
         self.scrolled.add(self.report_view)
 
         self.pack_start(
@@ -975,7 +976,8 @@ class MonitorModeView(Gtk.Box):
         self.report_view.apply_report(report)
 
         if (
-            suggested_governor is not None
+            report.current_gov is not None
+            and suggested_governor is not None
             and suggested_governor
             != report.current_gov
         ):
@@ -1105,7 +1107,7 @@ class DaemonNotRunningView(Gtk.Box):
                 text="Daemon install failed",
             )
             dialog.format_secondary_text(
-                f"The following error occured:\n{e}"
+                f"The following error occurred:\n{e}"
             )
             dialog.run()
             dialog.destroy()

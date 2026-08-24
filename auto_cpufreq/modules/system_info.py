@@ -191,7 +191,7 @@ class SystemInfo:
     ) -> tuple[dict[int, float], float | None]:
         try:
             temps = psutil.sensors_temperatures()
-        except (AttributeError, OSError):
+        except (AttributeError, NotImplementedError, OSError):
             return {}, None
 
         ids = cpu_ids if cpu_ids is not None else SystemInfo.cpu_ids("online")
@@ -247,16 +247,18 @@ class SystemInfo:
 
                 if temperatures_by_core and not duplicate_core_id:
                     by_cpu = {}
+                    matched_core_ids = set()
                     for cpu_id in ids:
                         core_id = SystemInfo._cpu_core_id(cpu_id)
                         if core_id in temperatures_by_core:
                             by_cpu[cpu_id] = temperatures_by_core[core_id]
+                            matched_core_ids.add(core_id)
 
                     if by_cpu:
-                        average = (
-                            sum(temperatures_by_core.values())
-                            / len(temperatures_by_core)
-                        )
+                        average = sum(
+                            temperatures_by_core[core_id]
+                            for core_id in matched_core_ids
+                        ) / len(matched_core_ids)
                         return by_cpu, average
 
             snapshot = snapshot_from_entries(coretemp_entries)
@@ -409,7 +411,7 @@ class SystemInfo:
     def cpu_fan_speed() -> int | None:
         try:
             fans = psutil.sensors_fans()
-        except (AttributeError, OSError):
+        except (AttributeError, NotImplementedError, OSError):
             return None
 
         for entries in fans.values():

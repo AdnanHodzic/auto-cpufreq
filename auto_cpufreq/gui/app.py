@@ -10,11 +10,10 @@ from os.path import isfile
 from subprocess import PIPE, run
 from threading import Thread
 
-from auto_cpufreq.config.config import config, find_config_file
+from auto_cpufreq.config.config import config
 from auto_cpufreq.core import check_for_update, daemon_is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.gui.objects import BluetoothBootControl, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, UpdateDialog
-from auto_cpufreq.gui.objects import get_stats
 from auto_cpufreq.modules.system_info import system_info
 from auto_cpufreq.power_helper import bluetoothctl_exists
 
@@ -306,7 +305,7 @@ class SystemReportView(Gtk.Box):
             report.cpu_driver or "Unknown"
         )
 
-        config_path = config.path if config.has_config() else find_config_file(None)
+        config_path = config.path
         if config_path and isfile(config_path):
             self.config_label.set_text(f"Configuration: {config_path}")
             self.config_label.show()
@@ -493,7 +492,8 @@ class ToolWindow(Gtk.Window):
             group.add_widget(button)
             button.set_halign(Gtk.Align.START)
 
-        if "Warning: CPU turbo is not available" not in get_stats():
+        turbo_state, _ = system_info.turbo_on()
+        if turbo_state is not None:
             self.turbo_control = CPUTurboOverride()
             self.turbo_control.label.set_xalign(0.0)
             self.turbo_control.auto.set_margin_start(CONTROL_OPTION_MARGIN)
@@ -542,14 +542,28 @@ class ToolWindow(Gtk.Window):
         # observed governor/Turbo rows directly.
         self.power_values = self.report_view.power_values
 
+        self.refresh_error_label = Gtk.Label(label="")
+        self.refresh_error_label.set_halign(Gtk.Align.START)
+        self.refresh_error_label.set_xalign(0)
+        self.refresh_error_label.set_no_show_all(True)
+
         self.scrolled = Gtk.ScrolledWindow()
         self.scrolled.set_policy(
             Gtk.PolicyType.NEVER,
             Gtk.PolicyType.AUTOMATIC,
         )
-        self.scrolled.set_can_focus(False)
+        self.scrolled.set_can_focus(True)
         self.scrolled.add(self.report_view)
-        self.add(self.scrolled)
+
+        main_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=8,
+        )
+        main_box.pack_start(
+            self.refresh_error_label, False, False, 0
+        )
+        main_box.pack_start(self.scrolled, True, True, 0)
+        self.add(main_box)
 
         self.refresh_in_thread()
         self._schedule_refresh()
@@ -749,18 +763,76 @@ class ToolWindow(Gtk.Window):
         response = dialog.run()
         dialog.destroy()
         if response != Gtk.ResponseType.YES: return
-        updater = run(["pkexec", "auto-cpufreq", "--update"], input="y\n", encoding="utf-8", stderr=PIPE)
-        if updater.returncode in (126, 127):
-            error = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Error updating")
-            error.format_secondary_text("Authorization Failed")
-            error.run()
-            error.destroy()
-            return
-        success = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, "Update successful")
-        success.format_secondary_text("The app will now close. Please reopen to apply changes")
+
+        self.set_sensitive(False)
+        Thread(target=self._run_update, daemon=True).start()
+
+    def _run_update(self):
+        try:
+            updater = run(
+                ["pkexec", "auto-cpufreq", "--update"],
+                input="y\n",
+                text=True,
+                stderr=PIPE,
+            )
+            error = None
+        except OSError as exc:
+            updater = None
+            error = exc
+
+        if not self.destroyed:
+            GLib.idle_add(
+                self._finish_update,
+                updater,
+                error,
+            )
+
+    def _finish_update(self, updater, error):
+        self.set_sensitive(True)
+
+        if error is not None:
+            message = str(error)
+        elif updater is None:
+            message = "Update command failed to start"
+        elif updater.returncode == 0:
+            message = None
+        elif updater.returncode == 126:
+            message = "Authorization was cancelled"
+        elif updater.returncode == 127:
+            message = "Authorization failed"
+        else:
+            message = (updater.stderr or "").strip() or (
+                "Update failed with exit status "
+                f"{updater.returncode}"
+            )
+
+        if message is not None:
+            dialog = Gtk.MessageDialog(
+                self,
+                0,
+                Gtk.MessageType.ERROR,
+                Gtk.ButtonsType.OK,
+                "Error updating",
+            )
+            dialog.format_secondary_text(message)
+            dialog.run()
+            dialog.destroy()
+            return False
+
+        success = Gtk.MessageDialog(
+            self,
+            0,
+            Gtk.MessageType.INFO,
+            Gtk.ButtonsType.OK,
+            "Update successful",
+        )
+        success.format_secondary_text(
+            "The app will now close. Please reopen to apply changes"
+        )
         success.run()
         success.destroy()
-        exit(0)
+        self.destroy()
+        return False
 
     def daemon_not_running(self):
         self.box = DaemonNotRunningView(self)
@@ -799,9 +871,12 @@ class ToolWindow(Gtk.Window):
     def _refresh(self):
         try:
             report = system_info.generate_system_report()
-        except Exception:
+        except Exception as error:
             if not self.destroyed:
-                GLib.idle_add(self._finish_refresh)
+                GLib.idle_add(
+                    self._finish_refresh_error,
+                    str(error),
+                )
             return
 
         if not self.destroyed:
@@ -817,13 +892,29 @@ class ToolWindow(Gtk.Window):
                 report,
                 self.pending_power_updates,
             )
+            self.refresh_error_label.hide()
+        except Exception as error:
+            self.refresh_error_label.set_text(
+                "Unable to refresh system information: "
+                f"{error}"
+            )
+            self.refresh_error_label.show()
         finally:
             self.refresh_in_progress = False
             self._run_pending_refresh()
 
         return False
 
-    def _finish_refresh(self):
+    def _finish_refresh_error(self, message):
+        if self.destroyed:
+            self.refresh_in_progress = False
+            return False
+
+        self.refresh_error_label.set_text(
+            "Unable to refresh system information: "
+            f"{message}"
+        )
+        self.refresh_error_label.show()
         self.refresh_in_progress = False
         self._run_pending_refresh()
         return False
