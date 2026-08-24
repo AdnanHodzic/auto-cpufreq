@@ -6,7 +6,6 @@ from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk
 
 from contextlib import redirect_stdout
 from io import StringIO
-from os.path import isfile
 from subprocess import PIPE, run
 from threading import Thread
 
@@ -107,6 +106,15 @@ def _turbo_status(report):
     return "On" if enabled else "Off"
 
 
+def _configuration_label_text():
+    prefix = (
+        "Using configuration file"
+        if config.has_config()
+        else "Configuration file"
+    )
+    return f"{prefix}: {config.path}"
+
+
 class SystemReportView(Gtk.Box):
     """Shared read-only presentation of SystemReport."""
 
@@ -140,12 +148,6 @@ class SystemReportView(Gtk.Box):
         ):
             _, self.system_values[key] = _add_row(system_grid, row, name)
         self.left_column.pack_start(system_frame, False, False, 0)
-
-        self.config_label = Gtk.Label(label="")
-        self.config_label.set_halign(Gtk.Align.START)
-        self.config_label.set_xalign(0)
-        self.config_label.set_line_wrap(True)
-        self.left_column.pack_start(self.config_label, False, False, 0)
 
         cpu_frame = Gtk.Frame()
         cpu_heading = Gtk.Label(label="CPU Statistics", name="bold")
@@ -238,7 +240,7 @@ class SystemReportView(Gtk.Box):
             )
         ):
             _, self.stats_values[key] = _add_row(stats_grid, row, name)
-        self.right_column.pack_start(stats_frame, False, False, 0)
+        self.left_column.pack_start(stats_frame, False, False, 0)
 
         self.pack_start(self.columns, True, True, 0)
 
@@ -304,13 +306,6 @@ class SystemReportView(Gtk.Box):
         self.system_values["driver"].set_text(
             report.cpu_driver or "Unknown"
         )
-
-        config_path = config.path
-        if config_path and isfile(config_path):
-            self.config_label.set_text(f"Configuration: {config_path}")
-            self.config_label.show()
-        else:
-            self.config_label.hide()
 
         self.max_freq_value.set_text(
             f"{report.cpu_max_freq:.0f} MHz"
@@ -464,9 +459,16 @@ class ToolWindow(Gtk.Window):
         controls_box.set_margin_end(10)
         controls_frame.add(controls_box)
 
+        controls_actions = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=10,
+        )
+        controls_actions.set_halign(Gtk.Align.END)
+        controls_box.pack_start(controls_actions, False, False, 0)
+
         self.menu = DropDownMenu(self)
         self._add_refresh_interval_menu()
-        controls_box.pack_start(self.menu, False, False, 0)
+        controls_actions.pack_end(self.menu, False, False, 0)
 
         self.governor_control = RadioButtonView()
         self.governor_control.label.set_xalign(0.0)
@@ -511,7 +513,15 @@ class ToolWindow(Gtk.Window):
                 button.set_halign(Gtk.Align.START)
 
         if bluetoothctl_exists:
-            self.bluetooth_control = BluetoothBootControl()
+            self.bluetooth_control = BluetoothBootControl(
+                show_advanced_button=False
+            )
+            controls_actions.pack_end(
+                self.bluetooth_control.advanced_btn,
+                False,
+                False,
+                0,
+            )
             self.bluetooth_control.label.set_xalign(0.0)
             self.bluetooth_control.on_btn.set_margin_start(
                 CONTROL_OPTION_MARGIN
@@ -535,6 +545,16 @@ class ToolWindow(Gtk.Window):
             controls_box.pack_start(
                 self.bluetooth_control, False, False, 0
             )
+
+        self.config_label = Gtk.Label(
+            label=_configuration_label_text()
+        )
+        self.config_label.set_halign(Gtk.Align.START)
+        self.config_label.set_xalign(0)
+        self.config_label.set_line_wrap(True)
+        controls_box.pack_start(
+            self.config_label, False, False, 0
+        )
 
         self.report_view.prepend_right(controls_frame)
 
@@ -891,6 +911,9 @@ class ToolWindow(Gtk.Window):
             self.report_view.apply_report(
                 report,
                 self.pending_power_updates,
+            )
+            self.config_label.set_text(
+                _configuration_label_text()
             )
             self.refresh_error_label.hide()
         except Exception as error:

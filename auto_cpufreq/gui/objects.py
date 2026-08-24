@@ -263,7 +263,7 @@ class CPUTurboOverride(Gtk.Box):
                 if self.set_by_app: self.set_by_app = False
 
 class BluetoothBootControl(Gtk.Box):
-    def __init__(self):
+    def __init__(self, show_advanced_button=True):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
 
         self.set_hexpand(True)
@@ -297,7 +297,8 @@ class BluetoothBootControl(Gtk.Box):
 
         self.revealer.add(self.inner_box)
 
-        self.pack_start(self.advanced_btn, False, False, 0)
+        if show_advanced_button:
+            self.pack_start(self.advanced_btn, False, False, 0)
         self.pack_start(self.revealer, False, False, 0)
 
     def on_advanced_clicked(self, button):
@@ -322,6 +323,7 @@ class BluetoothBootControl(Gtk.Box):
         )
 
         self.set_sensitive(False)
+        self.advanced_btn.set_sensitive(False)
         _run_privileged_async(
             [option],
             self._finish_command,
@@ -329,6 +331,7 @@ class BluetoothBootControl(Gtk.Box):
 
     def _finish_command(self, result, error):
         self.set_sensitive(True)
+        self.advanced_btn.set_sensitive(True)
 
         if _privileged_command_error(result, error) is not None:
             self.set_by_app = True
