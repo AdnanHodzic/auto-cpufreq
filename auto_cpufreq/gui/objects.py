@@ -1,9 +1,10 @@
 import gi
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk
 
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 from os.path import isfile
 from platform import python_version
@@ -59,6 +60,44 @@ def get_bluetooth_boot_status():
     except Exception:
         return None
 
+def _run_privileged_async(arguments, callback):
+    def worker():
+        try:
+            result = run(
+                ["pkexec", "auto-cpufreq", *arguments],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            error = None
+        except OSError as e:
+            result = None
+            error = e
+
+        GLib.idle_add(callback, result, error)
+
+    Thread(target=worker, daemon=True).start()
+
+
+def _privileged_command_error(result, error):
+    if error is not None:
+        return str(error)
+    if result is None:
+        return "Command failed to start"
+    if result.returncode == 0:
+        return None
+    if result.returncode == 126:
+        return "Authorization was cancelled"
+    if result.returncode == 127:
+        return "Authorization failed"
+
+    stderr = (result.stderr or "").strip()
+    return stderr or (
+        f"Command failed with exit status "
+        f"{result.returncode}"
+    )
+
+
 class RadioButtonView(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
@@ -88,13 +127,26 @@ class RadioButtonView(Gtk.Box):
         self.pack_start(self.performance, True, True, 0)
 
     def on_button_toggled(self, button, override):
-        if button.get_active():
-            if not self.set_by_app:
-                result = run(f"pkexec auto-cpufreq --force={override}", shell=True, stdout=PIPE, stderr=PIPE)
-                if result.returncode in (126, 127):
-                    self.set_by_app = True
-                    self.set_selected()
-            else: self.set_by_app = False
+        if not button.get_active():
+            return
+        if self.set_by_app:
+            self.set_by_app = False
+            return
+
+        self.set_sensitive(False)
+        _run_privileged_async(
+            [f"--force={override}"],
+            self._finish_command,
+        )
+
+    def _finish_command(self, result, error):
+        self.set_sensitive(True)
+
+        if _privileged_command_error(result, error) is not None:
+            self.set_by_app = True
+            self.set_selected()
+
+        return False
 
     def set_selected(self):
         override = get_override()
@@ -134,13 +186,26 @@ class CPUTurboOverride(Gtk.Box):
         self.pack_start(self.always, True, True, 0)
 
     def on_button_toggled(self, button, override):
-        if button.get_active():
-            if not self.set_by_app:
-                result = run(f"pkexec auto-cpufreq --turbo={override}", shell=True, stdout=PIPE, stderr=PIPE)
-                if result.returncode in (126, 127):
-                    self.set_by_app = True
-                    self.set_selected()
-            else: self.set_by_app = False
+        if not button.get_active():
+            return
+        if self.set_by_app:
+            self.set_by_app = False
+            return
+
+        self.set_sensitive(False)
+        _run_privileged_async(
+            [f"--turbo={override}"],
+            self._finish_command,
+        )
+
+    def _finish_command(self, result, error):
+        self.set_sensitive(True)
+
+        if _privileged_command_error(result, error) is not None:
+            self.set_by_app = True
+            self.set_selected()
+
+        return False
 
     def set_selected(self):
         override = get_turbo_override()
@@ -199,16 +264,32 @@ class BluetoothBootControl(Gtk.Box):
             self.advanced_btn.set_label("Hide Advanced Settings")
 
     def on_button_toggled(self, button, action):
-        if button.get_active():
-            if not self.set_by_app:
-                if action == "on":
-                    result = run("pkexec auto-cpufreq --bluetooth_boot_on", shell=True, stdout=PIPE, stderr=PIPE)
-                else:
-                    result = run("pkexec auto-cpufreq --bluetooth_boot_off", shell=True, stdout=PIPE, stderr=PIPE)
-                if result.returncode in (126, 127):
-                    self.set_by_app = True
-                    self.set_selected()
-            else: self.set_by_app = False
+        if not button.get_active():
+            return
+        if self.set_by_app:
+            self.set_by_app = False
+            return
+
+        option = (
+            "--bluetooth_boot_on"
+            if action == "on"
+            else "--bluetooth_boot_off"
+        )
+
+        self.set_sensitive(False)
+        _run_privileged_async(
+            [option],
+            self._finish_command,
+        )
+
+    def _finish_command(self, result, error):
+        self.set_sensitive(True)
+
+        if _privileged_command_error(result, error) is not None:
+            self.set_by_app = True
+            self.set_selected()
+
+        return False
 
     def set_selected(self):
         status = get_bluetooth_boot_status()
@@ -518,37 +599,65 @@ class DropDownMenu(Gtk.MenuButton):
         dialog.destroy()
 
     def _remove_daemon(self, MenuItem, parent):
-        confirm = ConfirmDialog(parent, message="Are you sure you want to remove the daemon?")
+        confirm = ConfirmDialog(
+            parent,
+            message="Are you sure you want to remove the daemon?",
+        )
         response = confirm.run()
         confirm.destroy()
-        if response == Gtk.ResponseType.YES:
-            try:
-                # run in thread to prevent GUI from hanging
-                with ThreadPoolExecutor() as executor:
-                    kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
-                    future = executor.submit(run, "pkexec auto-cpufreq --remove", **kwargs)
-                    result = future.result()
-                assert result.returncode not in (126, 127), Exception("Authorization was cancelled")
-                dialog = Gtk.MessageDialog(
-                    transient_for=parent,
-                    message_type=Gtk.MessageType.INFO,
-                    buttons=Gtk.ButtonsType.OK,
-                    text="Daemon successfully removed"
-                )
-                dialog.format_secondary_text("The app will now close. Please reopen to apply changes")
-                dialog.run()
-                dialog.destroy()
-                parent.destroy()
-            except Exception as e:
-                dialog = Gtk.MessageDialog(
-                    transient_for=parent,
-                    message_type=Gtk.MessageType.ERROR,
-                    buttons=Gtk.ButtonsType.OK,
-                    text="Daemon removal failed"
-                )
-                dialog.format_secondary_text(f"The following error occured:\n{e}")
-                dialog.run()
-                dialog.destroy()
+
+        if response != Gtk.ResponseType.YES:
+            return
+
+        self.set_sensitive(False)
+        _run_privileged_async(
+            ["--remove"],
+            lambda result, error: self._finish_remove(
+                parent,
+                result,
+                error,
+            ),
+        )
+
+    def _finish_remove(self, parent, result, error):
+        self.set_sensitive(True)
+
+        try:
+            command_error = _privileged_command_error(
+                result,
+                error,
+            )
+            if command_error is not None:
+                raise RuntimeError(command_error)
+
+            dialog = Gtk.MessageDialog(
+                transient_for=parent,
+                message_type=Gtk.MessageType.INFO,
+                buttons=Gtk.ButtonsType.OK,
+                text="Daemon successfully removed",
+            )
+            dialog.format_secondary_text(
+                "The app will now close. "
+                "Please reopen to apply changes"
+            )
+            dialog.run()
+            dialog.destroy()
+            parent.destroy()
+
+        except Exception as e:
+            dialog = Gtk.MessageDialog(
+                transient_for=parent,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Daemon removal failed",
+            )
+            dialog.format_secondary_text(
+                f"The following error occured:\n{e}"
+            )
+            dialog.run()
+            dialog.destroy()
+
+        return False
 
 class AboutDialog(Gtk.Dialog):
     def __init__(self, parent):
@@ -646,33 +755,50 @@ class MonitorModeView(Gtk.Box):
 
         self.pack_start(self.columns, True, True, 0)
 
-        self.refresh()
-        self.refresh_id = GLib.timeout_add_seconds(5, self.refresh_in_thread)
+        self.refresh_id = None
+        self.refresh_in_thread()
 
     def refresh_in_thread(self):
+        self.refresh_id = None
         if not self.running:
             return False
+
         Thread(target=self._refresh, daemon=True).start()
-        return True
+        return False
 
     def _refresh(self):
         try:
             report = system_info.generate_system_report()
-            GLib.idle_add(self._update_display, report)
-        except Exception as e:
-            GLib.idle_add(self._show_error, str(e))
+            suggested_governor = system_info.governor_suggestion(report)
 
-    def refresh(self):
-        try:
-            report = system_info.generate_system_report()
-            self._update_display(report)
+            suggested_turbo = None
+            if report.is_turbo_on[0] is not None:
+                suggested_turbo = system_info.turbo_on_suggestion(report)
         except Exception as e:
-            self._show_error(str(e))
+            if self.running:
+                GLib.idle_add(self._show_error, str(e))
+            return
+
+        if self.running:
+            GLib.idle_add(
+                self._update_display,
+                report,
+                suggested_governor,
+                suggested_turbo,
+            )
 
     def _show_error(self, error_msg):
+        if not self.running:
+            return False
+
         self._clear_boxes()
         self.left_box.pack_start(self._label(f"Error: {error_msg}"), False, False, 0)
         self.left_box.show_all()
+        self.refresh_id = GLib.timeout_add_seconds(
+            5,
+            self.refresh_in_thread,
+        )
+        return False
 
     def _clear_boxes(self):
         for child in self.left_box.get_children():
@@ -701,7 +827,15 @@ class MonitorModeView(Gtk.Box):
         label.set_halign(Gtk.Align.START)
         return label
 
-    def _update_display(self, report):
+    def _update_display(
+        self,
+        report,
+        suggested_governor,
+        suggested_turbo,
+    ):
+        if not self.running:
+            return False
+
         self._clear_boxes()
 
         current_time = time.strftime("%H:%M:%S")
@@ -712,7 +846,17 @@ class MonitorModeView(Gtk.Box):
         self.left_box.pack_start(self._label(f"Linux distro: {report.distro_name} {report.distro_ver}"), False, False, 0)
         self.left_box.pack_start(self._label(f"Linux kernel: {report.kernel_version}"), False, False, 0)
         self.left_box.pack_start(self._label(f"Processor: {report.processor_model}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Cores: {report.total_core}"), False, False, 0)
+        core_count = (
+            str(report.total_core)
+            if report.total_core is not None
+            else "Unknown"
+        )
+        self.left_box.pack_start(
+            self._label(f"Cores: {core_count}"),
+            False,
+            False,
+            0,
+        )
         self.left_box.pack_start(self._label(f"Architecture: {report.arch}"), False, False, 0)
         self.left_box.pack_start(self._label(f"Driver: {report.cpu_driver}"), False, False, 0)
 
@@ -729,9 +873,24 @@ class MonitorModeView(Gtk.Box):
         self.left_box.pack_start(self._label("Core    Usage   Temperature     Frequency"), False, False, 0)
 
         for core in report.cores_info:
+            temperature = (
+                f"{core.temperature:>6.0f} °C"
+                if core.temperature > 0
+                else "     —"
+            )
+            frequency = (
+                f"{core.frequency:>6.0f} MHz"
+                if core.frequency > 0
+                else "     —"
+            )
             self.left_box.pack_start(
-                self._label(f"CPU{core.id:<2}    {core.usage:>4.1f}%    {core.temperature:>6.0f} °C    {core.frequency:>6.0f} MHz"),
-                False, False, 0
+                self._label(
+                    f"CPU{core.id:<2}    {core.usage:>4.1f}%    "
+                    f"{temperature}    {frequency}"
+                ),
+                False,
+                False,
+                0,
             )
 
         if report.cpu_fan_speed:
@@ -754,26 +913,42 @@ class MonitorModeView(Gtk.Box):
         current_gov = report.current_gov if report.current_gov else "Unknown"
         self.right_box.pack_start(self._label(f'Setting to use: "{current_gov}" governor'), False, False, 0)
 
-        suggested_gov = system_info.governor_suggestion()
-        if report.current_gov and suggested_gov != report.current_gov:
-            self.right_box.pack_start(self._suggestion(f'Suggesting use of: "{suggested_gov}" governor'), False, False, 0)
+        if (
+            report.current_gov
+            and suggested_governor is not None
+            and suggested_governor != report.current_gov
+        ):
+            self.right_box.pack_start(
+                self._suggestion(
+                    f'Suggesting use of: "{suggested_governor}" governor'
+                ),
+                False,
+                False,
+                0,
+            )
 
         if report.current_epp:
             self.right_box.pack_start(self._label(f"Current EPP: {report.current_epp}"), False, False, 0)
         else:
             self.right_box.pack_start(self._label("Not setting EPP (not supported by system)"), False, False, 0)
 
-        if report.current_epb:
-            self.right_box.pack_start(self._label(f"Current EPB: {report.current_epb}"), False, False, 0)
-
         if report.current_hwp_dynamic_boost is not None:
-            state = "on" if report.current_hwp_dynamic_boost else "off"
+            state = (
+                "on"
+                if report.current_hwp_dynamic_boost
+                else "off"
+            )
             self.right_box.pack_start(
-                self._label(f"Intel HWP Dynamic Boost: {state}"),
+                self._label(
+                    f"Intel HWP Dynamic Boost: {state}"
+                ),
                 False,
                 False,
                 0,
             )
+
+        if report.current_epb:
+            self.right_box.pack_start(self._label(f"Current EPB: {report.current_epb}"), False, False, 0)
 
         self.right_box.pack_start(self._label(""), False, False, 0)
 
@@ -781,10 +956,25 @@ class MonitorModeView(Gtk.Box):
         self.right_box.pack_start(self._label(f"Total CPU usage: {report.cpu_usage:.1f} %"), False, False, 0)
         self.right_box.pack_start(self._label(f"Total system load: {report.load:.2f}"), False, False, 0)
 
-        avg_temp = 0.0
-        if report.cores_info:
-            avg_temp = sum(core.temperature for core in report.cores_info) / len(report.cores_info)
-            self.right_box.pack_start(self._label(f"Average temp. of all cores: {avg_temp:.2f} °C"), False, False, 0)
+        avg_temp = report.cpu_avg_temp
+        if avg_temp is None:
+            temperatures = [
+                core.temperature
+                for core in report.cores_info
+                if core.temperature > 0
+            ]
+            if temperatures:
+                avg_temp = sum(temperatures) / len(temperatures)
+
+        if avg_temp is not None:
+            self.right_box.pack_start(
+                self._label(
+                    f"Average temp. of all cores: {avg_temp:.2f} °C"
+                ),
+                False,
+                False,
+                0,
+            )
 
         if report.avg_load:
             load_status = "Load optimal" if report.load < 1.0 else "Load high"
@@ -793,12 +983,18 @@ class MonitorModeView(Gtk.Box):
                 False, False, 0
             )
 
-        if report.cores_info:
+        if avg_temp is not None:
             usage_status = "Optimal" if report.cpu_usage < 70 else "High"
             temp_status = "high" if avg_temp > 75 else "normal"
             self.right_box.pack_start(
-                self._label(f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"),
-                False, False, 0
+                self._label(
+                    f"{usage_status} total CPU usage: "
+                    f"{report.cpu_usage:.1f}%, {temp_status} "
+                    f"average core temp: {avg_temp:.1f}°C"
+                ),
+                False,
+                False,
+                0,
             )
 
         turbo_status = "Unknown"
@@ -808,14 +1004,30 @@ class MonitorModeView(Gtk.Box):
             turbo_status = f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
         self.right_box.pack_start(self._label(f"Setting turbo boost: {turbo_status}"), False, False, 0)
 
-        if report.is_turbo_on[0] is not None:
-            suggested_turbo = system_info.turbo_on_suggestion()
-            if suggested_turbo != report.is_turbo_on[0]:
-                turbo_text = "on" if suggested_turbo else "off"
-                self.right_box.pack_start(self._suggestion(f"Suggesting to set turbo boost: {turbo_text}"), False, False, 0)
+        if (
+            report.is_turbo_on[0] is not None
+            and suggested_turbo is not None
+            and suggested_turbo != report.is_turbo_on[0]
+        ):
+            turbo_text = "on" if suggested_turbo else "off"
+            self.right_box.pack_start(
+                self._suggestion(
+                    f"Suggesting to set turbo boost: {turbo_text}"
+                ),
+                False,
+                False,
+                0,
+            )
 
         self.left_box.show_all()
         self.right_box.show_all()
+
+        if self.running:
+            self.refresh_id = GLib.timeout_add_seconds(
+                5,
+                self.refresh_in_thread,
+            )
+
         return False
 
     def on_back_clicked(self, button):
@@ -826,8 +1038,9 @@ class MonitorModeView(Gtk.Box):
 
     def cleanup(self):
         self.running = False
-        if hasattr(self, 'refresh_id') and self.refresh_id:
+        if self.refresh_id is not None:
             GLib.source_remove(self.refresh_id)
+            self.refresh_id = None
 
 
 class DaemonNotRunningView(Gtk.Box):
@@ -857,34 +1070,52 @@ class DaemonNotRunningView(Gtk.Box):
         parent.show_all()
 
     def install_daemon(self, button, parent):
+        self.set_sensitive(False)
+        _run_privileged_async(
+            ["--install"],
+            lambda result, error: self._finish_install(
+                parent,
+                result,
+                error,
+            ),
+        )
+
+    def _finish_install(self, parent, result, error):
+        self.set_sensitive(True)
+
         try:
-            # run in thread to prevent GUI from hanging
-            with ThreadPoolExecutor() as executor:
-                kwargs = {"shell": True, "stdout": PIPE, "stderr": PIPE}
-                future = executor.submit(run, "pkexec auto-cpufreq --install", **kwargs)
-                result = future.result()
-            if result.returncode in (126, 127):
-                raise RuntimeError("Authorization was cancelled")
-            # enable for debug. causes issues if kept
-            # elif result.stderr is not None:
-            #     raise Exception(result.stderr.decode())
+            command_error = _privileged_command_error(
+                result,
+                error,
+            )
+            if command_error is not None:
+                raise RuntimeError(command_error)
+
             dialog = Gtk.MessageDialog(
                 transient_for=parent,
                 message_type=Gtk.MessageType.INFO,
                 buttons=Gtk.ButtonsType.OK,
-                text="Daemon successfully installed"
+                text="Daemon successfully installed",
             )
-            dialog.format_secondary_text("The app will now close. Please reopen to apply changes")
+            dialog.format_secondary_text(
+                "The app will now close. "
+                "Please reopen to apply changes"
+            )
             dialog.run()
             dialog.destroy()
             parent.destroy()
+
         except Exception as e:
             dialog = Gtk.MessageDialog(
                 transient_for=parent,
                 message_type=Gtk.MessageType.ERROR,
                 buttons=Gtk.ButtonsType.OK,
-                text="Daemon install failed"
+                text="Daemon install failed",
             )
-            dialog.format_secondary_text(f"The following error occured:\n{e}")
+            dialog.format_secondary_text(
+                f"The following error occured:\n{e}"
+            )
             dialog.run()
             dialog.destroy()
+
+        return False

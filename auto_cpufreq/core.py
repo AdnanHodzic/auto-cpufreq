@@ -223,15 +223,15 @@ def turbo(value: bool = None):
         print("Warning: CPU turbo is not available")
         return False
     
-    turbo_override = get_turbo_override()
-    if turbo_override != "auto":
-        # Set the value in respect to if turbo override is enabled or not.
-        if turbo_override == "always":
-            value = True
-        elif turbo_override == "never":
-            value = False
-
     if value is not None:
+        turbo_override = get_turbo_override()
+        if turbo_override != "auto":
+            # Set the value in respect to if turbo override is enabled or not.
+            if turbo_override == "always":
+                value = True
+            elif turbo_override == "never":
+                value = False
+
         try: f.write_text(f"{int(value ^ inverse)}\n")
         except PermissionError:
             print("Warning: Changing CPU turbo is not supported. Skipping.")
@@ -855,9 +855,14 @@ def set_hwp_dynamic_boost(enabled):
 
 def set_powersave():
     conf = config.get_config()
-    gov = conf["battery"]["governor"] if conf.has_option("battery", "governor") else AVAILABLE_GOVERNORS_SORTED[-1]
+    override = get_override()
+    gov = override if override in ("powersave", "performance") else (
+        conf["battery"]["governor"]
+        if conf.has_option("battery", "governor")
+        else AVAILABLE_GOVERNORS_SORTED[-1]
+    )
     print(f'Setting to use: "{gov}" governor')
-    if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
+    if override != "default": print("Warning: governor overwritten using `--force` flag.")
     try:
         result = run(
             ["cpufreqctl.auto-cpufreq", "--governor", f"--set={gov}"]
@@ -954,10 +959,15 @@ def mon_powersave():
 
 def set_performance():
     conf = config.get_config()
-    gov = conf["charger"]["governor"] if conf.has_option("charger", "governor") else AVAILABLE_GOVERNORS_SORTED[0]
+    override = get_override()
+    gov = override if override in ("powersave", "performance") else (
+        conf["charger"]["governor"]
+        if conf.has_option("charger", "governor")
+        else AVAILABLE_GOVERNORS_SORTED[0]
+    )
 
     print(f'Setting to use: "{gov}" governor')
-    if get_override() != "default": print("Warning: governor overwritten using `--force` flag.")
+    if override != "default": print("Warning: governor overwritten using `--force` flag.")
     try:
         result = run(
             ["cpufreqctl.auto-cpufreq", "--governor", f"--set={gov}"]
@@ -1118,11 +1128,8 @@ def set_autofreq():
     """
     print("\n" + "-" * 28 + " CPU frequency scaling " + "-" * 28 + "\n")
 
-    # determine which governor should be used
-    override = get_override()
-    if override == "powersave": set_powersave()
-    elif override == "performance": set_performance()
-    elif charging():
+    # determine which power profile should be used
+    if charging():
         print("Battery is: charging\n")
         set_performance()
     else:
@@ -1292,6 +1299,32 @@ def is_running(program, argument):
         except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess, OSError): continue
         for s in filter(lambda x: program in x, cmd):
             if argument in cmd: return True
+
+
+def daemon_is_running():
+    """Return whether the auto-cpufreq daemon is currently active."""
+    if is_running("auto-cpufreq", "--daemon"):
+        return True
+
+    if IS_INSTALLED_WITH_SNAP:
+        return SNAP_DAEMON_CHECK == "enabled"
+
+    if not Path("/run/systemd/system").is_dir():
+        return False
+
+    try:
+        return call(
+            [
+                "systemctl",
+                "is-active",
+                "--quiet",
+                "auto-cpufreq.service",
+            ],
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+        ) == 0
+    except OSError:
+        return False
 
 def daemon_running_msg():
     print("\n" + "-" * 24 + " auto-cpufreq running " + "-" * 30 + "\n")

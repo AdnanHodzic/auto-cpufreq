@@ -541,6 +541,9 @@ Necessary changes are temporarily made to the system over time, but this process
 `sudo auto-cpufreq --force=governor`
 
 Force use of either the "powersave" or "performance" governor, or set to "reset" to go back to normal mode.
+
+This overrides only the CPU governor. Other charger/battery profile settings continue to follow the detected power source.
+
 Please note that any set override will persist even after reboot.
 
 ### Overriding Turbo mode
