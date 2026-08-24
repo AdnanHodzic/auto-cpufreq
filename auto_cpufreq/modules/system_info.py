@@ -8,7 +8,7 @@ from typing import List, Optional, Tuple
 import distro
 import psutil
 
-from auto_cpufreq.config.config import config, find_config_file
+from auto_cpufreq.config.config import config
 from auto_cpufreq.core import (
     get_hwp_dynamic_boost,
     get_power_supply_ignore_list,
@@ -102,7 +102,6 @@ class SystemInfo:
         self.processor_model: str = (
             getoutput("grep -E 'model name' /proc/cpuinfo -m 1").split(":")[-1].strip()
         )
-        self.total_cores: int | None = psutil.cpu_count(logical=True)
         self.cpu_driver: str = getoutput(
             "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver"
         ).strip()
@@ -132,6 +131,24 @@ class SystemInfo:
             for freq in cpu_freqs
         )
         return max((value for value in values if value > 0), default=None)
+
+    @staticmethod
+    def cpu_current_frequency(cpu_id: int) -> float | None:
+        cpufreq_path = CPU_SYSFS_ROOT / f"cpu{cpu_id}" / "cpufreq"
+        for name in ("cpuinfo_cur_freq", "scaling_cur_freq"):
+            value = SystemInfo.read_file(str(cpufreq_path / name))
+            if value is None:
+                continue
+
+            try:
+                frequency = float(value) / 1000
+            except ValueError:
+                continue
+
+            if frequency > 0:
+                return frequency
+
+        return None
 
     @staticmethod
     def _parse_cpu_list(value: str) -> list[int]:
@@ -346,15 +363,14 @@ class SystemInfo:
         cpu_usage=None,
     ) -> List[CoreInfo]:
         """Returns detailed CPU information for each online logical CPU."""
+        # Keep the existing argument for callers, but do not map its positional
+        # entries to CPU IDs: psutil may return one entry per CPUFreq policy.
         if cpu_usage is None:
             try:
                 cpu_usage = psutil.cpu_percent(interval=0.5, percpu=True)
             except (AttributeError, OSError):
                 cpu_usage = []
 
-        frequencies = (
-            cpu_freqs if cpu_freqs is not None else SystemInfo.cpu_frequencies()
-        )
         online = (
             list(online_cpus)
             if online_cpus
@@ -386,14 +402,7 @@ class SystemInfo:
         cores = []
         for position, cpu_id in enumerate(online):
             usage = value_for_cpu(cpu_usage, cpu_id, position)
-            frequency_info = value_for_cpu(frequencies, cpu_id, position)
-
-            frequency = 0.0
-            if frequency_info is not None:
-                frequency = float(
-                    getattr(frequency_info, "current", 0.0) or 0.0
-                )
-
+            frequency = SystemInfo.cpu_current_frequency(cpu_id) or 0.0
             temperature = temperatures.get(cpu_id, avg_temp)
 
             cores.append(
@@ -767,6 +776,11 @@ class SystemInfo:
         battery_info = self.battery_info()
         cpu_freqs = self.cpu_frequencies()
         online_cpus = self.cpu_ids("online")
+        total_cores = (
+            len(online_cpus)
+            if online_cpus
+            else psutil.cpu_count(logical=True)
+        )
         core_temps, avg_temp = self.cpu_temperature_snapshot(online_cpus)
         total_usage, per_cpu_usage = self.cpu_usage_snapshot(online_cpus)
         load_average = self.avg_load()
@@ -776,7 +790,7 @@ class SystemInfo:
             distro_ver=self.distro_version,
             arch=self.architecture,
             processor_model=self.processor_model,
-            total_core=self.total_cores,
+            total_core=total_cores,
             cpu_driver=self.cpu_driver,
             kernel_version=self.kernel_version,
             current_gov=self.current_gov(),
@@ -837,7 +851,7 @@ def format_system_report(
     )
 
     if include_config:
-        config_path = config.path if config.has_config() else find_config_file(None)
+        config_path = config.path
         if config_path and os.path.isfile(config_path):
             lines.extend(["", f"Using settings defined in {config_path}"])
 
