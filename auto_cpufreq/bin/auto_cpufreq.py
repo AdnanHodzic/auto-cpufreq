@@ -85,6 +85,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             monitor = SystemMonitor(suggestion=True, type=ViewType.MONITOR)
             monitor.run(on_quit=conf.notifier.stop)
         elif live:
+            running_daemon_check("--live")
             root_check()
             start_battery_daemon()
             conf.notifier.start()

@@ -1293,11 +1293,13 @@ def is_running(program, argument):
         for s in filter(lambda x: program in x, cmd):
             if argument in cmd: return True
 
-def daemon_running_msg():
+def daemon_running_msg(mode=None):
     print("\n" + "-" * 24 + " auto-cpufreq running " + "-" * 30 + "\n")
-    print(
-        "ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the daemon before running with --live or --monitor mode"
-    )
+    click.secho("WARNING: auto-cpufreq is running in daemon mode.", fg="red")
+    action = f"before running {mode} mode" if mode else "before continuing"
+    print(f"\nYou have to stop the daemon {action}.")
+    if not IS_INSTALLED_WITH_SNAP and systemctl_exists:
+        print("\nTo stop the systemd service, run:\n\nsudo systemctl stop auto-cpufreq")
     footer()
 
 def daemon_not_running_msg():
@@ -1308,12 +1310,12 @@ def daemon_not_running_msg():
     footer()
 
 # check if auto-cpufreq --daemon is running
-def running_daemon_check():
+def running_daemon_check(mode=None):
     if is_running("auto-cpufreq", "--daemon"):
-        daemon_running_msg()
+        daemon_running_msg(mode)
         exit(1)
     elif IS_INSTALLED_WITH_SNAP and SNAP_DAEMON_CHECK == "enabled":
-        daemon_running_msg()
+        daemon_running_msg(mode)
         exit(1)
 
 # check if auto-cpufreq --daemon is not running
