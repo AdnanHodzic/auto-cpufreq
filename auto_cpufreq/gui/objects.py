@@ -98,6 +98,42 @@ def _privileged_command_error(result, error):
     )
 
 
+def _request_status_refresh(widget):
+    parent = widget.get_toplevel()
+    refresh = getattr(parent, "request_refresh", None)
+
+    if callable(refresh):
+        refresh()
+
+
+def _run_power_state_command(
+    widget,
+    state_key,
+    arguments,
+    callback,
+):
+    parent = widget.get_toplevel()
+    begin = getattr(parent, "begin_power_state_apply", None)
+    finish = getattr(parent, "finish_power_state_apply", None)
+
+    tracked = (
+        callable(begin)
+        and callable(finish)
+        and begin(state_key)
+    )
+
+    def complete(result, error):
+        if tracked:
+            finish(
+                state_key,
+                _privileged_command_error(result, error) is None,
+            )
+
+        return callback(result, error)
+
+    _run_privileged_async(arguments, complete)
+
+
 class RadioButtonView(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
@@ -134,7 +170,9 @@ class RadioButtonView(Gtk.Box):
             return
 
         self.set_sensitive(False)
-        _run_privileged_async(
+        _run_power_state_command(
+            self,
+            "governor",
             [f"--force={override}"],
             self._finish_command,
         )
@@ -142,7 +180,9 @@ class RadioButtonView(Gtk.Box):
     def _finish_command(self, result, error):
         self.set_sensitive(True)
 
-        if _privileged_command_error(result, error) is not None:
+        if _privileged_command_error(result, error) is None:
+            _request_status_refresh(self)
+        else:
             self.set_by_app = True
             self.set_selected()
 
@@ -193,7 +233,9 @@ class CPUTurboOverride(Gtk.Box):
             return
 
         self.set_sensitive(False)
-        _run_privileged_async(
+        _run_power_state_command(
+            self,
+            "turbo",
             [f"--turbo={override}"],
             self._finish_command,
         )
@@ -201,7 +243,9 @@ class CPUTurboOverride(Gtk.Box):
     def _finish_command(self, result, error):
         self.set_sensitive(True)
 
-        if _privileged_command_error(result, error) is not None:
+        if _privileged_command_error(result, error) is None:
+            _request_status_refresh(self)
+        else:
             self.set_by_app = True
             self.set_selected()
 
@@ -720,63 +764,170 @@ class ConfirmDialog(Gtk.Dialog):
 
 
 class MonitorModeView(Gtk.Box):
-    def __init__(self, parent):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+    def __init__(
+        self,
+        parent,
+        report_view,
+        refresh_interval=5,
+    ):
+        super().__init__(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=12,
+        )
         self.parent = parent
+        self.report_view = report_view
         self.running = True
-
-        self.header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.header.set_margin_bottom(10)
-
-        self.title = Gtk.Label(label="Monitor Mode", name="bold")
-        self.title.set_halign(Gtk.Align.START)
-        self.header.pack_start(self.title, True, True, 0)
-
-        self.back_button = Gtk.Button.new_with_label("Back")
-        self.back_button.connect("clicked", self.on_back_clicked)
-        self.header.pack_end(self.back_button, False, False, 0)
-
-        self.pack_start(self.header, False, False, 0)
-
-        self.columns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        self.columns.set_vexpand(True)
-        self.columns.set_hexpand(True)
-
-        self.left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        self.left_box.set_valign(Gtk.Align.START)
-        self.columns.pack_start(self.left_box, True, True, 0)
-
-        self.separator = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
-        self.columns.pack_start(self.separator, False, False, 0)
-
-        self.right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        self.right_box.set_valign(Gtk.Align.START)
-        self.columns.pack_start(self.right_box, True, True, 0)
-
-        self.pack_start(self.columns, True, True, 0)
-
+        self.refresh_interval = refresh_interval
         self.refresh_id = None
+
+        self.header = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL
+        )
+        self.header.set_margin_bottom(2)
+
+        self.title = Gtk.Label(
+            label="Monitor Mode",
+            name="bold",
+        )
+        self.title.set_halign(Gtk.Align.START)
+        self.header.pack_start(
+            self.title, True, True, 0
+        )
+
+        self.back_button = Gtk.Button.new_with_label(
+            "Back"
+        )
+        self.back_button.connect(
+            "clicked",
+            self.on_back_clicked,
+        )
+        self.header.pack_end(
+            self.back_button, False, False, 0
+        )
+
+        self.pack_start(
+            self.header, False, False, 0
+        )
+
+        self.error_label = Gtk.Label(label="")
+        self.error_label.set_halign(Gtk.Align.START)
+        self.error_label.set_xalign(0)
+        self.error_label.set_no_show_all(True)
+        self.pack_start(
+            self.error_label, False, False, 0
+        )
+
+        suggestions = Gtk.Frame()
+        heading = Gtk.Label(
+            label="Suggestions",
+            name="bold",
+        )
+        heading.set_halign(Gtk.Align.START)
+        suggestions.set_label_widget(heading)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(18)
+        grid.set_row_spacing(4)
+        grid.set_margin_top(8)
+        grid.set_margin_bottom(8)
+        grid.set_margin_start(10)
+        grid.set_margin_end(10)
+        suggestions.add(grid)
+
+        governor_name = Gtk.Label(label="Governor")
+        governor_name.set_halign(Gtk.Align.START)
+        governor_name.set_xalign(0)
+
+        self.governor_suggestion = Gtk.Label(
+            label="—"
+        )
+        self.governor_suggestion.set_halign(
+            Gtk.Align.START
+        )
+        self.governor_suggestion.set_xalign(0)
+
+        grid.attach(governor_name, 0, 0, 1, 1)
+        grid.attach(
+            self.governor_suggestion,
+            1, 0, 1, 1,
+        )
+
+        self.turbo_name = Gtk.Label(
+            label="Turbo Boost"
+        )
+        self.turbo_name.set_halign(Gtk.Align.START)
+        self.turbo_name.set_xalign(0)
+        self.turbo_name.set_no_show_all(True)
+
+        self.turbo_suggestion = Gtk.Label(
+            label="—"
+        )
+        self.turbo_suggestion.set_halign(
+            Gtk.Align.START
+        )
+        self.turbo_suggestion.set_xalign(0)
+        self.turbo_suggestion.set_no_show_all(True)
+
+        grid.attach(self.turbo_name, 0, 1, 1, 1)
+        grid.attach(
+            self.turbo_suggestion,
+            1, 1, 1, 1,
+        )
+
+        self.report_view.prepend_right(
+            suggestions
+        )
+
+        self.scrolled = Gtk.ScrolledWindow()
+        self.scrolled.set_policy(
+            Gtk.PolicyType.NEVER,
+            Gtk.PolicyType.AUTOMATIC,
+        )
+        self.scrolled.set_can_focus(False)
+        self.scrolled.add(self.report_view)
+
+        self.pack_start(
+            self.scrolled, True, True, 0
+        )
+
         self.refresh_in_thread()
 
     def refresh_in_thread(self):
         self.refresh_id = None
+
         if not self.running:
             return False
 
-        Thread(target=self._refresh, daemon=True).start()
+        Thread(
+            target=self._refresh,
+            daemon=True,
+        ).start()
+
         return False
 
     def _refresh(self):
         try:
-            report = system_info.generate_system_report()
-            suggested_governor = system_info.governor_suggestion(report)
+            report = (
+                system_info.generate_system_report()
+            )
+            suggested_governor = (
+                system_info.governor_suggestion(report)
+            )
 
             suggested_turbo = None
             if report.is_turbo_on[0] is not None:
-                suggested_turbo = system_info.turbo_on_suggestion(report)
-        except Exception as e:
+                suggested_turbo = (
+                    system_info.turbo_on_suggestion(
+                        report
+                    )
+                )
+
+        except Exception as error:
             if self.running:
-                GLib.idle_add(self._show_error, str(e))
+                GLib.idle_add(
+                    self._show_error,
+                    str(error),
+                )
             return
 
         if self.running:
@@ -787,45 +938,23 @@ class MonitorModeView(Gtk.Box):
                 suggested_turbo,
             )
 
-    def _show_error(self, error_msg):
+    def _show_error(self, message):
         if not self.running:
             return False
 
-        self._clear_boxes()
-        self.left_box.pack_start(self._label(f"Error: {error_msg}"), False, False, 0)
-        self.left_box.show_all()
-        self.refresh_id = GLib.timeout_add_seconds(
-            5,
-            self.refresh_in_thread,
+        self.error_label.set_text(
+            "Unable to refresh system information: "
+            f"{message}"
+        )
+        self.error_label.show()
+
+        self.refresh_id = (
+            GLib.timeout_add_seconds(
+                self.refresh_interval,
+                self.refresh_in_thread,
+            )
         )
         return False
-
-    def _clear_boxes(self):
-        for child in self.left_box.get_children():
-            self.left_box.remove(child)
-        for child in self.right_box.get_children():
-            self.right_box.remove(child)
-
-    def _header(self, text):
-        label = Gtk.Label(label=text, name="bold")
-        label.set_halign(Gtk.Align.START)
-        return label
-
-    def _label(self, text):
-        label = Gtk.Label(label=text)
-        label.set_halign(Gtk.Align.START)
-        return label
-
-    def _suggestion(self, text):
-        label = Gtk.Label(label=text)
-        label.set_halign(Gtk.Align.START)
-        label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.9, 0.7, 0.1, 1.0))
-        return label
-
-    def _separator(self, text):
-        label = Gtk.Label(label="-" * 28 + f" {text} " + "-" * 28)
-        label.set_halign(Gtk.Align.START)
-        return label
 
     def _update_display(
         self,
@@ -836,201 +965,63 @@ class MonitorModeView(Gtk.Box):
         if not self.running:
             return False
 
-        self._clear_boxes()
-
-        current_time = time.strftime("%H:%M:%S")
-        self.title.set_text(f"Monitor Mode - {current_time}")
-
-
-        self.left_box.pack_start(self._separator("System Information"), False, False, 5)
-        self.left_box.pack_start(self._label(f"Linux distro: {report.distro_name} {report.distro_ver}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Linux kernel: {report.kernel_version}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Processor: {report.processor_model}"), False, False, 0)
-        core_count = (
-            str(report.total_core)
-            if report.total_core is not None
-            else "Unknown"
+        self.error_label.hide()
+        self.title.set_text(
+            "Monitor Mode - "
+            f"{time.strftime('%H:%M:%S')}"
         )
-        self.left_box.pack_start(
-            self._label(f"Cores: {core_count}"),
-            False,
-            False,
-            0,
-        )
-        self.left_box.pack_start(self._label(f"Architecture: {report.arch}"), False, False, 0)
-        self.left_box.pack_start(self._label(f"Driver: {report.cpu_driver}"), False, False, 0)
 
-        config_path = config.path if config.has_config() else find_config_file(None)
-        if isfile(config_path):
-            self.left_box.pack_start(self._label(f"\nUsing settings defined in {config_path}"), False, False, 0)
-
-        self.left_box.pack_start(self._label(""), False, False, 0)
-
-        self.left_box.pack_start(self._separator("Current CPU Stats"), False, False, 5)
-        self.left_box.pack_start(self._label(f"CPU max frequency: {report.cpu_max_freq:.0f} MHz" if report.cpu_max_freq else "CPU max frequency: Unknown"), False, False, 0)
-        self.left_box.pack_start(self._label(f"CPU min frequency: {report.cpu_min_freq:.0f} MHz" if report.cpu_min_freq else "CPU min frequency: Unknown"), False, False, 0)
-        self.left_box.pack_start(self._label(""), False, False, 0)
-        self.left_box.pack_start(self._label("Core    Usage   Temperature     Frequency"), False, False, 0)
-
-        for core in report.cores_info:
-            temperature = (
-                f"{core.temperature:>6.0f} °C"
-                if core.temperature > 0
-                else "     —"
-            )
-            frequency = (
-                f"{core.frequency:>6.0f} MHz"
-                if core.frequency > 0
-                else "     —"
-            )
-            self.left_box.pack_start(
-                self._label(
-                    f"CPU{core.id:<2}    {core.usage:>4.1f}%    "
-                    f"{temperature}    {frequency}"
-                ),
-                False,
-                False,
-                0,
-            )
-
-        if report.cpu_fan_speed:
-            self.left_box.pack_start(self._label(""), False, False, 0)
-            self.left_box.pack_start(self._label(f"CPU fan speed: {report.cpu_fan_speed} RPM"), False, False, 0)
-
-
-        if report.battery_info is not None:
-            self.right_box.pack_start(self._separator("Battery Stats"), False, False, 5)
-            self.right_box.pack_start(self._label(f"Battery status: {str(report.battery_info)}"), False, False, 0)
-            battery_level = f"{report.battery_info.battery_level}%" if report.battery_info.battery_level is not None else "Unknown"
-            self.right_box.pack_start(self._label(f"Battery percentage: {battery_level}"), False, False, 0)
-            ac_status = "Yes" if report.battery_info.is_ac_plugged else "No" if report.battery_info.is_ac_plugged is not None else "Unknown"
-            self.right_box.pack_start(self._label(f"AC plugged: {ac_status}"), False, False, 0)
-            self.right_box.pack_start(self._label(f"Charging start threshold: {report.battery_info.charging_start_threshold}"), False, False, 0)
-            self.right_box.pack_start(self._label(f"Charging stop threshold: {report.battery_info.charging_stop_threshold}"), False, False, 0)
-            self.right_box.pack_start(self._label(""), False, False, 0)
-
-        self.right_box.pack_start(self._separator("CPU Frequency Scaling"), False, False, 5)
-        current_gov = report.current_gov if report.current_gov else "Unknown"
-        self.right_box.pack_start(self._label(f'Setting to use: "{current_gov}" governor'), False, False, 0)
+        # Same observed-state renderer as the normal GTK dashboard.
+        self.report_view.apply_report(report)
 
         if (
-            report.current_gov
-            and suggested_governor is not None
-            and suggested_governor != report.current_gov
+            suggested_governor is not None
+            and suggested_governor
+            != report.current_gov
         ):
-            self.right_box.pack_start(
-                self._suggestion(
-                    f'Suggesting use of: "{suggested_governor}" governor'
-                ),
-                False,
-                False,
-                0,
+            self.governor_suggestion.set_text(
+                f"Use {suggested_governor}"
             )
-
-        if report.current_epp:
-            self.right_box.pack_start(self._label(f"Current EPP: {report.current_epp}"), False, False, 0)
         else:
-            self.right_box.pack_start(self._label("Not setting EPP (not supported by system)"), False, False, 0)
-
-        if report.current_hwp_dynamic_boost is not None:
-            state = (
-                "on"
-                if report.current_hwp_dynamic_boost
-                else "off"
-            )
-            self.right_box.pack_start(
-                self._label(
-                    f"Intel HWP Dynamic Boost: {state}"
-                ),
-                False,
-                False,
-                0,
+            self.governor_suggestion.set_text(
+                "No change suggested"
             )
 
-        if report.current_epb:
-            self.right_box.pack_start(self._label(f"Current EPB: {report.current_epb}"), False, False, 0)
-
-        self.right_box.pack_start(self._label(""), False, False, 0)
-
-        self.right_box.pack_start(self._separator("System Statistics"), False, False, 5)
-        self.right_box.pack_start(self._label(f"Total CPU usage: {report.cpu_usage:.1f} %"), False, False, 0)
-        self.right_box.pack_start(self._label(f"Total system load: {report.load:.2f}"), False, False, 0)
-
-        avg_temp = report.cpu_avg_temp
-        if avg_temp is None:
-            temperatures = [
-                core.temperature
-                for core in report.cores_info
-                if core.temperature > 0
-            ]
-            if temperatures:
-                avg_temp = sum(temperatures) / len(temperatures)
-
-        if avg_temp is not None:
-            self.right_box.pack_start(
-                self._label(
-                    f"Average temp. of all cores: {avg_temp:.2f} °C"
-                ),
-                False,
-                False,
-                0,
-            )
-
-        if report.avg_load:
-            load_status = "Load optimal" if report.load < 1.0 else "Load high"
-            self.right_box.pack_start(
-                self._label(f"{load_status} (load average: {report.avg_load[0]:.2f}, {report.avg_load[1]:.2f}, {report.avg_load[2]:.2f})"),
-                False, False, 0
-            )
-
-        if avg_temp is not None:
-            usage_status = "Optimal" if report.cpu_usage < 70 else "High"
-            temp_status = "high" if avg_temp > 75 else "normal"
-            self.right_box.pack_start(
-                self._label(
-                    f"{usage_status} total CPU usage: "
-                    f"{report.cpu_usage:.1f}%, {temp_status} "
-                    f"average core temp: {avg_temp:.1f}°C"
-                ),
-                False,
-                False,
-                0,
-            )
-
-        turbo_status = "Unknown"
-        if report.is_turbo_on[0] is not None:
-            turbo_status = "On" if report.is_turbo_on[0] else "Off"
-        elif report.is_turbo_on[1] is not None:
-            turbo_status = f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
-        self.right_box.pack_start(self._label(f"Setting turbo boost: {turbo_status}"), False, False, 0)
-
-        if (
+        turbo_available = (
             report.is_turbo_on[0] is not None
-            and suggested_turbo is not None
-            and suggested_turbo != report.is_turbo_on[0]
-        ):
-            turbo_text = "on" if suggested_turbo else "off"
-            self.right_box.pack_start(
-                self._suggestion(
-                    f"Suggesting to set turbo boost: {turbo_text}"
-                ),
-                False,
-                False,
-                0,
-            )
+        )
 
-        self.left_box.show_all()
-        self.right_box.show_all()
+        if turbo_available:
+            self.turbo_name.show()
+            self.turbo_suggestion.show()
 
-        if self.running:
-            self.refresh_id = GLib.timeout_add_seconds(
-                5,
+            if (
+                suggested_turbo is not None
+                and suggested_turbo
+                != report.is_turbo_on[0]
+            ):
+                self.turbo_suggestion.set_text(
+                    "Turn on"
+                    if suggested_turbo
+                    else "Turn off"
+                )
+            else:
+                self.turbo_suggestion.set_text(
+                    "No change suggested"
+                )
+        else:
+            self.turbo_name.hide()
+            self.turbo_suggestion.hide()
+
+        self.refresh_id = (
+            GLib.timeout_add_seconds(
+                self.refresh_interval,
                 self.refresh_in_thread,
             )
-
+        )
         return False
 
-    def on_back_clicked(self, button):
+    def on_back_clicked(self, _button):
         self.cleanup()
         self.parent.remove(self)
         self.parent.daemon_not_running()
@@ -1038,6 +1029,7 @@ class MonitorModeView(Gtk.Box):
 
     def cleanup(self):
         self.running = False
+
         if self.refresh_id is not None:
             GLib.source_remove(self.refresh_id)
             self.refresh_id = None
