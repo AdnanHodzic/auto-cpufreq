@@ -123,13 +123,14 @@ class SystemInfo:
             core_temps = []
 
         avg_temp = sum(core_temps) / len(core_temps) if core_temps else 0.0
+        avg_freq = sum(cpu_freqs) / len(cpu_freqs) if cpu_freqs else 0.0
 
         return [
             CoreInfo(
                 id=i,
-                usage=cpu_usage[i],
+                usage=cpu_usage[i], # do not need to guard since looping over cpu_usage range
                 temperature=core_temps[i] if i < len(core_temps) else avg_temp,
-                frequency=cpu_freqs[i].current,
+                frequency=cpu_freqs[i].current if i < len(cpu_freqs) else avg_freq,
             )
             for i in range(len(cpu_usage))
         ]
@@ -202,15 +203,23 @@ class SystemInfo:
 
     @staticmethod
     def system_load() -> float:
-        return os.getloadavg()[0]
+        try:
+            return os.getloadavg()[0]
+        except OSError, IndexError:
+            return 0.0
 
     @staticmethod
     def avg_load() -> Tuple[float, float, float]:
-        return os.getloadavg()
+        try:
+            return os.getloadavg()
+        except OSError:
+            return 0.0
 
     @staticmethod
     def avg_temp() -> int:
         temps: List[float] = [i.temperature for i in SystemInfo.get_cpu_info()]
+        if len(temps) == 0:
+            return 0
         return int(sum(temps) / len(temps))
 
     @staticmethod
