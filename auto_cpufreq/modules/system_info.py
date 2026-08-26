@@ -429,7 +429,7 @@ class SystemInfo:
                     current = float(fan.current)
                 except (AttributeError, TypeError, ValueError):
                     continue
-                if current > 0:
+                if current >= 0:
                     return int(current)
         return None
 
@@ -903,7 +903,7 @@ def format_system_report(
             ]
         )
 
-    if report.cpu_fan_speed:
+    if report.cpu_fan_speed is not None:
         lines.extend(["", f"CPU fan speed: {report.cpu_fan_speed} RPM"])
 
     return "\n".join(lines)

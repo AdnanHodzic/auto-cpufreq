@@ -319,7 +319,7 @@ class SystemReportView(Gtk.Box):
         )
         self._refresh_core_rows(report.cores_info)
 
-        if report.cpu_fan_speed:
+        if report.cpu_fan_speed is not None:
             self.fan_label.set_text(
                 f"CPU fan speed: {report.cpu_fan_speed} RPM"
             )
