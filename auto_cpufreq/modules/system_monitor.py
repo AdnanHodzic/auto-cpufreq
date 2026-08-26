@@ -278,7 +278,7 @@ class SystemMonitor:
                 )
             )
 
-        if report.cpu_fan_speed:
+        if report.cpu_fan_speed is not None:
             self.left_content.append(aligned_text(""))
             self.left_content.append(
                 aligned_text(f"CPU fan speed: {report.cpu_fan_speed} RPM")

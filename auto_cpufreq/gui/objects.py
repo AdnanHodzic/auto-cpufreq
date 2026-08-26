@@ -543,7 +543,7 @@ class SystemStatisticsBox(Gtk.Box):
             else:
                 self.temp_label.hide()
 
-            if report.cpu_fan_speed:
+            if report.cpu_fan_speed is not None:
                 self.fan_label.set_label(f"CPU fan speed: {report.cpu_fan_speed} RPM")
                 self.fan_label.show()
             else:
