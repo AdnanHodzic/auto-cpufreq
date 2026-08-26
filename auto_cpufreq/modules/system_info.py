@@ -3,10 +3,11 @@ import os
 from pathlib import Path
 import platform
 from subprocess import getoutput
-from typing import Tuple, List
-import psutil
+from typing import List, Optional, Tuple
+
 import distro
-from pathlib import Path
+import psutil
+
 from auto_cpufreq.config.config import config
 from auto_cpufreq.core import (
     get_hwp_dynamic_boost,
@@ -18,7 +19,10 @@ from auto_cpufreq.globals import (
     IS_INSTALLED_WITH_SNAP,
     POWER_SUPPLY_DIR,
 )
-from typing import Optional
+
+
+CPU_SYSFS_ROOT = Path("/sys/devices/system/cpu")
+SNAP_HOST_ROOT = "/var/lib/snapd/hostfs"
 
 
 @dataclass
@@ -50,6 +54,8 @@ class BatteryInfo:
 
 @dataclass
 class SystemReport:
+    """Point-in-time telemetry snapshot for reporting frontends, not control policy."""
+
     distro_name: str
     distro_ver: str
     arch: str
@@ -70,6 +76,8 @@ class SystemReport:
     cores_info: list[CoreInfo]
     battery_info: BatteryInfo
     is_turbo_on: Tuple[bool | None, bool | None]
+    cpu_avg_temp: float | None = None
+    offline_cpus: tuple[int, ...] = ()
 
 
 class SystemInfo:
@@ -78,66 +86,352 @@ class SystemInfo:
     """
 
     def __init__(self):
-        self.distro_name: str = (
-            distro.name(pretty=True) if not IS_INSTALLED_WITH_SNAP else "UNKNOWN"
-        )
-        self.distro_version: str = (
-            distro.version() if not IS_INSTALLED_WITH_SNAP else "UNKNOWN"
-        )
+        if IS_INSTALLED_WITH_SNAP:
+            try:
+                host_distro = distro.LinuxDistribution(root_dir=SNAP_HOST_ROOT)
+                self.distro_name = host_distro.name(pretty=False) or "UNKNOWN"
+                self.distro_version = host_distro.version() or "UNKNOWN"
+            except (OSError, UnicodeError, ValueError):
+                self.distro_name = "UNKNOWN"
+                self.distro_version = "UNKNOWN"
+        else:
+            self.distro_name = distro.name(pretty=False)
+            self.distro_version = distro.version()
+
         self.architecture: str = platform.machine()
         self.processor_model: str = (
             getoutput("grep -E 'model name' /proc/cpuinfo -m 1").split(":")[-1].strip()
         )
-        self.total_cores: int | None = psutil.cpu_count(logical=True)
         self.cpu_driver: str = getoutput(
             "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver"
         ).strip()
         self.kernel_version: str = platform.release()
 
     @staticmethod
-    def cpu_min_freq() -> float | None:
-        freqs = psutil.cpu_freq(percpu=True)
-        return min((freq.min for freq in freqs), default=None)
+    def cpu_frequencies():
+        try:
+            return psutil.cpu_freq(percpu=True) or []
+        except (AttributeError, NotImplementedError, OSError):
+            return []
 
     @staticmethod
-    def cpu_max_freq() -> float | None:
-        freqs = psutil.cpu_freq(percpu=True)
-        return max((freq.max for freq in freqs), default=None)
+    def cpu_min_freq(freqs=None) -> float | None:
+        cpu_freqs = freqs if freqs is not None else SystemInfo.cpu_frequencies()
+        values = (
+            float(getattr(freq, "min", 0.0) or 0.0)
+            for freq in cpu_freqs
+        )
+        return min((value for value in values if value > 0), default=None)
 
     @staticmethod
-    def get_cpu_info() -> List[CoreInfo]:
-        """Returns detailed CPU information for each core."""
-        cpu_usage = psutil.cpu_percent(percpu=True)
-        cpu_freqs = psutil.cpu_freq(percpu=True)
+    def cpu_max_freq(freqs=None) -> float | None:
+        cpu_freqs = freqs if freqs is not None else SystemInfo.cpu_frequencies()
+        values = (
+            float(getattr(freq, "max", 0.0) or 0.0)
+            for freq in cpu_freqs
+        )
+        return max((value for value in values if value > 0), default=None)
+
+    @staticmethod
+    def cpu_current_frequency(cpu_id: int) -> float | None:
+        cpufreq_path = CPU_SYSFS_ROOT / f"cpu{cpu_id}" / "cpufreq"
+        for name in ("cpuinfo_cur_freq", "scaling_cur_freq"):
+            value = SystemInfo.read_file(str(cpufreq_path / name))
+            if value is None:
+                continue
+
+            try:
+                frequency = float(value) / 1000
+            except ValueError:
+                continue
+
+            if frequency > 0:
+                return frequency
+
+        return None
+
+    @staticmethod
+    def _parse_cpu_list(value: str) -> list[int]:
+        cpus = []
+        for part in value.split(","):
+            part = part.strip()
+            if not part:
+                continue
+
+            if "-" in part:
+                start, end = part.split("-", 1)
+                start_cpu = int(start)
+                end_cpu = int(end)
+                if end_cpu < start_cpu:
+                    raise ValueError("invalid CPU range")
+                cpus.extend(range(start_cpu, end_cpu + 1))
+            else:
+                cpus.append(int(part))
+
+        return cpus
+
+    @staticmethod
+    def cpu_ids(mask: str) -> list[int]:
+        value = SystemInfo.read_file(str(CPU_SYSFS_ROOT / mask))
+        if not value:
+            return []
 
         try:
+            return SystemInfo._parse_cpu_list(value)
+        except ValueError:
+            return []
+
+    @staticmethod
+    def offline_cpu_ids() -> list[int]:
+        present = set(SystemInfo.cpu_ids("present"))
+        online = set(SystemInfo.cpu_ids("online"))
+        if not present or not online:
+            return []
+        return sorted(present - online)
+
+    @staticmethod
+    def _cpu_core_id(cpu_id: int) -> int | None:
+        value = SystemInfo.read_file(
+            str(CPU_SYSFS_ROOT / f"cpu{cpu_id}" / "topology" / "core_id")
+        )
+        if value is None:
+            return None
+
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def cpu_temperature_snapshot(
+        cpu_ids: list[int] | None = None,
+    ) -> tuple[dict[int, float], float | None]:
+        try:
             temps = psutil.sensors_temperatures()
-            temp_sensor = []
-            for sensor in CPU_TEMP_SENSOR_PRIORITY:
-                temp_sensor = temps.get(sensor, [])
-                if temp_sensor != []:
-                    break
+        except (AttributeError, NotImplementedError, OSError):
+            return {}, None
 
-            core_temps = [temp.current for temp in temp_sensor]
-        except AttributeError:
-            core_temps = []
+        ids = cpu_ids if cpu_ids is not None else SystemInfo.cpu_ids("online")
 
-        avg_temp = sum(core_temps) / len(core_temps) if core_temps else 0.0
+        def snapshot_from_entries(entries):
+            readings = []
+            for entry in entries:
+                try:
+                    current = float(entry.current)
+                except (AttributeError, TypeError, ValueError):
+                    continue
+                if current > 0:
+                    readings.append(current)
 
-        return [
-            CoreInfo(
-                id=i,
-                usage=cpu_usage[i],
-                temperature=core_temps[i] if i < len(core_temps) else avg_temp,
-                frequency=cpu_freqs[i].current,
+            if not readings:
+                return None
+
+            average = sum(readings) / len(readings)
+
+            if not ids:
+                return {
+                    cpu_id: temperature
+                    for cpu_id, temperature in enumerate(readings)
+                }, average
+
+            if len(readings) == len(ids):
+                return dict(zip(ids, readings)), average
+
+            return {cpu_id: average for cpu_id in ids}, average
+
+        coretemp_entries = temps.get("coretemp", [])
+        if coretemp_entries:
+            if ids:
+                temperatures_by_core = {}
+                duplicate_core_id = False
+                for entry in coretemp_entries:
+                    label = str(getattr(entry, "label", "") or "")
+                    if not label.startswith("Core "):
+                        continue
+
+                    try:
+                        core_id = int(label.removeprefix("Core ").strip())
+                        current = float(entry.current)
+                    except (AttributeError, TypeError, ValueError):
+                        continue
+
+                    if current <= 0:
+                        continue
+                    if core_id in temperatures_by_core:
+                        duplicate_core_id = True
+                        break
+                    temperatures_by_core[core_id] = current
+
+                if temperatures_by_core and not duplicate_core_id:
+                    by_cpu = {}
+                    matched_core_ids = set()
+                    for cpu_id in ids:
+                        core_id = SystemInfo._cpu_core_id(cpu_id)
+                        if core_id in temperatures_by_core:
+                            by_cpu[cpu_id] = temperatures_by_core[core_id]
+                            matched_core_ids.add(core_id)
+
+                    if by_cpu:
+                        average = sum(
+                            temperatures_by_core[core_id]
+                            for core_id in matched_core_ids
+                        ) / len(matched_core_ids)
+                        return by_cpu, average
+
+            snapshot = snapshot_from_entries(coretemp_entries)
+            if snapshot is not None:
+                return snapshot
+
+        # Preserve the legacy fallback for hwmon drivers that expose
+        # CPU temperature under a device-specific sensor group.
+        for entries in temps.values():
+            for entry in entries:
+                label = str(getattr(entry, "label", "") or "")
+                if "CPU" not in label and "Tctl" not in label:
+                    continue
+
+                try:
+                    current = float(entry.current)
+                except (AttributeError, TypeError, ValueError):
+                    continue
+
+                if current <= 0:
+                    continue
+
+                if not ids:
+                    return {0: current}, current
+
+                return {
+                    cpu_id: current
+                    for cpu_id in ids
+                }, current
+
+        for sensor in CPU_TEMP_SENSOR_PRIORITY:
+            if sensor == "coretemp":
+                continue
+
+            snapshot = snapshot_from_entries(
+                temps.get(sensor, [])
             )
-            for i in range(len(cpu_usage))
+            if snapshot is not None:
+                return snapshot
+
+        return {}, None
+
+    @staticmethod
+    def cpu_temperatures() -> List[float]:
+        temperatures, _ = SystemInfo.cpu_temperature_snapshot()
+        return [
+            temperatures[cpu_id]
+            for cpu_id in sorted(temperatures)
         ]
 
     @staticmethod
+    def cpu_usage_snapshot(
+        online_cpus: list[int] | None = None,
+    ) -> tuple[float, list[float]]:
+        try:
+            per_cpu = psutil.cpu_percent(interval=0.5, percpu=True)
+        except (AttributeError, OSError):
+            return 0.0, []
+
+        if not per_cpu:
+            return 0.0, []
+
+        online = list(online_cpus) if online_cpus else []
+        if not online:
+            sampled = per_cpu
+        elif len(per_cpu) == len(online):
+            sampled = per_cpu
+        else:
+            sampled = [
+                per_cpu[cpu_id]
+                for cpu_id in online
+                if cpu_id < len(per_cpu)
+            ]
+
+        if not sampled:
+            return 0.0, per_cpu
+
+        return sum(sampled) / len(sampled), per_cpu
+
+    @staticmethod
+    def get_cpu_info(
+        cpu_freqs=None,
+        core_temps=None,
+        online_cpus=None,
+        cpu_usage=None,
+    ) -> List[CoreInfo]:
+        """Returns detailed CPU information for each online logical CPU."""
+        # Keep the existing argument for callers, but do not map its positional
+        # entries to CPU IDs: psutil may return one entry per CPUFreq policy.
+        if cpu_usage is None:
+            try:
+                cpu_usage = psutil.cpu_percent(interval=0.5, percpu=True)
+            except (AttributeError, OSError):
+                cpu_usage = []
+
+        online = (
+            list(online_cpus)
+            if online_cpus
+            else list(range(len(cpu_usage)))
+        )
+        temperatures = (
+            core_temps
+            if core_temps is not None
+            else SystemInfo.cpu_temperature_snapshot(online)[0]
+        )
+        valid_temperatures = [
+            temperature
+            for temperature in temperatures.values()
+            if temperature > 0
+        ]
+        avg_temp = (
+            sum(valid_temperatures) / len(valid_temperatures)
+            if valid_temperatures
+            else 0.0
+        )
+
+        def value_for_cpu(values, cpu_id, position):
+            if len(values) == len(online):
+                return values[position]
+            if cpu_id < len(values):
+                return values[cpu_id]
+            return None
+
+        cores = []
+        for position, cpu_id in enumerate(online):
+            usage = value_for_cpu(cpu_usage, cpu_id, position)
+            frequency = SystemInfo.cpu_current_frequency(cpu_id) or 0.0
+            temperature = temperatures.get(cpu_id, avg_temp)
+
+            cores.append(
+                CoreInfo(
+                    id=cpu_id,
+                    usage=float(usage or 0.0),
+                    temperature=temperature if temperature > 0 else avg_temp,
+                    frequency=frequency,
+                )
+            )
+
+        return cores
+
+    @staticmethod
     def cpu_fan_speed() -> int | None:
-        fans = psutil.sensors_fans()
-        return next((fan[0].current for fan in fans.values() if fan), None)
+        try:
+            fans = psutil.sensors_fans()
+        except (AttributeError, NotImplementedError, OSError):
+            return None
+
+        for entries in fans.values():
+            for fan in entries:
+                try:
+                    current = float(fan.current)
+                except (AttributeError, TypeError, ValueError):
+                    continue
+                if current > 0:
+                    return int(current)
+        return None
 
     @staticmethod
     def current_gov() -> str | None:
@@ -150,7 +444,7 @@ class SystemInfo:
             return None
 
     @staticmethod
-    def current_epp(_is_ac_plugged: bool) -> str | None:
+    def current_epp(_is_ac_plugged: bool | None = None) -> str | None:
         paths = list(Path("/sys/devices/system/cpu").glob(
             "cpu[0-9]*/cpufreq/energy_performance_preference"
         ))
@@ -169,7 +463,7 @@ class SystemInfo:
         return values.pop()
 
     @staticmethod
-    def current_epb(_is_ac_plugged: bool) -> str | None:
+    def current_epb(_is_ac_plugged: bool | None = None) -> str | None:
         epb_names = {
             "0": "performance",
             "4": "balance_performance",
@@ -196,9 +490,10 @@ class SystemInfo:
 
     @staticmethod
     def cpu_usage() -> float:
-        return psutil.cpu_percent(
-            interval=0.5
-        )  # Reduced interval for better responsiveness
+        try:
+            return psutil.cpu_percent(interval=0.5)
+        except (AttributeError, OSError):
+            return 0.0
 
     @staticmethod
     def system_load() -> float:
@@ -210,8 +505,8 @@ class SystemInfo:
 
     @staticmethod
     def avg_temp() -> int:
-        temps: List[float] = [i.temperature for i in SystemInfo.get_cpu_info()]
-        return int(sum(temps) / len(temps))
+        _, average = SystemInfo.cpu_temperature_snapshot()
+        return int(average) if average is not None else 0
 
     @staticmethod
     def turbo_on() -> Tuple[bool | None, bool | None]:
@@ -234,7 +529,10 @@ class SystemInfo:
             control_file = cpu_freq
             inverse_logic = False
         elif amd_pstate.exists():
-            amd_status: str = amd_pstate.read_text().strip()
+            try:
+                amd_status = amd_pstate.read_text().strip()
+            except OSError:
+                return None, None
             if amd_status == "active":
                 return None, True
             return None, False
@@ -244,7 +542,7 @@ class SystemInfo:
         try:
             current_value = int(control_file.read_text().strip())
             return bool(current_value) ^ inverse_logic, False
-        except Exception as e:
+        except (OSError, ValueError):
             return None, None
 
     @staticmethod
@@ -406,7 +704,7 @@ class SystemInfo:
 
             if (current and current.isdigit()) and (voltage and voltage.isdigit()):
                 energy_rate = (int(current) * int(voltage)) / 1_000_000
- 
+
 
 
         charge_start_threshold = (
@@ -436,30 +734,63 @@ class SystemInfo:
         )
 
     @staticmethod
-    def turbo_on_suggestion() -> bool:
-        usage = SystemInfo.cpu_usage()
+    def turbo_on_suggestion(report: SystemReport | None = None) -> bool:
+        usage = report.cpu_usage if report is not None else SystemInfo.cpu_usage()
+
+        if report is not None:
+            if report.cpu_avg_temp is not None:
+                avg_temp = report.cpu_avg_temp
+            else:
+                temperatures = [
+                    core.temperature
+                    for core in report.cores_info
+                    if core.temperature > 0
+                ]
+                avg_temp = (
+                    sum(temperatures) / len(temperatures)
+                    if temperatures
+                    else 0.0
+                )
+        else:
+            avg_temp = SystemInfo.avg_temp()
+
         if usage >= 20.0:
             return True
-        elif usage <= 25 and SystemInfo.avg_temp() >= 70:
+        elif usage <= 25 and avg_temp >= 70:
             return False
         return False
 
     @staticmethod
-    def governor_suggestion() -> str:
-        is_ac_plugged = SystemInfo.external_power_state()
-        if is_ac_plugged is not False:
+    def governor_suggestion(report: SystemReport | None = None) -> str:
+        battery_info = (
+            report.battery_info
+            if report is not None
+            else SystemInfo.battery_info()
+        )
+        if battery_info.is_ac_plugged is not False:
             return AVAILABLE_GOVERNORS_SORTED[0]
         return AVAILABLE_GOVERNORS_SORTED[-1]
 
     def generate_system_report(self) -> SystemReport:
+        """Collect one reporting snapshot without changing system state."""
         battery_info = self.battery_info()
+        cpu_freqs = self.cpu_frequencies()
+        online_cpus = self.cpu_ids("online")
+        total_cores = (
+            len(online_cpus)
+            if online_cpus
+            else psutil.cpu_count(logical=True)
+        )
+        core_temps, avg_temp = self.cpu_temperature_snapshot(online_cpus)
+        total_usage, per_cpu_usage = self.cpu_usage_snapshot(online_cpus)
+        load_average = self.avg_load()
 
         return SystemReport(
             distro_name=self.distro_name,
             distro_ver=self.distro_version,
             arch=self.architecture,
             processor_model=self.processor_model,
-            total_core=self.total_cores,
+            total_core=total_cores,
             cpu_driver=self.cpu_driver,
             kernel_version=self.kernel_version,
             current_gov=self.current_gov(),
@@ -467,15 +798,132 @@ class SystemInfo:
             current_epb=self.current_epb(battery_info.is_ac_plugged),
             current_hwp_dynamic_boost=get_hwp_dynamic_boost(),
             cpu_fan_speed=self.cpu_fan_speed(),
-            cpu_usage=self.cpu_usage(),
-            cpu_max_freq=self.cpu_max_freq(),
-            cpu_min_freq=self.cpu_min_freq(),
-            load=self.system_load(),
-            avg_load=self.avg_load(),
-            cores_info=self.get_cpu_info(),
+            cpu_usage=total_usage,
+            cpu_max_freq=self.cpu_max_freq(cpu_freqs),
+            cpu_min_freq=self.cpu_min_freq(cpu_freqs),
+            load=load_average[0],
+            avg_load=load_average,
+            cores_info=self.get_cpu_info(
+                cpu_freqs,
+                core_temps,
+                online_cpus,
+                per_cpu_usage,
+            ),
             is_turbo_on=self.turbo_on(),
             battery_info=battery_info,
+            cpu_avg_temp=avg_temp,
+            offline_cpus=tuple(self.offline_cpu_ids()),
         )
 
 
 system_info = SystemInfo()
+
+
+def format_system_report(
+    report: SystemReport,
+    include_distro: bool = True,
+    include_config: bool = True,
+) -> str:
+    """Format one SystemReport using the legacy textual status layout."""
+    lines = []
+
+    if include_distro:
+        distro_name = f"{report.distro_name} {report.distro_ver}".strip()
+        lines.extend(
+            [
+                f"Linux distro: {distro_name}",
+                f"Linux kernel: {report.kernel_version}",
+            ]
+        )
+
+    total_core = (
+        str(report.total_core)
+        if report.total_core is not None
+        else "Unknown"
+    )
+    lines.extend(
+        [
+            f"Processor: {report.processor_model}",
+            f"Cores: {total_core}",
+            f"Architecture: {report.arch}",
+            f"Driver: {report.cpu_driver}",
+        ]
+    )
+
+    if include_config:
+        config_path = config.path
+        if config_path and os.path.isfile(config_path):
+            lines.extend(["", f"Using settings defined in {config_path}"])
+
+    max_freq = (
+        f"{report.cpu_max_freq:.0f} MHz"
+        if report.cpu_max_freq is not None
+        else "Unknown"
+    )
+    min_freq = (
+        f"{report.cpu_min_freq:.0f} MHz"
+        if report.cpu_min_freq is not None
+        else "Unknown"
+    )
+
+    lines.extend(
+        [
+            "",
+            "-" * 30 + " Current CPU stats " + "-" * 30,
+            "",
+            f"CPU max frequency: {max_freq}",
+            f"CPU min frequency: {min_freq}",
+            "",
+            "Core\tUsage\tTemperature\tFrequency",
+        ]
+    )
+
+    for core in report.cores_info:
+        temperature = (
+            f"{core.temperature:>3.0f} °C"
+            if core.temperature > 0
+            else "  —"
+        )
+        frequency = (
+            f"{core.frequency:>5.0f} MHz"
+            if core.frequency > 0
+            else "    —"
+        )
+        lines.append(
+            f"CPU{core.id}    {core.usage:>5.1f}%       "
+            f"{temperature}     {frequency}"
+        )
+
+    if report.offline_cpus:
+        lines.extend(
+            [
+                "",
+                "Disabled CPUs: "
+                + ",".join(str(cpu) for cpu in report.offline_cpus),
+            ]
+        )
+
+    if report.cpu_fan_speed:
+        lines.extend(["", f"CPU fan speed: {report.cpu_fan_speed} RPM"])
+
+    return "\n".join(lines)
+
+
+def print_system_report(
+    report: SystemReport | None = None,
+    output=None,
+    include_distro: bool = True,
+    include_config: bool = True,
+):
+    """Print a structured snapshot without collecting the same status twice."""
+    if report is None:
+        report = system_info.generate_system_report()
+
+    print(
+        format_system_report(
+            report,
+            include_distro=include_distro,
+            include_config=include_config,
+        ),
+        file=output,
+    )

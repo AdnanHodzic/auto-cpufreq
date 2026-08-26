@@ -1,4 +1,7 @@
+import os
 import sys
+from queue import Empty, SimpleQueue
+from threading import Thread
 from typing import Callable
 import urwid
 import time
@@ -80,39 +83,131 @@ class SystemMonitor:
         self.last_focus_right = 0
         self.on_quit: Callable[[], None] | None = None
         self.suggestion = suggestion
+        self.running = False
+        self._refresh_pipe_fd: int | None = None
+        self._alarm_handle = None
+        self._refresh_results = SimpleQueue()
 
     def update(self, loop: urwid.MainLoop, user_data: dict) -> None:
-        # Store current focus positions
+        self._alarm_handle = None
+
+        if not self.running:
+            return
+
+        Thread(target=self._collect_report, daemon=True).start()
+
+    def _collect_report(self):
+        try:
+            report = system_info.generate_system_report()
+
+            if self.suggestion:
+                suggested_governor = system_info.governor_suggestion(report)
+                suggested_turbo = system_info.turbo_on_suggestion(report)
+            else:
+                suggested_governor = None
+                suggested_turbo = None
+
+            result = (
+                report,
+                suggested_governor,
+                suggested_turbo,
+                None,
+            )
+        except Exception as exc:
+            result = (None, None, None, exc)
+
+        if not self.running:
+            return
+
+        self._refresh_results.put(result)
+
+        wakeup_fd = self._refresh_pipe_fd
+        if wakeup_fd is None:
+            return
+
+        try:
+            os.write(wakeup_fd, b"1")
+        except OSError:
+            # The monitor may have been closed while collection
+            # was still finishing.
+            pass
+
+    def _refresh_ready(self, _data):
+        try:
+            (
+                report,
+                suggested_governor,
+                suggested_turbo,
+                error,
+            ) = self._refresh_results.get_nowait()
+        except Empty:
+            return True
+
+        if error is not None:
+            raise error
+
+        if report is None:
+            raise RuntimeError(
+                "System monitor refresh completed without a report"
+            )
+
+        # Capture focus only now. The user may have scrolled while
+        # the worker was collecting telemetry.
         if len(self.left_content) > 0:
             _, self.last_focus_left = self.left_listbox.get_focus()
             if self.last_focus_left is None:
                 self.last_focus_left = 0
+
         if len(self.right_content) > 0:
             _, self.last_focus_right = self.right_listbox.get_focus()
             if self.last_focus_right is None:
                 self.last_focus_right = 0
 
         current_time = time.strftime("%H:%M:%S")
-        self.title_header.set_text(f"{self.type} Mode - {current_time}")
+        self.title_header.set_text(
+            f"{self.type} Mode - {current_time}"
+        )
 
-        report: SystemReport = system_info.generate_system_report()
-        self.format_system_info(report)
+        self.format_system_info(
+            report,
+            suggested_governor,
+            suggested_turbo,
+        )
 
-        # Restore focus positions
         if len(self.left_content) > 0:
-            self.left_listbox.set_focus(min(self.last_focus_left, len(self.left_content) - 1))  # type: ignore
-        if len(self.right_content) > 0:
-            self.right_listbox.set_focus(min(self.last_focus_right, len(self.right_content) - 1))  # type: ignore
+            self.left_listbox.set_focus(
+                min(
+                    self.last_focus_left,
+                    len(self.left_content) - 1,
+                )
+            )
 
-        self.loop.set_alarm_in(2, self.update)  # type: ignore
+        if len(self.right_content) > 0:
+            self.right_listbox.set_focus(
+                min(
+                    self.last_focus_right,
+                    len(self.right_content) - 1,
+                )
+            )
+
+        if self.running:
+            self._alarm_handle = self.loop.set_alarm_in(
+                2,
+                self.update,
+            )
+
+        return True
 
     def handle_input(self, key):
         if key in ("q", "Q"):
-            if self.on_quit:
-                self.on_quit()
             raise urwid.ExitMainLoop()
 
-    def format_system_info(self, report: SystemReport):
+    def format_system_info(
+        self,
+        report: SystemReport,
+        suggested_governor: str | None = None,
+        suggested_turbo: bool | None = None,
+    ):
         self.left_content.clear()
         self.right_content.clear()
 
@@ -128,7 +223,11 @@ class SystemMonitor:
                 aligned_text(f"Linux distro: {report.distro_name} {report.distro_ver}"),
                 aligned_text(f"Linux kernel: {report.kernel_version}"),
                 aligned_text(f"Processor: {report.processor_model}"),
-                aligned_text(f"Cores: {report.total_core}"),
+                aligned_text(
+                    f"Cores: {report.total_core}"
+                    if report.total_core is not None
+                    else "Cores: Unknown"
+                ),
                 aligned_text(f"Architecture: {report.arch}"),
                 aligned_text(f"Driver: {report.cpu_driver}"),
                 aligned_text(""),
@@ -146,17 +245,36 @@ class SystemMonitor:
             [
                 urwid.AttrMap(aligned_text("Current CPU Stats"), "header"),
                 aligned_text(""),
-                aligned_text(f"CPU max frequency: {report.cpu_max_freq} MHz"),
-                aligned_text(f"CPU min frequency: {report.cpu_min_freq} MHz"),
+                aligned_text(
+                    f"CPU max frequency: {report.cpu_max_freq:.0f} MHz"
+                    if report.cpu_max_freq is not None
+                    else "CPU max frequency: Unknown"
+                ),
+                aligned_text(
+                    f"CPU min frequency: {report.cpu_min_freq:.0f} MHz"
+                    if report.cpu_min_freq is not None
+                    else "CPU min frequency: Unknown"
+                ),
                 aligned_text(""),
                 aligned_text("Core    Usage   Temperature     Frequency"),
             ]
         )
 
         for core in report.cores_info:
+            temperature = (
+                f"{core.temperature:>6.0f} °C"
+                if core.temperature > 0
+                else "     —"
+            )
+            frequency = (
+                f"{core.frequency:>6.0f} MHz"
+                if core.frequency > 0
+                else "     —"
+            )
             self.left_content.append(
                 aligned_text(
-                    f"CPU{core.id:<2}    {core.usage:>4.1f}%    {core.temperature:>6.0f} °C    {core.frequency:>6.0f} MHz"
+                    f"CPU{core.id:<2}    {core.usage:>4.1f}%    "
+                    f"{temperature}    {frequency}"
                 )
             )
 
@@ -203,12 +321,13 @@ class SystemMonitor:
         if (
             self.suggestion
             and report.current_gov != None
-            and system_info.governor_suggestion() != report.current_gov
+            and suggested_governor != None
+            and suggested_governor != report.current_gov
         ):
             self.right_content.append(
                 urwid.AttrMap(
                     aligned_text(
-                        f'Suggesting use of: "{system_info.governor_suggestion()}" governor'
+                        f'Suggesting use of: "{suggested_governor}" governor'
                     ),
                     "suggestion",
                 )
@@ -247,10 +366,17 @@ class SystemMonitor:
             ]
         )
 
-        if report.cores_info:
-            avg_temp = sum(core.temperature for core in report.cores_info) / len(
-                report.cores_info
-            )
+        avg_temp = report.cpu_avg_temp
+        if avg_temp is None and report.cores_info:
+            temperatures = [
+                core.temperature
+                for core in report.cores_info
+                if core.temperature > 0
+            ]
+            if temperatures:
+                avg_temp = sum(temperatures) / len(temperatures)
+
+        if avg_temp is not None:
             self.right_content.append(
                 aligned_text(f"Average temp. of all cores: {avg_temp:.2f} °C")
             )
@@ -263,12 +389,12 @@ class SystemMonitor:
                 )
             )
 
-        if report.cores_info:
+        if avg_temp is not None:
             usage_status = "Optimal" if report.cpu_usage < 70 else "High"
-            temp_status = "high" if avg_temp > 75 else "normal"  # type: ignore
+            temp_status = "high" if avg_temp > 75 else "normal"
             self.right_content.append(
                 aligned_text(
-                    f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"  # type: ignore
+                    f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"
                 )
             )
 
@@ -285,24 +411,57 @@ class SystemMonitor:
         if (
             self.suggestion
             and report.is_turbo_on[0] != None
-            and system_info.turbo_on_suggestion() != report.is_turbo_on[0]
+            and suggested_turbo != None
+            and suggested_turbo != report.is_turbo_on[0]
         ):
             self.right_content.append(
                 urwid.AttrMap(
                     aligned_text(
-                        f'Suggesting to set turbo boost: {"on" if system_info.turbo_on_suggestion() else "off"}'
+                        f'Suggesting to set turbo boost: {"on" if suggested_turbo else "off"}'
                     ),
                     "suggestion",
                 )
             )
 
     def run(self, on_quit: Callable[[], None] | None = None):
+        self.on_quit = on_quit
+        self.running = True
+
         try:
-            if on_quit:
-                self.on_quit = on_quit
-            self.loop.set_alarm_in(0, self.update)  # type: ignore
+            self._refresh_pipe_fd = self.loop.watch_pipe(
+                self._refresh_ready
+            )
+            self._alarm_handle = self.loop.set_alarm_in(
+                0,
+                self.update,
+            )
             self.loop.run()
         except KeyboardInterrupt:
-            if on_quit:
-                on_quit()
             sys.exit(0)
+        finally:
+            self.running = False
+
+            callback = self.on_quit
+            self.on_quit = None
+
+            try:
+                alarm_handle = self._alarm_handle
+                self._alarm_handle = None
+
+                if alarm_handle is not None:
+                    self.loop.remove_alarm(alarm_handle)
+
+                wakeup_fd = self._refresh_pipe_fd
+                self._refresh_pipe_fd = None
+
+                if wakeup_fd is not None:
+                    try:
+                        self.loop.remove_watch_pipe(wakeup_fd)
+                    finally:
+                        try:
+                            os.close(wakeup_fd)
+                        except OSError:
+                            pass
+            finally:
+                if callback:
+                    callback()
