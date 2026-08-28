@@ -80,6 +80,14 @@ def gnome_power_detect_install():
         print('This daemon is not automatically disabled in "monitor" mode and')
         print("will be enabled after auto-cpufreq daemon is removed.")
 
+# alert before temporarily stopping gnome power profiles in live mode
+def gnome_power_detect_live():
+    if systemctl_exists and gnome_power_status == 0:
+        warning()
+        print("Detected running GNOME Power Profiles daemon service!")
+        print("\nThis daemon might interfere with auto-cpufreq and will be stopped.\n")
+        print('It will be started again when "live" mode exits.')
+
 
 # notification on snap
 def gnome_power_detect_snap():
@@ -279,11 +287,11 @@ def disable_tuned_daemon():
 
 # default gnome_power_svc_disable func (balanced)
 def gnome_power_svc_disable():
-    if not systemctl_exists or gnome_power_status != 0:
+    if not systemctl_exists:
         return
 
-    if powerprofilesctl_exists:
-        print("Using profile: ", "balanced")
+    if gnome_power_status == 0 and powerprofilesctl_exists:
+        print("\nUsing profile: balanced")
         call(["powerprofilesctl", "set", "balanced"])
 
     disable_power_profiles_daemon()

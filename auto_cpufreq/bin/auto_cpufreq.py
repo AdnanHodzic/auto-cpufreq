@@ -93,7 +93,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
-                gnome_power_detect_install()
+                gnome_power_detect_live()
                 gnome_power_stop_live()
                 tuned_stop_live()
                 tlp_service_detect()
