@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import isfinite
 import os
 from pathlib import Path
 import platform
@@ -423,15 +424,20 @@ class SystemInfo:
         except (AttributeError, NotImplementedError, OSError):
             return None
 
+        stopped_fan_reported = False
         for entries in fans.values():
             for fan in entries:
                 try:
                     current = float(fan.current)
                 except (AttributeError, TypeError, ValueError):
                     continue
+                if not isfinite(current):
+                    continue
                 if current > 0:
                     return int(current)
-        return None
+                if current == 0:
+                    stopped_fan_reported = True
+        return 0 if stopped_fan_reported else None
 
     @staticmethod
     def current_gov() -> str | None:
@@ -903,7 +909,7 @@ def format_system_report(
             ]
         )
 
-    if report.cpu_fan_speed:
+    if report.cpu_fan_speed is not None:
         lines.extend(["", f"CPU fan speed: {report.cpu_fan_speed} RPM"])
 
     return "\n".join(lines)

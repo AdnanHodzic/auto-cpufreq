@@ -281,6 +281,9 @@ class SystemReportView(Gtk.Box):
                 label = Gtk.Label(label=text)
                 label.set_halign(Gtk.Align.START)
                 label.set_xalign(0)
+                if column == 1:
+                    # Keep later columns stable when usage reaches 100.0%.
+                    label.set_width_chars(len("100.0%"))
                 self.cores_grid.attach(label, column, row, 1, 1)
 
         self.cores_grid.show_all()
@@ -319,7 +322,7 @@ class SystemReportView(Gtk.Box):
         )
         self._refresh_core_rows(report.cores_info)
 
-        if report.cpu_fan_speed:
+        if report.cpu_fan_speed is not None:
             self.fan_label.set_text(
                 f"CPU fan speed: {report.cpu_fan_speed} RPM"
             )
