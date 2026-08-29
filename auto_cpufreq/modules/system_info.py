@@ -89,9 +89,21 @@ class SystemInfo:
     def __init__(self):
         if IS_INSTALLED_WITH_SNAP:
             try:
-                host_distro = distro.LinuxDistribution(root_dir=SNAP_HOST_ROOT)
-                self.distro_name = host_distro.name(pretty=False) or "UNKNOWN"
-                self.distro_version = host_distro.version() or "UNKNOWN"
+                host_os_release = "/var/lib/snapd/hostfs/etc/os-release"
+                if not os.path.exists(host_os_release):
+                    host_os_release = "/var/lib/snapd/hostfs/usr/lib/os-release"
+
+                if os.path.exists(host_os_release):
+                    host_distro = distro.LinuxDistribution(
+                        include_lsb=False,
+                        os_release_file=host_os_release,
+                        distro_release_file="",
+                    )
+                    self.distro_name = host_distro.name(pretty=False) or "UNKNOWN"
+                    self.distro_version = host_distro.version() or "UNKNOWN"
+                else:
+                    self.distro_name = "UNKNOWN"
+                    self.distro_version = "UNKNOWN"
             except (OSError, UnicodeError, ValueError):
                 self.distro_name = "UNKNOWN"
                 self.distro_version = "UNKNOWN"
