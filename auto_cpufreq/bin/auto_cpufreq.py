@@ -67,6 +67,10 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             set_turbo_override(turbo)
 
         if monitor:
+            if IS_INSTALLED_WITH_SNAP:
+                daemon_running_msg()
+                sys.exit(0)
+            running_daemon_check()
             root_check()
             conf.notifier.start()
             if IS_INSTALLED_WITH_SNAP:
@@ -86,6 +90,10 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             monitor = SystemMonitor(suggestion=True, type=ViewType.MONITOR)
             monitor.run(on_quit=conf.notifier.stop)
         elif live:
+            if IS_INSTALLED_WITH_SNAP:
+                daemon_running_msg()
+                sys.exit(0)
+            running_daemon_check()
             root_check()
             start_battery_daemon()
             conf.notifier.start()
@@ -156,19 +164,13 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 except KeyboardInterrupt: break
             conf.notifier.stop()
         elif install:
-            root_check()
             if IS_INSTALLED_WITH_SNAP:
-                running_daemon_check()
-                gnome_power_detect_snap()
-                tlp_service_detect_snap()
-                bluetooth_notif_snap()
-                gov_check()
-                run("snapctl set daemon=enabled", shell=True)
-                run("snapctl start --enable auto-cpufreq", shell=True)
-            else:
-                running_daemon_check()
-                gov_check()
-                deploy_daemon()
+                daemon_running_msg()
+                sys.exit(0)
+            root_check()
+            running_daemon_check()
+            gov_check()
+            deploy_daemon()
             deploy_complete_msg()
         elif update:
             root_check()

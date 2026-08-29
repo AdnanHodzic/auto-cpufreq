@@ -10,10 +10,19 @@ from auto_cpufreq.battery_scripts.shared import BatteryDevice
 BATTERY_APPLY_INTERVAL = 3600  # 1 hour
 
 
-def lsmod(module):
-    return (
-        module in run(["lsmod"], stdout=PIPE, stderr=PIPE, text=True).stdout
-    )
+def lsmod(module: str) -> bool:
+    try:
+        with open("/proc/modules", "r") as f:
+            for line in f:
+                parts = line.split()
+                if parts and parts[0] == module:
+                    return True
+        return False
+    except OSError:
+        try:
+            return module in run(["lsmod"], stdout=PIPE, stderr=PIPE, text=True).stdout
+        except (OSError, FileNotFoundError):
+            return False
 
 
 def battery_get_thresholds():
