@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import isfinite
 import os
 from pathlib import Path
 import platform
@@ -88,9 +89,21 @@ class SystemInfo:
     def __init__(self):
         if IS_INSTALLED_WITH_SNAP:
             try:
-                host_distro = distro.LinuxDistribution(root_dir=SNAP_HOST_ROOT)
-                self.distro_name = host_distro.name(pretty=False) or "UNKNOWN"
-                self.distro_version = host_distro.version() or "UNKNOWN"
+                host_os_release = "/var/lib/snapd/hostfs/etc/os-release"
+                if not os.path.exists(host_os_release):
+                    host_os_release = "/var/lib/snapd/hostfs/usr/lib/os-release"
+
+                if os.path.exists(host_os_release):
+                    host_distro = distro.LinuxDistribution(
+                        include_lsb=False,
+                        os_release_file=host_os_release,
+                        distro_release_file="",
+                    )
+                    self.distro_name = host_distro.name(pretty=False) or "UNKNOWN"
+                    self.distro_version = host_distro.version() or "UNKNOWN"
+                else:
+                    self.distro_name = "UNKNOWN"
+                    self.distro_version = "UNKNOWN"
             except (OSError, UnicodeError, ValueError):
                 self.distro_name = "UNKNOWN"
                 self.distro_version = "UNKNOWN"
@@ -423,15 +436,20 @@ class SystemInfo:
         except (AttributeError, NotImplementedError, OSError):
             return None
 
+        stopped_fan_reported = False
         for entries in fans.values():
             for fan in entries:
                 try:
                     current = float(fan.current)
                 except (AttributeError, TypeError, ValueError):
                     continue
+                if not isfinite(current):
+                    continue
                 if current > 0:
                     return int(current)
-        return None
+                if current == 0:
+                    stopped_fan_reported = True
+        return 0 if stopped_fan_reported else None
 
     @staticmethod
     def current_gov() -> str | None:
@@ -903,7 +921,7 @@ def format_system_report(
             ]
         )
 
-    if report.cpu_fan_speed:
+    if report.cpu_fan_speed is not None:
         lines.extend(["", f"CPU fan speed: {report.cpu_fan_speed} RPM"])
 
     return "\n".join(lines)
