@@ -1169,23 +1169,26 @@ def distro_info():
     version = "UNKNOWN version"
     if IS_INSTALLED_WITH_SNAP:
         try:
-            with open("/var/lib/snapd/hostfs/etc/os-release", "r") as searchfile:
-                for line in searchfile:
-                    if line.startswith("NAME="):
-                        dist = line[5 : line.find("$")].strip('"')
-                        continue
-                    elif line.startswith("VERSION="):
-                        version = line[8 : line.find("$")].strip('"')
-                        continue
-        except PermissionError as e: print(repr(e))
-        dist = f"{dist} {version}"
-    else: # get distro information
-        fdist = distro.linux_distribution()
-        dist = " ".join(x for x in fdist)
+            host_os_release = "/var/lib/snapd/hostfs/etc/os-release"
+            if not os.path.exists(host_os_release):
+                host_os_release = "/var/lib/snapd/hostfs/usr/lib/os-release"
+
+            if os.path.exists(host_os_release):
+                host_distro = distro.LinuxDistribution(
+                    include_lsb=False,
+                    os_release_file=host_os_release,
+                    distro_release_file="",
+                )
+                dist = host_distro.name(pretty=False) or "UNKNOWN"
+                version = host_distro.version() or "UNKNOWN"
+        except (OSError, UnicodeError, ValueError) as e:
+            print(repr(e))
+        dist = f"{dist} {version}".strip()
+    else:  # get distro information
+        dist = f"{distro.name(pretty=False)} {distro.version()}".strip()
 
     print("Linux distro: " + dist)
     print("Linux kernel: " + platform.release())
-
 def sysinfo():
     """
     get system information
