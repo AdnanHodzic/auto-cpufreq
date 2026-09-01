@@ -1331,16 +1331,12 @@ def daemon_is_running():
 
 def daemon_running_msg():
     print("\n" + "-" * 24 + " auto-cpufreq running " + "-" * 30 + "\n")
-    if IS_INSTALLED_WITH_SNAP:
-        print(
-            "auto-cpufreq daemon is already running after auto-cpufreq .snap package is installed.\n\n"
-            "Live stats of CPU/system load monitoring and optimization can be seen by running:\n"
-            "auto-cpufreq --stats"
-        )
-    else:
-        print(
-            "ERROR: auto-cpufreq is running in daemon mode.\n\nMake sure to stop the daemon before running with --live or --monitor mode"
-        )
+    print(
+        "ERROR: auto-cpufreq is running in daemon mode.\n\n"
+        "Live stats of CPU/system load monitoring and optimization can be seen by running:\n"
+        "auto-cpufreq --stats\n\n"
+        "Otherwise make sure to stop the daemon before running with --live or --monitor mode"
+    )
     footer()
 
 def daemon_not_running_msg():
