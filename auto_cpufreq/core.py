@@ -17,6 +17,7 @@ from auto_cpufreq.config.config import config
 from auto_cpufreq.globals import (
     ALL_GOVERNORS, AVAILABLE_GOVERNORS, AVAILABLE_GOVERNORS_SORTED, GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP, POWER_SUPPLY_DIR, SNAP_DAEMON_CHECK
 )
+from auto_cpufreq.modules.platform_profile import platform_profile
 from auto_cpufreq.power_helper import *
 
 filterwarnings("ignore")
@@ -657,24 +658,29 @@ def set_platform_profile(conf, profile):
     if not conf.has_option(profile, "platform_profile"):
         return
 
-    platform_profile_path = Path("/sys/firmware/acpi/platform_profile")
-    if not platform_profile_path.exists():
-        print('Not setting Platform Profile (not supported by system)')
-        return
-
     pp = conf[profile]["platform_profile"]
+    snapshot = platform_profile.snapshot()
+
+    if not snapshot.devices:
+        print("Not setting Platform Profile (not supported by system)")
+        return
 
     if not hasattr(set_platform_profile, "last_applied_platform_profile"):
         set_platform_profile.last_applied_platform_profile = {}
 
     def is_platform_profile_enforced():
         try:
-            return conf.getboolean(profile, "enforce_platform_profile", fallback=True)
+            return conf.getboolean(
+                profile,
+                "enforce_platform_profile",
+                fallback=True,
+            )
         except ValueError:
             raw_value = conf[profile].get("enforce_platform_profile", "")
             print(
-                f"Invalid boolean value for 'enforce_platform_profile' in profile '{profile}': "
-                f"{raw_value!r}. Using default value True."
+                "Invalid boolean value for 'enforce_platform_profile' "
+                f"in profile '{profile}': {raw_value!r}. "
+                "Using default value True."
             )
             return True
 
@@ -682,26 +688,56 @@ def set_platform_profile(conf, profile):
     if (
         not is_platform_profile_enforced()
         and last_applied_config_section == profile
-        and set_platform_profile.last_applied_platform_profile.get(profile) == pp
+        and set_platform_profile.last_applied_platform_profile.get(profile)
+        == pp
     ):
         return
 
-    try:
-        current = platform_profile_path.read_text().strip()
-    except OSError:
-        current = None
+    current = snapshot.current
+    available = snapshot.available_profiles
 
+    if snapshot.choices_known:
+        if pp not in available:
+            available_display = ", ".join(available) or "none"
+            print(
+                f'Not setting Platform Profile to "{pp}" '
+                f"(available: {available_display})"
+            )
+            return
+    elif current != pp:
+        print(
+            f'Not setting Platform Profile to "{pp}" '
+            "(available profiles could not be determined safely)"
+        )
+        return
+
+    # If choices are known, validity was checked above. If choices are
+    # temporarily unavailable, an already-effective value is still a safe
+    # no-op because no sysfs write is required.
     if current == pp:
         print(f'Platform Profile already set to "{pp}" (no change)')
         set_platform_profile.last_applied_platform_profile[profile] = pp
         return
 
-    result = run(["cpufreqctl.auto-cpufreq", "--pp", f"--set={pp}"])
+    if not snapshot.control_available:
+        print(
+            "Not setting Platform Profile "
+            "(safe platform profile control is unavailable)"
+        )
+        return
 
     try:
-        current = platform_profile_path.read_text().strip()
-    except OSError:
-        current = None
+        result = run(
+            ["cpufreqctl.auto-cpufreq", "--pp", f"--set={pp}"]
+        )
+    except OSError as error:
+        print(
+            f'Failed to set Platform Profile to "{pp}" '
+            f"(cpufreqctl could not be executed: {error})"
+        )
+        return
+
+    current = platform_profile.current()
 
     if current == pp:
         print(f'Set Platform Profile to "{pp}"')
@@ -711,7 +747,8 @@ def set_platform_profile(conf, profile):
     current_display = current if current is not None else "unknown"
     print(
         f'Failed to set Platform Profile to "{pp}" '
-        f'(current: "{current_display}", cpufreqctl status: {result.returncode})'
+        f'(current: "{current_display}", '
+        f"cpufreqctl status: {result.returncode})"
     )
 
 def set_energy_perf_bias(conf, profile):
