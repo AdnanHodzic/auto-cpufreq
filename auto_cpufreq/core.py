@@ -669,6 +669,9 @@ def set_platform_profile(conf, profile):
         return
 
     pp = conf[profile]["platform_profile"]
+    if cache.get(profile) != pp:
+        cache.pop(profile, None)
+
     snapshot = platform_profile.snapshot()
 
     if not snapshot.devices:
