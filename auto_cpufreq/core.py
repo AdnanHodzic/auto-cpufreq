@@ -655,7 +655,17 @@ def set_frequencies(power_supply):
             )
 
 def set_platform_profile(conf, profile):
+    if not hasattr(set_platform_profile, "last_applied_platform_profile"):
+        set_platform_profile.last_applied_platform_profile = {}
+
+    cache = set_platform_profile.last_applied_platform_profile
+
+    global last_applied_config_section
+    if last_applied_config_section != profile:
+        cache.pop(profile, None)
+
     if not conf.has_option(profile, "platform_profile"):
+        cache.pop(profile, None)
         return
 
     pp = conf[profile]["platform_profile"]
@@ -664,9 +674,6 @@ def set_platform_profile(conf, profile):
     if not snapshot.devices:
         print("Not setting Platform Profile (not supported by system)")
         return
-
-    if not hasattr(set_platform_profile, "last_applied_platform_profile"):
-        set_platform_profile.last_applied_platform_profile = {}
 
     def is_platform_profile_enforced():
         try:
@@ -684,17 +691,22 @@ def set_platform_profile(conf, profile):
             )
             return True
 
-    global last_applied_config_section
     if (
         not is_platform_profile_enforced()
         and last_applied_config_section == profile
-        and set_platform_profile.last_applied_platform_profile.get(profile)
-        == pp
+        and cache.get(profile) == pp
     ):
         return
 
     current = snapshot.current
     available = snapshot.available_profiles
+
+    if pp == "custom" and snapshot.control_is_aggregate:
+        print(
+            'Not setting Platform Profile to "custom" '
+            "(the aggregate control does not accept custom)"
+        )
+        return
 
     if snapshot.choices_known:
         if pp not in available:
@@ -716,7 +728,7 @@ def set_platform_profile(conf, profile):
     # no-op because no sysfs write is required.
     if current == pp:
         print(f'Platform Profile already set to "{pp}" (no change)')
-        set_platform_profile.last_applied_platform_profile[profile] = pp
+        cache[profile] = pp
         return
 
     if not snapshot.control_available:
@@ -737,11 +749,16 @@ def set_platform_profile(conf, profile):
         )
         return
 
-    current = platform_profile.current()
+    final_snapshot = platform_profile.snapshot()
+    current = final_snapshot.current
 
-    if current == pp:
+    if (
+        result.returncode == 0
+        and current == pp
+        and not (pp == "custom" and final_snapshot.control_is_aggregate)
+    ):
         print(f'Set Platform Profile to "{pp}"')
-        set_platform_profile.last_applied_platform_profile[profile] = pp
+        cache[profile] = pp
         return
 
     current_display = current if current is not None else "unknown"

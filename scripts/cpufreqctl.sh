@@ -319,6 +319,7 @@ function resolve_platform_profile_paths () {
   PLATFORM_PROFILE_PATH=""
   PLATFORM_PROFILE_CHOICES_PATH=""
   PLATFORM_PROFILE_CHOICES_IS_AGGREGATE=0
+  PLATFORM_PROFILE_CONTROL_IS_AGGREGATE=0
   PLATFORM_PROFILE_MODERN_COUNT=0
 
   for path in "$PPROOT"/platform-profile-*; do
@@ -343,6 +344,7 @@ function resolve_platform_profile_paths () {
   # interface so one config value is never applied to only one provider.
   if [ -e "$FWROOT/acpi/platform_profile" ]; then
     PLATFORM_PROFILE_PATH="$FWROOT/acpi/platform_profile"
+    PLATFORM_PROFILE_CONTROL_IS_AGGREGATE=1
     if [ -e "$FWROOT/acpi/platform_profile_choices" ]; then
       PLATFORM_PROFILE_CHOICES_PATH="$FWROOT/acpi/platform_profile_choices"
       PLATFORM_PROFILE_CHOICES_IS_AGGREGATE=1
@@ -481,6 +483,11 @@ function set_platform_profile () {
     return 1
   fi
 
+  if [ "$VALUE" = "custom" ] && [ $PLATFORM_PROFILE_CONTROL_IS_AGGREGATE -eq 1 ]; then
+    echo "Platform Profile 'custom' cannot be selected through the aggregate control" >&2
+    return 1
+  fi
+
   local choice
   local available=0
 
@@ -501,15 +508,39 @@ function set_platform_profile () {
     return 1
   fi
 
-  # A no-op is safe with missing choices only after any available choices have
-  # been consulted. This keeps aggregate `custom` invalid even when it happens
-  # to be the current aggregate state.
+  # A no-op remains safe with missing choices for an individual provider, but
+  # re-resolve the control target so a topology change cannot turn an individual
+  # `custom` state into aggregate `custom` and still report success.
   if [ "$current_profile" = "$VALUE" ]; then
+    resolve_platform_profile_paths || {
+      echo "Platform Profile control disappeared while verifying the current state" >&2
+      return 1
+    }
+    if [ "$VALUE" = "custom" ] && [ $PLATFORM_PROFILE_CONTROL_IS_AGGREGATE -eq 1 ]; then
+      echo "Platform Profile 'custom' cannot be selected through the aggregate control" >&2
+      return 1
+    fi
+    if ! current_profile=$(cat "$PLATFORM_PROFILE_PATH" 2>/dev/null) || [ "$current_profile" != "$VALUE" ]; then
+      echo "Platform Profile '$VALUE' could not be verified after the control topology changed" >&2
+      return 1
+    fi
     return 0
   fi
 
   if ! echo "$VALUE" > "$PLATFORM_PROFILE_PATH"; then
     echo "Failed to write Platform Profile '$VALUE'" >&2
+    return 1
+  fi
+
+  # Re-resolve before read-back so the final verification reflects the current
+  # provider topology rather than the topology observed before the write.
+  resolve_platform_profile_paths || {
+    echo "Platform Profile '$VALUE' was written but the control disappeared before verification" >&2
+    return 1
+  }
+
+  if [ "$VALUE" = "custom" ] && [ $PLATFORM_PROFILE_CONTROL_IS_AGGREGATE -eq 1 ]; then
+    echo "Platform Profile 'custom' resolved to aggregate state after the write" >&2
     return 1
   fi
 
