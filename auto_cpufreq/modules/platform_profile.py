@@ -31,6 +31,7 @@ class PlatformProfileSnapshot:
     available_profiles: tuple[str, ...] = ()
     choices_known: bool = False
     writable: bool = False
+    control_is_aggregate: bool = False
 
     @property
     def control_available(self) -> bool:
@@ -321,6 +322,10 @@ class PlatformProfileManager:
                 and bool(control_current)
                 and choices_known
                 and bool(available_profiles)
+            ),
+            control_is_aggregate=(
+                control_path is not None
+                and control_path == self.legacy_profile
             ),
         )
 
