@@ -101,8 +101,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 gnome_power_detect_snap()
                 tlp_service_detect_snap()
             else:
-                gnome_power_detect_install()
-                gnome_power_stop_live()
+                gnome_power_detect_live()
                 tuned_stop_live()
                 tlp_service_detect()
             
@@ -112,7 +111,8 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 except KeyboardInterrupt:
                     conf.notifier.stop()
                     sys.exit(0)
-            
+
+            gnome_power_stop_live()
             cpufreqctl()
             def live_daemon():
                 # Redirect stdout to suppress prints
