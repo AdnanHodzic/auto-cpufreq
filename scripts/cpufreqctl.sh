@@ -591,9 +591,9 @@ case $OPTION in
     fi
   ;;
   -p|--pp)
-    if [ ! -z $AVAILABLE ]; then
+    if [ -n "${AVAILABLE:-}" ]; then
       get_available_platform_profiles
-    elif [ -z $VALUE ]; then
+    elif [ -z "${VALUE:-}" ]; then
       verbose "Getting Platform Profile"
       get_platform_profile
     else
