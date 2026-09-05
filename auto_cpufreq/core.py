@@ -1353,11 +1353,16 @@ def read_stats():
 # check if program (argument) is running
 def is_running(program, argument):
     # iterate over all processes found by psutil
-    # and find the one with name and args passed to the function
+    # and find the one with name and args passed to the function.
+    # Also match the python module name (auto_cpufreq) so the daemon is
+    # detected regardless of how it was started: as the binary
+    # (auto-cpufreq --daemon) or via `python3 -m auto_cpufreq.bin.auto_cpufreq`
+    # as used by the Debian package wrapper.
+    module_name = program.replace("-", "_")
     for p in psutil.process_iter():
         try: cmd = p.cmdline()
         except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess, OSError): continue
-        for s in filter(lambda x: program in x, cmd):
+        for s in filter(lambda x: program in x or module_name in x, cmd):
             if argument in cmd: return True
 
 

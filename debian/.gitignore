@@ -1,0 +1,8 @@
+*.substvars
+debhelper-build-stamp
+files
+.postrm.debhelper
+*.debhelper
+build/
+*.log
+auto-cpufreq/

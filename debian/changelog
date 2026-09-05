@@ -1,0 +1,8 @@
+auto-cpufreq (3.1.0-1) unstable; urgency=medium
+
+  * Initial Debian packaging.
+  * Install Python package to system site-packages.
+  * Provide systemd service, polkit policy, desktop file.
+  * All dependencies available in Debian repositories.
+
+ -- Claudio Ferreira Filho <filhocf@gmail.com>  Tue, 28 Jul 2026 13:30:00 -0300

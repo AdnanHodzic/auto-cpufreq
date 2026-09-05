@@ -1,0 +1,32 @@
+name: Debian Package (.deb)
+
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+      - ".gitignore"
+      - "LICENSE"
+  pull_request:
+
+jobs:
+  build_deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq debhelper dh-python python3-all python3-setuptools
+
+      - name: Build Debian package
+        run: |
+          dpkg-buildpackage --no-sign -b -d
+          cp ../auto-cpufreq_*.deb auto-cpufreq.deb
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: auto-cpufreq-deb
+          path: auto-cpufreq.deb
+          if-no-files-found: error
