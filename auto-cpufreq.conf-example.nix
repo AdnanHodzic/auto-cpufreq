@@ -27,13 +27,17 @@ services.auto-cpufreq.settings = {
 
     # Platform Profiles
     # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
-    # See available options by running:
-    # cat /sys/firmware/acpi/platform_profile_choices
+    # auto-cpufreq prefers per-handler /sys/class/platform-profile and retains
+    # /sys/firmware/acpi/platform_profile for compatibility and safe global
+    # control. Available values depend on the hardware and kernel. Run
+    # `auto-cpufreq --stats` or `auto-cpufreq --pp` to see the exact accepted
+    # profile names.
     # platform_profile = "performance";
 
     # Controls strict enforcement of the platform profile.
-    # - true: Constantly enforces the platform profile defined above.
-    # - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+    # - true: Continuously restores the configured platform profile.
+    # - false: Applies it on AC/Battery policy changes while allowing manual
+    #   firmware or hotkey profile changes in between.
     # enforce_platform_profile = true;
 
     # minimum cpu frequency (in kHz)
@@ -93,13 +97,17 @@ services.auto-cpufreq.settings = {
 
     # Platform Profiles
     # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
-    # See available options by running:
-    # cat /sys/firmware/acpi/platform_profile_choices
+    # auto-cpufreq prefers per-handler /sys/class/platform-profile and retains
+    # /sys/firmware/acpi/platform_profile for compatibility and safe global
+    # control. Available values depend on the hardware and kernel. Run
+    # `auto-cpufreq --stats` or `auto-cpufreq --pp` to see the exact accepted
+    # profile names.
     # platform_profile = "low-power";
 
     # Controls strict enforcement of the platform profile.
-    # - true: Constantly enforces the platform profile defined above.
-    # - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+    # - true: Continuously restores the configured platform profile.
+    # - false: Applies it on AC/Battery policy changes while allowing manual
+    #   firmware or hotkey profile changes in between.
     # enforce_platform_profile = true;
 
     # minimum cpu frequency (in kHz)

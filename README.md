@@ -71,6 +71,7 @@ Example of `auto-cpufreq --stats` CLI output
   - [bluetooth_boot_off](#bluetooth_boot_off)
   - [bluetooth_boot_on](#bluetooth_boot_on)
 - [Intel HWP Dynamic Boost](#intel-hwp-dynamic-boost)
+- [Platform Profiles](#platform-profiles)
 - [Battery charging thresholds](#battery-charging-thresholds)
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
@@ -119,6 +120,11 @@ Only devices with an Intel, AMD, or ARM CPU are supported. This tool was develop
   - CPU temperature in combination with CPU utilization/load (to prevent overheating)
   - System load
 - Automatic CPU & power optimization (temporary and persistent)
+- Platform Profile monitoring and configuration, when exposed by the Linux platform driver
+  - Current platform profile
+  - Available profiles
+  - Platform Profile provider(s)
+  - Separate charger and battery configuration
 - Settings battery charging thresholds (limited support)
 
 ## Installing auto-cpufreq
@@ -388,13 +394,17 @@ energy_perf_bias = performance
 
 # Platform Profiles
 # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
-# See available options by running:
-# cat /sys/firmware/acpi/platform_profile_choices
+# auto-cpufreq prefers the per-handler /sys/class/platform-profile interface
+# when available and retains /sys/firmware/acpi/platform_profile for
+# compatibility and safe global control.
+# Available values depend on the hardware and kernel. Run `auto-cpufreq --stats`
+# or `auto-cpufreq --pp` to see the exact accepted names.
 platform_profile = performance
 
 # Controls strict enforcement of the platform profile.
-# - true: Constantly enforces the platform profile defined above.
-# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+# - true: Continuously restores the configured platform profile.
+# - false: Applies it on AC/Battery policy changes while allowing manual
+#   firmware or hotkey profile changes in between.
 enforce_platform_profile = true
 
 # minimum cpu frequency (in kHz)
@@ -439,13 +449,17 @@ turbo = always
 
 # Platform Profiles
 # https://www.kernel.org/doc/html/latest/userspace-api/sysfs-platform_profile.html
-# See available options by running:
-# cat /sys/firmware/acpi/platform_profile_choices
+# auto-cpufreq prefers the per-handler /sys/class/platform-profile interface
+# when available and retains /sys/firmware/acpi/platform_profile for
+# compatibility and safe global control.
+# Available values depend on the hardware and kernel. Run `auto-cpufreq --stats`
+# or `auto-cpufreq --pp` to see the exact accepted names.
 #platform_profile = low-power
 
 # Controls strict enforcement of the platform profile.
-# - true: Constantly enforces the platform profile defined above.
-# - false: Sets profile only on AC/Battery changes, allowing manual overrides (e.g., Fn+Q on Legion laptops).
+# - true: Continuously restores the configured platform profile.
+# - false: Applies it on AC/Battery policy changes while allowing manual
+#   firmware or hotkey profile changes in between.
 # enforce_platform_profile = true
 
 # minimum cpu frequency (in kHz)
@@ -612,9 +626,13 @@ This does, in part, the equivalent of `systemctl stop auto-cpufreq && systemctl 
 
 ### Stats
 
-If the daemon has been installed, live stats of CPU/system load monitoring and optimization can be seen by running:
+If the daemon has been installed, live system information and the current optimization state can be viewed with:
 
-`auto-cpufreq --stats`
+```bash
+auto-cpufreq --stats
+```
+
+In addition to CPU and battery telemetry, the stats interface reports the current **Platform Profile**, detected interface, control availability, available platform profiles, and provider information. CPU power controls such as the governor, EPP, EPB, HWP Dynamic Boost, and Turbo Boost are grouped separately under **CPU Power State**.
 
 ### bluetooth_boot_off
 
@@ -633,6 +651,86 @@ On typical non-server Intel systems, the Linux `intel_pstate` driver starts HWP 
 Dynamic Boost is detected through `/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost`; systems that do not expose this interface are left unchanged.
 
 When disabling Dynamic Boost, auto-cpufreq applies that state before changing EPP. When enabling Dynamic Boost, EPP is applied first. To override the default policy, configure `hwp_dynamic_boost` in the charger and/or battery profiles; see [4: auto-cpufreq config file](#4-auto-cpufreq-config-file).
+
+## Platform Profiles
+
+Linux Platform Profiles provide a standardized interface for selecting platform-wide power and performance policies exposed by the system firmware or platform driver. Unlike the CPU governor, EPP, or EPB, a platform profile may affect more than the CPU, including thermal behavior, fan policy, power limits, and other platform-specific components.
+
+Platform Profile support depends on the hardware, firmware, kernel, and available platform driver. It can be present on laptops, desktops, mini PCs, and other systems. If no Platform Profile interface is detected, auto-cpufreq reports that state without attempting to configure it.
+
+auto-cpufreq prefers the modern Linux Platform Profile class interface:
+
+```text
+/sys/class/platform-profile/
+```
+
+The aggregate interface remains supported for compatibility and safe global control:
+
+```text
+/sys/firmware/acpi/platform_profile
+```
+
+When only the aggregate interface is available, auto-cpufreq can still read and configure Platform Profiles. The aggregate interface reports the current profile and the available choices, but it does not expose a generic provider name. The normal reporting interfaces therefore identify the interface as `Legacy` and report that the provider name is not available from that ABI.
+
+auto-cpufreq also reports whether Platform Profile control is available. If the current state can be observed but the available choices cannot be determined reliably, the profile remains visible but control is disabled. auto-cpufreq does not write an unvalidated profile value. This distinguishes a detected-but-not-safely-controllable interface from a system where no Platform Profile interface was detected at all.
+
+The profile names are defined by the Linux Platform Profile ABI, but **not every system supports every profile**. The kernel reports the exact profiles available for the current machine, so users should not assume that values such as `balanced`, `quiet`, or `performance` are always available.
+
+To see the profiles available on the current system, use:
+
+```bash
+auto-cpufreq --stats
+```
+
+or:
+
+```bash
+auto-cpufreq --pp
+```
+
+For example:
+
+```text
+Platform Profile
+Interface: Modern · Control: Available
+Current profile: balanced
+Available profiles (4): low-power, quiet, balanced, performance
+Provider: example-platform-driver
+```
+
+The GTK interface displays the same information in its **Platform Profile** section. These reporting interfaces are informational; profile selection remains an advanced configuration option in `auto-cpufreq.conf`.
+
+Platform Profiles can be configured independently for charger and battery operation:
+
+```ini
+[charger]
+platform_profile = balanced
+
+[battery]
+platform_profile = quiet
+```
+
+Always choose a value reported in **Available profiles** on the target system. auto-cpufreq validates the requested profile against the profiles reported by the kernel before attempting to apply it.
+
+By default, auto-cpufreq continuously restores the configured Platform Profile. This keeps the selected charger or battery policy authoritative even if the profile is changed manually.
+
+This default behavior is equivalent to:
+
+```ini
+enforce_platform_profile = true
+```
+
+With:
+
+```ini
+enforce_platform_profile = false
+```
+
+auto-cpufreq applies the configured profile when switching between charger and battery policies, but does not continuously overwrite a manual profile change.
+
+Modern kernels may expose more than one Platform Profile provider. auto-cpufreq reports each provider and its current profile. For global configuration, only profiles that can be safely applied across the platform are offered. If providers are currently using different profiles, the aggregate state may be reported as `custom`. auto-cpufreq does not arbitrarily modify only one provider when a safe global control path is unavailable.
+
+`custom` can have different semantics depending on the kernel interface. With multiple providers, it may describe an aggregate state where providers are using different profiles rather than a profile that can be selected globally. auto-cpufreq therefore relies on the kernel-reported writable choices instead of maintaining its own fixed list of profile names.
 
 ## Battery charging thresholds
 

@@ -5,7 +5,11 @@ from threading import Thread
 from typing import Callable
 import urwid
 import time
-from .system_info import SystemReport, system_info
+from .system_info import (
+    SystemReport,
+    format_platform_profile_summary,
+    system_info,
+)
 from auto_cpufreq.config.config import config
 from enum import Enum
 
@@ -284,74 +288,98 @@ class SystemMonitor:
                 aligned_text(f"CPU fan speed: {report.cpu_fan_speed} RPM")
             )
 
-        # Right Column - Battery, Frequency Scaling, and System Stats
-        if report.battery_info != None:
+        # Right Column - Battery, Platform Profile, CPU Power State, and System Stats
+        if report.battery_info is not None:
             self.right_content.extend(
                 [
                     urwid.AttrMap(aligned_text("Battery Stats"), "header"),
-                    aligned_text(""),
                     aligned_text(f"Battery status: {str(report.battery_info)}"),
                     aligned_text(
-                        f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level != None else 'Unknown'}"
+                        f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged is not None else "Unknown"}'
                     ),
                     aligned_text(
-                        f'Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f'Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
                     ),
                     aligned_text(
-                        f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged != None else "Unknown"}'
+                        f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
                     ),
                     aligned_text(""),
                 ]
             )
 
-        # CPU Frequency Scaling
+        # Platform Profile
+        self.right_content.append(
+            urwid.AttrMap(aligned_text("Platform Profile"), "header")
+        )
+        for line in format_platform_profile_summary(report.platform_profile):
+            self.right_content.append(aligned_text(line))
+        self.right_content.append(aligned_text(""))
+
+        # CPU Power State
         self.right_content.extend(
             [
-                urwid.AttrMap(aligned_text("CPU Frequency Scaling"), "header"),
-                aligned_text(""),
+                urwid.AttrMap(aligned_text("CPU Power State"), "header"),
                 aligned_text(
-                    f'Setting to use: "{report.current_gov if report.current_gov != None else "Unknown"}" governor'
+                    f"Governor: {report.current_gov or 'Unknown'}"
                 ),
             ]
         )
 
         if (
             self.suggestion
-            and report.current_gov != None
-            and suggested_governor != None
+            and report.current_gov is not None
+            and suggested_governor is not None
             and suggested_governor != report.current_gov
         ):
             self.right_content.append(
                 urwid.AttrMap(
-                    aligned_text(
-                        f'Suggesting use of: "{suggested_governor}" governor'
-                    ),
+                    aligned_text(f"Suggested governor: {suggested_governor}"),
                     "suggestion",
                 )
             )
 
-        if report.current_epp:
-            self.right_content.append(
-                aligned_text(f"EPP setting: {report.current_epp}")
-            )
-        else:
-            self.right_content.append(
-                aligned_text("Not setting EPP (not supported by system)")
-            )
+        self.right_content.append(
+            aligned_text(f"EPP: {report.current_epp or 'Unavailable'}")
+        )
+        self.right_content.append(
+            aligned_text(f"EPB: {report.current_epb or 'Unavailable'}")
+        )
 
         if report.current_hwp_dynamic_boost is not None:
             self.right_content.append(
                 aligned_text(
-                    f"Intel HWP Dynamic Boost: {'on' if report.current_hwp_dynamic_boost else 'off'}"
+                    f"HWP Dynamic Boost: {'On' if report.current_hwp_dynamic_boost else 'Off'}"
                 )
             )
 
-        if report.current_epb:
+        if report.is_turbo_on[0] is not None:
+            turbo_status = "On" if report.is_turbo_on[0] else "Off"
+        elif report.is_turbo_on[1] is not None:
+            turbo_status = (
+                "Driver managed"
+                if report.is_turbo_on[1]
+                else "Unavailable"
+            )
+        else:
+            turbo_status = "Unavailable"
+        self.right_content.append(aligned_text(f"Turbo Boost: {turbo_status}"))
+
+        if (
+            self.suggestion
+            and report.is_turbo_on[0] is not None
+            and suggested_turbo is not None
+            and suggested_turbo != report.is_turbo_on[0]
+        ):
             self.right_content.append(
-                aligned_text(f'Setting to use: "{report.current_epb}" EPB')
+                urwid.AttrMap(
+                    aligned_text(
+                        f"Suggested Turbo Boost: {'On' if suggested_turbo else 'Off'}"
+                    ),
+                    "suggestion",
+                )
             )
 
         self.right_content.append(aligned_text(""))
@@ -360,11 +388,20 @@ class SystemMonitor:
         self.right_content.extend(
             [
                 urwid.AttrMap(aligned_text("System Statistics"), "header"),
-                aligned_text(""),
-                aligned_text(f"Total CPU usage: {report.cpu_usage:.1f} %"),
-                aligned_text(f"Total system load: {report.load:.2f}"),
+                aligned_text(f"CPU usage: {report.cpu_usage:.1f}%"),
+                aligned_text(f"System load: {report.load:.2f}"),
             ]
         )
+
+        if report.avg_load:
+            self.right_content.append(
+                aligned_text(
+                    "Load average: "
+                    f"{report.avg_load[0]:.2f} / "
+                    f"{report.avg_load[1]:.2f} / "
+                    f"{report.avg_load[2]:.2f}"
+                )
+            )
 
         avg_temp = report.cpu_avg_temp
         if avg_temp is None and report.cores_info:
@@ -378,49 +415,7 @@ class SystemMonitor:
 
         if avg_temp is not None:
             self.right_content.append(
-                aligned_text(f"Average temp. of all cores: {avg_temp:.2f} °C")
-            )
-
-        if report.avg_load:
-            load_status = "Load optimal" if report.load < 1.0 else "Load high"
-            self.right_content.append(
-                aligned_text(
-                    f"{load_status} (load average: {report.avg_load[0]:.2f}, {report.avg_load[1]:.2f}, {report.avg_load[2]:.2f})"
-                )
-            )
-
-        if avg_temp is not None:
-            usage_status = "Optimal" if report.cpu_usage < 70 else "High"
-            temp_status = "high" if avg_temp > 75 else "normal"
-            self.right_content.append(
-                aligned_text(
-                    f"{usage_status} total CPU usage: {report.cpu_usage:.1f}%, {temp_status} average core temp: {avg_temp:.1f}°C"
-                )
-            )
-
-        turbo_status: str
-        if report.is_turbo_on[0] != None:
-            turbo_status = "On" if report.is_turbo_on[0] else "Off"
-        elif report.is_turbo_on[1] != None:
-            turbo_status = (
-                f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
-            )
-        else:
-            turbo_status = "Unknown"
-        self.right_content.append(aligned_text(f"Setting turbo boost: {turbo_status}"))
-        if (
-            self.suggestion
-            and report.is_turbo_on[0] != None
-            and suggested_turbo != None
-            and suggested_turbo != report.is_turbo_on[0]
-        ):
-            self.right_content.append(
-                urwid.AttrMap(
-                    aligned_text(
-                        f'Suggesting to set turbo boost: {"on" if suggested_turbo else "off"}'
-                    ),
-                    "suggestion",
-                )
+                aligned_text(f"Average CPU temperature: {avg_temp:.1f} °C")
             )
 
     def run(self, on_quit: Callable[[], None] | None = None):

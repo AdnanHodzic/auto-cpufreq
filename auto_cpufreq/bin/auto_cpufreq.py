@@ -13,7 +13,11 @@ from auto_cpufreq.battery_scripts.battery import *
 from auto_cpufreq.config.config import config as conf, find_config_file
 from auto_cpufreq.core import *
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
-from auto_cpufreq.modules.system_info import print_system_report
+from auto_cpufreq.modules.platform_profile import platform_profile
+from auto_cpufreq.modules.system_info import (
+    format_platform_profile_summary,
+    print_system_report,
+)
 from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
 # import everything from power_helper, including bluetooth_disable and bluetooth_enable
 from auto_cpufreq.power_helper import *
@@ -30,13 +34,14 @@ from threading import Thread
 @click.option("--turbo", is_flag=False, help="Force use of CPU turbo mode, if supported, with \"never\" or \"always\". Setting to \"auto\" automatically handles turbo mode")
 @click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
 @click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
+@click.option("--pp", is_flag=True, help="Show Platform Profile information")
 @click.option("--get-state", is_flag=True, hidden=True)
 @click.option("--bluetooth_boot_off", is_flag=True, help="Turn off Bluetooth on boot")
 @click.option("--bluetooth_boot_on", is_flag=True, help="Turn on Bluetooth on boot")
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, turbo, config, stats, get_state,
+def main(monitor, live, daemon, install, update, remove, force, turbo, config, stats, pp, get_state,
           bluetooth_boot_off, bluetooth_boot_on, debug, version, donate):
     # display info if config file is used
     config_path = find_config_file(config)
@@ -243,6 +248,10 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             
             monitor = SystemMonitor(type=ViewType.STATS)
             monitor.run()
+        elif pp:
+            print("Platform Profile")
+            for line in format_platform_profile_summary(platform_profile.snapshot()):
+                print(line)
         elif get_state:
             not_running_daemon_check()
             override = get_override()

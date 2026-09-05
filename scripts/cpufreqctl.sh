@@ -4,6 +4,7 @@ VERSION='20'
 cpucount=`cat /proc/cpuinfo | grep processor | wc -l`
 FLROOT=/sys/devices/system/cpu
 FWROOT=/sys/firmware
+PPROOT=/sys/class/platform-profile
 DRIVER=auto
 VERBOSE=0
 WRITE_ERROR=0
@@ -59,6 +60,7 @@ function help () {
   echo "      --frequency-min-limit   Get minimal frequency limit"
   echo "      --frequency-max-limit   Get maximum frequency limit"
   echo "  -b, --boost                 Current cpu boost value"
+  echo "  -p, --pp                    Platform profile options"
   echo
   echo "intel_pstate options"
   echo "      --no-turbo              Current no_turbo value"
@@ -69,6 +71,11 @@ function help () {
   echo "      --throttle              Get thermal throttle counter"
   echo "      --throttle-event        Get kernel thermal throttle events counter"
   echo "      --irqbalance            Get irqbalance presence"
+  echo
+  echo "Platform profile examples"
+  echo "      cpufreqctl --pp                 Get current platform profile"
+  echo "      cpufreqctl --pp --available     List available platform profiles"
+  echo "      cpufreqctl --pp --set=balanced  Set a platform profile"
 }
 
 function info () {
@@ -305,6 +312,250 @@ function set_energy_performance_bias () {
   fi
 }
 
+function resolve_platform_profile_paths () {
+  local devices=()
+  local path
+
+  PLATFORM_PROFILE_PATH=""
+  PLATFORM_PROFILE_CHOICES_PATH=""
+  PLATFORM_PROFILE_CHOICES_IS_AGGREGATE=0
+  PLATFORM_PROFILE_CONTROL_IS_AGGREGATE=0
+  PLATFORM_PROFILE_MODERN_COUNT=0
+
+  for path in "$PPROOT"/platform-profile-*; do
+    if [ -d "$path" ]; then
+      devices+=("$path")
+    fi
+  done
+  PLATFORM_PROFILE_MODERN_COUNT=${#devices[@]}
+
+  if [ ${#devices[@]} -eq 1 ] && [ -e "${devices[0]}/profile" ]; then
+    PLATFORM_PROFILE_PATH="${devices[0]}/profile"
+    if [ -e "${devices[0]}/choices" ]; then
+      PLATFORM_PROFILE_CHOICES_PATH="${devices[0]}/choices"
+    elif [ -e "$FWROOT/acpi/platform_profile_choices" ]; then
+      PLATFORM_PROFILE_CHOICES_PATH="$FWROOT/acpi/platform_profile_choices"
+      PLATFORM_PROFILE_CHOICES_IS_AGGREGATE=1
+    fi
+    return 0
+  fi
+
+  # With multiple handlers, keep using the kernel's aggregate compatibility
+  # interface so one config value is never applied to only one provider.
+  if [ -e "$FWROOT/acpi/platform_profile" ]; then
+    PLATFORM_PROFILE_PATH="$FWROOT/acpi/platform_profile"
+    PLATFORM_PROFILE_CONTROL_IS_AGGREGATE=1
+    if [ -e "$FWROOT/acpi/platform_profile_choices" ]; then
+      PLATFORM_PROFILE_CHOICES_PATH="$FWROOT/acpi/platform_profile_choices"
+      PLATFORM_PROFILE_CHOICES_IS_AGGREGATE=1
+    fi
+    return 0
+  fi
+
+  return 1
+}
+
+function get_common_modern_platform_profiles () {
+  local common=()
+  local next=()
+  local initialized=0
+  local path
+  local choices
+  local choice
+  local candidate
+  local found
+
+  for path in "$PPROOT"/platform-profile-*; do
+    [ -d "$path" ] || continue
+    [ -e "$path/choices" ] || return 1
+
+    if ! choices=$(cat "$path/choices" 2>/dev/null); then
+      return 1
+    fi
+
+    if [ $initialized -eq 0 ]; then
+      for choice in $choices; do
+        if [ "$choice" != "custom" ]; then
+          common+=("$choice")
+        fi
+      done
+      initialized=1
+      continue
+    fi
+
+    next=()
+    for candidate in "${common[@]}"; do
+      found=0
+      for choice in $choices; do
+        if [ "$candidate" = "$choice" ]; then
+          found=1
+          break
+        fi
+      done
+      if [ $found -eq 1 ]; then
+        next+=("$candidate")
+      fi
+    done
+    common=("${next[@]}")
+  done
+
+  if [ $initialized -eq 0 ]; then
+    return 1
+  fi
+
+  # An empty intersection is a known result: there is no profile that can be
+  # applied safely to every handler.
+  echo "${common[*]}"
+}
+
+function resolve_available_platform_profiles () {
+  AVAILABLE_PLATFORM_PROFILES=""
+
+  local choices
+  local choice
+  local filtered=()
+
+  if [ -n "$PLATFORM_PROFILE_CHOICES_PATH" ] && \
+     choices=$(cat "$PLATFORM_PROFILE_CHOICES_PATH" 2>/dev/null); then
+    if [ $PLATFORM_PROFILE_CHOICES_IS_AGGREGATE -eq 1 ]; then
+      for choice in $choices; do
+        if [ "$choice" != "custom" ]; then
+          filtered+=("$choice")
+        fi
+      done
+      AVAILABLE_PLATFORM_PROFILES="${filtered[*]}"
+    else
+      AVAILABLE_PLATFORM_PROFILES="$choices"
+    fi
+    return 0
+  fi
+
+  # Match the Python manager's fallback when a single modern handler has a
+  # choices attribute that exists but cannot be read.
+  if [ $PLATFORM_PROFILE_MODERN_COUNT -eq 1 ] && \
+     [ $PLATFORM_PROFILE_CHOICES_IS_AGGREGATE -eq 0 ] && \
+     [ -e "$FWROOT/acpi/platform_profile_choices" ]; then
+    filtered=()
+    if choices=$(cat "$FWROOT/acpi/platform_profile_choices" 2>/dev/null); then
+      for choice in $choices; do
+        if [ "$choice" != "custom" ]; then
+          filtered+=("$choice")
+        fi
+      done
+      AVAILABLE_PLATFORM_PROFILES="${filtered[*]}"
+      return 0
+    fi
+  fi
+
+  # With multiple handlers, fall back to the intersection of the per-handler
+  # choices if the aggregate choices attribute is missing or unreadable.
+  if [ $PLATFORM_PROFILE_MODERN_COUNT -gt 1 ] && \
+     [ "$PLATFORM_PROFILE_PATH" = "$FWROOT/acpi/platform_profile" ]; then
+    if AVAILABLE_PLATFORM_PROFILES=$(get_common_modern_platform_profiles); then
+      return 0
+    fi
+  fi
+
+  AVAILABLE_PLATFORM_PROFILES=""
+  return 1
+}
+
+function get_platform_profile () {
+  resolve_platform_profile_paths || return 1
+  cat "$PLATFORM_PROFILE_PATH"
+}
+
+function get_available_platform_profiles () {
+  resolve_platform_profile_paths || return 1
+  resolve_available_platform_profiles || return 1
+  echo "$AVAILABLE_PLATFORM_PROFILES"
+}
+
+function set_platform_profile () {
+  resolve_platform_profile_paths || {
+    echo "Platform Profile is not available on this system" >&2
+    return 1
+  }
+
+  local current_profile
+  if ! current_profile=$(cat "$PLATFORM_PROFILE_PATH" 2>/dev/null) || [ -z "$current_profile" ]; then
+    echo "Platform Profile current state could not be read; no change was made" >&2
+    return 1
+  fi
+
+  if [ "$VALUE" = "custom" ] && [ $PLATFORM_PROFILE_CONTROL_IS_AGGREGATE -eq 1 ]; then
+    echo "Platform Profile 'custom' cannot be selected through the aggregate control" >&2
+    return 1
+  fi
+
+  local choice
+  local available=0
+
+  if resolve_available_platform_profiles; then
+    for choice in $AVAILABLE_PLATFORM_PROFILES; do
+      if [ "$choice" = "$VALUE" ]; then
+        available=1
+        break
+      fi
+    done
+
+    if [ $available -eq 0 ]; then
+      echo "Platform Profile '$VALUE' is not available (available: $AVAILABLE_PLATFORM_PROFILES)" >&2
+      return 1
+    fi
+  elif [ "$current_profile" != "$VALUE" ]; then
+    echo "Platform Profile '$VALUE' was not changed because available profiles could not be determined" >&2
+    return 1
+  fi
+
+  # A no-op remains safe with missing choices for an individual provider, but
+  # re-resolve the control target so a topology change cannot turn an individual
+  # `custom` state into aggregate `custom` and still report success.
+  if [ "$current_profile" = "$VALUE" ]; then
+    resolve_platform_profile_paths || {
+      echo "Platform Profile control disappeared while verifying the current state" >&2
+      return 1
+    }
+    if [ "$VALUE" = "custom" ] && [ $PLATFORM_PROFILE_CONTROL_IS_AGGREGATE -eq 1 ]; then
+      echo "Platform Profile 'custom' cannot be selected through the aggregate control" >&2
+      return 1
+    fi
+    if ! current_profile=$(cat "$PLATFORM_PROFILE_PATH" 2>/dev/null) || [ "$current_profile" != "$VALUE" ]; then
+      echo "Platform Profile '$VALUE' could not be verified after the control topology changed" >&2
+      return 1
+    fi
+    return 0
+  fi
+
+  if ! echo "$VALUE" > "$PLATFORM_PROFILE_PATH"; then
+    echo "Failed to write Platform Profile '$VALUE'" >&2
+    return 1
+  fi
+
+  # Re-resolve before read-back so the final verification reflects the current
+  # provider topology rather than the topology observed before the write.
+  resolve_platform_profile_paths || {
+    echo "Platform Profile '$VALUE' was written but the control disappeared before verification" >&2
+    return 1
+  }
+
+  if [ "$VALUE" = "custom" ] && [ $PLATFORM_PROFILE_CONTROL_IS_AGGREGATE -eq 1 ]; then
+    echo "Platform Profile 'custom' resolved to aggregate state after the write" >&2
+    return 1
+  fi
+
+  local applied_profile
+  if ! applied_profile=$(cat "$PLATFORM_PROFILE_PATH" 2>/dev/null); then
+    echo "Platform Profile '$VALUE' was written but the resulting state could not be read" >&2
+    return 1
+  fi
+
+  if [ "$applied_profile" != "$VALUE" ]; then
+    echo "Platform Profile '$VALUE' was not applied (current: $applied_profile)" >&2
+    return 1
+  fi
+}
+
 case $OPTION in
   -h|--help) help;;
   --version) echo $VERSION;;
@@ -340,16 +591,14 @@ case $OPTION in
     fi
   ;;
   -p|--pp)
-    if [ ! -z $AVAILABLE ]; then cat $FWROOT/acpi/platform_profile_choices
-    elif [ -z $VALUE ]; then
+    if [ -n "${AVAILABLE:-}" ]; then
+      get_available_platform_profiles
+    elif [ -z "${VALUE:-}" ]; then
       verbose "Getting Platform Profile"
-      cat $FWROOT/acpi/platform_profile
+      get_platform_profile
     else
       verbose "Setting Platform Profile to $VALUE"
-      current_profile=$(cat "$FWROOT/acpi/platform_profile")
-      if [ "$current_profile" != "$VALUE" ]; then 
-        echo "$VALUE" > "$FWROOT/acpi/platform_profile"
-      fi
+      set_platform_profile
     fi
   ;;
   -f|--frequency)
