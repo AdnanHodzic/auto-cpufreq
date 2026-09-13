@@ -39,7 +39,8 @@ gui = ["PyGObject"]
 
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.6.1"
-ruff = "^0.16.7"
+ruff = "0.16.7"
+# pre-commit 4.3.0 is the last release that supports Python 3.9.
 pre-commit = "4.3.0"
 
 [tool.ruff]

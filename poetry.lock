@@ -1615,4 +1615,4 @@ gui = ["PyGObject"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "8a405e6319505ac65df85533d7880d776d8461791e906a739a0c0be9493463cc"
+content-hash = "ef5c836c5e85284c627731029736940fb0c9c2eaf8119fc9f8894f354ccaec4c"
