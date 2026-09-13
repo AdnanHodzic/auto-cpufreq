@@ -87,7 +87,7 @@ class _Config:
             self._config.read(self.path)
         except ParsingError as e:
             print(
-                f"The following error occured while parsing the config file: \n{repr(e)}"
+                f"The following error occurred while parsing the config file: \n{repr(e)}"
             )
 
 
