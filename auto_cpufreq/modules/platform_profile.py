@@ -5,9 +5,7 @@ from typing import Iterable
 
 PLATFORM_PROFILE_CLASS_ROOT = Path("/sys/class/platform-profile")
 LEGACY_PLATFORM_PROFILE = Path("/sys/firmware/acpi/platform_profile")
-LEGACY_PLATFORM_PROFILE_CHOICES = Path(
-    "/sys/firmware/acpi/platform_profile_choices"
-)
+LEGACY_PLATFORM_PROFILE_CHOICES = Path("/sys/firmware/acpi/platform_profile_choices")
 
 
 @dataclass(frozen=True)
@@ -41,11 +39,7 @@ class PlatformProfileSnapshot:
     @property
     def providers(self) -> tuple[str, ...]:
         return tuple(
-            dict.fromkeys(
-                device.provider
-                for device in self.devices
-                if device.provider
-            )
+            dict.fromkeys(device.provider for device in self.devices if device.provider)
         )
 
     @property
@@ -75,18 +69,10 @@ def summarize_platform_profile_devices(
         current = None
     else:
         profiles = [device.profile for device in devices]
-        current = (
-            profiles[0]
-            if len(set(profiles)) == 1
-            else "custom"
-        )
+        current = profiles[0] if len(set(profiles)) == 1 else "custom"
 
     providers = tuple(
-        dict.fromkeys(
-            device.provider
-            for device in devices
-            if device.provider
-        )
+        dict.fromkeys(device.provider for device in devices if device.provider)
     )
     return current, providers
 
@@ -137,11 +123,7 @@ class PlatformProfileManager:
         common = set(devices[0].choices)
         for device in devices[1:]:
             common.intersection_update(device.choices)
-        return tuple(
-            choice
-            for choice in devices[0].choices
-            if choice in common
-        )
+        return tuple(choice for choice in devices[0].choices if choice in common)
 
     def _modern_paths(self) -> tuple[Path, ...]:
         try:
@@ -157,9 +139,7 @@ class PlatformProfileManager:
         if modern_paths:
             devices = []
             for path in modern_paths:
-                choices, choices_known = self._read_choices_state(
-                    path / "choices"
-                )
+                choices, choices_known = self._read_choices_state(path / "choices")
                 devices.append(
                     PlatformProfileDevice(
                         provider=self._read(path / "name") or None,
@@ -174,9 +154,7 @@ class PlatformProfileManager:
         if not self.legacy_profile.exists():
             return ()
 
-        choices, choices_known = self._read_choices_state(
-            self.legacy_choices
-        )
+        choices, choices_known = self._read_choices_state(self.legacy_choices)
         return (
             PlatformProfileDevice(
                 provider=None,
@@ -206,9 +184,7 @@ class PlatformProfileManager:
         devices: tuple[PlatformProfileDevice, ...],
     ) -> tuple[tuple[str, ...], bool]:
         if len(modern_paths) > 1:
-            legacy_choices, legacy_known = self._read_choices_state(
-                self.legacy_choices
-            )
+            legacy_choices, legacy_known = self._read_choices_state(self.legacy_choices)
             if legacy_known:
                 return (
                     self._without_aggregate_custom(legacy_choices),
@@ -216,9 +192,7 @@ class PlatformProfileManager:
                 )
             if all(device.choices_known for device in devices):
                 return (
-                    self._without_aggregate_custom(
-                        self._common_choices(devices)
-                    ),
+                    self._without_aggregate_custom(self._common_choices(devices)),
                     True,
                 )
             return (), False
@@ -232,9 +206,7 @@ class PlatformProfileManager:
             # and is distinct from an unknown list.
             if devices[0].choices_known:
                 return devices[0].choices, True
-            legacy_choices, legacy_known = self._read_choices_state(
-                self.legacy_choices
-            )
+            legacy_choices, legacy_known = self._read_choices_state(self.legacy_choices)
             return (
                 self._without_aggregate_custom(legacy_choices),
                 legacy_known,
@@ -293,27 +265,15 @@ class PlatformProfileManager:
     def snapshot(self) -> PlatformProfileSnapshot:
         modern_paths = self._modern_paths()
         devices = self._devices_for_paths(modern_paths)
-        available_profiles, choices_known = (
-            self._available_choices_state_for(
-                modern_paths,
-                devices,
-            )
+        available_profiles, choices_known = self._available_choices_state_for(
+            modern_paths,
+            devices,
         )
         control_path = self._control_path_for(modern_paths)
-        control_current = (
-            self._read(control_path)
-            if control_path is not None
-            else None
-        )
+        control_current = self._read(control_path) if control_path is not None else None
         return PlatformProfileSnapshot(
             devices=devices,
-            interface=(
-                "modern"
-                if modern_paths
-                else "legacy"
-                if devices
-                else "none"
-            ),
+            interface=("modern" if modern_paths else "legacy" if devices else "none"),
             current=self._current_for(modern_paths, devices),
             available_profiles=available_profiles,
             choices_known=choices_known,
@@ -324,8 +284,7 @@ class PlatformProfileManager:
                 and bool(available_profiles)
             ),
             control_is_aggregate=(
-                control_path is not None
-                and control_path == self.legacy_profile
+                control_path is not None and control_path == self.legacy_profile
             ),
         )
 

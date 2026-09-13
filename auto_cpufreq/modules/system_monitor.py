@@ -152,9 +152,7 @@ class SystemMonitor:
             raise error
 
         if report is None:
-            raise RuntimeError(
-                "System monitor refresh completed without a report"
-            )
+            raise RuntimeError("System monitor refresh completed without a report")
 
         # Capture focus only now. The user may have scrolled while
         # the worker was collecting telemetry.
@@ -169,9 +167,7 @@ class SystemMonitor:
                 self.last_focus_right = 0
 
         current_time = time.strftime("%H:%M:%S")
-        self.title_header.set_text(
-            f"{self.type} Mode - {current_time}"
-        )
+        self.title_header.set_text(f"{self.type} Mode - {current_time}")
 
         self.format_system_info(
             report,
@@ -267,14 +263,10 @@ class SystemMonitor:
 
         for core in report.cores_info:
             temperature = (
-                f"{core.temperature:>6.0f} °C"
-                if core.temperature > 0
-                else "     —"
+                f"{core.temperature:>6.0f} °C" if core.temperature > 0 else "     —"
             )
             frequency = (
-                f"{core.frequency:>6.0f} MHz"
-                if core.frequency > 0
-                else "     —"
+                f"{core.frequency:>6.0f} MHz" if core.frequency > 0 else "     —"
             )
             self.left_content.append(
                 aligned_text(
@@ -299,13 +291,13 @@ class SystemMonitor:
                         f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                        f"AC plugged: {('Yes' if report.battery_info.is_ac_plugged else 'No') if report.battery_info.is_ac_plugged is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                        f"Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged is not None else 'Unknown'}"
                     ),
                     aligned_text(
-                        f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                        f"Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged is not None else 'Unknown'}"
                     ),
                     aligned_text(
                         f"{battery_power_label(report.battery_info)}: "
@@ -331,9 +323,7 @@ class SystemMonitor:
         self.right_content.extend(
             [
                 urwid.AttrMap(aligned_text("CPU Power State"), "header"),
-                aligned_text(
-                    f"Governor: {report.current_gov or 'Unknown'}"
-                ),
+                aligned_text(f"Governor: {report.current_gov or 'Unknown'}"),
             ]
         )
 
@@ -367,11 +357,7 @@ class SystemMonitor:
         if report.is_turbo_on[0] is not None:
             turbo_status = "On" if report.is_turbo_on[0] else "Off"
         elif report.is_turbo_on[1] is not None:
-            turbo_status = (
-                "Driver managed"
-                if report.is_turbo_on[1]
-                else "Unavailable"
-            )
+            turbo_status = "Driver managed" if report.is_turbo_on[1] else "Unavailable"
         else:
             turbo_status = "Unavailable"
         self.right_content.append(aligned_text(f"Turbo Boost: {turbo_status}"))
@@ -415,9 +401,7 @@ class SystemMonitor:
         avg_temp = report.cpu_avg_temp
         if avg_temp is None and report.cores_info:
             temperatures = [
-                core.temperature
-                for core in report.cores_info
-                if core.temperature > 0
+                core.temperature for core in report.cores_info if core.temperature > 0
             ]
             if temperatures:
                 avg_temp = sum(temperatures) / len(temperatures)
@@ -432,9 +416,7 @@ class SystemMonitor:
         self.running = True
 
         try:
-            self._refresh_pipe_fd = self.loop.watch_pipe(
-                self._refresh_ready
-            )
+            self._refresh_pipe_fd = self.loop.watch_pipe(self._refresh_ready)
             self._alarm_handle = self.loop.set_alarm_in(
                 0,
                 self.update,

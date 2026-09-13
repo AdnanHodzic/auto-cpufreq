@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from auto_cpufreq.battery_scripts.shared import BatteryDevice
 
+
 class IdeapadBatteryDevice(BatteryDevice):
     # Support for most Lenovo Ideapad/Legion/Thinkpad conservation mode file(s).
     # The function finds the conservation_mode file in common paths.
@@ -14,31 +15,31 @@ class IdeapadBatteryDevice(BatteryDevice):
     def _find_conservation_mode_path(self) -> str | None:
         search_paths = [
             "/sys/bus/platform/drivers/ideapad_acpi",
-            "/sys/devices/platform/ideapad_acpi"
+            "/sys/devices/platform/ideapad_acpi",
         ]
-        
+
         for base in search_paths:
             base_path = Path(base)
             if not base_path.exists():
                 continue
-                
+
             direct_file = base_path / "conservation_mode"
             if direct_file.exists():
                 return str(direct_file)
-            
+
             try:
                 for match in base_path.glob("*/conservation_mode"):
                     if match.exists():
                         return str(match)
             except OSError:
                 continue
-                
+
         return None
 
     def is_conservation_mode(self) -> bool:
         if not self.conservation_mode_path:
             return False
-            
+
         val = self._read_value_from_file(self.conservation_mode_path)
         if val not in ("0", "1"):
             error_type = "Read failure" if val == "" else f"Unexpected value: {val}"
@@ -50,9 +51,11 @@ class IdeapadBatteryDevice(BatteryDevice):
         if not self.conservation_mode_path:
             print("ERROR: conservation_mode file path not found")
             return False
-            
+
         if not self._write_value_to_file(self.conservation_mode_path, value):
-            print(f"WARNING: unable to set conservation mode at {self.conservation_mode_path}")
+            print(
+                f"WARNING: unable to set conservation mode at {self.conservation_mode_path}"
+            )
             return False
         return True
 
