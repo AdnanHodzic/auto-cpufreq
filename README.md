@@ -311,6 +311,8 @@ services.auto-cpufreq.enable = true;
   poetry run auto-cpufreq --help
   ```
 
+  Python files are formatted with Ruff. After installing the development dependencies, run `poetry run pre-commit install` once to enable automatic formatting before each commit. You can check the entire repository manually with `poetry run ruff format --check .`.
+
 - To install with GUI support:
   ```bash
   poetry install --extras gui
