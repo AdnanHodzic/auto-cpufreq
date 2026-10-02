@@ -7,6 +7,7 @@ import urwid
 import time
 from .system_info import (
     SystemReport,
+    battery_power_label,
     format_platform_profile_summary,
     system_info,
 )
@@ -305,6 +306,14 @@ class SystemMonitor:
                     ),
                     aligned_text(
                         f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                    ),
+                    aligned_text(
+                        f"{battery_power_label(report.battery_info)}: "
+                        + (
+                            f"{report.battery_info.power_watts:.2f} W"
+                            if report.battery_info.power_watts is not None
+                            else "Unavailable"
+                        )
                     ),
                     aligned_text(""),
                 ]

@@ -15,6 +15,7 @@ from auto_cpufreq.core import check_for_update, daemon_is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.gui.objects import BluetoothBootControl, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, UpdateDialog
 from auto_cpufreq.modules.system_info import (
+    battery_power_label,
     format_platform_profile_choices,
     system_info,
 )
@@ -249,6 +250,7 @@ class SystemReportView(Gtk.Box):
         self.right_column.pack_start(power_frame, False, False, 0)
 
         battery_frame, self.battery_grid = _new_section("Battery")
+        self.battery_names = {}
         self.battery_values = {}
         for row, (key, name) in enumerate(
             (
@@ -257,12 +259,14 @@ class SystemReportView(Gtk.Box):
                 ("ac", "AC power"),
                 ("start", "Start threshold"),
                 ("stop", "Stop threshold"),
-                ("power", "Power draw"),
+                ("power", "Battery power"),
             )
         ):
-            _, self.battery_values[key] = _add_row(
+            name_label, value_label = _add_row(
                 self.battery_grid, row, name
             )
+            self.battery_names[key] = name_label
+            self.battery_values[key] = value_label
         self.right_column.pack_start(battery_frame, False, False, 0)
 
         stats_frame, stats_grid = _new_section("System Statistics")
@@ -466,9 +470,12 @@ class SystemReportView(Gtk.Box):
                 if battery.charging_stop_threshold is not None
                 else "Unavailable"
             )
+            self.battery_names["power"].set_text(
+                battery_power_label(battery)
+            )
             self.battery_values["power"].set_text(
-                f"{battery.power_consumption:.2f} W"
-                if battery.power_consumption is not None
+                f"{battery.power_watts:.2f} W"
+                if battery.power_watts is not None
                 else "Unavailable"
             )
 
