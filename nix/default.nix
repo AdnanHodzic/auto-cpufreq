@@ -28,12 +28,15 @@ let
   });
 
 in
-python3Packages.buildPythonPackage {
+python3Packages.buildPythonPackage rec {
   # use pyproject.toml instead of setup.py
   format = "pyproject";
 
   pname = "auto-cpufreq";
   version = "3.1.0";
+  # Flake source trees do not contain Git metadata. Use the release version
+  # already declared by this derivation instead of weakening strict source builds.
+  POETRY_DYNAMIC_VERSIONING_BYPASS = version;
   src = ../.;
 
   nativeBuildInputs = with pkgs; [wrapGAppsHook3 gobject-introspection];
@@ -54,7 +57,7 @@ python3Packages.buildPythonPackage {
 
   postPatch = ''
     substituteInPlace auto_cpufreq/core.py --replace-fail '/opt/auto-cpufreq/override.pickle' /var/run/override.pickle
-    substituteInPlace scripts/org.auto-cpufreq.pkexec.policy --replace-fail "/opt/auto-cpufreq/venv/bin/auto-cpufreq" $out/bin/auto-cpufreq
+    substituteInPlace scripts/org.auto-cpufreq.pkexec.policy --replace-fail "/opt/auto-cpufreq/current/venv/bin/auto-cpufreq" $out/bin/auto-cpufreq
 
     substituteInPlace auto_cpufreq/gui/app.py auto_cpufreq/gui/objects.py --replace-fail "/usr/local/share/auto-cpufreq/images/icon.png" $out/share/pixmaps/auto-cpufreq.png
     substituteInPlace auto_cpufreq/gui/app.py --replace-fail "/usr/local/share/auto-cpufreq/scripts/style.css" $out/share/auto-cpufreq/scripts/style.css

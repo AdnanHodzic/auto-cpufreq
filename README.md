@@ -131,14 +131,30 @@ Only devices with an Intel, AMD, or ARM CPU are supported. This tool was develop
 
 ### auto-cpufreq-installer
 
-> As auto-cpufreq relies on git based versioning, users are advised to install `auto-cpufreq`  using `git clone` method only. Downloading source code as a zip/from release will emit build error like [these](https://github.com/AdnanHodzic/auto-cpufreq/issues/623).
+The source installer automatically handles several major Linux distribution families, including Debian/Ubuntu (and derivatives such as Linux Mint), Fedora/RHEL, Arch-based distributions, openSUSE, Void Linux, and Solus. Other recognized derivatives can use the installation path of their declared base distribution.
 
-Get source code, run installer, and follow on-screen instructions:
+Source installation requires a distribution-provided Python 3.9 or newer. Enterprise Linux 8 uses its Python 3.9 stream; newer Enterprise Linux releases use the distribution's default Python 3.
 
+The installer automatically installs system dependencies and creates each source installation in a dedicated virtual environment under `/opt/auto-cpufreq/releases`. It verifies a new installation before atomically selecting it through `/opt/auto-cpufreq/current`; an incomplete installation does not replace the working one.
+
+NixOS uses the native Nix integration described below instead of the source installer.
+
+For a stable source installation, download the `.zip` or `.tar.gz` source archive for the desired version from [GitHub Releases](https://github.com/AdnanHodzic/auto-cpufreq/releases), extract it, enter the extracted directory, and run:
+
+```bash
+sudo bash ./auto-cpufreq-installer
 ```
+
+Release archives published before this archive metadata support was added are not changed retroactively and may still require a Git checkout.
+
+For the current development version, clone the Git repository instead:
+
+```bash
 git clone https://github.com/AdnanHodzic/auto-cpufreq.git
 cd auto-cpufreq && sudo ./auto-cpufreq-installer
 ```
+
+When replacing an existing source installation, remove its auto-cpufreq daemon first if the installer asks you to do so. Earlier versioned generations are retained until the source installation is removed.
 
 ### Snap Store
 
@@ -608,21 +624,27 @@ If installed via Snap package, daemon status can be viewed as follows:
 
 ### Update - auto-cpufreq update
 
-Update functionality works by cloning the auto-cpufreq repo, installing it via [auto-cpufreq-installer](#auto-cpufreq-installer), and performing a fresh [auto-cpufreq daemon install](#install---auto-cpufreq-daemon) to provide the [latest version's](https://github.com/AdnanHodzic/auto-cpufreq/releases) changes.
+For source installations, the updater checks the [latest published release](https://github.com/AdnanHodzic/auto-cpufreq/releases), clones that exact release tag, and installs it through [auto-cpufreq-installer](#auto-cpufreq-installer). If the [auto-cpufreq daemon](#install---auto-cpufreq-daemon) was installed, the updater removes and reinstalls it; otherwise the daemon remains uninstalled. The updater does not install the development `master` branch.
 
-Update auto-cpufreq by running: `sudo auto-cpufreq --update`. By default, the latest revision is cloned to `/opt/auto-cpufreq/source`, thus maintaining existing directory structure.
+The installer builds and verifies the new release as a separate generation before selecting it through `/opt/auto-cpufreq/current`. Download, daemon removal, installation, and final command failures stop the updater without reporting success; a candidate that fails before activation does not replace the active generation.
 
-Update and clone to a custom directory by running: `sudo auto-cpufreq --update=/path/to/directory`
+Update auto-cpufreq by running: `sudo auto-cpufreq --update`. By default, the selected release tag is cloned to a uniquely named staging directory under `/opt/auto-cpufreq/source`; the updater removes that staging directory after the attempt finishes.
+
+Update and create the staging directory under a custom parent by running: `sudo auto-cpufreq --update=/path/to/directory`
+
+Development checkouts are not advanced by `--update`. To replace a development installation while its daemon is installed, run `sudo auto-cpufreq --remove`, install the desired Git revision with `sudo ./auto-cpufreq-installer --install`, and then run `sudo auto-cpufreq --install` to deploy the daemon from the new generation.
 
 ### Remove - auto-cpufreq daemon
 
-The auto-cpufreq daemon, its systemd service, and all its persistent changes can be removed by running:
+The auto-cpufreq daemon and its service can be removed by running:
 
 `sudo auto-cpufreq --remove`
 
 This does, in part, the equivalent of `systemctl stop auto-cpufreq && systemctl disable auto-cpufreq`, but the above command should be used instead of using `systemctl`.
 
-*Please note:* after the daemon is removed, the auto-cpufreq GUI and desktop entry (icon) are also removed.
+Removing the daemon does not uninstall the source-installed CLI or GUI. To remove the complete source installation, run `sudo bash ./auto-cpufreq-installer --remove` from an auto-cpufreq source directory.
+
+If removal fails, address the reported error and retry the same command. On s6, an unfinished removal must complete before reinstalling the daemon. If the error identifies unrecognized source-install remnants or a preserved s6 removal directory, inspect and preserve any custom files before removing those remnants; they are not treated as successful cleanup.
 
 ### Stats
 

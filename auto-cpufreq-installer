@@ -3,15 +3,23 @@
 # auto-cpufreq-installer:
 # auto-cpufreq source code based installer
 
-cd "$(dirname "$(readlink -f "$0")")" || exit 1
+SOURCE_ROOT="$(dirname "$(readlink -f "$0")")"
+cd "$SOURCE_ROOT" || exit 1
 
 COLOUMNS="`tput cols`"
 MID="$((COLOUMNS / 2))"
 
 APPLICATIONS_PATH="/usr/share/applications"
-VENV_PATH="/opt/auto-cpufreq"
+INSTALL_ROOT="/opt/auto-cpufreq"
+RELEASES_PATH="$INSTALL_ROOT/releases"
+CURRENT_PATH="$INSTALL_ROOT/current"
+OPERATION_LOCK_DIR="/run/auto-cpufreq"
+PREPARED_RELEASE=""
+PYTHON_BIN="/usr/bin/python3"
+PYGOBJECT_INSTALL="pypi"
 
-SHARE_DIR="/usr/local/share/auto-cpufreq/"
+SHARE_DIR="$CURRENT_PATH/share"
+LEGACY_SHARE_DIR="/usr/local/share/auto-cpufreq"
 
 AUTO_CPUFREQ_FILE="/usr/local/bin/auto-cpufreq"
 AUTO_CPUFREQ_GTK_FILE=$AUTO_CPUFREQ_FILE-gtk
@@ -35,25 +43,30 @@ function ask_operation {
 }
 
 function manual_install {
+  local manual_venv="$INSTALL_ROOT/venv"
+
   if command -v lsb_release > /dev/null; then
     distro="$(lsb_release -is)"
     release="$(lsb_release -rs)"
     codename="$(lsb_release -cs)"
   fi
 
-	echo "Didn't detect Debian or RedHat or Arch based distro."; echo
-  echo "To complete installation, you need to:"
-  echo "Install: python3, pip3, python3-setuptools, gobject-introspection, cairo (or cairo-devel), gcc, and gtk3"; echo
-  echo "Install necessary Python packages:"
-  echo "pip3 install psutil click distro power requests PyGObject"
-  echo "Run following sequence of lines:"; echo
+  echo "This Linux distribution is not handled automatically by the source installer."; echo
+  echo "Install your distro's equivalents of these source-build requirements:"
+  echo "Python 3 with venv, pip and development headers; setuptools; dmidecode;"
+  echo "gcc; git; pkg-config; gobject-introspection; Cairo development files;"
+  echo "and GTK3 development files."; echo
+  echo "Then install auto-cpufreq in an isolated virtual environment:"
   echo "-----"; echo
-  echo "pip3 install ."
-  echo "mkdir -p $SHARE_DIR"
-  echo "cp -r scripts/ $SHARE_DIR"; echo
+  echo "python3 -m venv \"$manual_venv\""
+  echo "\"$manual_venv/bin/python\" -m pip install --upgrade pip wheel"
+  echo "\"$manual_venv/bin/python\" -m pip install PyGObject"
+  echo "\"$manual_venv/bin/python\" -m pip install ."
   echo "-----"; echo
-  echo "After which tool is installed, for full list of options run:";echo
-  echo "auto-cpufreq --help"
+  echo "You can run the installed command directly from the virtual environment:"
+  echo "\"$manual_venv/bin/auto-cpufreq\" --help"; echo
+  echo "Automatic system deployment and daemon integration are not available"
+  echo "for this distribution yet."
 
   echo; printf "%0.s─" $(seq $COLOUMNS); echo
   
@@ -68,130 +81,788 @@ function manual_install {
   exit 1
 }
 
+function os_release_matches {
+  local target="$1"
+
+  [ "${ID:-}" = "$target" ] && return 0
+
+  case " ${ID_LIKE:-} " in
+    *" $target "*) return 0;;
+  esac
+
+  return 1
+}
+
+function is_enterprise_linux {
+  case "${PLATFORM_ID:-}" in
+    platform:el[0-9]*) return 0;;
+  esac
+
+  os_release_matches rhel
+}
+
+function enterprise_linux_major {
+  case "${PLATFORM_ID:-}" in
+    platform:el[0-9]*)
+      printf '%s\n' "${PLATFORM_ID#platform:el}" | sed 's/[^0-9].*$//'
+      return 0
+      ;;
+  esac
+
+  printf '%s\n' "${VERSION_ID%%.*}"
+}
+
+function verify_python_version {
+  "$1" - <<'PYVERSION'
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 9) else 1)
+PYVERSION
+}
+
+function verify_gtk3_runtime {
+  # Debian/Ubuntu provide PyGObject as python3-gi. The GTK3 introspection
+  # package supplies the typelibs used by the auto-cpufreq GUI.
+  # https://pygobject.gnome.org/getting_started.html
+  "$1" - <<'PYGTK'
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
+PYGTK
+}
+
+function el_pygobject_spec {
+  local glib_version="$1"
+
+  if printf '%s\n%s\n' "2.80" "$glib_version" | sort -V -C; then
+    printf '%s\n' 'PyGObject>=3.50'
+  elif printf '%s\n%s\n' "2.64" "$glib_version" | sort -V -C; then
+    printf '%s\n' 'PyGObject>=3.46,<3.50'
+  elif printf '%s\n%s\n' "2.56" "$glib_version" | sort -V -C; then
+    printf '%s\n' 'PyGObject>=3.44.2,<3.46'
+  else
+    return 1
+  fi
+}
+
+function install_el_pygobject {
+  local venv_python="$1"
+  local glib_version
+  local pygobject_spec
+
+  glib_version="$(pkg-config --modversion glib-2.0 2>/dev/null)" || {
+    echo "Error: Unable to determine the installed GLib version."
+    return 1
+  }
+  pygobject_spec="$(el_pygobject_spec "$glib_version")" || {
+    echo "Error: GLib $glib_version is too old for the supported PyGObject compatibility path."
+    return 1
+  }
+
+  if ! "$venv_python" -m pip install pycairo "$pygobject_spec"; then
+    echo "Error: Failed to install a PyGObject build compatible with GLib $glib_version."
+    return 1
+  fi
+}
+
+function acquire_operation_lock {
+  if ! command -v flock > /dev/null 2>&1; then
+    echo "Error: flock is required to prevent concurrent source installer operations."
+    return 1
+  fi
+
+  # /run is root-controlled, so validating a private child directory before
+  # opening it for locking avoids following a path planted by another user.
+  if [ -L "$OPERATION_LOCK_DIR" ] \
+    || ! mkdir -p "$OPERATION_LOCK_DIR" \
+    || [ ! -d "$OPERATION_LOCK_DIR" ] \
+    || [ "$(stat -Lc '%u' "$OPERATION_LOCK_DIR" 2>/dev/null)" != "0" ] \
+    || ! chmod 755 "$OPERATION_LOCK_DIR"; then
+    echo "Error: Unable to create a secure source installer lock directory."
+    return 1
+  fi
+  # Lock the directory inode itself. This avoids a separately named lock file
+  # that could be replaced between validation and opening.
+  exec 9<"$OPERATION_LOCK_DIR" || {
+    echo "Error: Unable to open the source installer lock."
+    return 1
+  }
+  if ! flock -n 9; then
+    echo "Error: Another auto-cpufreq source installer operation is in progress."
+    return 1
+  fi
+}
+
+function ensure_install_layout {
+  local path
+
+  for path in "$INSTALL_ROOT" "$RELEASES_PATH"; do
+    if [ -L "$path" ] \
+      || ! mkdir -p "$path" \
+      || [ ! -d "$path" ] \
+      || [ "$(stat -Lc '%u' "$path" 2>/dev/null)" != "0" ] \
+      || ! chmod 755 "$path"; then
+      echo "Error: $path must be a root-owned directory, not a symbolic link."
+      return 1
+    fi
+  done
+
+  if [ -e "$CURRENT_PATH" ] && [ ! -L "$CURRENT_PATH" ]; then
+    echo "Error: $CURRENT_PATH exists but is not a managed release link."
+    return 1
+  fi
+}
+
+function source_revision {
+  local git_root
+  local revision
+
+  # safe.directory is scoped to these commands. This permits the root-run
+  # installer to inspect a checkout owned by the invoking user without adding
+  # a permanent exception to root's Git configuration.
+  git_root="$(git -c safe.directory="$SOURCE_ROOT" -C "$SOURCE_ROOT" \
+    rev-parse --show-toplevel 2>/dev/null || true)"
+  if [ -n "$git_root" ] \
+    && [ "$(readlink -f "$git_root")" = "$SOURCE_ROOT" ]; then
+    revision="$(git -c safe.directory="$SOURCE_ROOT" -C "$SOURCE_ROOT" \
+      rev-parse --verify 'HEAD^{commit}' 2>/dev/null || true)"
+  fi
+
+  if [ -z "${revision:-}" ] && [ -r "$SOURCE_ROOT/.git_archival.json" ]; then
+    revision="$("$PYTHON_BIN" - "$SOURCE_ROOT/.git_archival.json" <<'PYREVISION'
+import json
+import re
+import sys
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as archive_metadata:
+        revision = json.load(archive_metadata).get("hash-full", "")
+except (OSError, ValueError):
+    raise SystemExit(1)
+
+if not re.fullmatch(r"[0-9a-fA-F]{40}", revision):
+    raise SystemExit(1)
+print(revision.lower())
+PYREVISION
+    )" || revision=""
+  fi
+
+  if [[ "${revision:-}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+    printf '%s\n' "${revision,,}"
+  else
+    echo "Error: Unable to determine an exact source revision from this Git checkout or source archive." >&2
+    return 1
+  fi
+}
+
+function release_is_complete {
+  local release_dir="$1"
+
+  [ "$(dirname "$release_dir")" = "$RELEASES_PATH" ] \
+    && [ ! -L "$release_dir" ] \
+    && [ -f "$release_dir/.complete" ] \
+    && [ -d "$release_dir/share/scripts" ] \
+    && [ -d "$release_dir/share/images" ] \
+    && [ -x "$release_dir/venv/bin/python" ] \
+    && [ -x "$release_dir/venv/bin/auto-cpufreq" ] \
+    && [ -x "$release_dir/venv/bin/auto-cpufreq-gtk" ]
+}
+
+function activate_release {
+  local release_dir="$1"
+  local release_name
+  local temporary_current="$INSTALL_ROOT/.current.$$"
+
+  if ! release_is_complete "$release_dir"; then
+    echo "Error: Refusing to activate an incomplete or unmanaged source release."
+    return 1
+  fi
+  if [ -e "$CURRENT_PATH" ] && [ ! -L "$CURRENT_PATH" ]; then
+    echo "Error: Refusing to replace an unmanaged current installation path."
+    return 1
+  fi
+
+  release_name="$(basename "$release_dir")"
+  rm -f -- "$temporary_current"
+  if ! ln -s "releases/$release_name" "$temporary_current" \
+    || ! mv -Tf "$temporary_current" "$CURRENT_PATH"; then
+    rm -f -- "$temporary_current"
+    echo "Error: Failed to activate the prepared source release."
+    return 1
+  fi
+}
+
+function discard_release {
+  local release_dir="$1"
+
+  if [ "$(dirname "$release_dir")" != "$RELEASES_PATH" ] \
+    || [ -L "$release_dir" ]; then
+    echo "Error: Refusing to remove an unmanaged release path: $release_dir"
+    return 1
+  fi
+  rm -rf -- "$release_dir"
+}
+
+function publish_file {
+  local source_file="$1"
+  local target_file="$2"
+  local target_mode="$3"
+  local target_dir
+  local temporary_file
+
+  target_dir="$(dirname "$target_file")"
+  if ! mkdir -p "$target_dir"; then
+    return 1
+  fi
+  temporary_file="$(mktemp "$target_dir/.$(basename "$target_file").XXXXXXXX")" \
+    || return 1
+  if ! cp "$source_file" "$temporary_file" \
+    || ! chmod "$target_mode" "$temporary_file" \
+    || ! mv -Tf "$temporary_file" "$target_file"; then
+    rm -f -- "$temporary_file"
+    return 1
+  fi
+}
+
+function restore_public_file {
+  local backup_file="$1"
+  local target_file="$2"
+  local target_mode="$3"
+
+  if [ -n "$backup_file" ]; then
+    publish_file "$backup_file" "$target_file" "$target_mode" || return 1
+    rm -f -- "$backup_file"
+  else
+    rm -f -- "$target_file"
+  fi
+}
+
+function snapshot_public_files {
+  local backup_file
+  local target_file
+  local target_mode
+
+  PUBLIC_FILE_BACKUPS=()
+  PUBLIC_FILE_MODES=()
+  for target_file in "${PUBLIC_FILE_TARGETS[@]}"; do
+    if [ -L "$target_file" ] \
+      || { [ -e "$target_file" ] && [ ! -f "$target_file" ]; }; then
+      echo "Error: Refusing to replace an unmanaged integration path: $target_file"
+      discard_public_file_backups
+      return 1
+    fi
+
+    backup_file=""
+    target_mode=""
+    if [ -f "$target_file" ]; then
+      backup_file="$(mktemp "$INSTALL_ROOT/.public-file.XXXXXXXX")" || {
+        discard_public_file_backups
+        return 1
+      }
+      target_mode="$(stat -Lc '%a' "$target_file")" || target_mode=""
+      if [ -z "$target_mode" ] \
+        || ! cp -p -- "$target_file" "$backup_file"; then
+        rm -f -- "$backup_file"
+        discard_public_file_backups
+        return 1
+      fi
+    fi
+    PUBLIC_FILE_BACKUPS+=("$backup_file")
+    PUBLIC_FILE_MODES+=("$target_mode")
+  done
+}
+
+function restore_public_files {
+  local index
+  local restore_status=0
+
+  for index in "${!PUBLIC_FILE_TARGETS[@]}"; do
+    if ! restore_public_file \
+      "${PUBLIC_FILE_BACKUPS[$index]}" \
+      "${PUBLIC_FILE_TARGETS[$index]}" \
+      "${PUBLIC_FILE_MODES[$index]}"; then
+      restore_status=1
+    fi
+  done
+  return "$restore_status"
+}
+
+function discard_public_file_backups {
+  local backup_file
+
+  for backup_file in "${PUBLIC_FILE_BACKUPS[@]:-}"; do
+    [ -z "$backup_file" ] || rm -f -- "$backup_file"
+  done
+}
+
+function verify_command_version {
+  local command_path="$1"
+  local installed_version="$2"
+  local expected_line
+  local version_line
+  local version_output
+
+  expected_line="auto-cpufreq version: ${installed_version%%+*}"
+  if [ "$installed_version" != "${installed_version%%+*}" ]; then
+    expected_line="$expected_line (git: ${installed_version#*+})"
+  fi
+
+  if [ ! -x "$command_path" ] \
+    || ! version_output="$("$command_path" --version)"; then
+    return 1
+  fi
+  while IFS= read -r version_line; do
+    [ "$version_line" = "$expected_line" ] && return 0
+  done <<< "$version_output"
+  return 1
+}
+
+function has_new_dependency_issues {
+  local existing_issues="$1"
+  local candidate_issues="$2"
+  local issue
+
+  while IFS= read -r issue; do
+    [ -z "$issue" ] && continue
+    if ! printf '%s\n' "$existing_issues" | grep -F -x -- "$issue" > /dev/null; then
+      return 0
+    fi
+  done <<< "$candidate_issues"
+  return 1
+}
+
+function build_release {
+  local existing_dependency_issues
+  local candidate_dependency_issues
+  local release_dir
+  local revision
+  local installed_version
+  local venv_dir
+  local venv_python
+
+  PREPARED_RELEASE=""
+  ensure_install_layout || return 1
+  revision="$(source_revision)" || return 1
+  release_dir="$(mktemp -d "$RELEASES_PATH/${revision:0:12}.XXXXXXXX")" || {
+    echo "Error: Failed to allocate a source release directory."
+    return 1
+  }
+  if ! chmod 755 "$release_dir"; then
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  # A venv records absolute interpreter paths in its scripts. Creating it at
+  # the final generation path avoids an apparently successful activation whose
+  # entry points still refer to a discarded staging directory.
+  venv_dir="$release_dir/venv"
+  if ! "$PYTHON_BIN" -m venv --system-site-packages "$venv_dir"; then
+    echo "Error: Failed to create the Python virtual environment."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  venv_python="$venv_dir/bin/python"
+  if [ ! -x "$venv_python" ]; then
+    echo "Error: Python executable was not created in the virtual environment."
+    discard_release "$release_dir"
+    return 1
+  fi
+  if ! "$venv_python" -m pip --version > /dev/null; then
+    echo "Error: pip is unavailable inside the Python virtual environment."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  if ! "$venv_python" -m pip install --upgrade pip wheel; then
+    echo "Error: Failed to install Python build dependencies."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  # A system-site-packages venv can expose unrelated broken host packages.
+  # Retain that baseline so only incompatibilities introduced by this
+  # candidate can reject an otherwise usable release.
+  if existing_dependency_issues="$("$venv_python" -m pip check 2>&1)"; then
+    existing_dependency_issues=""
+  fi
+
+  case "$PYGOBJECT_INSTALL" in
+    system) ;;
+    el-compatible)
+      if ! install_el_pygobject "$venv_python"; then
+        discard_release "$release_dir"
+        return 1
+      fi
+      ;;
+    pypi)
+      if ! "$venv_python" -m pip install PyGObject; then
+        echo "Error: Failed to install PyGObject."
+        discard_release "$release_dir"
+        return 1
+      fi
+      ;;
+  esac
+  if ! verify_gtk3_runtime "$venv_python"; then
+    echo "Error: The virtual environment cannot load the PyGObject GTK3 runtime."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  header "Installing auto-cpufreq tool"
+  if ! "$venv_python" -m pip install "$SOURCE_ROOT"; then
+    echo "Error: Failed to install auto-cpufreq into the virtual environment."
+    discard_release "$release_dir"
+    return 1
+  fi
+  if ! candidate_dependency_issues="$("$venv_python" -m pip check 2>&1)"; then
+    if has_new_dependency_issues "$existing_dependency_issues" "$candidate_dependency_issues"; then
+      echo "Error: The prepared auto-cpufreq release has incompatible Python dependencies."
+      printf '%s\n' "$candidate_dependency_issues"
+      discard_release "$release_dir"
+      return 1
+    fi
+  fi
+
+  if ! mkdir -p "$release_dir/share" \
+    || ! cp -r "$SOURCE_ROOT/scripts" "$SOURCE_ROOT/images" "$release_dir/share/" \
+    || ! printf '%s\n' "$revision" > "$release_dir/revision"; then
+    echo "Error: Failed to install version-specific source resources."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  if [ ! -x "$venv_dir/bin/auto-cpufreq" ] \
+    || [ ! -x "$venv_dir/bin/auto-cpufreq-gtk" ]; then
+    echo "Error: The prepared auto-cpufreq release failed verification."
+    discard_release "$release_dir"
+    return 1
+  fi
+  if ! installed_version="$("$venv_python" -c \
+    'from importlib.metadata import version; print(version("auto-cpufreq"))')" \
+    || [ -z "$installed_version" ] \
+    || ! verify_command_version "$venv_dir/bin/auto-cpufreq" "$installed_version"; then
+    echo "Error: The prepared auto-cpufreq release has no usable version metadata."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  # Activation only accepts candidates carrying this marker. It is written
+  # after every executable and version-specific resource has been verified.
+  if ! touch "$release_dir/.complete"; then
+    echo "Error: Failed to mark the prepared auto-cpufreq release complete."
+    discard_release "$release_dir"
+    return 1
+  fi
+
+  PREPARED_RELEASE="$release_dir"
+}
+
 function tool_install {
+  local active_version
+  local candidate_is_active
+  local integration_files_published=false
+  local prepared_share_dir
+  local previous_release=""
+  local -a PUBLIC_FILE_BACKUPS PUBLIC_FILE_MODES PUBLIC_FILE_TARGETS
+
+  PUBLIC_FILE_TARGETS=(
+    "$AUTO_CPUFREQ_FILE"
+    "$IMG_FILE"
+    "$ORG_FILE"
+    "$AUTO_CPUFREQ_GTK_FILE"
+  )
+  if command -v desktop-file-install > /dev/null 2>&1; then
+    PUBLIC_FILE_TARGETS+=("$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE")
+  fi
+
   echo
+  if [ -e "$AUTO_CPUFREQ_FILE-remove" ] || [ -L "$AUTO_CPUFREQ_FILE-remove" ]; then
+    if [ ! -f "$AUTO_CPUFREQ_FILE-remove" ] \
+      || [ -L "$AUTO_CPUFREQ_FILE-remove" ]; then
+      echo "Error: Found an unexpected daemon-removal marker: $AUTO_CPUFREQ_FILE-remove"
+      echo "The source installation was not changed. Inspect that path before retrying."
+    else
+      echo "Error: The auto-cpufreq daemon is still installed, so the source installation was not changed."
+      echo "Run 'sudo auto-cpufreq --remove' to remove only the daemon, then run this installer again."
+    fi
+    return 1
+  fi
+  if [ -e "$CURRENT_PATH" ] && [ ! -L "$CURRENT_PATH" ]; then
+    echo "Error: $CURRENT_PATH exists but is not a managed release link."
+    return 1
+  fi
+
+  # Distro-provided Python modules are installed for /usr/bin/python3 (or the
+  # selected EL stream), not for an unrelated python3 earlier in root's PATH.
+  PYTHON_BIN="/usr/bin/python3"
+  PYGOBJECT_INSTALL="pypi"
+
   # First argument is the distro
   function detected_distro {
     header "Detected $1 distribution"
     header "Setting up Python environment"
   }
 
-  if [ -f /etc/debian_version ]; then  
-    detected_distro "Debian based"
-    VERSION=$(cat /etc/debian_version) 
-
-    # install necessary libgirepository debian package dependencies
-    # https://github.com/AdnanHodzic/auto-cpufreq/pull/826#issuecomment-2794549837
-    apt update
-
-    if apt-cache show libgirepository-2.0-dev > /dev/null 2>&1; then
-        LIB_GI_REPO="libgirepository-2.0-dev"
-        PYGOBJECT_VER="^3.50.0"
-    else
-        LIB_GI_REPO="libgirepository1.0-dev"
-        # pin PYGOBJECT_VER to libgirepository1.0-dev
-        # https://github.com/AdnanHodzic/auto-cpufreq/issues/813#issuecomment-2712543486
-        PYGOBJECT_VER="3.50.0"
-    fi
-
-    # Update PyGObject in pyproject.toml
-    # https://github.com/AdnanHodzic/auto-cpufreq/pull/826#issuecomment-2794549837
-    if [ -f ./pyproject.toml ]; then
-        if grep -q 'PyGObject *= *{[^}]*version *= *"' pyproject.toml; then
-            sed -i "s/\(PyGObject *= *{[^}]*version *= *\"\)[^\"]*\(.*\)/\1$PYGOBJECT_VER\2/" pyproject.toml
-            echo "PyGObject version updated to $PYGOBJECT_VER in pyproject.toml"
-        else
-            echo "Warning: Could not find PyGObject version entry in pyproject.toml!"
-        fi
-    else
-        echo "Error: pyproject.toml not found and PyGObject version not updated!"
-    fi
-
-
-    echo "Installing $LIB_GI_REPO for Debian version $VERSION..."
-    echo '---- '
-    apt install -y python3-dev python3-pip python3-venv python3-setuptools dmidecode \
-    "$LIB_GI_REPO" libcairo2-dev libgtk-3-dev gcc python3-gi
-
-  elif [ -f /etc/redhat-release ]; then
-    detected_distro "RedHat based"
-    if [ -f /etc/centos-release ]; then yum install platform-python-devel
-    else yum install python-devel
-    fi
-    yum install dmidecode gcc cairo-devel gobject-introspection-devel cairo-gobject-devel gtk3-devel
-
-  elif [ -f /etc/solus-release ]; then
-    detected_distro "Solus"
-    eopkg install pip python3 python3-devel dmidecode gobject-introspection-devel libcairo-devel gcc libgtk-3
-    eopkg install -c system.devel
-
-  elif [ -f /etc/arch-release ]; then
-    detected_distro "Arch Linux based"
-    pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc
-    
-elif [ -f /etc/os-release ];then
+  # Prefer the standardized os-release identification data. /etc/os-release
+  # takes precedence over /usr/lib/os-release as documented by os-release(5).
+  if [ -r /etc/os-release ]; then
     . /etc/os-release
-    case $ID in
-      opensuse-leap)
-        detected_distro "OpenSUSE"
-        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
-      ;;
-      opensuse-tumbleweed)
-        detected_distro "OpenSUSE"
-        zypper install -y python3 python3-pip python311-setuptools python3-devel gcc dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel
-      ;;
-      void)
-        detected_distro "Void Linux"
-        xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode cairo-devel gobject-introspection gcc gtk+3
-      ;;
-      nixos)
-        echo "NixOS detected"
-        echo "This installer is not supported on NixOS."
-        echo "Please refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
-        exit 1
-      ;;
-      *) manual_install;;
-    esac
-  else # In case /etc/os-release doesn't exist
+  elif [ -r /usr/lib/os-release ]; then
+    . /usr/lib/os-release
+  fi
+
+  # NixOS uses its native module/package integration instead of this installer.
+  if [ "${ID:-}" = "nixos" ]; then
+    echo "NixOS detected"
+    echo "This installer is not supported on NixOS."
+    echo "Please refer to the install instructions for NixOS at https://github.com/AdnanHodzic/auto-cpufreq#nixos"
+    exit 1
+
+  # Keep the historical marker-file checks as compatibility fallbacks, while
+  # ID_LIKE lets derivative distributions use their base distribution's
+  # packaging interface as recommended by os-release(5).
+  elif [ -f /etc/debian_version ] || os_release_matches debian; then
+    detected_distro "Debian based"
+    PYGOBJECT_INSTALL="system"
+    VERSION="${VERSION_ID:-unknown}"
+    [ -z "${VERSION_ID:-}" ] && [ -r /etc/debian_version ] && VERSION="$(cat /etc/debian_version)"
+
+    # apt(8) is intended for interactive use. Debian recommends apt-get for
+    # scripts because its command-line behavior is kept backward compatible.
+    if ! apt-get update; then
+      echo "Error: Failed to update package lists."
+      return 1
+    fi
+
+    # Detect a broken package-manager state before attempting installation.
+    # Do not repair or upgrade the user's system automatically.
+    if ! apt-get check; then
+      echo "Error: APT reports broken or inconsistent package dependencies."
+      echo "Repair the package-manager state and run the installer again."
+      return 1
+    fi
+
+    # Use Debian/Ubuntu's native PyGObject runtime instead of compiling
+    # PyGObject from PyPI. python3-gi provides the Python bindings and
+    # gir1.2-gtk-3.0 provides the GTK3 introspection data used by the GUI.
+    #
+    # gcc and python3-dev remain because other Python dependencies may still
+    # need to build native extensions when a compatible wheel is unavailable.
+    echo "Installing Debian/Ubuntu dependencies for version $VERSION..."
+    echo '---- '
+    if ! apt-get install -y \
+      python3 python3-dev python3-venv python3-setuptools \
+      dmidecode gcc git python3-gi gir1.2-gtk-3.0; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+
+    if ! verify_gtk3_runtime "$PYTHON_BIN"; then
+      echo "Error: The Debian/Ubuntu PyGObject GTK3 runtime could not be loaded."
+      echo "Verify that python3-gi and gir1.2-gtk-3.0 are correctly installed."
+      return 1
+    fi
+
+  elif [ -f /etc/redhat-release ] || os_release_matches rhel || os_release_matches fedora; then
+    detected_distro "RedHat based"
+
+    if command -v dnf > /dev/null 2>&1; then
+      RPM_PM="dnf"
+    elif command -v yum > /dev/null 2>&1; then
+      RPM_PM="yum"
+    else
+      echo "Error: Neither dnf nor yum is available to install RPM dependencies."
+      return 1
+    fi
+
+    if is_enterprise_linux; then
+      PYGOBJECT_INSTALL="el-compatible"
+      EL_MAJOR="$(enterprise_linux_major)"
+      case "$EL_MAJOR" in
+        8)
+          PYTHON_BIN="/usr/bin/python3.9"
+          RPM_PYTHON_PACKAGES=(python39 python39-devel python39-pip)
+          ;;
+        9|10)
+          RPM_PYTHON_PACKAGES=(python3 python3-devel python3-pip)
+          ;;
+        *)
+          echo "Error: Unsupported Enterprise Linux major version '$EL_MAJOR'."
+          return 1
+          ;;
+      esac
+    else
+      PYGOBJECT_INSTALL="system"
+      RPM_PYTHON_PACKAGES=(python3 python3-devel python3-pip)
+    fi
+
+    if [ "$PYGOBJECT_INSTALL" = "system" ]; then
+      RPM_PYTHON_PACKAGES+=(python3-gobject)
+    fi
+    if ! "$RPM_PM" install -y "${RPM_PYTHON_PACKAGES[@]}" \
+      dmidecode gcc git pkgconf-pkg-config cairo-devel \
+      gobject-introspection-devel cairo-gobject-devel gtk3-devel; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+
+  elif [ -f /etc/solus-release ] || [ "${ID:-}" = "solus" ]; then
+    detected_distro "Solus"
+    if ! eopkg install pip python3 python3-devel dmidecode gobject-introspection-devel libcairo-devel gcc git libgtk-3; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+    if ! eopkg install -c system.devel; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+
+  elif [ -f /etc/arch-release ] || [ "${ID:-}" = "artix" ] || os_release_matches arch; then
+    detected_distro "Arch Linux based"
+    if ! pacman -S --noconfirm --needed python python-pip python-setuptools base-devel dmidecode gobject-introspection gtk3 gcc git; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+
+  elif [ "${ID:-}" = "opensuse-leap" ] || [ "${ID:-}" = "opensuse-tumbleweed" ] || os_release_matches suse || os_release_matches opensuse; then
+    detected_distro "OpenSUSE"
+    if ! zypper install -y python3 python3-pip python311-setuptools python3-devel gcc git dmidecode gobject-introspection-devel python3-cairo-devel gtk3 gtk3-devel; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+
+  elif [ "${ID:-}" = "void" ]; then
+    detected_distro "Void Linux"
+    if ! xbps-install -Sy python3 python3-pip python3-devel python3-setuptools base-devel dmidecode cairo-devel gobject-introspection gcc git gtk+3; then
+      echo "Error: Failed to install required system dependencies."
+      return 1
+    fi
+
+  else
     manual_install
   fi
 
-  header "Installing necessary Python packages"
-
-  venv_dir=$VENV_PATH/venv
-  mkdir -p "$venv_dir"
-  python3 -m venv --system-site-packages "$venv_dir"
-
-  source "$venv_dir/bin/activate"
-  python3 -m pip install --upgrade pip wheel
-
-
-  # debian specific PyGObject Installation
-  if [ -f /etc/debian_version ] && [ "$PYGOBJECT_VER" = "3.50.0" ]; then
-    python3 -m pip install PyGObject==3.50.0
-  else
-    python3 -m pip install PyGObject
+  if [ ! -x "$PYTHON_BIN" ]; then
+    echo "Error: The distribution Python interpreter is unavailable at $PYTHON_BIN."
+    return 1
+  fi
+  if ! verify_python_version "$PYTHON_BIN"; then
+    echo "Error: auto-cpufreq requires Python 3.9 or newer."
+    return 1
   fi
 
-  header "Installing auto-cpufreq tool"
-  
-  git config --global --add safe.directory $(pwd)
-  python -m pip install .
+  header "Installing necessary Python packages"
+  if ! build_release; then
+    return 1
+  fi
+  prepared_share_dir="$PREPARED_RELEASE/share"
+  if [ -L "$CURRENT_PATH" ]; then
+    previous_release="$(readlink -f "$CURRENT_PATH")" || {
+      echo "Error: Failed to resolve the active source release."
+      discard_release "$PREPARED_RELEASE"
+      return 1
+    }
+  fi
+  # Keep every public integration file inside the same rollback boundary as
+  # current. A failed candidate must leave the previously installed command,
+  # desktop integration and PolicyKit entry exactly as they were.
+  if ! snapshot_public_files; then
+    discard_release "$PREPARED_RELEASE"
+    return 1
+  fi
+  if ! publish_file "$prepared_share_dir/scripts/auto-cpufreq-venv-wrapper" "$AUTO_CPUFREQ_FILE" 755; then
+    echo "Error: Failed to install auto-cpufreq command wrapper."
+    restore_public_files || echo "Error: Failed to restore public auto-cpufreq files."
+    discard_release "$PREPARED_RELEASE"
+    return 1
+  fi
 
-  mkdir -p $SHARE_DIR
-  cp -r scripts/ $SHARE_DIR
-  cp -r images/ $SHARE_DIR
-  cp images/icon.png $IMG_FILE
-  cp scripts/$(basename $ORG_FILE) $(dirname $ORG_FILE)
+  # current is the single code activation point. The stable wrapper has been
+  # published, but it keeps resolving the previous generation until this
+  # atomic link replacement succeeds.
+  if ! activate_release "$PREPARED_RELEASE"; then
+    restore_public_files || echo "Error: Failed to restore public auto-cpufreq files."
+    discard_release "$PREPARED_RELEASE"
+    return 1
+  fi
 
-  # this is necessary since we need this script before we can run auto-cpufreq itself
-  cp scripts/auto-cpufreq-venv-wrapper $AUTO_CPUFREQ_FILE
-  chmod a+x $AUTO_CPUFREQ_FILE
-  cp scripts/start_app $AUTO_CPUFREQ_GTK_FILE
-  chmod a+x $AUTO_CPUFREQ_GTK_FILE
+  # Candidate checks do not exercise the stable command users invoke. Verify
+  # that the published wrapper resolves current before announcing success.
+  if ! active_version="$("$PREPARED_RELEASE/venv/bin/python" -c \
+    'from importlib.metadata import version; print(version("auto-cpufreq"))')" \
+    || [ -z "$active_version" ] \
+    || ! verify_command_version "$AUTO_CPUFREQ_FILE" "$active_version"; then
+    echo "Error: The installed auto-cpufreq command failed its final version check."
+    candidate_is_active=true
+    if [ -n "$previous_release" ]; then
+      if activate_release "$previous_release"; then
+        candidate_is_active=false
+      else
+        echo "Error: Failed to restore the previous active source release."
+      fi
+    elif rm -f -- "$CURRENT_PATH"; then
+      candidate_is_active=false
+    else
+      echo "Error: Failed to undo the first source release activation."
+    fi
+    restore_public_files || echo "Error: Failed to restore public auto-cpufreq files."
+    $candidate_is_active || discard_release "$PREPARED_RELEASE"
+    return 1
+  fi
 
-  desktop-file-install --dir=$APPLICATIONS_PATH scripts/$AUTO_CPUFREQ_GTK_DESKTOP_FILE
-  update-desktop-database $APPLICATIONS_PATH
+  if ! publish_file "$prepared_share_dir/images/icon.png" "$IMG_FILE" 644; then
+    echo "Error: Failed to install auto-cpufreq icon."
+  elif ! publish_file "$prepared_share_dir/scripts/$(basename "$ORG_FILE")" "$ORG_FILE" 644; then
+    echo "Error: Failed to install auto-cpufreq PolicyKit policy."
+  elif ! publish_file "$prepared_share_dir/scripts/start_app" "$AUTO_CPUFREQ_GTK_FILE" 755; then
+    echo "Error: Failed to install auto-cpufreq GTK launcher."
+  elif command -v desktop-file-install > /dev/null 2>&1 \
+    && ! desktop-file-install --dir="$APPLICATIONS_PATH" "$prepared_share_dir/scripts/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"; then
+    echo "Error: Failed to install the auto-cpufreq desktop entry."
+  else
+    integration_files_published=true
+  fi
+
+  if [ "$integration_files_published" != true ]; then
+    candidate_is_active=true
+    if [ -n "$previous_release" ]; then
+      if activate_release "$previous_release"; then
+        candidate_is_active=false
+      else
+        echo "Error: Failed to restore the previous active source release."
+      fi
+    elif rm -f -- "$CURRENT_PATH"; then
+      candidate_is_active=false
+    else
+      echo "Error: Failed to undo the first source release activation."
+    fi
+    restore_public_files || echo "Error: Failed to restore public auto-cpufreq files."
+    $candidate_is_active || discard_release "$PREPARED_RELEASE"
+    return 1
+  fi
+
+  if ! command -v desktop-file-install > /dev/null 2>&1; then
+    echo "Warning: desktop-file-install is not available; skipping desktop menu integration."
+    echo "The GTK interface can still be launched with auto-cpufreq-gtk."
+  fi
+  discard_public_file_backups
+
+  if command -v update-desktop-database > /dev/null 2>&1; then
+    if ! update-desktop-database "$APPLICATIONS_PATH"; then
+      echo "Warning: Failed to refresh the desktop application database."
+    fi
+  fi
+
+  # The legacy venv/share copies are no longer executable state once current
+  # and every public entry point refer to the complete new generation.
+  if ! rm -rf -- "$INSTALL_ROOT/venv" "$LEGACY_SHARE_DIR"; then
+    echo "Error: Failed to remove obsolete source installation files."
+    return 1
+  fi
   
   header "auto-cpufreq tool successfully installed"
   echo "For list of options, run:"
@@ -199,43 +870,109 @@ elif [ -f /etc/os-release ];then
 }
 
 function tool_remove {
-  # stop any running auto-cpufreq argument (daemon/live/monitor)
-  tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
-  for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
+  local daemon_installed=false
+  local managed_file srv_remove
+  local -a tool_arg_pids
+
+  if [ -L "$INSTALL_ROOT" ]; then
+    echo "Error: Refusing to remove a symbolic-link source installation root."
+    return 1
+  fi
+  if [ ! -d "$RELEASES_PATH" ] \
+    && [ ! -d "$INSTALL_ROOT/venv" ]; then
+    # A failed recursive removal may already have deleted both recognizable
+    # layouts. Their absence alone does not prove that cleanup completed.
+    if [ -e "$INSTALL_ROOT" ]; then
+      echo "Error: Unrecognized or partially removed source installation: $INSTALL_ROOT"
+      echo "Inspect the remaining files before retrying; they were not deleted."
+      return 1
+    fi
+    echo; echo "No auto-cpufreq source installation was found."; echo
+    return 0
+  fi
 
   function remove_directory {
-    [ -d $1 ] && rm -rf $1
+    if [ ! -e "$1" ] && [ ! -L "$1" ]; then
+      return 0
+    fi
+    if [ ! -d "$1" ] || [ -L "$1" ]; then
+      echo "Error: Refusing to remove an unexpected source-install path: $1"
+      return 1
+    fi
+    rm -rf -- "$1"
   }
   function remove_file {
-    [ -f $1 ] && rm $1
+    if [ ! -e "$1" ] && [ ! -L "$1" ]; then
+      return 0
+    fi
+    if [ ! -f "$1" ] && [ ! -L "$1" ]; then
+      echo "Error: Refusing to remove an unexpected source-install path: $1"
+      return 1
+    fi
+    rm -f -- "$1"
   }
 
   srv_remove="$AUTO_CPUFREQ_FILE-remove"
 
-  # run uninstall in case of installed daemon
-  if [ -f $srv_remove -o -f $AUTO_CPUFREQ_FILE ]; then
-    eval "$AUTO_CPUFREQ_FILE --remove"
-  else
-    echo; echo "Couldn't remove the auto-cpufreq daemon, $srv_remove do not exist."
+  # The installer deploys the daemon-removal marker as a regular file. A
+  # symlink or another file type cannot prove that daemon cleanup is safe, so
+  # retain the source tree and let the administrator inspect the path.
+  if [ -e "$srv_remove" ] || [ -L "$srv_remove" ]; then
+    if [ ! -f "$srv_remove" ] || [ -L "$srv_remove" ]; then
+      echo "Error: Refusing to trust an unexpected daemon-removal marker: $srv_remove"
+      echo "The source installation was kept so removal can be retried."
+      return 1
+    fi
+    daemon_installed=true
   fi
 
-  # remove auto-cpufreq and all its supporting files
-  remove_directory $SHARE_DIR
+  # stop any running auto-cpufreq argument (daemon/live/monitor)
+  tool_arg_pids=($(pgrep -f "auto-cpufreq --"))
+  for pid in "${tool_arg_pids[@]}"; do [ $pid != $$ ] && kill "$pid"; done
 
-  remove_file "$AUTO_CPUFREQ_FILE-install"
-  remove_file $srv_remove
-  remove_file $AUTO_CPUFREQ_FILE
-  remove_file $AUTO_CPUFREQ_GTK_FILE
-  remove_file $IMG_FILE
-  remove_file $ORG_FILE
-  remove_file "/usr/local/bin/cpufreqctl.auto-cpufreq"
-  remove_file "/var/run/auto-cpufreq.stats"
+  if $daemon_installed; then
+    if ! "$AUTO_CPUFREQ_FILE" --remove; then
+      echo "Error: Failed to remove the auto-cpufreq daemon."
+      echo "The source installation was kept so removal can be retried."
+      return 1
+    fi
+  else
+    echo; echo "auto-cpufreq daemon is not installed; removing the source installation."
+  fi
 
-  remove_file "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"
-  update-desktop-database $APPLICATIONS_PATH
+  # Keep the versioned source tree until every public integration path has
+  # been removed. A partial cleanup then remains retryable with this installer.
+  if ! remove_directory "$LEGACY_SHARE_DIR"; then
+    echo "Error: Source installation removal is incomplete."
+    return 1
+  fi
 
-  # remove python virtual environment
-  remove_directory $VENV_PATH
+  for managed_file in \
+    "$AUTO_CPUFREQ_FILE-install" \
+    "$srv_remove" \
+    "$AUTO_CPUFREQ_FILE" \
+    "$AUTO_CPUFREQ_GTK_FILE" \
+    "$IMG_FILE" \
+    "$ORG_FILE" \
+    "/usr/local/bin/cpufreqctl.auto-cpufreq" \
+    "/var/run/auto-cpufreq.stats" \
+    "$APPLICATIONS_PATH/$AUTO_CPUFREQ_GTK_DESKTOP_FILE"; do
+    if ! remove_file "$managed_file"; then
+      echo "Error: Source installation removal is incomplete."
+      return 1
+    fi
+  done
+
+  if command -v update-desktop-database > /dev/null 2>&1; then
+    update-desktop-database "$APPLICATIONS_PATH" \
+      || echo "Warning: Failed to refresh the desktop application database."
+  fi
+
+  # Remove every source generation only after daemon removal has completed.
+  if ! remove_directory "$INSTALL_ROOT"; then
+    echo "Error: Source installation removal is incomplete."
+    return 1
+  fi
 
   echo; echo "auto-cpufreq tool and all its supporting files successfully removed"; echo
 }
@@ -245,6 +982,8 @@ if ((EUID != 0)); then
   echo; echo "Must be run as root (i.e: 'sudo $0')."; echo
   exit 1
 fi
+
+acquire_operation_lock || exit 1
 
 if [[ -z "$1" ]]; then ask_operation
 else

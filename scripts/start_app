@@ -1,7 +1,7 @@
 #!/usr/bin/sh
 
 # load python virtual environment
-venv_dir=/opt/auto-cpufreq/venv
+venv_dir=/opt/auto-cpufreq/current/venv
 . "$venv_dir/bin/activate"
 python_command="$venv_dir/bin/auto-cpufreq-gtk"
 

@@ -6,6 +6,7 @@ from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
 
 from contextlib import redirect_stdout
 from io import StringIO
+from os.path import isdir
 from subprocess import PIPE, run
 from threading import Thread
 
@@ -22,6 +23,9 @@ from auto_cpufreq.power_helper import bluetoothctl_exists
 if IS_INSTALLED_WITH_SNAP:
     CSS_FILE = "/snap/auto-cpufreq/current/style.css"
     ICON_FILE = "/snap/auto-cpufreq/current/icon.png"
+elif isdir("/opt/auto-cpufreq/current/share"):
+    CSS_FILE = "/opt/auto-cpufreq/current/share/scripts/style.css"
+    ICON_FILE = "/opt/auto-cpufreq/current/share/images/icon.png"
 else:
     CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
     ICON_FILE = "/usr/local/share/auto-cpufreq/images/icon.png"

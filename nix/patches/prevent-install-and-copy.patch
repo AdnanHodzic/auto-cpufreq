@@ -54,13 +54,13 @@ index f03e7de..2dff5fb 100755
 -
 -    tlp_service_detect() # output warning if TLP service is detected
 -
--    call("/usr/local/bin/auto-cpufreq-install", shell=True)
+-    return call("/usr/local/bin/auto-cpufreq-install", shell=True)
 +    # prevent needless copying and system changes
-+    pass
++    return 0
  
  def deploy_daemon_performance():
      print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
-@@ -363,37 +333,7 @@ def deploy_daemon_performance():
+@@ -363,43 +333,7 @@ def deploy_daemon_performance():
  
      call("/usr/local/bin/auto-cpufreq-install", shell=True)
  
@@ -72,6 +72,14 @@ index f03e7de..2dff5fb 100755
 -
 -    print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 -
+-    # Keep the removal entry point and local runtime state until the init
+-    # system cleanup succeeds. Restoring competing services before that point
+-    # could leave them running alongside an auto-cpufreq daemon that failed to
+-    # stop, and would make a failed removal unsafe to retry.
+-    remove_status = call("/usr/local/bin/auto-cpufreq-remove", shell=True)
+-    if remove_status != 0:
+-        return remove_status
+-
 -    bluetooth_enable() # turn on bluetooth on boot
 -
 -    # output warning if gnome power profile is stopped
@@ -79,9 +87,6 @@ index f03e7de..2dff5fb 100755
 -    gnome_power_svc_enable()
 -
 -    tuned_svc_enable()
--
--    # run auto-cpufreq daemon remove script
--    call("/usr/local/bin/auto-cpufreq-remove", shell=True)
 -
 -    # remove auto-cpufreq-remove
 -    os.remove("/usr/local/bin/auto-cpufreq-remove")
@@ -95,7 +100,8 @@ index f03e7de..2dff5fb 100755
 -        auto_cpufreq_stats_path.unlink()
 -
 -    cpufreqctl_restore() # restore original cpufrectl script
-+def remove_daemon(): pass
+-    return 0
++def remove_daemon(): return 0
  
  def gov_check():
      for gov in AVAILABLE_GOVERNORS:

@@ -7,7 +7,6 @@
 # core import
 import sys, time, os
 from subprocess import run
-from shutil import rmtree
 
 from auto_cpufreq.battery_scripts.battery import *
 from auto_cpufreq.config.config import config as conf, find_config_file
@@ -175,7 +174,9 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             root_check()
             running_daemon_check()
             gov_check()
-            deploy_daemon()
+            if deploy_daemon() != 0:
+                print("Failed to install the auto-cpufreq daemon.")
+                sys.exit(1)
             deploy_complete_msg()
         elif update:
             root_check()
@@ -199,19 +200,42 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 #check for AUR 
             elif IS_INSTALLED_WITH_AUR: print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
             else:
-                is_new_update = check_for_update()
-                if not is_new_update: return
+                target_tag = check_for_update()
+                if target_tag is None: sys.exit(1)
+                if target_tag is False: return
                 ans = input("Do you want to update auto-cpufreq to the latest release? [Y/n]: ").strip().lower()
-                if not os.path.exists(custom_dir): os.makedirs(custom_dir)
-                if os.path.exists(os.path.join(custom_dir, "auto-cpufreq")): rmtree(os.path.join(custom_dir, "auto-cpufreq"))
                 if ans in ['', 'y', 'yes']:
-                    remove_daemon()
-                    remove_complete_msg()
-                    new_update(custom_dir)
-                    print("enabling daemon")
-                    run(["auto-cpufreq", "--install"])
-                    print("auto-cpufreq is installed with the latest version")
-                    run(["auto-cpufreq", "--version"])
+                    os.makedirs(custom_dir, exist_ok=True)
+                    daemon_was_installed = os.path.exists("/usr/local/bin/auto-cpufreq-remove")
+                    if daemon_was_installed:
+                        if remove_daemon() != 0:
+                            print("The existing auto-cpufreq daemon could not be removed; update aborted.")
+                            sys.exit(1)
+                        remove_complete_msg()
+                    if not new_update(custom_dir, target_tag):
+                        if daemon_was_installed:
+                            print("Update failed. Reinstalling the daemon from the active source generation.")
+                            daemon_restore = run(["/usr/local/bin/auto-cpufreq", "--install"])
+                            if daemon_restore.returncode != 0:
+                                print("The daemon could not be restored automatically; run `sudo auto-cpufreq --install` after resolving the reported error.")
+                        sys.exit(1)
+                    if daemon_was_installed:
+                        print("enabling daemon")
+                        daemon_install = run(["/usr/local/bin/auto-cpufreq", "--install"])
+                        if daemon_install.returncode != 0:
+                            print("The source release was updated, but the daemon could not be installed.")
+                            sys.exit(1)
+                    version_result = run(
+                        ["/usr/local/bin/auto-cpufreq", "--version"],
+                        capture_output=True,
+                        text=True,
+                    )
+                    installed_version = parse_version_output(version_result.stdout)
+                    if version_result.returncode != 0 or installed_version is None \
+                        or installed_version != target_tag.removeprefix("v"):
+                        print("The updated auto-cpufreq command did not report the selected release.")
+                        sys.exit(1)
+                    print(f"auto-cpufreq is installed with the latest release ({target_tag})")
                 else: print("Aborted")
         elif remove:
             root_check()
@@ -227,7 +251,9 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 # {the following snippet also used in --update, update it there too(if required)}
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
-            else: remove_daemon()
+            elif remove_daemon() != 0:
+                print("Failed to remove the auto-cpufreq daemon.")
+                sys.exit(1)
             remove_complete_msg()
         elif stats:
             not_running_daemon_check()

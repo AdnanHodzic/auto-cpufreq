@@ -5,13 +5,19 @@ set -eu
 
 # bailout function
 err_exit() {
-  echo "$(basename $0): ${1:-wrong invocation. try --help for help.}" 1>&2
+  echo "$(basename "$0"): ${1:-wrong invocation. try --help for help.}" 1>&2
   exit 1
 }
 
-# load python virtual environment
-opt_path=/opt/auto-cpufreq
-venv_bin_dir=$opt_path/venv/bin
-. "$venv_bin_dir/activate"
+# A virtual environment does not need to be activated when its interpreter is
+# invoked explicitly. Keeping the paths explicit also prevents an accidental
+# fallback to the system Python when the virtual environment is incomplete.
+opt_path=/opt/auto-cpufreq/current
+venv_bin_dir="$opt_path/venv/bin"
+venv_python="$venv_bin_dir/python"
+venv_entrypoint="$venv_bin_dir/auto-cpufreq"
 
-PYTHONPATH=$opt_path $venv_bin_dir/python $venv_bin_dir/auto-cpufreq "$@"
+[ -x "$venv_python" ] || err_exit "virtual environment Python is unavailable. reinstall auto-cpufreq."
+[ -x "$venv_entrypoint" ] || err_exit "auto-cpufreq entry point is unavailable. reinstall auto-cpufreq."
+
+PYTHONPATH="$opt_path" "$venv_python" "$venv_entrypoint" "$@"

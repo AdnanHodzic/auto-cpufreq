@@ -8,8 +8,9 @@ from pathlib import Path
 from pickle import dump, load
 from re import search
 from requests import get, exceptions
-from shutil import copy
-from subprocess import call, check_output, DEVNULL, getoutput, run
+from shutil import copy, rmtree
+from subprocess import call, DEVNULL, getoutput, run
+from tempfile import mkdtemp
 from time import sleep
 from warnings import filterwarnings
 
@@ -31,7 +32,9 @@ else:
 # ToDo:
 # - replace get system/CPU load from: psutil.getloadavg() | available in 5.6.2)
 
-SCRIPTS_DIR = Path("/usr/local/share/auto-cpufreq/scripts/")
+SOURCE_INSTALL_ROOT = Path("/opt/auto-cpufreq")
+SOURCE_INSTALL_SCRIPTS_DIR = SOURCE_INSTALL_ROOT / "current/share/scripts"
+SCRIPTS_DIR = SOURCE_INSTALL_SCRIPTS_DIR if SOURCE_INSTALL_SCRIPTS_DIR.is_dir() else Path("/usr/local/share/auto-cpufreq/scripts/")
 CPUS = os.cpu_count()
 
 
@@ -125,8 +128,35 @@ def app_version():
         try: print(get_formatted_version())
         except Exception as e: print(repr(e))
 
+def parse_version_output(output):
+    match = search(
+        r"(?m)^auto-cpufreq version:[ \t]*(0|[1-9]\d*)\."
+        r"(0|[1-9]\d*)\.(0|[1-9]\d*)"
+        r"(?: \(git: [^)\r\n]+\))?[ \t]*$",
+        output,
+    )
+    return None if match is None else ".".join(match.groups())
+
+def is_source_installation():
+    package_file = Path(__file__).resolve()
+    for source_root in (
+        SOURCE_INSTALL_ROOT / "current",
+        SOURCE_INSTALL_ROOT / "venv",
+    ):
+        try: source_root = source_root.resolve(strict=True)
+        except OSError: continue
+        if package_file.is_relative_to(source_root): return True
+    return False
+
 def check_for_update():
-    # returns True if a new release is available from the GitHub repo
+    # Return the exact published tag so the artifact installed below cannot
+    # drift from the release that was presented to the user. False means the
+    # active version is current; None means the check itself could not finish.
+
+    if not is_source_installation():
+        print("The built-in updater is available only for auto-cpufreq source installations.")
+        print("Update this installation through the package manager that provided it.")
+        return None
 
     # Specify the repository and package name
     # IT IS IMPORTANT TO  THAT IF THE REPOSITORY STRUCTURE IS CHANGED, THE FOLLOWING FUNCTION NEEDS TO BE UPDATED ACCORDINGLY
@@ -141,57 +171,106 @@ def check_for_update():
             if message is not None and message.startswith("API rate limit exceeded"):
                 print("GitHub Rate limit exceeded. Please try again later within 1 hour or use different network/VPN.")
             else: print("Unexpected status code:", response.status_code)
-            return False
+            return None
     except (exceptions.ConnectionError, exceptions.Timeout,
             exceptions.RequestException, exceptions.HTTPError):
         print("Error Connecting to server!")
+        return None
+
+    latest_tag = latest_release.get("tag_name")
+    latest_match = search(
+        r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
+        latest_tag or "",
+    )
+    if latest_match is None:
+        print("Malformed release data!\nReinstall manually or open an issue on GitHub for help!")
+        return None
+
+    installed_match = search(
+        r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
+        get_literal_version("auto-cpufreq").partition("+")[0],
+    )
+    if installed_match is None:
+        print("Error retrieving current version!")
+        return None
+
+    latest_release_version = tuple(map(int, latest_match.groups()))
+    installed_release = tuple(map(int, installed_match.groups()))
+    installed_version = ".".join(installed_match.groups())
+    installed_version = "v" + installed_version
+    if latest_release_version <= installed_release:
+        print("auto-cpufreq is up to date")
         return False
 
-    latest_version = latest_release.get("tag_name")
+    print(f"Updates are available,\nCurrent version: {installed_version}\nLatest version: {latest_tag}")
+    print("If installed, the auto-cpufreq daemon will be stopped and reinstalled during this update")
+    return latest_tag
 
-    if latest_version is not None:
-        # Get the current version of auto-cpufreq
-        # Extract version number from the output string
-        output = check_output(['auto-cpufreq', '--version']).decode('utf-8')
-        try: version_line = next((search(r'\d+\.\d+\.\d+', line).group() for line in output.split('\n') if line.startswith('auto-cpufreq version')), None)
-        except AttributeError:
-            print("Error Retrieving Current Version!")
-            exit(1)
-        installed_version = "v" + version_line
-        #Check whether the same is installed or not
-        # Compare the latest version with the installed version and perform update if necessary
-        if latest_version == installed_version:
-            print("auto-cpufreq is up to date")
-            return False
-        else:
-            print(f"Updates are available,\nCurrent version: {installed_version}\nLatest version: {latest_version}")
-            print("Note that your previous custom settings might be erased with the following update")
-            return True
-    # Handle the case where "tag_name" key doesn't exist
-    else: print("Malformed Released data!\nReinstall manually or Open an issue on GitHub for help!")
+def _install_update_from_staging(source_dir, target_tag):
+    print(f"Cloning release {target_tag} to {source_dir}")
+    # A branch and a tag may share the same short name. Fetching the fully
+    # qualified tag ref prevents a branch from being installed by mistake.
+    git_commands = [
+        ["git", "init", "--quiet", source_dir],
+        ["git", "-C", source_dir, "remote", "add", "origin", GITHUB + ".git"],
+        [
+            "git", "-C", source_dir, "fetch", "--no-tags", "origin",
+            f"refs/tags/{target_tag}:refs/tags/{target_tag}",
+        ],
+        [
+            "git", "-C", source_dir, "checkout", "--detach", "--quiet",
+            f"refs/tags/{target_tag}^{{commit}}",
+        ],
+    ]
+    try: download_failed = any(run(command).returncode != 0 for command in git_commands)
+    except OSError as error:
+        print(f"Failed to prepare auto-cpufreq release {target_tag}: {error}")
+        return False
+    if download_failed:
+        print(f"Failed to download auto-cpufreq release {target_tag}.")
+        return False
 
-def new_update(custom_dir):
-    os.chdir(custom_dir)
-    print(f"Cloning the latest release to {custom_dir}")
-    run(["git", "clone", GITHUB+".git"])
-    os.chdir("auto-cpufreq")
-    print(f"package cloned to directory {custom_dir}")
-    run(['./auto-cpufreq-installer'], input='i\n', encoding='utf-8')
+    print(f"Package cloned to directory {source_dir}")
+    try:
+        installer = run([
+            "bash", "./auto-cpufreq-installer", "--install",
+        ], cwd=source_dir)
+    except OSError as error:
+        print(f"Failed to prepare auto-cpufreq release {target_tag}: {error}")
+        return False
+    if installer.returncode != 0:
+        print(f"Failed to install auto-cpufreq release {target_tag}.")
+        return False
+    return True
+
+def new_update(custom_dir, target_tag):
+    # The parent directory is user-selected, but the checkout itself must be
+    # updater-owned. A unique directory avoids deleting unrelated contents and
+    # prevents concurrent downloads from sharing a partially populated tree.
+    try: source_dir = mkdtemp(prefix="auto-cpufreq-", dir=custom_dir)
+    except OSError as error:
+        print(f"Failed to prepare auto-cpufreq release {target_tag}: {error}")
+        return False
+
+    try: return _install_update_from_staging(source_dir, target_tag)
+    finally:
+        try: rmtree(source_dir)
+        except OSError as error:
+            print(f"Warning: Failed to remove update staging directory {source_dir}: {error}")
 
 def get_literal_version(package_name):
     try:
-        package_metadata = metadata(package_name)
-        package_name = package_metadata['Name']
-        numbered_version, _, git_version = package_metadata['Version'].partition("+")
-
-        return f"{numbered_version}+{git_version}" # Construct the literal version string
-
-    except PackageNotFoundError: return f"Package '{package_name}' not found"
+        return metadata(package_name)["Version"]
+    except PackageNotFoundError:
+        return f"Package '{package_name}' not found"
 
 # return formatted version for a better readability
 def get_formatted_version():
-    splitted_version = get_literal_version("auto-cpufreq").split("+")
-    return splitted_version[0] + ("" if len(splitted_version) > 1 else " (git: " + splitted_version[1] + ")")
+    literal_version = get_literal_version("auto-cpufreq")
+    release, separator, revision = literal_version.partition("+")
+    if separator and revision:
+        return f"{release} (git: {revision})"
+    return release
 
 def app_res_use():
     p = psutil.Process()
@@ -303,7 +382,7 @@ def deploy_complete_msg():
 
 def remove_complete_msg():
     print("\n" + "-" * 25 + " auto-cpufreq daemon removed " + "-" * 25 + "\n")
-    print("auto-cpufreq successfully removed.")
+    print("auto-cpufreq daemon successfully removed.")
     footer()
 
 def deploy_daemon():
@@ -331,7 +410,7 @@ def deploy_daemon():
 
     tlp_service_detect() # output warning if TLP service is detected
 
-    call("/usr/local/bin/auto-cpufreq-install", shell=True)
+    return call("/usr/local/bin/auto-cpufreq-install", shell=True)
 
 def deploy_daemon_performance():
     print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
@@ -371,6 +450,14 @@ def remove_daemon():
 
     print("\n" + "-" * 21 + " Removing auto-cpufreq daemon " + "-" * 22 + "\n")
 
+    # Keep the removal entry point and local runtime state until the init
+    # system cleanup succeeds. Restoring competing services before that point
+    # could leave them running alongside an auto-cpufreq daemon that failed to
+    # stop, and would make a failed removal unsafe to retry.
+    remove_status = call("/usr/local/bin/auto-cpufreq-remove", shell=True)
+    if remove_status != 0:
+        return remove_status
+
     bluetooth_enable() # turn on bluetooth on boot
 
     # output warning if gnome power profile is stopped
@@ -378,9 +465,6 @@ def remove_daemon():
     gnome_power_svc_enable()
 
     tuned_svc_enable()
-
-    # run auto-cpufreq daemon remove script
-    call("/usr/local/bin/auto-cpufreq-remove", shell=True)
 
     # remove auto-cpufreq-remove
     os.remove("/usr/local/bin/auto-cpufreq-remove")
@@ -394,6 +478,7 @@ def remove_daemon():
         auto_cpufreq_stats_path.unlink()
 
     cpufreqctl_restore() # restore original cpufrectl script
+    return 0
 
 def gov_check():
     for gov in AVAILABLE_GOVERNORS:
