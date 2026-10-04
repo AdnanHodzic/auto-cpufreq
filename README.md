@@ -26,13 +26,14 @@ If you're having a problem with auto-cpufreq, before ([submitting an issue](http
 
 [![](https://img.youtube.com/vi/a-UcwAAXOoc/0.jpg)](https://www.youtube.com/watch?v=a-UcwAAXOoc)
 
-Example of auto-cpufreq GUI (available >= v2.0)
+Example of auto-cpufreq GUI (v3.2.0)
 
-<img src="https://github.com/user-attachments/assets/3e33bd92-964c-48f0-9825-4a66f9039261" width="480" alt="Example of auto-cpufreq GUI (available >= v2.0)" />
+<img src="https://github.com/user-attachments/assets/739beb37-4026-4d53-962d-a6b42a8efd0d" width="480" alt="Example of auto-cpufreq GUI (v3.2.0)" />
 
-Example of `auto-cpufreq --stats` CLI output
+Example of `auto-cpufreq --stats` CLI output (v3.2.0)
 
-<img src="https://github.com/user-attachments/assets/1114e937-35bd-4943-8a74-a932c04c367e" width="480" alt="Example of auto-cpufreq CLI output"/>
+<img src="https://github.com/user-attachments/assets/92c2e935-2e2b-4b6d-b90b-2136730ec704" width="480" alt="Example of auto-cpufreq v3.2.0 CLI output"/>
+
 
 ## Looking for developers and co-maintainers
 
