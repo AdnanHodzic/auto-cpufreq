@@ -156,6 +156,17 @@ cd auto-cpufreq && sudo ./auto-cpufreq-installer
 
 When replacing an existing source installation, remove its auto-cpufreq daemon first if the installer asks you to do so. Earlier versioned generations are retained until the source installation is removed.
 
+### Debian repositories (.deb package)
+
+auto-cpufreq has been added to [official Debian repositories](https://packages.debian.org/search?keywords=auto-cpufreq&searchon=names&suite=all&section=all), and will soon make its way to other derivatives like [Ubuntu](https://packages.ubuntu.com/search?keywords=auto-cpufreq&searchon=names&suite=all&section=all), Mint and et cetera. 
+
+```
+sudo apt install auto-cpufreq
+```
+
+The Debian package is currently being maintained by [emfox](https://github.com/emfox).
+
+
 ### Snap Store
 
 *Please note: while all [auto-cpufreq >= v2.0 CLI functionality](https://www.youtube.com/watch?v=SPGpkZ0AZVU&t=295s) will work as intended, [the GUI won't be available on Snap package installs](https://storage.googleapis.com/foolcontrol-media/2023/10/auto-cpufreq-v2-snap-deprecation-notice.png) due to [Snap package confinement limitations](https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579). Hence, please consider installing auto-cpufreq using [auto-cpufreq-installer](#auto-cpufreq-installer)*.
