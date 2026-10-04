@@ -33,7 +33,7 @@ python3Packages.buildPythonPackage rec {
   format = "pyproject";
 
   pname = "auto-cpufreq";
-  version = "3.1.0";
+  version = "3.2.0";
   # Flake source trees do not contain Git metadata. Use the release version
   # already declared by this derivation instead of weakening strict source builds.
   POETRY_DYNAMIC_VERSIONING_BYPASS = version;
