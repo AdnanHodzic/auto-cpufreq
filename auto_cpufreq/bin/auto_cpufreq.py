@@ -18,33 +18,87 @@ from auto_cpufreq.modules.system_info import (
     print_system_report,
 )
 from auto_cpufreq.modules.system_monitor import ViewType, SystemMonitor
+
 # import everything from power_helper, including bluetooth_disable and bluetooth_enable
 from auto_cpufreq.power_helper import *
 from threading import Thread
 
+
 @click.command()
-@click.option("--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations")
-@click.option("--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations")
+@click.option(
+    "--monitor", is_flag=True, help="Monitor and see suggestions for CPU optimizations"
+)
+@click.option(
+    "--live", is_flag=True, help="Monitor and make (temp.) suggested CPU optimizations"
+)
 @click.option("--daemon", is_flag=True, hidden=True)
-@click.option("--install", is_flag=True, help="Install daemon for (permanent) automatic CPU optimizations")
-@click.option("--update", is_flag=False, help="Update daemon and package for (permanent) automatic CPU optimizations", flag_value="--update")
-@click.option("--remove", is_flag=True, help="Remove daemon for (permanent) automatic CPU optimizations")
-@click.option("--force", is_flag=False, help="Force use of either \"powersave\" or \"performance\" governors. Setting to \"reset\" will go back to normal mode")
-@click.option("--turbo", is_flag=False, help="Force use of CPU turbo mode, if supported, with \"never\" or \"always\". Setting to \"auto\" automatically handles turbo mode")
-@click.option("--config", is_flag=False, required=False, help="Use config file at defined path",)
-@click.option("--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon")
+@click.option(
+    "--install",
+    is_flag=True,
+    help="Install daemon for (permanent) automatic CPU optimizations",
+)
+@click.option(
+    "--update",
+    is_flag=False,
+    help="Update daemon and package for (permanent) automatic CPU optimizations",
+    flag_value="--update",
+)
+@click.option(
+    "--remove",
+    is_flag=True,
+    help="Remove daemon for (permanent) automatic CPU optimizations",
+)
+@click.option(
+    "--force",
+    is_flag=False,
+    help='Force use of either "powersave" or "performance" governors. Setting to "reset" will go back to normal mode',
+)
+@click.option(
+    "--turbo",
+    is_flag=False,
+    help='Force use of CPU turbo mode, if supported, with "never" or "always". Setting to "auto" automatically handles turbo mode',
+)
+@click.option(
+    "--config",
+    is_flag=False,
+    required=False,
+    help="Use config file at defined path",
+)
+@click.option(
+    "--stats", is_flag=True, help="View live stats of CPU optimizations made by daemon"
+)
 @click.option("--pp", is_flag=True, help="Show Platform Profile information")
 @click.option("--get-state", is_flag=True, hidden=True)
 @click.option("--bluetooth_boot_off", is_flag=True, help="Turn off Bluetooth on boot")
 @click.option("--bluetooth_boot_on", is_flag=True, help="Turn on Bluetooth on boot")
-@click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
+@click.option(
+    "--debug", is_flag=True, help="Show debug info (include when submitting bugs)"
+)
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
-def main(monitor, live, daemon, install, update, remove, force, turbo, config, stats, pp, get_state,
-          bluetooth_boot_off, bluetooth_boot_on, debug, version, donate):
+def main(
+    monitor,
+    live,
+    daemon,
+    install,
+    update,
+    remove,
+    force,
+    turbo,
+    config,
+    stats,
+    pp,
+    get_state,
+    bluetooth_boot_off,
+    bluetooth_boot_on,
+    debug,
+    version,
+    donate,
+):
     # display info if config file is used
     config_path = find_config_file(config)
     conf.set_path(config_path)
+
     def config_info_dialog():
         if conf.has_config():
             print("\nUsing settings defined in " + config_path + " file")
@@ -52,7 +106,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
     if len(sys.argv) == 1:
         print("\n" + "-" * 32 + " auto-cpufreq " + "-" * 33 + "\n")
         print("Automatic CPU speed & power optimizer for Linux")
- 
+
         print("\nExample usage:\nauto-cpufreq --monitor")
         print("\n-----\n")
 
@@ -62,9 +116,9 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
         # set governor override unless None or invalid
         if force is not None:
             not_running_daemon_check()
-            root_check() # Calling root_check before set_override as it will require sudo access
-            set_override(force) # Calling set override, only if force has some values
-        
+            root_check()  # Calling root_check before set_override as it will require sudo access
+            set_override(force)  # Calling set override, only if force has some values
+
         if turbo is not None:
             not_running_daemon_check()
             root_check()
@@ -83,14 +137,18 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-                
-            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+
+            if (
+                IS_INSTALLED_WITH_SNAP
+                or tlp_stat_exists
+                or (systemctl_exists and not bool(gnome_power_status))
+            ):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
                     conf.notifier.stop()
                     sys.exit(0)
-            
+
             monitor = SystemMonitor(suggestion=True, type=ViewType.MONITOR)
             monitor.run(on_quit=conf.notifier.stop)
         elif live:
@@ -108,8 +166,12 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 gnome_power_detect_live()
                 tuned_stop_live()
                 tlp_service_detect()
-            
-            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+
+            if (
+                IS_INSTALLED_WITH_SNAP
+                or tlp_stat_exists
+                or (systemctl_exists and not bool(gnome_power_status))
+            ):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
@@ -118,14 +180,19 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
 
             gnome_power_stop_live()
             cpufreqctl()
+
             def live_daemon():
                 # Redirect stdout to suppress prints
                 class NullWriter:
-                    def write(self, _): pass
-                    def flush(self): pass
+                    def write(self, _):
+                        pass
+
+                    def flush(self):
+                        pass
+
                 try:
                     sys.stdout = NullWriter()
-                    
+
                     while True:
                         time.sleep(1)
                         set_autofreq()
@@ -133,16 +200,16 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                     raise
                 except Exception:
                     pass
-            
+
             def live_daemon_off():
                 gnome_power_start_live()
                 tuned_start_live()
                 cpufreqctl_restore()
                 conf.notifier.stop()
-            
+
             thread = Thread(target=live_daemon, daemon=True)
             thread.start()
-            
+
             monitor = SystemMonitor(type=ViewType.LIVE)
             monitor.run(on_quit=live_daemon_off)
         elif daemon:
@@ -165,7 +232,8 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                     print_system_report()
                     set_autofreq()
                     countdown(2)
-                except KeyboardInterrupt: break
+                except KeyboardInterrupt:
+                    break
             conf.notifier.stop()
         elif install:
             if IS_INSTALLED_WITH_SNAP:
@@ -189,41 +257,69 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             if "--update" in sys.argv:
                 update = True
                 sys.argv.remove("--update")
-                if len(sys.argv) == 2: custom_dir = sys.argv[1] 
+                if len(sys.argv) == 2:
+                    custom_dir = sys.argv[1]
 
             if IS_INSTALLED_WITH_SNAP:
                 print("Detected auto-cpufreq was installed using snap")
                 # refresh snap directly using this command
                 # path wont work in this case
 
-                print("Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`.")
-                #check for AUR 
-            elif IS_INSTALLED_WITH_AUR: print("Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper.")
+                print(
+                    "Please update using snap package manager, i.e: `sudo snap refresh auto-cpufreq`."
+                )
+                # check for AUR
+            elif IS_INSTALLED_WITH_AUR:
+                print(
+                    "Arch-based distribution with AUR support detected. Please refresh auto-cpufreq using your AUR helper."
+                )
             else:
                 target_tag = check_for_update()
-                if target_tag is None: sys.exit(1)
-                if target_tag is False: return
-                ans = input("Do you want to update auto-cpufreq to the latest release? [Y/n]: ").strip().lower()
-                if ans in ['', 'y', 'yes']:
+                if target_tag is None:
+                    sys.exit(1)
+                if target_tag is False:
+                    return
+                ans = (
+                    input(
+                        "Do you want to update auto-cpufreq to the latest release? [Y/n]: "
+                    )
+                    .strip()
+                    .lower()
+                )
+                if ans in ["", "y", "yes"]:
                     os.makedirs(custom_dir, exist_ok=True)
-                    daemon_was_installed = os.path.exists("/usr/local/bin/auto-cpufreq-remove")
+                    daemon_was_installed = os.path.exists(
+                        "/usr/local/bin/auto-cpufreq-remove"
+                    )
                     if daemon_was_installed:
                         if remove_daemon() != 0:
-                            print("The existing auto-cpufreq daemon could not be removed; update aborted.")
+                            print(
+                                "The existing auto-cpufreq daemon could not be removed; update aborted."
+                            )
                             sys.exit(1)
                         remove_complete_msg()
                     if not new_update(custom_dir, target_tag):
                         if daemon_was_installed:
-                            print("Update failed. Reinstalling the daemon from the active source generation.")
-                            daemon_restore = run(["/usr/local/bin/auto-cpufreq", "--install"])
+                            print(
+                                "Update failed. Reinstalling the daemon from the active source generation."
+                            )
+                            daemon_restore = run(
+                                ["/usr/local/bin/auto-cpufreq", "--install"]
+                            )
                             if daemon_restore.returncode != 0:
-                                print("The daemon could not be restored automatically; run `sudo auto-cpufreq --install` after resolving the reported error.")
+                                print(
+                                    "The daemon could not be restored automatically; run `sudo auto-cpufreq --install` after resolving the reported error."
+                                )
                         sys.exit(1)
                     if daemon_was_installed:
                         print("enabling daemon")
-                        daemon_install = run(["/usr/local/bin/auto-cpufreq", "--install"])
+                        daemon_install = run(
+                            ["/usr/local/bin/auto-cpufreq", "--install"]
+                        )
                         if daemon_install.returncode != 0:
-                            print("The source release was updated, but the daemon could not be installed.")
+                            print(
+                                "The source release was updated, but the daemon could not be installed."
+                            )
                             sys.exit(1)
                     version_result = run(
                         ["/usr/local/bin/auto-cpufreq", "--version"],
@@ -231,12 +327,20 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                         text=True,
                     )
                     installed_version = parse_version_output(version_result.stdout)
-                    if version_result.returncode != 0 or installed_version is None \
-                        or installed_version != target_tag.removeprefix("v"):
-                        print("The updated auto-cpufreq command did not report the selected release.")
+                    if (
+                        version_result.returncode != 0
+                        or installed_version is None
+                        or installed_version != target_tag.removeprefix("v")
+                    ):
+                        print(
+                            "The updated auto-cpufreq command did not report the selected release."
+                        )
                         sys.exit(1)
-                    print(f"auto-cpufreq is installed with the latest release ({target_tag})")
-                else: print("Aborted")
+                    print(
+                        f"auto-cpufreq is installed with the latest release ({target_tag})"
+                    )
+                else:
+                    print("Aborted")
         elif remove:
             root_check()
             if IS_INSTALLED_WITH_SNAP:
@@ -247,7 +351,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                         auto_cpufreq_stats_file.close()
 
                     auto_cpufreq_stats_path.unlink()
-                # ToDo: 
+                # ToDo:
                 # {the following snippet also used in --update, update it there too(if required)}
                 # * undo bluetooth boot disable
                 gnome_power_rm_reminder_snap()
@@ -264,14 +368,18 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             else:
                 gnome_power_detect()
                 tlp_service_detect()
-            
-            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+
+            if (
+                IS_INSTALLED_WITH_SNAP
+                or tlp_stat_exists
+                or (systemctl_exists and not bool(gnome_power_status))
+            ):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
                     conf.notifier.stop()
                     sys.exit(0)
-            
+
             monitor = SystemMonitor(type=ViewType.STATS)
             monitor.run()
         elif pp:
@@ -335,7 +443,9 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
             footer()
             print("If auto-cpufreq helped you out and you find it useful ...\n")
             print("Show your appreciation by donating!")
-            print(GITHUB+"#donate")
+            print(GITHUB + "#donate")
             footer()
-                
-if __name__ == "__main__": main()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,4 +1,5 @@
 import gi
+
 gi.require_version("Gdk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
 gi.require_version("Gtk", "3.0")
@@ -13,12 +14,21 @@ from threading import Thread
 import time
 
 from auto_cpufreq.config.config import config, find_config_file
-from auto_cpufreq.core import distro_info, get_formatted_version, get_override, get_turbo_override, sysinfo
+from auto_cpufreq.core import (
+    distro_info,
+    get_formatted_version,
+    get_override,
+    get_turbo_override,
+    sysinfo,
+)
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_AUR, IS_INSTALLED_WITH_SNAP
 from auto_cpufreq.modules.system_info import system_info
 from auto_cpufreq.power_helper import bluetoothctl_exists
 
-auto_cpufreq_stats_path = ("/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run") + "/auto-cpufreq.stats"
+auto_cpufreq_stats_path = (
+    "/var/snap/auto-cpufreq/current" if IS_INSTALLED_WITH_SNAP else "/var/run"
+) + "/auto-cpufreq.stats"
+
 
 def get_stats():
     if not isfile(auto_cpufreq_stats_path):
@@ -26,17 +36,22 @@ def get_stats():
     with open(auto_cpufreq_stats_path, "r") as file:
         return "".join(file.readlines()[-50:])
 
+
 def get_version():
     # snap package
-    if IS_INSTALLED_WITH_SNAP: return getoutput(r"echo \(Snap\) $SNAP_VERSION")
+    if IS_INSTALLED_WITH_SNAP:
+        return getoutput(r"echo \(Snap\) $SNAP_VERSION")
     # aur package
-    elif IS_INSTALLED_WITH_AUR: return getoutput("pacman -Qi auto-cpufreq | grep Version")
+    elif IS_INSTALLED_WITH_AUR:
+        return getoutput("pacman -Qi auto-cpufreq | grep Version")
     else:
         # source code (auto-cpufreq-installer)
-        try: return get_formatted_version()
+        try:
+            return get_formatted_version()
         except Exception as e:
             print(repr(e))
             pass
+
 
 def get_bluetooth_boot_status():
     if not bluetoothctl_exists:
@@ -60,6 +75,7 @@ def get_bluetooth_boot_status():
             return "on"
     except Exception:
         return None
+
 
 def _run_privileged_async(arguments, callback):
     def worker():
@@ -93,10 +109,7 @@ def _privileged_command_error(result, error):
         return "Authorization failed"
 
     stderr = (result.stderr or "").strip()
-    return stderr or (
-        f"Command failed with exit status "
-        f"{result.returncode}"
-    )
+    return stderr or (f"Command failed with exit status {result.returncode}")
 
 
 def _request_status_refresh(widget):
@@ -117,11 +130,7 @@ def _run_power_state_command(
     begin = getattr(parent, "begin_power_state_apply", None)
     finish = getattr(parent, "finish_power_state_apply", None)
 
-    tracked = (
-        callable(begin)
-        and callable(finish)
-        and begin(state_key)
-    )
+    tracked = callable(begin) and callable(finish) and begin(state_key)
 
     def complete(result, error):
         if tracked:
@@ -147,10 +156,14 @@ class RadioButtonView(Gtk.Box):
         self.default = Gtk.RadioButton.new_with_label_from_widget(None, "Default")
         self.default.connect("toggled", self.on_button_toggled, "reset")
         self.default.set_halign(Gtk.Align.END)
-        self.powersave = Gtk.RadioButton.new_with_label_from_widget(self.default, "Powersave")
+        self.powersave = Gtk.RadioButton.new_with_label_from_widget(
+            self.default, "Powersave"
+        )
         self.powersave.connect("toggled", self.on_button_toggled, "powersave")
         self.powersave.set_halign(Gtk.Align.END)
-        self.performance = Gtk.RadioButton.new_with_label_from_widget(self.default, "Performance")
+        self.performance = Gtk.RadioButton.new_with_label_from_widget(
+            self.default, "Performance"
+        )
         self.performance.connect("toggled", self.on_button_toggled, "performance")
         self.performance.set_halign(Gtk.Align.END)
 
@@ -192,12 +205,16 @@ class RadioButtonView(Gtk.Box):
     def set_selected(self):
         override = get_override()
         match override:
-            case "powersave": self.powersave.set_active(True)
-            case "performance": self.performance.set_active(True)
+            case "powersave":
+                self.powersave.set_active(True)
+            case "performance":
+                self.performance.set_active(True)
             case "default":
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.default.set_active(True)
-                if self.set_by_app: self.set_by_app = False
+                if self.set_by_app:
+                    self.set_by_app = False
+
 
 class CPUTurboOverride(Gtk.Box):
     def __init__(self):
@@ -209,10 +226,10 @@ class CPUTurboOverride(Gtk.Box):
         self.label = Gtk.Label("CPU Turbo Override", name="bold")
 
         self.auto = Gtk.RadioButton.new_with_label_from_widget(None, "Auto")
-        self.auto.connect("toggled", self.on_button_toggled,  "auto")
+        self.auto.connect("toggled", self.on_button_toggled, "auto")
         self.auto.set_halign(Gtk.Align.END)
         self.never = Gtk.RadioButton.new_with_label_from_widget(self.auto, "Never")
-        self.never.connect("toggled", self.on_button_toggled,  "never")
+        self.never.connect("toggled", self.on_button_toggled, "never")
         self.never.set_halign(Gtk.Align.END)
         self.always = Gtk.RadioButton.new_with_label_from_widget(self.auto, "Always")
         self.always.connect("toggled", self.on_button_toggled, "always")
@@ -255,12 +272,16 @@ class CPUTurboOverride(Gtk.Box):
     def set_selected(self):
         override = get_turbo_override()
         match override:
-            case "never": self.never.set_active(True)
-            case "always": self.always.set_active(True)
+            case "never":
+                self.never.set_active(True)
+            case "always":
+                self.always.set_active(True)
             case "auto":
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.auto.set_active(True)
-                if self.set_by_app: self.set_by_app = False
+                if self.set_by_app:
+                    self.set_by_app = False
+
 
 class BluetoothBootControl(Gtk.Box):
     def __init__(self, show_advanced_button=True):
@@ -316,11 +337,7 @@ class BluetoothBootControl(Gtk.Box):
             self.set_by_app = False
             return
 
-        option = (
-            "--bluetooth_boot_on"
-            if action == "on"
-            else "--bluetooth_boot_off"
-        )
+        option = "--bluetooth_boot_on" if action == "on" else "--bluetooth_boot_off"
 
         self.set_sensitive(False)
         self.advanced_btn.set_sensitive(False)
@@ -342,23 +359,32 @@ class BluetoothBootControl(Gtk.Box):
     def set_selected(self):
         status = get_bluetooth_boot_status()
         match status:
-            case "off": self.off_btn.set_active(True)
+            case "off":
+                self.off_btn.set_active(True)
             case "on" | _:
                 # because this is the default button, it does not trigger the callback when set by the app
                 self.on_btn.set_active(True)
-                if self.set_by_app: self.set_by_app = False
+                if self.set_by_app:
+                    self.set_by_app = False
+
 
 class CurrentGovernorBox(Gtk.Box):
     def __init__(self):
         super().__init__(spacing=25)
         self.static = Gtk.Label(label="Current Governor", name="bold")
-        self.governor = Gtk.Label(label=getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0], halign=Gtk.Align.END)
+        self.governor = Gtk.Label(
+            label=getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0],
+            halign=Gtk.Align.END,
+        )
 
         self.pack_start(self.static, False, False, 0)
         self.pack_start(self.governor, False, False, 0)
 
     def refresh(self):
-        self.governor.set_label(getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0])
+        self.governor.set_label(
+            getoutput("cpufreqctl.auto-cpufreq --governor").strip().split(" ")[0]
+        )
+
 
 class BatteryInfoBox(Gtk.Box):
     def __init__(self):
@@ -410,13 +436,23 @@ class BatteryInfoBox(Gtk.Box):
             self.ac_label.set_label(f"AC plugged: {ac_text}")
 
             if battery_info.is_ac_plugged is not None:
-                start_text = str(battery_info.charging_start_threshold) if battery_info.charging_start_threshold is not None else "None"
+                start_text = (
+                    str(battery_info.charging_start_threshold)
+                    if battery_info.charging_start_threshold is not None
+                    else "None"
+                )
             else:
                 start_text = "Unknown"
-            self.start_threshold_label.set_label(f"Charging start threshold: {start_text}")
+            self.start_threshold_label.set_label(
+                f"Charging start threshold: {start_text}"
+            )
 
             if battery_info.is_ac_plugged is not None:
-                stop_text = str(battery_info.charging_stop_threshold) if battery_info.charging_stop_threshold is not None else "None"
+                stop_text = (
+                    str(battery_info.charging_stop_threshold)
+                    if battery_info.charging_stop_threshold is not None
+                    else "None"
+                )
             else:
                 stop_text = "Unknown"
             self.stop_threshold_label.set_label(f"Charging stop threshold: {stop_text}")
@@ -427,6 +463,7 @@ class BatteryInfoBox(Gtk.Box):
             self.ac_label.set_label("AC plugged: Unknown")
             self.start_threshold_label.set_label("Charging start threshold: Unknown")
             self.stop_threshold_label.set_label("Charging stop threshold: Unknown")
+
 
 class CPUFreqScalingBox(Gtk.Box):
     def __init__(self):
@@ -484,6 +521,7 @@ class CPUFreqScalingBox(Gtk.Box):
             self.epb_label.hide()
             self.hwp_dynamic_boost_label.hide()
 
+
 class SystemStatisticsBox(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -537,8 +575,12 @@ class SystemStatisticsBox(Gtk.Box):
 
             avg_temp = 0.0
             if report.cores_info:
-                avg_temp = sum(core.temperature for core in report.cores_info) / len(report.cores_info)
-                self.temp_label.set_label(f"Average temp. of all cores: {avg_temp:.2f} °C")
+                avg_temp = sum(core.temperature for core in report.cores_info) / len(
+                    report.cores_info
+                )
+                self.temp_label.set_label(
+                    f"Average temp. of all cores: {avg_temp:.2f} °C"
+                )
                 self.temp_label.show()
             else:
                 self.temp_label.hide()
@@ -571,7 +613,9 @@ class SystemStatisticsBox(Gtk.Box):
             if report.is_turbo_on[0] is not None:
                 turbo_status = "On" if report.is_turbo_on[0] else "Off"
             elif report.is_turbo_on[1] is not None:
-                turbo_status = f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
+                turbo_status = (
+                    f"Auto mode {'enabled' if report.is_turbo_on[1] else 'disabled'}"
+                )
             else:
                 turbo_status = "Unknown"
             self.turbo_label.set_label(f"Setting turbo boost: {turbo_status}")
@@ -584,6 +628,7 @@ class SystemStatisticsBox(Gtk.Box):
             self.load_status_label.hide()
             self.usage_status_label.hide()
             self.turbo_label.set_label("Setting turbo boost: Unknown")
+
 
 class SystemStatsLabel(Gtk.Label):
     def __init__(self):
@@ -599,12 +644,13 @@ class SystemStatsLabel(Gtk.Label):
         sysinfo()
         self.set_label(text.getvalue())
         sys.stdout = old_stdout
-    
+
+
 class CPUFreqStatsLabel(Gtk.Label):
     def __init__(self):
         super().__init__()
         self.refresh()
-  
+
     def refresh(self):
         stats = get_stats().split("\n")
         start = None
@@ -616,13 +662,16 @@ class CPUFreqStatsLabel(Gtk.Label):
             del stats[:i]
             del stats[-4:]
             self.set_label("\n".join(stats))
- 
+
+
 class DropDownMenu(Gtk.MenuButton):
     def __init__(self, parent):
         super().__init__()
         self.set_halign(Gtk.Align.END)
         self.set_valign(Gtk.Align.START)
-        self.image = Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
+        self.image = Gtk.Image.new_from_icon_name(
+            "open-menu-symbolic", Gtk.IconSize.LARGE_TOOLBAR
+        )
         self.add(self.image)
         self.menu = self.build_menu(parent)
         self.set_popup(self.menu)
@@ -685,8 +734,7 @@ class DropDownMenu(Gtk.MenuButton):
                 text="Daemon successfully removed",
             )
             dialog.format_secondary_text(
-                "The app will now close. "
-                "Please reopen to apply changes"
+                "The app will now close. Please reopen to apply changes"
             )
             dialog.run()
             dialog.destroy()
@@ -699,13 +747,12 @@ class DropDownMenu(Gtk.MenuButton):
                 buttons=Gtk.ButtonsType.OK,
                 text="Daemon removal failed",
             )
-            dialog.format_secondary_text(
-                f"The following error occurred:\n{e}"
-            )
+            dialog.format_secondary_text(f"The following error occurred:\n{e}")
             dialog.run()
             dialog.destroy()
 
         return False
+
 
 class AboutDialog(Gtk.Dialog):
     def __init__(self, parent):
@@ -719,17 +766,16 @@ class AboutDialog(Gtk.Dialog):
         if not isfile(icon_file):
             icon_file = "/usr/local/share/auto-cpufreq/images/icon.png"
         img_buffer = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-            filename=icon_file,
-            width=150,
-            height=150,
-            preserve_aspect_ratio=True
+            filename=icon_file, width=150, height=150, preserve_aspect_ratio=True
         )
         self.image = Gtk.Image.new_from_pixbuf(img_buffer)
         self.title = Gtk.Label(label="auto-cpufreq", name="bold")
         self.version = Gtk.Label(label=app_version)
         self.python = Gtk.Label(label=f"Python {python_version()}")
         self.github = Gtk.Label(label=GITHUB)
-        self.license = Gtk.Label(label="Licensed under GNU GPL v3 or later", name="small")
+        self.license = Gtk.Label(
+            label="Licensed under GNU GPL v3 or later", name="small"
+        )
         self.love = Gtk.Label(label="Made with <3", name="small")
 
         self.box.pack_start(self.image, False, False, 0)
@@ -740,6 +786,7 @@ class AboutDialog(Gtk.Dialog):
         self.box.pack_start(self.license, False, False, 0)
         self.box.pack_start(self.love, False, False, 0)
         self.show_all()
+
 
 class UpdateDialog(Gtk.Dialog):
     def __init__(self, parent, current_version: str, latest_version: str):
@@ -756,6 +803,7 @@ class UpdateDialog(Gtk.Dialog):
         self.box.pack_start(self.latest_version, True, False, 0)
 
         self.show_all()
+
 
 class ConfirmDialog(Gtk.Dialog):
     def __init__(self, parent, message: str):
@@ -787,9 +835,7 @@ class MonitorModeView(Gtk.Box):
         self.refresh_interval = refresh_interval
         self.refresh_id = None
 
-        self.header = Gtk.Box(
-            orientation=Gtk.Orientation.HORIZONTAL
-        )
+        self.header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.header.set_margin_bottom(2)
 
         self.title = Gtk.Label(
@@ -797,32 +843,22 @@ class MonitorModeView(Gtk.Box):
             name="bold",
         )
         self.title.set_halign(Gtk.Align.START)
-        self.header.pack_start(
-            self.title, True, True, 0
-        )
+        self.header.pack_start(self.title, True, True, 0)
 
-        self.back_button = Gtk.Button.new_with_label(
-            "Back"
-        )
+        self.back_button = Gtk.Button.new_with_label("Back")
         self.back_button.connect(
             "clicked",
             self.on_back_clicked,
         )
-        self.header.pack_end(
-            self.back_button, False, False, 0
-        )
+        self.header.pack_end(self.back_button, False, False, 0)
 
-        self.pack_start(
-            self.header, False, False, 0
-        )
+        self.pack_start(self.header, False, False, 0)
 
         self.error_label = Gtk.Label(label="")
         self.error_label.set_halign(Gtk.Align.START)
         self.error_label.set_xalign(0)
         self.error_label.set_no_show_all(True)
-        self.pack_start(
-            self.error_label, False, False, 0
-        )
+        self.pack_start(self.error_label, False, False, 0)
 
         suggestions = Gtk.Frame()
         heading = Gtk.Label(
@@ -845,45 +881,39 @@ class MonitorModeView(Gtk.Box):
         governor_name.set_halign(Gtk.Align.START)
         governor_name.set_xalign(0)
 
-        self.governor_suggestion = Gtk.Label(
-            label="—"
-        )
-        self.governor_suggestion.set_halign(
-            Gtk.Align.START
-        )
+        self.governor_suggestion = Gtk.Label(label="—")
+        self.governor_suggestion.set_halign(Gtk.Align.START)
         self.governor_suggestion.set_xalign(0)
 
         grid.attach(governor_name, 0, 0, 1, 1)
         grid.attach(
             self.governor_suggestion,
-            1, 0, 1, 1,
+            1,
+            0,
+            1,
+            1,
         )
 
-        self.turbo_name = Gtk.Label(
-            label="Turbo Boost"
-        )
+        self.turbo_name = Gtk.Label(label="Turbo Boost")
         self.turbo_name.set_halign(Gtk.Align.START)
         self.turbo_name.set_xalign(0)
         self.turbo_name.set_no_show_all(True)
 
-        self.turbo_suggestion = Gtk.Label(
-            label="—"
-        )
-        self.turbo_suggestion.set_halign(
-            Gtk.Align.START
-        )
+        self.turbo_suggestion = Gtk.Label(label="—")
+        self.turbo_suggestion.set_halign(Gtk.Align.START)
         self.turbo_suggestion.set_xalign(0)
         self.turbo_suggestion.set_no_show_all(True)
 
         grid.attach(self.turbo_name, 0, 1, 1, 1)
         grid.attach(
             self.turbo_suggestion,
-            1, 1, 1, 1,
+            1,
+            1,
+            1,
+            1,
         )
 
-        self.report_view.prepend_right(
-            suggestions
-        )
+        self.report_view.prepend_right(suggestions)
 
         self.scrolled = Gtk.ScrolledWindow()
         self.scrolled.set_policy(
@@ -893,9 +923,7 @@ class MonitorModeView(Gtk.Box):
         self.scrolled.set_can_focus(True)
         self.scrolled.add(self.report_view)
 
-        self.pack_start(
-            self.scrolled, True, True, 0
-        )
+        self.pack_start(self.scrolled, True, True, 0)
 
         self.refresh_in_thread()
 
@@ -914,20 +942,12 @@ class MonitorModeView(Gtk.Box):
 
     def _refresh(self):
         try:
-            report = (
-                system_info.generate_system_report()
-            )
-            suggested_governor = (
-                system_info.governor_suggestion(report)
-            )
+            report = system_info.generate_system_report()
+            suggested_governor = system_info.governor_suggestion(report)
 
             suggested_turbo = None
             if report.is_turbo_on[0] is not None:
-                suggested_turbo = (
-                    system_info.turbo_on_suggestion(
-                        report
-                    )
-                )
+                suggested_turbo = system_info.turbo_on_suggestion(report)
 
         except Exception as error:
             if self.running:
@@ -949,17 +969,12 @@ class MonitorModeView(Gtk.Box):
         if not self.running:
             return False
 
-        self.error_label.set_text(
-            "Unable to refresh system information: "
-            f"{message}"
-        )
+        self.error_label.set_text(f"Unable to refresh system information: {message}")
         self.error_label.show()
 
-        self.refresh_id = (
-            GLib.timeout_add_seconds(
-                self.refresh_interval,
-                self.refresh_in_thread,
-            )
+        self.refresh_id = GLib.timeout_add_seconds(
+            self.refresh_interval,
+            self.refresh_in_thread,
         )
         return False
 
@@ -973,10 +988,7 @@ class MonitorModeView(Gtk.Box):
             return False
 
         self.error_label.hide()
-        self.title.set_text(
-            "Monitor Mode - "
-            f"{time.strftime('%H:%M:%S')}"
-        )
+        self.title.set_text(f"Monitor Mode - {time.strftime('%H:%M:%S')}")
 
         # Same observed-state renderer as the normal GTK dashboard.
         self.report_view.apply_report(report)
@@ -984,48 +996,31 @@ class MonitorModeView(Gtk.Box):
         if (
             report.current_gov is not None
             and suggested_governor is not None
-            and suggested_governor
-            != report.current_gov
+            and suggested_governor != report.current_gov
         ):
-            self.governor_suggestion.set_text(
-                f"Use {suggested_governor}"
-            )
+            self.governor_suggestion.set_text(f"Use {suggested_governor}")
         else:
-            self.governor_suggestion.set_text(
-                "No change suggested"
-            )
+            self.governor_suggestion.set_text("No change suggested")
 
-        turbo_available = (
-            report.is_turbo_on[0] is not None
-        )
+        turbo_available = report.is_turbo_on[0] is not None
 
         if turbo_available:
             self.turbo_name.show()
             self.turbo_suggestion.show()
 
-            if (
-                suggested_turbo is not None
-                and suggested_turbo
-                != report.is_turbo_on[0]
-            ):
+            if suggested_turbo is not None and suggested_turbo != report.is_turbo_on[0]:
                 self.turbo_suggestion.set_text(
-                    "Turn on"
-                    if suggested_turbo
-                    else "Turn off"
+                    "Turn on" if suggested_turbo else "Turn off"
                 )
             else:
-                self.turbo_suggestion.set_text(
-                    "No change suggested"
-                )
+                self.turbo_suggestion.set_text("No change suggested")
         else:
             self.turbo_name.hide()
             self.turbo_suggestion.hide()
 
-        self.refresh_id = (
-            GLib.timeout_add_seconds(
-                self.refresh_interval,
-                self.refresh_in_thread,
-            )
+        self.refresh_id = GLib.timeout_add_seconds(
+            self.refresh_interval,
+            self.refresh_in_thread,
         )
         return False
 
@@ -1045,12 +1040,21 @@ class MonitorModeView(Gtk.Box):
 
 class DaemonNotRunningView(Gtk.Box):
     def __init__(self, parent):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+        super().__init__(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10,
+            halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.CENTER,
+        )
 
         self.label = Gtk.Label(label="auto-cpufreq daemon is not running")
-        self.sublabel = Gtk.Label(label="Install the daemon for permanent optimization, or use Monitor mode to preview")
+        self.sublabel = Gtk.Label(
+            label="Install the daemon for permanent optimization, or use Monitor mode to preview"
+        )
 
-        self.button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10, halign=Gtk.Align.CENTER)
+        self.button_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=10, halign=Gtk.Align.CENTER
+        )
         self.install_button = Gtk.Button.new_with_label("Install Daemon")
         self.monitor_button = Gtk.Button.new_with_label("Monitor Mode")
 
@@ -1098,8 +1102,7 @@ class DaemonNotRunningView(Gtk.Box):
                 text="Daemon successfully installed",
             )
             dialog.format_secondary_text(
-                "The app will now close. "
-                "Please reopen to apply changes"
+                "The app will now close. Please reopen to apply changes"
             )
             dialog.run()
             dialog.destroy()
@@ -1112,9 +1115,7 @@ class DaemonNotRunningView(Gtk.Box):
                 buttons=Gtk.ButtonsType.OK,
                 text="Daemon install failed",
             )
-            dialog.format_secondary_text(
-                f"The following error occurred:\n{e}"
-            )
+            dialog.format_secondary_text(f"The following error occurred:\n{e}")
             dialog.run()
             dialog.destroy()
 
