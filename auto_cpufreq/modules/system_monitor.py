@@ -159,12 +159,12 @@ class SystemMonitor:
         # Capture focus only now. The user may have scrolled while
         # the worker was collecting telemetry.
         if len(self.left_content) > 0:
-            _, self.last_focus_left = self.left_listbox.get_focus()
+            _, self.last_focus_left = self.left_listbox.body.get_focus()
             if self.last_focus_left is None:
                 self.last_focus_left = 0
 
         if len(self.right_content) > 0:
-            _, self.last_focus_right = self.right_listbox.get_focus()
+            _, self.last_focus_right = self.right_listbox.body.get_focus()
             if self.last_focus_right is None:
                 self.last_focus_right = 0
 
