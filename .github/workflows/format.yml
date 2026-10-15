@@ -1,0 +1,30 @@
+name: Ruff Format
+
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+      - ".gitignore"
+      - "LICENSE"
+  pull_request:
+
+jobs:
+  ruff-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: poetry
+
+      - name: Install development dependencies
+        run: poetry install --only dev --no-root
+
+      - name: Check Python formatting
+        run: poetry run ruff format --check .

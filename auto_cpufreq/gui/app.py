@@ -1,4 +1,5 @@
 import gi
+
 gi.require_version("Gdk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
 gi.require_version("Gtk", "3.0")
@@ -13,7 +14,15 @@ from threading import Thread
 from auto_cpufreq.config.config import config
 from auto_cpufreq.core import check_for_update, daemon_is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
-from auto_cpufreq.gui.objects import BluetoothBootControl, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, UpdateDialog
+from auto_cpufreq.gui.objects import (
+    BluetoothBootControl,
+    DaemonNotRunningView,
+    DropDownMenu,
+    MonitorModeView,
+    RadioButtonView,
+    CPUTurboOverride,
+    UpdateDialog,
+)
 from auto_cpufreq.modules.system_info import (
     battery_power_label,
     format_platform_profile_choices,
@@ -115,11 +124,7 @@ def _turbo_status(report):
 
 
 def _configuration_label_text():
-    prefix = (
-        "Using configuration file"
-        if config.has_config()
-        else "Configuration file"
-    )
+    prefix = "Using configuration file" if config.has_config() else "Configuration file"
     return f"{prefix}: {config.path}"
 
 
@@ -154,9 +159,7 @@ class SystemReportView(Gtk.Box):
                 ("driver", "CPU driver"),
             )
         ):
-            _, self.system_values[key] = _add_row(
-                self.system_grid, row, name
-            )
+            _, self.system_values[key] = _add_row(self.system_grid, row, name)
         self.left_column.pack_start(system_frame, False, False, 0)
 
         cpu_frame = Gtk.Frame()
@@ -177,12 +180,8 @@ class SystemReportView(Gtk.Box):
         limits_grid = Gtk.Grid()
         limits_grid.set_column_spacing(18)
         limits_grid.set_row_spacing(4)
-        _, self.max_freq_value = _add_row(
-            limits_grid, 0, "Maximum frequency"
-        )
-        _, self.min_freq_value = _add_row(
-            limits_grid, 1, "Minimum frequency"
-        )
+        _, self.max_freq_value = _add_row(limits_grid, 0, "Maximum frequency")
+        _, self.min_freq_value = _add_row(limits_grid, 1, "Minimum frequency")
         self.cpu_box.pack_start(limits_grid, False, False, 0)
 
         self.cores_grid = Gtk.Grid()
@@ -216,9 +215,7 @@ class SystemReportView(Gtk.Box):
                 ("provider", "Provider"),
             )
         ):
-            name_label, value_label = _add_row(
-                self.platform_grid, row, name
-            )
+            name_label, value_label = _add_row(self.platform_grid, row, name)
             self.platform_names[key] = name_label
             self.platform_values[key] = value_label
 
@@ -243,9 +240,7 @@ class SystemReportView(Gtk.Box):
                 ("turbo", "Turbo Boost"),
             )
         ):
-            _, self.power_values[key] = _add_row(
-                self.power_grid, row, name
-            )
+            _, self.power_values[key] = _add_row(self.power_grid, row, name)
         _set_row_visible(self.power_grid, 3, False)
         self.right_column.pack_start(power_frame, False, False, 0)
 
@@ -262,9 +257,7 @@ class SystemReportView(Gtk.Box):
                 ("power", "Battery power"),
             )
         ):
-            name_label, value_label = _add_row(
-                self.battery_grid, row, name
-            )
+            name_label, value_label = _add_row(self.battery_grid, row, name)
             self.battery_names[key] = name_label
             self.battery_values[key] = value_label
         self.right_column.pack_start(battery_frame, False, False, 0)
@@ -285,18 +278,14 @@ class SystemReportView(Gtk.Box):
         self.pack_start(self.columns, True, True, 0)
 
     def prepend_right(self, widget):
-        self.right_column.pack_start(
-            widget, False, False, 0
-        )
+        self.right_column.pack_start(widget, False, False, 0)
         self.right_column.reorder_child(widget, 0)
 
     def _refresh_core_rows(self, cores):
         for child in self.cores_grid.get_children():
             self.cores_grid.remove(child)
 
-        for column, text in enumerate(
-            ("CPU", "Usage", "Temperature", "Frequency")
-        ):
+        for column, text in enumerate(("CPU", "Usage", "Temperature", "Frequency")):
             label = Gtk.Label(label=text, name="bold")
             label.set_halign(Gtk.Align.START)
             label.set_xalign(0)
@@ -306,16 +295,8 @@ class SystemReportView(Gtk.Box):
             values = (
                 f"CPU{core.id}",
                 f"{core.usage:.1f}%",
-                (
-                    f"{core.temperature:.0f} °C"
-                    if core.temperature > 0
-                    else "—"
-                ),
-                (
-                    f"{core.frequency:.0f} MHz"
-                    if core.frequency > 0
-                    else "—"
-                ),
+                (f"{core.temperature:.0f} °C" if core.temperature > 0 else "—"),
+                (f"{core.frequency:.0f} MHz" if core.frequency > 0 else "—"),
             )
             for column, text in enumerate(values):
                 label = Gtk.Label(label=text)
@@ -332,23 +313,13 @@ class SystemReportView(Gtk.Box):
         self.system_values["distro"].set_text(
             f"{report.distro_name} {report.distro_ver}".strip()
         )
-        self.system_values["kernel"].set_text(
-            report.kernel_version or "Unknown"
-        )
-        self.system_values["processor"].set_text(
-            report.processor_model or "Unknown"
-        )
+        self.system_values["kernel"].set_text(report.kernel_version or "Unknown")
+        self.system_values["processor"].set_text(report.processor_model or "Unknown")
         self.system_values["cores"].set_text(
-            str(report.total_core)
-            if report.total_core is not None
-            else "Unknown"
+            str(report.total_core) if report.total_core is not None else "Unknown"
         )
-        self.system_values["architecture"].set_text(
-            report.arch or "Unknown"
-        )
-        self.system_values["driver"].set_text(
-            report.cpu_driver or "Unknown"
-        )
+        self.system_values["architecture"].set_text(report.arch or "Unknown")
+        self.system_values["driver"].set_text(report.cpu_driver or "Unknown")
 
         platform_state = report.platform_profile
         if platform_state.interface == "none":
@@ -361,9 +332,7 @@ class SystemReportView(Gtk.Box):
                 "legacy": "Legacy",
             }.get(platform_state.interface, "Unknown")
             control_text = (
-                "Available"
-                if platform_state.control_available
-                else "Unavailable"
+                "Available" if platform_state.control_available else "Unavailable"
             )
             self.platform_values["interface"].set_text(
                 f"{interface_text} · Control: {control_text}"
@@ -410,23 +379,15 @@ class SystemReportView(Gtk.Box):
         self._refresh_core_rows(report.cores_info)
 
         if report.cpu_fan_speed is not None:
-            self.fan_label.set_text(
-                f"CPU fan speed: {report.cpu_fan_speed} RPM"
-            )
+            self.fan_label.set_text(f"CPU fan speed: {report.cpu_fan_speed} RPM")
             self.fan_label.show()
         else:
             self.fan_label.hide()
 
         if "governor" not in pending_power_updates:
-            self.power_values["governor"].set_text(
-                _governor_status(report)
-            )
-        self.power_values["epp"].set_text(
-            report.current_epp or "Unavailable"
-        )
-        self.power_values["epb"].set_text(
-            report.current_epb or "Unavailable"
-        )
+            self.power_values["governor"].set_text(_governor_status(report))
+        self.power_values["epp"].set_text(report.current_epp or "Unavailable")
+        self.power_values["epb"].set_text(report.current_epb or "Unavailable")
 
         hwp_available = report.current_hwp_dynamic_boost is not None
         _set_row_visible(self.power_grid, 3, hwp_available)
@@ -436,14 +397,10 @@ class SystemReportView(Gtk.Box):
             )
 
         if "turbo" not in pending_power_updates:
-            self.power_values["turbo"].set_text(
-                _turbo_status(report)
-            )
+            self.power_values["turbo"].set_text(_turbo_status(report))
 
         battery = report.battery_info
-        self.battery_values["status"].set_text(
-            _battery_status(battery)
-        )
+        self.battery_values["status"].set_text(_battery_status(battery))
         if battery is None:
             for key in ("charge", "ac", "start", "stop", "power"):
                 self.battery_values[key].set_text("Unavailable")
@@ -470,18 +427,14 @@ class SystemReportView(Gtk.Box):
                 if battery.charging_stop_threshold is not None
                 else "Unavailable"
             )
-            self.battery_names["power"].set_text(
-                battery_power_label(battery)
-            )
+            self.battery_names["power"].set_text(battery_power_label(battery))
             self.battery_values["power"].set_text(
                 f"{battery.power_watts:.2f} W"
                 if battery.power_watts is not None
                 else "Unavailable"
             )
 
-        self.stats_values["usage"].set_text(
-            f"{report.cpu_usage:.1f}%"
-        )
+        self.stats_values["usage"].set_text(f"{report.cpu_usage:.1f}%")
         self.stats_values["load"].set_text(f"{report.load:.2f}")
         if report.avg_load:
             self.stats_values["load_avg"].set_text(
@@ -495,17 +448,13 @@ class SystemReportView(Gtk.Box):
         average_temp = report.cpu_avg_temp
         if average_temp is None:
             temperatures = [
-                core.temperature
-                for core in report.cores_info
-                if core.temperature > 0
+                core.temperature for core in report.cores_info if core.temperature > 0
             ]
             if temperatures:
                 average_temp = sum(temperatures) / len(temperatures)
 
         self.stats_values["temp"].set_text(
-            f"{average_temp:.1f} °C"
-            if average_temp is not None
-            else "Unavailable"
+            f"{average_temp:.1f} °C" if average_temp is not None else "Unavailable"
         )
 
 
@@ -568,13 +517,10 @@ class ToolWindow(Gtk.Window):
         self.governor_control.default.set_margin_start(CONTROL_OPTION_MARGIN)
         controls_box.pack_start(self.governor_control, False, False, 0)
 
-        self.control_label_group = Gtk.SizeGroup(
-            mode=Gtk.SizeGroupMode.HORIZONTAL
-        )
+        self.control_label_group = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
         self.control_label_group.add_widget(self.governor_control.label)
         self.control_option_groups = [
-            Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
-            for _ in range(3)
+            Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL) for _ in range(3)
         ]
         for group, button in zip(
             self.control_option_groups,
@@ -606,9 +552,7 @@ class ToolWindow(Gtk.Window):
                 button.set_halign(Gtk.Align.START)
 
         if bluetoothctl_exists:
-            self.bluetooth_control = BluetoothBootControl(
-                show_advanced_button=False
-            )
+            self.bluetooth_control = BluetoothBootControl(show_advanced_button=False)
             controls_actions.pack_end(
                 self.bluetooth_control.advanced_btn,
                 False,
@@ -616,38 +560,22 @@ class ToolWindow(Gtk.Window):
                 0,
             )
             self.bluetooth_control.label.set_xalign(0.0)
-            self.bluetooth_control.on_btn.set_margin_start(
-                CONTROL_OPTION_MARGIN
-            )
-            self.control_label_group.add_widget(
-                self.bluetooth_control.label
-            )
-            self.control_option_groups[0].add_widget(
-                self.bluetooth_control.on_btn
-            )
-            self.control_option_groups[1].add_widget(
-                self.bluetooth_control.off_btn
-            )
+            self.bluetooth_control.on_btn.set_margin_start(CONTROL_OPTION_MARGIN)
+            self.control_label_group.add_widget(self.bluetooth_control.label)
+            self.control_option_groups[0].add_widget(self.bluetooth_control.on_btn)
+            self.control_option_groups[1].add_widget(self.bluetooth_control.off_btn)
             self.bluetooth_control.on_btn.set_halign(Gtk.Align.START)
             self.bluetooth_control.off_btn.set_halign(Gtk.Align.START)
             spacer = Gtk.Label()
             self.control_option_groups[2].add_widget(spacer)
-            self.bluetooth_control.inner_box.pack_start(
-                spacer, True, True, 0
-            )
-            controls_box.pack_start(
-                self.bluetooth_control, False, False, 0
-            )
+            self.bluetooth_control.inner_box.pack_start(spacer, True, True, 0)
+            controls_box.pack_start(self.bluetooth_control, False, False, 0)
 
-        self.config_label = Gtk.Label(
-            label=_configuration_label_text()
-        )
+        self.config_label = Gtk.Label(label=_configuration_label_text())
         self.config_label.set_halign(Gtk.Align.START)
         self.config_label.set_xalign(0)
         self.config_label.set_line_wrap(True)
-        controls_box.pack_start(
-            self.config_label, False, False, 0
-        )
+        controls_box.pack_start(self.config_label, False, False, 0)
 
         self.report_view.prepend_right(controls_frame)
 
@@ -672,9 +600,7 @@ class ToolWindow(Gtk.Window):
             orientation=Gtk.Orientation.VERTICAL,
             spacing=8,
         )
-        main_box.pack_start(
-            self.refresh_error_label, False, False, 0
-        )
+        main_box.pack_start(self.refresh_error_label, False, False, 0)
         main_box.pack_start(self.scrolled, True, True, 0)
         self.add(main_box)
 
@@ -682,10 +608,7 @@ class ToolWindow(Gtk.Window):
         self._schedule_refresh()
 
     def begin_power_state_apply(self, key):
-        if (
-            self.destroyed
-            or key not in getattr(self, "power_values", {})
-        ):
+        if self.destroyed or key not in getattr(self, "power_values", {}):
             return False
 
         source_id = self.power_apply_sources.pop(key, None)
@@ -700,10 +623,7 @@ class ToolWindow(Gtk.Window):
         return True
 
     def finish_power_state_apply(self, key, success):
-        if (
-            self.destroyed
-            or key not in self.pending_power_updates
-        ):
+        if self.destroyed or key not in self.pending_power_updates:
             return False
 
         if not success:
@@ -723,10 +643,7 @@ class ToolWindow(Gtk.Window):
     def _release_power_state_apply(self, key):
         self.power_apply_sources.pop(key, None)
 
-        if (
-            self.destroyed
-            or key not in self.pending_power_updates
-        ):
+        if self.destroyed or key not in self.pending_power_updates:
             return False
 
         # Never let a report that started before this point replace
@@ -741,18 +658,12 @@ class ToolWindow(Gtk.Window):
         return False
 
     def _add_refresh_interval_menu(self):
-        refresh_item = Gtk.MenuItem(
-            label="Refresh interval"
-        )
+        refresh_item = Gtk.MenuItem(label="Refresh interval")
         refresh_menu = Gtk.Menu()
         group = None
 
         for seconds in REFRESH_INTERVALS:
-            label = (
-                f"{seconds} second"
-                if seconds == 1
-                else f"{seconds} seconds"
-            )
+            label = f"{seconds} second" if seconds == 1 else f"{seconds} seconds"
 
             item = Gtk.RadioMenuItem.new_with_label(
                 group,
@@ -762,9 +673,7 @@ class ToolWindow(Gtk.Window):
             if group is None:
                 group = item.get_group()
 
-            item.set_active(
-                seconds == self.refresh_interval
-            )
+            item.set_active(seconds == self.refresh_interval)
 
             item.connect(
                 "toggled",
@@ -776,9 +685,7 @@ class ToolWindow(Gtk.Window):
 
         refresh_item.set_submenu(refresh_menu)
 
-        self.menu.menu.prepend(
-            Gtk.SeparatorMenuItem()
-        )
+        self.menu.menu.prepend(Gtk.SeparatorMenuItem())
         self.menu.menu.prepend(refresh_item)
         self.menu.menu.show_all()
 
@@ -821,10 +728,7 @@ class ToolWindow(Gtk.Window):
         return self.refresh_in_thread()
 
     def _run_pending_refresh(self):
-        if (
-            not self.refresh_pending
-            or self.destroyed
-        ):
+        if not self.refresh_pending or self.destroyed:
             return
 
         self.refresh_pending = False
@@ -854,15 +758,18 @@ class ToolWindow(Gtk.Window):
         self.pending_power_release.clear()
 
     def snap(self):
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
-        # reference: https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579
-        label = Gtk.Label(label="GUI not available due to Snap package confinement limitations.\nPlease install auto-cpufreq using auto-cpufreq-installer\nVisit the GitHub repo for more info")
-        label.set_justify(Gtk.Justification.CENTER)
-        button = Gtk.LinkButton.new_with_label(
-            uri=GITHUB,
-            label="GitHub Repo"
+        box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.CENTER,
         )
-        
+        # reference: https://forum.snapcraft.io/t/pkexec-not-found-python-gtk-gnome-app/36579
+        label = Gtk.Label(
+            label="GUI not available due to Snap package confinement limitations.\nPlease install auto-cpufreq using auto-cpufreq-installer\nVisit the GitHub repo for more info"
+        )
+        label.set_justify(Gtk.Justification.CENTER)
+        button = Gtk.LinkButton.new_with_label(uri=GITHUB, label="GitHub Repo")
+
         box.pack_start(label, False, False, 0)
         box.pack_start(button, False, False, 0)
         self.add(box)
@@ -870,12 +777,14 @@ class ToolWindow(Gtk.Window):
     def handle_update(self):
         new_stdout = StringIO()
         with redirect_stdout(new_stdout):
-            if not check_for_update(): return
+            if not check_for_update():
+                return
         captured_output = new_stdout.getvalue().splitlines()
         dialog = UpdateDialog(self, captured_output[1], captured_output[2])
         response = dialog.run()
         dialog.destroy()
-        if response != Gtk.ResponseType.YES: return
+        if response != Gtk.ResponseType.YES:
+            return
 
         self.set_sensitive(False)
         Thread(target=self._run_update, daemon=True).start()
@@ -915,8 +824,7 @@ class ToolWindow(Gtk.Window):
             message = "Authorization failed"
         else:
             message = (updater.stderr or "").strip() or (
-                "Update failed with exit status "
-                f"{updater.returncode}"
+                f"Update failed with exit status {updater.returncode}"
             )
 
         if message is not None:
@@ -960,15 +868,20 @@ class ToolWindow(Gtk.Window):
         self.add(self.monitor_view)
 
     def build(self):
-        if IS_INSTALLED_WITH_SNAP: self.snap()
-        elif daemon_is_running(): self.main()
-        else: self.daemon_not_running()
+        if IS_INSTALLED_WITH_SNAP:
+            self.snap()
+        elif daemon_is_running():
+            self.main()
+        else:
+            self.daemon_not_running()
 
     def load_css(self):
         screen = Gdk.Screen.get_default()
         self.gtk_provider = Gtk.CssProvider()
         self.gtk_context = Gtk.StyleContext()
-        self.gtk_context.add_provider_for_screen(screen, self.gtk_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.gtk_context.add_provider_for_screen(
+            screen, self.gtk_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
         self.gtk_provider.load_from_file(Gio.File.new_for_path(CSS_FILE))
 
     def refresh_in_thread(self):
@@ -1005,14 +918,11 @@ class ToolWindow(Gtk.Window):
                 report,
                 self.pending_power_updates,
             )
-            self.config_label.set_text(
-                _configuration_label_text()
-            )
+            self.config_label.set_text(_configuration_label_text())
             self.refresh_error_label.hide()
         except Exception as error:
             self.refresh_error_label.set_text(
-                "Unable to refresh system information: "
-                f"{error}"
+                f"Unable to refresh system information: {error}"
             )
             self.refresh_error_label.show()
         finally:
@@ -1027,8 +937,7 @@ class ToolWindow(Gtk.Window):
             return False
 
         self.refresh_error_label.set_text(
-            "Unable to refresh system information: "
-            f"{message}"
+            f"Unable to refresh system information: {message}"
         )
         self.refresh_error_label.show()
         self.refresh_in_progress = False

@@ -145,19 +145,13 @@ class SystemInfo:
     @staticmethod
     def cpu_min_freq(freqs=None) -> float | None:
         cpu_freqs = freqs if freqs is not None else SystemInfo.cpu_frequencies()
-        values = (
-            float(getattr(freq, "min", 0.0) or 0.0)
-            for freq in cpu_freqs
-        )
+        values = (float(getattr(freq, "min", 0.0) or 0.0) for freq in cpu_freqs)
         return min((value for value in values if value > 0), default=None)
 
     @staticmethod
     def cpu_max_freq(freqs=None) -> float | None:
         cpu_freqs = freqs if freqs is not None else SystemInfo.cpu_frequencies()
-        values = (
-            float(getattr(freq, "max", 0.0) or 0.0)
-            for freq in cpu_freqs
-        )
+        values = (float(getattr(freq, "max", 0.0) or 0.0) for freq in cpu_freqs)
         return max((value for value in values if value > 0), default=None)
 
     @staticmethod
@@ -258,8 +252,7 @@ class SystemInfo:
 
             if not ids:
                 return {
-                    cpu_id: temperature
-                    for cpu_id, temperature in enumerate(readings)
+                    cpu_id: temperature for cpu_id, temperature in enumerate(readings)
                 }, average
 
             if len(readings) == len(ids):
@@ -329,18 +322,13 @@ class SystemInfo:
                 if not ids:
                     return {0: current}, current
 
-                return {
-                    cpu_id: current
-                    for cpu_id in ids
-                }, current
+                return {cpu_id: current for cpu_id in ids}, current
 
         for sensor in CPU_TEMP_SENSOR_PRIORITY:
             if sensor == "coretemp":
                 continue
 
-            snapshot = snapshot_from_entries(
-                temps.get(sensor, [])
-            )
+            snapshot = snapshot_from_entries(temps.get(sensor, []))
             if snapshot is not None:
                 return snapshot
 
@@ -349,10 +337,7 @@ class SystemInfo:
     @staticmethod
     def cpu_temperatures() -> List[float]:
         temperatures, _ = SystemInfo.cpu_temperature_snapshot()
-        return [
-            temperatures[cpu_id]
-            for cpu_id in sorted(temperatures)
-        ]
+        return [temperatures[cpu_id] for cpu_id in sorted(temperatures)]
 
     @staticmethod
     def cpu_usage_snapshot(
@@ -372,11 +357,7 @@ class SystemInfo:
         elif len(per_cpu) == len(online):
             sampled = per_cpu
         else:
-            sampled = [
-                per_cpu[cpu_id]
-                for cpu_id in online
-                if cpu_id < len(per_cpu)
-            ]
+            sampled = [per_cpu[cpu_id] for cpu_id in online if cpu_id < len(per_cpu)]
 
         if not sampled:
             return 0.0, per_cpu
@@ -399,20 +380,14 @@ class SystemInfo:
             except (AttributeError, OSError):
                 cpu_usage = []
 
-        online = (
-            list(online_cpus)
-            if online_cpus
-            else list(range(len(cpu_usage)))
-        )
+        online = list(online_cpus) if online_cpus else list(range(len(cpu_usage)))
         temperatures = (
             core_temps
             if core_temps is not None
             else SystemInfo.cpu_temperature_snapshot(online)[0]
         )
         valid_temperatures = [
-            temperature
-            for temperature in temperatures.values()
-            if temperature > 0
+            temperature for temperature in temperatures.values() if temperature > 0
         ]
         avg_temp = (
             sum(valid_temperatures) / len(valid_temperatures)
@@ -478,9 +453,11 @@ class SystemInfo:
 
     @staticmethod
     def current_epp(_is_ac_plugged: bool | None = None) -> str | None:
-        paths = list(Path("/sys/devices/system/cpu").glob(
-            "cpu[0-9]*/cpufreq/energy_performance_preference"
-        ))
+        paths = list(
+            Path("/sys/devices/system/cpu").glob(
+                "cpu[0-9]*/cpufreq/energy_performance_preference"
+            )
+        )
         if not paths:
             return None
 
@@ -504,9 +481,9 @@ class SystemInfo:
             "8": "balance_power",
             "15": "power",
         }
-        paths = list(Path("/sys/devices/system/cpu").glob(
-            "cpu[0-9]*/power/energy_perf_bias"
-        ))
+        paths = list(
+            Path("/sys/devices/system/cpu").glob("cpu[0-9]*/power/energy_perf_bias")
+        )
         if not paths:
             return None
 
@@ -656,21 +633,15 @@ class SystemInfo:
                     continue
 
                 supply_path = os.path.join(POWER_SUPPLY_DIR, supply)
-                supply_type = SystemInfo.read_file(
-                    os.path.join(supply_path, "type")
-                )
+                supply_type = SystemInfo.read_file(os.path.join(supply_path, "type"))
                 if not supply_type or supply_type.lower() == "battery":
                     continue
 
-                scope = SystemInfo.read_file(
-                    os.path.join(supply_path, "scope")
-                )
+                scope = SystemInfo.read_file(os.path.join(supply_path, "scope"))
                 if scope and scope.lower() == "device":
                     continue
 
-                online = SystemInfo.read_file(
-                    os.path.join(supply_path, "online")
-                )
+                online = SystemInfo.read_file(os.path.join(supply_path, "online"))
                 if online in ("0", "1", "2"):
                     external_power_states.append(online != "0")
         except OSError:
@@ -679,9 +650,7 @@ class SystemInfo:
         if external_power_states:
             return any(external_power_states)
 
-        battery_status = SystemInfo.read_file(
-            os.path.join(battery_path, "status")
-        )
+        battery_status = SystemInfo.read_file(os.path.join(battery_path, "status"))
         if not battery_status:
             return None
 
@@ -727,7 +696,6 @@ class SystemInfo:
         charging_stop_threshold = None
 
         if not battery_path:
-
             # No battery detected
             return BatteryInfo(
                 is_charging=None,
@@ -746,20 +714,32 @@ class SystemInfo:
 
         power_watts = SystemInfo._battery_power_watts(battery_path)
 
-        charge_start_threshold = (
-            SystemInfo.read_file(os.path.join(battery_path, "charge_start_threshold"))
-            or SystemInfo.read_file(os.path.join(battery_path, "charge_control_start_threshold"))
+        charge_start_threshold = SystemInfo.read_file(
+            os.path.join(battery_path, "charge_start_threshold")
+        ) or SystemInfo.read_file(
+            os.path.join(battery_path, "charge_control_start_threshold")
         )
-        charge_stop_threshold = (
-            SystemInfo.read_file(os.path.join(battery_path, "charge_stop_threshold"))
-            or SystemInfo.read_file(os.path.join(battery_path, "charge_control_end_threshold"))
+        charge_stop_threshold = SystemInfo.read_file(
+            os.path.join(battery_path, "charge_stop_threshold")
+        ) or SystemInfo.read_file(
+            os.path.join(battery_path, "charge_control_end_threshold")
         )
         is_charging = battery_status.lower() == "charging" if battery_status else None
-        battery_level = int(battery_capacity) if battery_capacity and battery_capacity.isdigit() else None
-        charging_start_threshold = int(charge_start_threshold) if charge_start_threshold \
-            and charge_start_threshold.isdigit() else None
-        charging_stop_threshold = int(charge_stop_threshold) if charge_stop_threshold \
-            and charge_stop_threshold.isdigit() else None
+        battery_level = (
+            int(battery_capacity)
+            if battery_capacity and battery_capacity.isdigit()
+            else None
+        )
+        charging_start_threshold = (
+            int(charge_start_threshold)
+            if charge_start_threshold and charge_start_threshold.isdigit()
+            else None
+        )
+        charging_stop_threshold = (
+            int(charge_stop_threshold)
+            if charge_stop_threshold and charge_stop_threshold.isdigit()
+            else None
+        )
 
         return BatteryInfo(
             is_charging=is_charging,
@@ -784,9 +764,7 @@ class SystemInfo:
                     if core.temperature > 0
                 ]
                 avg_temp = (
-                    sum(temperatures) / len(temperatures)
-                    if temperatures
-                    else 0.0
+                    sum(temperatures) / len(temperatures) if temperatures else 0.0
                 )
         else:
             avg_temp = SystemInfo.avg_temp()
@@ -800,9 +778,7 @@ class SystemInfo:
     @staticmethod
     def governor_suggestion(report: SystemReport | None = None) -> str:
         battery_info = (
-            report.battery_info
-            if report is not None
-            else SystemInfo.battery_info()
+            report.battery_info if report is not None else SystemInfo.battery_info()
         )
         if battery_info.is_ac_plugged is not False:
             return AVAILABLE_GOVERNORS_SORTED[0]
@@ -814,9 +790,7 @@ class SystemInfo:
         cpu_freqs = self.cpu_frequencies()
         online_cpus = self.cpu_ids("online")
         total_cores = (
-            len(online_cpus)
-            if online_cpus
-            else psutil.cpu_count(logical=True)
+            len(online_cpus) if online_cpus else psutil.cpu_count(logical=True)
         )
         core_temps, avg_temp = self.cpu_temperature_snapshot(online_cpus)
         total_usage, per_cpu_usage = self.cpu_usage_snapshot(online_cpus)
@@ -922,11 +896,7 @@ def format_system_report(
             ]
         )
 
-    total_core = (
-        str(report.total_core)
-        if report.total_core is not None
-        else "Unknown"
-    )
+    total_core = str(report.total_core) if report.total_core is not None else "Unknown"
     lines.extend(
         [
             f"Processor: {report.processor_model}",
@@ -1003,27 +973,17 @@ def format_system_report(
     )
 
     for core in report.cores_info:
-        temperature = (
-            f"{core.temperature:>3.0f} °C"
-            if core.temperature > 0
-            else "  —"
-        )
-        frequency = (
-            f"{core.frequency:>5.0f} MHz"
-            if core.frequency > 0
-            else "    —"
-        )
+        temperature = f"{core.temperature:>3.0f} °C" if core.temperature > 0 else "  —"
+        frequency = f"{core.frequency:>5.0f} MHz" if core.frequency > 0 else "    —"
         lines.append(
-            f"CPU{core.id}    {core.usage:>5.1f}%       "
-            f"{temperature}     {frequency}"
+            f"CPU{core.id}    {core.usage:>5.1f}%       {temperature}     {frequency}"
         )
 
     if report.offline_cpus:
         lines.extend(
             [
                 "",
-                "Disabled CPUs: "
-                + ",".join(str(cpu) for cpu in report.offline_cpus),
+                "Disabled CPUs: " + ",".join(str(cpu) for cpu in report.offline_cpus),
             ]
         )
 
