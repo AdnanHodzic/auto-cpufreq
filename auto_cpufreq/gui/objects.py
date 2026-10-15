@@ -743,11 +743,11 @@ class AboutDialog(Gtk.Dialog):
 
 class UpdateDialog(Gtk.Dialog):
     def __init__(self, parent, current_version: str, latest_version: str):
-        super().__init__(title="Update Available", transient_for=parent)
+        super().__init__(title="auto-cpufreq update available", transient_for=parent)
         self.box = self.get_content_area()
         self.set_default_size(400, 100)
         self.add_buttons("Update", Gtk.ResponseType.YES, "Cancel", Gtk.ResponseType.NO)
-        self.label = Gtk.Label(label="An update is available\n")
+        self.label = Gtk.Label(label="An update for auto-cpufreq is available\n")
         self.current_version = Gtk.Label(label=current_version + "\n")
         self.latest_version = Gtk.Label(label=latest_version + "\n")
 
