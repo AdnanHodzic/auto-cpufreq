@@ -15,7 +15,7 @@
     in
     {
       packages = forAllSystems (system: {
-        default = pkgsForEach.${system}.callPackage ./nix/default.nix { };
+        default = pkgsForEach.${system}.python3Packages.callPackage ./nix/default.nix { };
       });
 
       devShells = forAllSystems (system: {
@@ -23,7 +23,7 @@
       });
 
       overlays.default = final: _: {
-        auto-cpufreq = final.callPackage ./nix/default.nix { };
+        auto-cpufreq = final.python3Packages.callPackage ./nix/default.nix { };
       };
 
       formatter = forAllSystems (system: pkgsForEach.${system}.nixfmt-tree);
