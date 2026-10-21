@@ -1,4 +1,5 @@
-inputs: {
+inputs:
+{
   config,
   lib,
   pkgs,
@@ -15,8 +16,9 @@ let
   inherit (lib.modules) mkIf mkForce;
   inherit (lib.options) mkOption mkEnableOption;
 
-  format = pkgs.formats.ini {};
-in {
+  format = pkgs.formats.ini { };
+in
+{
   options.programs.auto-cpufreq = {
     enable = mkEnableOption "Automatic CPU speed & power optimizer for Linux";
 
@@ -28,8 +30,8 @@ in {
         [example configuration file]: https://github.com/AdnanHodzic/auto-cpufreq/blob/master/auto-cpufreq.conf-example
       '';
 
-      default = {};
-      type = types.submodule {freeformType = format.type;};
+      default = { };
+      type = types.submodule { freeformType = format.type; };
     };
   };
 
@@ -37,10 +39,14 @@ in {
     environment.systemPackages = [ defaultPackage ];
 
     systemd = {
-      packages =  [ defaultPackage ];
+      packages = [ defaultPackage ];
       services.auto-cpufreq = {
         wantedBy = [ "multi-user.target" ];
-        path = with pkgs; [ bash coreutils gawk ];
+        path = with pkgs; [
+          bash
+          coreutils
+          gawk
+        ];
         overrideStrategy = "asDropin";
 
         serviceConfig.WorkingDirectory = "";

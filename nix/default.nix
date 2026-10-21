@@ -1,34 +1,45 @@
 {
   lib,
-  python3Packages,
+  buildPythonPackage,
+  poetry-core,
+  pygobject3,
+  click,
+  distro,
+  psutil,
+  setuptools,
+  poetry-dynamic-versioning,
+  pyinotify,
+  urwid,
+  pyasyncore,
+  requests,
   pkgs,
   fetchFromGitHub,
   fetchPypi,
 }:
 let
 
-  pyinotify = python3Packages.pyinotify.overrideAttrs (oldAttrs: {
+  pyinotifyPatched = pyinotify.overrideAttrs (oldAttrs: {
     src = fetchFromGitHub {
       owner = "shadeyg56";
       repo = "pyinotify-3.12";
       rev = "923cebec3a2a84c7e38c9e68171eb93f5d07ce5d";
       hash = "sha256-714CximEK4YhIqDmvqJYOUGs39gvDkWGrkNrXwxT8iM=";
     };
-    patches = [];
+    patches = [ ];
   });
 
-  requests = python3Packages.requests.overrideAttrs (oldAttrs: rec {
+  requestsPatched = requests.overrideAttrs (oldAttrs: rec {
     version = "2.32.4";
     src = fetchPypi {
       pname = "requests";
       inherit version;
       hash = "sha256-J9AxZoLIopg00yZIIAJLYqNpQgg9Usry8UwFkTNtNCI=";
     };
-    patches = [];
+    patches = [ ];
   });
 
 in
-python3Packages.buildPythonPackage rec {
+buildPythonPackage rec {
   # use pyproject.toml instead of setup.py
   format = "pyproject";
 
@@ -39,16 +50,34 @@ python3Packages.buildPythonPackage rec {
   POETRY_DYNAMIC_VERSIONING_BYPASS = version;
   src = ../.;
 
-  nativeBuildInputs = with pkgs; [wrapGAppsHook3 gobject-introspection];
+  nativeBuildInputs = with pkgs; [
+    wrapGAppsHook3
+    gobject-introspection
+  ];
 
-  buildInputs = with pkgs; [gtk3 python3Packages.poetry-core];
+  buildInputs = [
+    pkgs.gtk3
+    poetry-core
+  ];
 
-  propagatedBuildInputs = with python3Packages; [requests pygobject3 click distro psutil setuptools poetry-dynamic-versioning pyinotify urwid pyasyncore pkgs.getent
-    pkgs.kmod pkgs.dmidecode 
+  propagatedBuildInputs = [
+    requestsPatched
+    pygobject3
+    click
+    distro
+    psutil
+    setuptools
+    poetry-dynamic-versioning
+    pyinotifyPatched
+    urwid
+    pyasyncore
+    pkgs.getent
+    pkgs.kmod
+    pkgs.dmidecode
   ];
 
   doCheck = false;
-  pythonImportsCheck = ["auto_cpufreq"];
+  pythonImportsCheck = [ "auto_cpufreq" ];
 
   patches = [
     # patch to prevent script copying and to disable install
@@ -91,7 +120,7 @@ python3Packages.buildPythonPackage rec {
     description = "Automatic CPU speed & power optimizer for Linux";
     license = lib.licenses.gpl3Plus;
     platforms = lib.platforms.linux;
-    maintainers = with lib.maintainers; [Technical27];
+    maintainers = with lib.maintainers; [ Technical27 ];
     mainProgram = "auto-cpufreq";
   };
 }
