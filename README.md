@@ -64,6 +64,9 @@ Example of `auto-cpufreq --stats` CLI output (v3.2.0)
   - [monitor](#monitor)
   - [live](#live)
   - [GUI](#gui)
+    - [GTK debug logging](#gtk-debug-logging)
+  - [Optional terminal diagnostics](#optional-terminal-diagnostics)
+  - [Collecting a complete troubleshooting report](#collecting-a-complete-troubleshooting-report)
   - [overriding governor](#overriding-governor)
   - [overriding turbo mode](#overriding-turbo-mode)
   - [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
@@ -590,7 +593,50 @@ When the daemon is running, the GUI provides a live overview of system, CPU, bat
 
 The dashboard refresh interval can be changed from the menu between 1, 2 and 5 seconds.
 
-If the daemon is not running, the GUI allows you to either install it for persistent automatic optimization or open Monitor Mode to preview system state and auto-cpufreq recommendations without applying changes.
+If the daemon is not running, the GUI offers daemon installation or Monitor Mode for read-only system information and recommendations. The Monitor view is not a separate panel in the running-daemon dashboard.
+
+#### GTK debug logging
+
+Use **Enable debug logging** in the GTK menu to start recording a diagnostic session. Logging is disabled by default, but the GTK preference is remembered across launches. The **Debug log location** dialog displays the selected log filename, its directory, and whether the session is active or has already ended. **Copy full path** copies the absolute path of the log file (not just the filename or folder); **Open folder** opens its directory through the desktop's registered file manager. The folder icon beside the GTK configuration path opens the configuration file's parent directory.
+
+**No diagnostic directory or log file is created until debug logging is first enabled.** If the directory does not exist, the location dialog and the Open folder error explain that logging must be enabled first. Once created, the folder remains accessible even when logging is disabled. Each time logging is enabled, the program starts a new session log; opening the folder does not enable logging.
+
+Diagnostic preferences are stored in `$XDG_CONFIG_HOME/auto-cpufreq/gtk-debug.json` (default `~/.config/auto-cpufreq/gtk-debug.json`). Logs are stored under `$XDG_STATE_HOME/auto-cpufreq/` (default `~/.local/state/auto-cpufreq/`). The files have private permissions, bounded queues, 1 MiB rotation and up to three backups per session. Review logs before sharing: they may include local paths, system information and Python stack traces.
+
+When enabled, logging records errors and slow or stalled refreshes. It summarizes GTK queueing, data collection, delivery and rendering times approximately once a minute. The process-health sampler runs every 5 seconds and summarizes CPU usage (relative to one logical CPU), memory, thread count and open file descriptors approximately once a minute. It does **not** continuously log per-thread CPU usage or stacks. Sustained process CPU usage above 70% of one logical CPU for three consecutive samples can trigger a report of the hottest thread and its Python stack; an unresponsive GTK main loop may also produce a stack trace.
+
+This optional GTK logging does not alter the daemon's power policy. The CLI's existing `--debug` mode remains separate from persistent diagnostic logging.
+
+GTK diagnostic sessions now start only when the GTK entrypoint attaches its main loop; merely importing GTK modules will not launch diagnostic workers.
+
+### Optional terminal diagnostics
+
+To record an independent diagnostic session for a terminal screen, add `--diagnostic-log` to `--stats`, `--monitor` or `--live`:
+
+```bash
+auto-cpufreq --stats --diagnostic-log
+```
+
+The terminal option is **off by default** and does not share the GTK preference. It uses the same bounded rotating log writer and process-health sampling as GTK. On unprivileged runs, the log is stored under `$XDG_STATE_HOME/auto-cpufreq/` (or `~/.local/state/auto-cpufreq/`). For terminal modes run with `sudo`, logs go to the **root account's** `~/.local/state/auto-cpufreq/` rather than the invoking user's home; access requires appropriate permissions. Review log contents before sharing. The option is not valid for install, remove, daemon or other noninteractive operations. It does not enable logging for the built-in `--debug` command.
+
+`--stats` observes the running daemon without requesting power-policy changes. Unlike `--stats`, the existing `--monitor` and `--live` modes have service and privilege preconditions; do not use them as casual diagnostics of a production system.
+
+
+### Collecting a complete troubleshooting report
+
+For a snapshot of the machine **and** a short record of refresh timing, collect
+both sources close together, as two **separate commands**:
+
+1. Run `auto-cpufreq --stats --diagnostic-log` and observe the Stats screen. Press `Q` to close it, then keep the `stats-*.log` file in `~/.local/state/auto-cpufreq/` (or your `XDG_STATE_HOME` location).
+2. If a maintainer asks for the traditional hardware/system report, run `auto-cpufreq --debug` **separately** and save its terminal output. The historical `--debug` command requires root privileges and invokes `cpufreqctl()`, which can perform system setup; **do not run it on a working production installation merely to collect routine read-only monitoring data**. Review its implementation and effects before using it with `sudo`.
+3. Share the Stats log and, when explicitly collected, the Debug text with the relevant error description, auto-cpufreq version and approximate collection time. A Python stack trace is recorded by optional diagnostics only when its trigger conditions occur, not in every session. Review and redact private paths and other identifying information before sharing.
+
+The commands are complementary, not simultaneous: `--stats --debug` is
+rejected, and `--diagnostic-log` is only valid with exactly one of
+`--stats`, `--monitor` and `--live`. It cannot accompany update,
+installation, removal or power overrides. Do **not** use `--live` as a
+troubleshooting alternative to Stats: Live may change CPU power settings.
+
 
 ### Overriding governor
 
@@ -968,5 +1014,8 @@ Bitcoin address: `bc1qlncmgdjyqy8pe4gad4k2s6xtyr8f2r3ehrnl87`
 ### Code contribution
 
 Other ways of supporting the project consist of making a code or documentation contribution. If you have an idea for a new feature or you want to implement some of the existing feature requests or fix some of the [bugs & issues](https://github.com/AdnanHodzic/auto-cpufreq/issues), please make your changes and submit a [pull request](https://github.com/AdnanHodzic/auto-cpufreq/pulls). I'll be glad to review it and, if your changes are accepted, you'll be credited on the [releases page](https://github.com/AdnanHodzic/auto-cpufreq/releases).
+
+For development setup, the current module ownership map, and the
+frontend and diagnostic architecture, consult [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Please note: auto-cpufreq is looking for co-maintainers & open source developers to [help shape the future of the project!](https://github.com/AdnanHodzic/auto-cpufreq/discussions/312)**
