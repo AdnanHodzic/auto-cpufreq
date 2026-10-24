@@ -936,6 +936,18 @@ test = ["packaging", "pyfakefs", "pytest (>=6,!=8.1.*)", "pytest-perf (>=0.17)"]
 type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 
 [[package]]
+name = "inotify-simple"
+version = "2.0.1"
+description = "A simple wrapper around inotify. No fancy bells and whistles, just a literal wrapper with ctypes. Under 100 lines of code!"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "inotify_simple-2.0.1-py3-none-any.whl", hash = "sha256:e5da495f2064889f8e68b67f9358b0d102e03b783c2d42e5b8e132ab859a5d8a"},
+    {file = "inotify_simple-2.0.1.tar.gz", hash = "sha256:f010bbbd8283bd71a9f4eb2de94765804ede24bd47320b0e6ef4136e541cdc2c"},
+]
+
+[[package]]
 name = "installer"
 version = "0.7.0"
 description = "A library for installing Python wheels."
@@ -1395,18 +1407,6 @@ files = [
 ]
 
 [[package]]
-name = "pyasyncore"
-version = "1.0.5"
-description = "Make asyncore available for Python 3.12 onwards"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "pyasyncore-1.0.5-py3-none-any.whl", hash = "sha256:269bbc5252671827387636822841a1fb721ec6e858b23a3e12cf92eb1f97da2a"},
-    {file = "pyasyncore-1.0.5.tar.gz", hash = "sha256:dd483d5103a6d59b66b86e0ca2334ad43dca732ff23a0ac5d63c88c52510542e"},
-]
-
-[[package]]
 name = "pycairo"
 version = "1.28.0"
 description = "Python interface for cairo"
@@ -1523,22 +1523,6 @@ files = [
 
 [package.dependencies]
 pycairo = ">=1.16"
-
-[[package]]
-name = "pyinotify"
-version = "0.9.6"
-description = "Linux filesystem events monitoring"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = []
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/shadeyg56/pyinotify-3.12"
-reference = "HEAD"
-resolved_reference = "271b7aba3269116b6c3870355393f47c79bce146"
 
 [[package]]
 name = "pyproject-hooks"
@@ -2229,4 +2213,4 @@ gui = ["PyGObject"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "44a1897c3b2afe9b2670a77e83dec0124abb7ed3207fceb9c58e9bdc8b4d5451"
+content-hash = "242a2fdd18887e6f9af826692edb53b26f47ec24a05bc6f9373c8a14749f425b"

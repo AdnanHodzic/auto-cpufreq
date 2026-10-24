@@ -39,7 +39,7 @@ Prefer a development environment over replacing a running system installation. D
 | Process/CPU/thread health measurements | `auto_cpufreq/modules/process_health.py` |
 | Terminal Stats, Monitor, Live display | `auto_cpufreq/modules/system_monitor.py` |
 | CLI modes, installation and policy lifecycle | `auto_cpufreq/bin/auto_cpufreq.py`, `auto_cpufreq/power_helper.py` |
-| Configuration and file notifications | `auto_cpufreq/config/` |
+| Configuration parsing, atomic snapshot publication and lazy inotify watches | `auto_cpufreq/config/config.py`, `auto_cpufreq/config/file_watcher.py` |
 
 The shared recommendation functions are the **only place to change the
 governor/Turbo suggestion formulas**. `SystemInfo.governor_suggestion()`
@@ -54,6 +54,25 @@ New code should import `MonitorModeView` from `gui/monitor_view.py` and
 statistics widgets were removed from `gui/objects.py`: they were not used
 by any tracked application entrypoint and performed separate synchronous
 collection. Avoid reintroducing a second sampling path.
+
+## Configuration file watcher
+
+`config.py` uses `inotify-simple` 2.0.1 (BSD-2-Clause, maintained by
+Chris Billington) through a dedicated `ConfigFileWatcher`. The project
+retains its GPL-3.0-or-later license; the dependency is installed separately,
+not copied or relicensed. The observer is **lazy**: read-only GTK and Stats
+initialize configuration data without starting an inotify thread or
+allocating watcher file descriptors. Daemon, Monitor, and Live modes call
+`config.notifier.start()` when needed and `config.stop_watching()`
+during their existing exit paths.
+
+Keep reloads atomic: malformed, unreadable or concurrently replaced
+files must not publish partially parsed settings. Genuine deletion
+restores defaults. The watcher handles close-write/rename, symlinks,
+lost directories and event-queue overflow; stopped observers must release
+resources, and unexpected watch errors must not spin at high CPU.
+Changes to these contracts should be exercised without modifying
+production configuration or power policy.
 
 ## Consistent report fields across GTK and Stats
 

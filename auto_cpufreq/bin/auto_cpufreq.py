@@ -115,12 +115,12 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
-                    conf.notifier.stop()
+                    conf.stop_watching()
                     sys.exit(0)
             
             monitor = SystemMonitor(suggestion=True, type=ViewType.MONITOR,
                                     diagnostic_log=diagnostic_log)
-            monitor.run(on_quit=conf.notifier.stop)
+            monitor.run(on_quit=conf.stop_watching)
         elif live:
             if IS_INSTALLED_WITH_SNAP:
                 daemon_running_msg()
@@ -141,7 +141,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
-                    conf.notifier.stop()
+                    conf.stop_watching()
                     sys.exit(0)
 
             gnome_power_stop_live()
@@ -166,7 +166,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 gnome_power_start_live()
                 tuned_start_live()
                 cpufreqctl_restore()
-                conf.notifier.stop()
+                conf.stop_watching()
             
             thread = Thread(target=live_daemon, daemon=True)
             thread.start()
@@ -195,7 +195,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                     set_autofreq()
                     countdown(2)
                 except KeyboardInterrupt: break
-            conf.notifier.stop()
+            conf.stop_watching()
         elif install:
             if IS_INSTALLED_WITH_SNAP:
                 daemon_running_msg()
@@ -298,7 +298,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
-                    conf.notifier.stop()
+                    conf.stop_watching()
                     sys.exit(0)
             
             monitor = SystemMonitor(type=ViewType.STATS,

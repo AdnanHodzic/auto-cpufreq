@@ -350,23 +350,20 @@ the repository:
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq`
 
-Make sure to have `psutil` & `pyinotify` Python library installed before next step:
+The helper requires the project's Python dependencies, including `psutil` and
+`inotify-simple`. Install them in an isolated development environment rather
+than modifying system Python with `--break-system-packages`. For example,
+from the cloned repository with Poetry installed:
 
-If you're using Debian based distro install them by running:
+```bash
+cd auto-cpufreq
+poetry install
+sudo "$(poetry env info --path)/bin/python" -m auto_cpufreq.power_helper --gnome_power_disable
+```
 
-`sudo apt install python3-psutil python3-pyinotify` 
-
-or manually using pip, e.g: 
-
-`sudo pip3 install psutil pyinotify --break-system-packages`
-
-Then disable the GNOME Power Profiles daemon:
-
-`sudo python3 -m auto_cpufreq.power_helper --gnome_power_disable`
-
-for full list of options run --help, e.g:
-
-`sudo python3 -m auto_cpufreq.power_helper --help`
+For the list of options, use the same interpreter with `--help`.
+`inotify-simple` 2.0.1 is a separate BSD-2-Clause-licensed dependency;
+the auto-cpufreq project remains GPL-3.0-or-later.
 
 ### 2: `--force` governor override
 

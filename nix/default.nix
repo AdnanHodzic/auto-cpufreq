@@ -8,25 +8,13 @@
   psutil,
   setuptools,
   poetry-dynamic-versioning,
-  pyinotify,
+  inotify-simple,
   urwid,
-  pyasyncore,
   requests,
   pkgs,
-  fetchFromGitHub,
   fetchPypi,
 }:
 let
-
-  pyinotifyPatched = pyinotify.overrideAttrs (oldAttrs: {
-    src = fetchFromGitHub {
-      owner = "shadeyg56";
-      repo = "pyinotify-3.12";
-      rev = "923cebec3a2a84c7e38c9e68171eb93f5d07ce5d";
-      hash = "sha256-714CximEK4YhIqDmvqJYOUGs39gvDkWGrkNrXwxT8iM=";
-    };
-    patches = [ ];
-  });
 
   requestsPatched = requests.overrideAttrs (oldAttrs: rec {
     version = "2.32.4";
@@ -68,9 +56,8 @@ buildPythonPackage rec {
     psutil
     setuptools
     poetry-dynamic-versioning
-    pyinotifyPatched
+    inotify-simple
     urwid
-    pyasyncore
     pkgs.getent
     pkgs.kmod
     pkgs.dmidecode
