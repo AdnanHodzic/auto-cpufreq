@@ -2,23 +2,30 @@ import gi
 gi.require_version("Gdk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk
 
-from contextlib import redirect_stdout
-from io import StringIO
+from importlib.metadata import PackageNotFoundError, version as package_version
 from os.path import isdir
 from subprocess import PIPE, run
 from threading import Thread
+import time
+
+from auto_cpufreq.gui.diagnostics import diagnostics
+from auto_cpufreq.gui.refresh_bridge import GtkRefreshBridge
+from auto_cpufreq.gui.refresh_timer import GtkRefreshTimer
+from auto_cpufreq.gui.report_view import SystemReportView
 
 from auto_cpufreq.config.config import config
 from auto_cpufreq.core import check_for_update, daemon_is_running
 from auto_cpufreq.globals import GITHUB, IS_INSTALLED_WITH_SNAP
-from auto_cpufreq.gui.objects import BluetoothBootControl, DaemonNotRunningView, DropDownMenu, MonitorModeView, RadioButtonView, CPUTurboOverride, UpdateDialog
-from auto_cpufreq.modules.system_info import (
-    battery_power_label,
-    format_platform_profile_choices,
-    system_info,
+from auto_cpufreq.gui.desktop import open_containing_folder
+from auto_cpufreq.gui.monitor_view import MonitorModeView
+from auto_cpufreq.gui.objects import (
+    BluetoothBootControl, CPUTurboOverride, DaemonNotRunningView,
+    DropDownMenu, RadioButtonView, UpdateDialog,
 )
+from auto_cpufreq.modules.report_presentation import configuration_file_text
+from auto_cpufreq.modules.system_info import system_info
 from auto_cpufreq.power_helper import bluetoothctl_exists
 
 if IS_INSTALLED_WITH_SNAP:
@@ -31,9 +38,7 @@ else:
     CSS_FILE = "/usr/local/share/auto-cpufreq/scripts/style.css"
     ICON_FILE = "/usr/local/share/auto-cpufreq/images/icon.png"
 
-HBOX_PADDING = 20
 CONTROL_OPTION_MARGIN = 8
-SECTION_SPACING = 12
 
 DEFAULT_REFRESH_INTERVAL = 2
 REFRESH_INTERVALS = (1, 2, 5)
@@ -43,470 +48,8 @@ REFRESH_INTERVALS = (1, 2, 5)
 CONTROL_APPLY_DELAY_SECONDS = 3
 
 
-def _new_section(title):
-    frame = Gtk.Frame()
-    heading = Gtk.Label(label=title, name="bold")
-    heading.set_halign(Gtk.Align.START)
-    frame.set_label_widget(heading)
-
-    grid = Gtk.Grid()
-    grid.set_column_spacing(18)
-    grid.set_row_spacing(4)
-    grid.set_margin_top(8)
-    grid.set_margin_bottom(8)
-    grid.set_margin_start(10)
-    grid.set_margin_end(10)
-    frame.add(grid)
-    return frame, grid
-
-
-def _add_row(grid, row, name):
-    name_label = Gtk.Label(label=name)
-    name_label.set_halign(Gtk.Align.START)
-    name_label.set_xalign(0)
-
-    value_label = Gtk.Label(label="—")
-    value_label.set_halign(Gtk.Align.START)
-    value_label.set_xalign(0)
-    value_label.set_hexpand(True)
-
-    grid.attach(name_label, 0, row, 1, 1)
-    grid.attach(value_label, 1, row, 1, 1)
-    return name_label, value_label
-
-
-def _set_row_visible(grid, row, visible):
-    for column in (0, 1):
-        child = grid.get_child_at(column, row)
-        if child is None:
-            continue
-        child.set_no_show_all(True)
-        if visible:
-            child.show()
-        else:
-            child.hide()
-
-
-def _battery_status(battery):
-    if battery is None:
-        return "Unavailable"
-    if battery.is_charging is True:
-        return "Charging"
-    if battery.is_ac_plugged is False:
-        return "Discharging"
-    if battery.is_ac_plugged is True:
-        return "Not charging"
-    return "Unknown"
-
-
-def _governor_status(report):
-    return report.current_gov or "Unavailable"
-
-
-def _turbo_status(report):
-    enabled, driver_managed = report.is_turbo_on
-
-    if enabled is None:
-        if driver_managed is True:
-            return "Driver managed"
-        return "Unavailable"
-
-    return "On" if enabled else "Off"
-
-
 def _configuration_label_text():
-    prefix = (
-        "Using configuration file"
-        if config.has_config()
-        else "Configuration file"
-    )
-    return f"{prefix}: {config.path}"
-
-
-class SystemReportView(Gtk.Box):
-    """Shared read-only presentation of SystemReport."""
-
-    def __init__(self):
-        super().__init__(
-            orientation=Gtk.Orientation.VERTICAL,
-        )
-
-        self.columns = Gtk.Box(
-            orientation=Gtk.Orientation.HORIZONTAL,
-            spacing=HBOX_PADDING,
-        )
-        self.left_column = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            spacing=SECTION_SPACING,
-        )
-        self.left_column.set_valign(Gtk.Align.START)
-        self.columns.pack_start(self.left_column, True, True, 0)
-
-        system_frame, self.system_grid = _new_section("System Information")
-        self.system_values = {}
-        for row, (key, name) in enumerate(
-            (
-                ("distro", "Linux distro"),
-                ("kernel", "Linux kernel"),
-                ("processor", "Processor"),
-                ("cores", "Logical CPUs"),
-                ("architecture", "Architecture"),
-                ("driver", "CPU driver"),
-            )
-        ):
-            _, self.system_values[key] = _add_row(
-                self.system_grid, row, name
-            )
-        self.left_column.pack_start(system_frame, False, False, 0)
-
-        cpu_frame = Gtk.Frame()
-        cpu_heading = Gtk.Label(label="CPU Statistics", name="bold")
-        cpu_heading.set_halign(Gtk.Align.START)
-        cpu_frame.set_label_widget(cpu_heading)
-
-        self.cpu_box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            spacing=8,
-        )
-        self.cpu_box.set_margin_top(8)
-        self.cpu_box.set_margin_bottom(8)
-        self.cpu_box.set_margin_start(10)
-        self.cpu_box.set_margin_end(10)
-        cpu_frame.add(self.cpu_box)
-
-        limits_grid = Gtk.Grid()
-        limits_grid.set_column_spacing(18)
-        limits_grid.set_row_spacing(4)
-        _, self.max_freq_value = _add_row(
-            limits_grid, 0, "Maximum frequency"
-        )
-        _, self.min_freq_value = _add_row(
-            limits_grid, 1, "Minimum frequency"
-        )
-        self.cpu_box.pack_start(limits_grid, False, False, 0)
-
-        self.cores_grid = Gtk.Grid()
-        self.cores_grid.set_column_spacing(18)
-        self.cores_grid.set_row_spacing(3)
-        self.cpu_box.pack_start(self.cores_grid, False, False, 0)
-
-        self.fan_label = Gtk.Label(label="")
-        self.fan_label.set_halign(Gtk.Align.START)
-        self.fan_label.set_xalign(0)
-        self.fan_label.set_no_show_all(True)
-        self.cpu_box.pack_start(self.fan_label, False, False, 0)
-
-        self.left_column.pack_start(cpu_frame, False, False, 0)
-
-        self.right_column = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            spacing=SECTION_SPACING,
-        )
-        self.right_column.set_valign(Gtk.Align.START)
-        self.columns.pack_start(self.right_column, True, True, 0)
-
-        platform_frame, self.platform_grid = _new_section("Platform Profile")
-        self.platform_names = {}
-        self.platform_values = {}
-        for row, (key, name) in enumerate(
-            (
-                ("interface", "Interface"),
-                ("current", "Current profile"),
-                ("available", "Available profiles (0)"),
-                ("provider", "Provider"),
-            )
-        ):
-            name_label, value_label = _add_row(
-                self.platform_grid, row, name
-            )
-            self.platform_names[key] = name_label
-            self.platform_values[key] = value_label
-
-        # Keep long kernel-provided lists readable without increasing the
-        # window's minimum width. The complete values stay visible by wrapping.
-        for key in ("available", "provider"):
-            value_label = self.platform_values[key]
-            value_label.set_max_width_chars(44)
-            value_label.set_line_wrap(True)
-            value_label.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
-
-        self.right_column.pack_start(platform_frame, False, False, 0)
-
-        power_frame, self.power_grid = _new_section("CPU Power State")
-        self.power_values = {}
-        for row, (key, name) in enumerate(
-            (
-                ("governor", "Governor"),
-                ("epp", "EPP"),
-                ("epb", "EPB"),
-                ("hwp", "HWP Dynamic Boost"),
-                ("turbo", "Turbo Boost"),
-            )
-        ):
-            _, self.power_values[key] = _add_row(
-                self.power_grid, row, name
-            )
-        _set_row_visible(self.power_grid, 3, False)
-        self.right_column.pack_start(power_frame, False, False, 0)
-
-        battery_frame, self.battery_grid = _new_section("Battery")
-        self.battery_names = {}
-        self.battery_values = {}
-        for row, (key, name) in enumerate(
-            (
-                ("status", "Status"),
-                ("charge", "Charge"),
-                ("ac", "AC power"),
-                ("start", "Start threshold"),
-                ("stop", "Stop threshold"),
-                ("power", "Battery power"),
-            )
-        ):
-            name_label, value_label = _add_row(
-                self.battery_grid, row, name
-            )
-            self.battery_names[key] = name_label
-            self.battery_values[key] = value_label
-        self.right_column.pack_start(battery_frame, False, False, 0)
-
-        stats_frame, stats_grid = _new_section("System Statistics")
-        self.stats_values = {}
-        for row, (key, name) in enumerate(
-            (
-                ("usage", "CPU usage"),
-                ("load", "System load"),
-                ("load_avg", "Load average (1 / 5 / 15 min)"),
-                ("temp", "Average CPU temperature"),
-            )
-        ):
-            _, self.stats_values[key] = _add_row(stats_grid, row, name)
-        self.left_column.pack_start(stats_frame, False, False, 0)
-
-        self.pack_start(self.columns, True, True, 0)
-
-    def prepend_right(self, widget):
-        self.right_column.pack_start(
-            widget, False, False, 0
-        )
-        self.right_column.reorder_child(widget, 0)
-
-    def _refresh_core_rows(self, cores):
-        for child in self.cores_grid.get_children():
-            self.cores_grid.remove(child)
-
-        for column, text in enumerate(
-            ("CPU", "Usage", "Temperature", "Frequency")
-        ):
-            label = Gtk.Label(label=text, name="bold")
-            label.set_halign(Gtk.Align.START)
-            label.set_xalign(0)
-            self.cores_grid.attach(label, column, 0, 1, 1)
-
-        for row, core in enumerate(cores, start=1):
-            values = (
-                f"CPU{core.id}",
-                f"{core.usage:.1f}%",
-                (
-                    f"{core.temperature:.0f} °C"
-                    if core.temperature > 0
-                    else "—"
-                ),
-                (
-                    f"{core.frequency:.0f} MHz"
-                    if core.frequency > 0
-                    else "—"
-                ),
-            )
-            for column, text in enumerate(values):
-                label = Gtk.Label(label=text)
-                label.set_halign(Gtk.Align.START)
-                label.set_xalign(0)
-                if column == 1:
-                    # Keep later columns stable when usage reaches 100.0%.
-                    label.set_width_chars(len("100.0%"))
-                self.cores_grid.attach(label, column, row, 1, 1)
-
-        self.cores_grid.show_all()
-
-    def apply_report(self, report, pending_power_updates=()):
-        self.system_values["distro"].set_text(
-            f"{report.distro_name} {report.distro_ver}".strip()
-        )
-        self.system_values["kernel"].set_text(
-            report.kernel_version or "Unknown"
-        )
-        self.system_values["processor"].set_text(
-            report.processor_model or "Unknown"
-        )
-        self.system_values["cores"].set_text(
-            str(report.total_core)
-            if report.total_core is not None
-            else "Unknown"
-        )
-        self.system_values["architecture"].set_text(
-            report.arch or "Unknown"
-        )
-        self.system_values["driver"].set_text(
-            report.cpu_driver or "Unknown"
-        )
-
-        platform_state = report.platform_profile
-        if platform_state.interface == "none":
-            self.platform_values["interface"].set_text("Not detected")
-            for row in (1, 2, 3):
-                _set_row_visible(self.platform_grid, row, False)
-        else:
-            interface_text = {
-                "modern": "Modern",
-                "legacy": "Legacy",
-            }.get(platform_state.interface, "Unknown")
-            control_text = (
-                "Available"
-                if platform_state.control_available
-                else "Unavailable"
-            )
-            self.platform_values["interface"].set_text(
-                f"{interface_text} · Control: {control_text}"
-            )
-
-            _set_row_visible(self.platform_grid, 1, True)
-            _set_row_visible(self.platform_grid, 2, True)
-            self.platform_values["current"].set_text(
-                platform_state.current or "Unknown"
-            )
-
-            available_label, available_text = format_platform_profile_choices(
-                platform_state
-            )
-            self.platform_names["available"].set_text(available_label)
-            self.platform_values["available"].set_text(available_text)
-
-            provider_states = platform_state.provider_states
-            provider_visible = bool(provider_states)
-            _set_row_visible(self.platform_grid, 3, provider_visible)
-            if provider_visible:
-                self.platform_names["provider"].set_text(
-                    "Providers" if len(provider_states) > 1 else "Provider"
-                )
-                if len(provider_states) > 1:
-                    provider_text = "; ".join(
-                        f"{provider}: {profile or 'Unknown'}"
-                        for provider, profile in provider_states
-                    )
-                else:
-                    provider_text = provider_states[0][0]
-                self.platform_values["provider"].set_text(provider_text)
-
-        self.max_freq_value.set_text(
-            f"{report.cpu_max_freq:.0f} MHz"
-            if report.cpu_max_freq is not None
-            else "Unavailable"
-        )
-        self.min_freq_value.set_text(
-            f"{report.cpu_min_freq:.0f} MHz"
-            if report.cpu_min_freq is not None
-            else "Unavailable"
-        )
-        self._refresh_core_rows(report.cores_info)
-
-        if report.cpu_fan_speed is not None:
-            self.fan_label.set_text(
-                f"CPU fan speed: {report.cpu_fan_speed} RPM"
-            )
-            self.fan_label.show()
-        else:
-            self.fan_label.hide()
-
-        if "governor" not in pending_power_updates:
-            self.power_values["governor"].set_text(
-                _governor_status(report)
-            )
-        self.power_values["epp"].set_text(
-            report.current_epp or "Unavailable"
-        )
-        self.power_values["epb"].set_text(
-            report.current_epb or "Unavailable"
-        )
-
-        hwp_available = report.current_hwp_dynamic_boost is not None
-        _set_row_visible(self.power_grid, 3, hwp_available)
-        if hwp_available:
-            self.power_values["hwp"].set_text(
-                "On" if report.current_hwp_dynamic_boost else "Off"
-            )
-
-        if "turbo" not in pending_power_updates:
-            self.power_values["turbo"].set_text(
-                _turbo_status(report)
-            )
-
-        battery = report.battery_info
-        self.battery_values["status"].set_text(
-            _battery_status(battery)
-        )
-        if battery is None:
-            for key in ("charge", "ac", "start", "stop", "power"):
-                self.battery_values[key].set_text("Unavailable")
-        else:
-            self.battery_values["charge"].set_text(
-                f"{battery.battery_level}%"
-                if battery.battery_level is not None
-                else "Unavailable"
-            )
-            self.battery_values["ac"].set_text(
-                "Connected"
-                if battery.is_ac_plugged is True
-                else "Disconnected"
-                if battery.is_ac_plugged is False
-                else "Unknown"
-            )
-            self.battery_values["start"].set_text(
-                str(battery.charging_start_threshold)
-                if battery.charging_start_threshold is not None
-                else "Unavailable"
-            )
-            self.battery_values["stop"].set_text(
-                str(battery.charging_stop_threshold)
-                if battery.charging_stop_threshold is not None
-                else "Unavailable"
-            )
-            self.battery_names["power"].set_text(
-                battery_power_label(battery)
-            )
-            self.battery_values["power"].set_text(
-                f"{battery.power_watts:.2f} W"
-                if battery.power_watts is not None
-                else "Unavailable"
-            )
-
-        self.stats_values["usage"].set_text(
-            f"{report.cpu_usage:.1f}%"
-        )
-        self.stats_values["load"].set_text(f"{report.load:.2f}")
-        if report.avg_load:
-            self.stats_values["load_avg"].set_text(
-                f"{report.avg_load[0]:.2f} / "
-                f"{report.avg_load[1]:.2f} / "
-                f"{report.avg_load[2]:.2f}"
-            )
-        else:
-            self.stats_values["load_avg"].set_text("Unavailable")
-
-        average_temp = report.cpu_avg_temp
-        if average_temp is None:
-            temperatures = [
-                core.temperature
-                for core in report.cores_info
-                if core.temperature > 0
-            ]
-            if temperatures:
-                average_temp = sum(temperatures) / len(temperatures)
-
-        self.stats_values["temp"].set_text(
-            f"{average_temp:.1f} °C"
-            if average_temp is not None
-            else "Unavailable"
-        )
+    return configuration_file_text(config.path, config.has_config())
 
 
 class ToolWindow(Gtk.Window):
@@ -515,15 +58,35 @@ class ToolWindow(Gtk.Window):
         self.set_default_size(920, 680)
         self.set_border_width(10)
         self.set_resizable(True)
-        self.refresh_in_progress = False
         self.refresh_pending = False
         self.refresh_interval = DEFAULT_REFRESH_INTERVAL
-        self.refresh_id = None
         self.pending_power_updates = set()
         self.pending_power_release = set()
         self.power_apply_sources = {}
         self.destroyed = False
+        self._update_check_pending = False
+        self._refresh_bridge = GtkRefreshBridge(
+            self._collect_report,
+            component="GTK dashboard",
+            diagnostics=diagnostics,
+            active=lambda: not self.destroyed,
+            interval=lambda: self.refresh_interval,
+            on_report=self._apply_refresh,
+            on_error=self._finish_refresh_error,
+            before_ack=self._run_pending_refresh,
+            thread_name="gtk-dashboard-refresh",
+        )
+        self._refresh_coordinator = self._refresh_bridge.coordinator
+        self._refresh_timer = GtkRefreshTimer(
+            coordinator=self._refresh_coordinator,
+            request=self._refresh_coordinator.request_if_idle,
+            active=lambda: not self.destroyed,
+            diagnostics=diagnostics,
+            component="GTK dashboard",
+            interval=self.refresh_interval,
+        )
         self.connect("destroy", self._cleanup_refresh)
+        diagnostics.info("GTK window created")
         self.load_css()
         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
             filename=ICON_FILE,
@@ -639,15 +202,31 @@ class ToolWindow(Gtk.Window):
                 self.bluetooth_control, False, False, 0
             )
 
+        config_row = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=6
+        )
         self.config_label = Gtk.Label(
             label=_configuration_label_text()
         )
         self.config_label.set_halign(Gtk.Align.START)
         self.config_label.set_xalign(0)
         self.config_label.set_line_wrap(True)
-        controls_box.pack_start(
-            self.config_label, False, False, 0
+        config_row.pack_start(self.config_label, True, True, 0)
+
+        self.config_folder_button = Gtk.Button.new_from_icon_name(
+            "folder-open-symbolic", Gtk.IconSize.BUTTON
         )
+        self.config_folder_button.set_relief(Gtk.ReliefStyle.NONE)
+        self.config_folder_button.set_tooltip_text(
+            "Open configuration folder"
+        )
+        self.config_folder_button.connect(
+            "clicked", self._open_config_folder
+        )
+        config_row.pack_start(
+            self.config_folder_button, False, False, 0
+        )
+        controls_box.pack_start(config_row, False, False, 0)
 
         self.report_view.prepend_right(controls_frame)
 
@@ -740,6 +319,9 @@ class ToolWindow(Gtk.Window):
         self.refresh_in_thread()
         return False
 
+    def _open_config_folder(self, _button):
+        open_containing_folder(self, config.path)
+
     def _add_refresh_interval_menu(self):
         refresh_item = Gtk.MenuItem(
             label="Refresh interval"
@@ -798,26 +380,25 @@ class ToolWindow(Gtk.Window):
             return
 
         self.refresh_interval = seconds
+        self._refresh_timer.set_interval(seconds)
+        diagnostics.info("GTK refresh interval set to %ds", seconds)
         self._schedule_refresh()
         self.request_refresh()
 
-    def _schedule_refresh(self):
-        if self.refresh_id is not None:
-            GLib.source_remove(self.refresh_id)
+    @property
+    def refresh_in_progress(self):
+        """Single authoritative collection/delivery state."""
+        return self._refresh_coordinator.in_progress
 
-        self.refresh_id = GLib.timeout_add_seconds(
-            self.refresh_interval,
-            self.refresh_in_thread,
-        )
+    @property
+    def refresh_id(self):
+        """Active periodic timer source, exposed for legacy UI inspection."""
+        return self._refresh_timer.source_id
+
+    def _schedule_refresh(self):
+        self._refresh_timer.start()
 
     def request_refresh(self):
-        if self.destroyed:
-            return False
-
-        if self.refresh_in_progress:
-            self.refresh_pending = True
-            return True
-
         return self.refresh_in_thread()
 
     def _run_pending_refresh(self):
@@ -836,22 +417,42 @@ class ToolWindow(Gtk.Window):
             self.pending_power_updates.discard(key)
         self.pending_power_release.clear()
 
-        self.refresh_in_thread()
+        self._refresh_coordinator.request()
 
     def _cleanup_refresh(self, *_args):
+        if self.destroyed:
+            return
         self.destroyed = True
-        self.refresh_in_progress = False
+        # Free UI resources before optional diagnostic I/O. The destroy
+        # signal and explicit teardown may both call this method.
+        self._refresh_coordinator.close()
         self.refresh_pending = False
 
-        if self.refresh_id is not None:
-            GLib.source_remove(self.refresh_id)
-            self.refresh_id = None
+        self._refresh_timer.stop()
 
         for source_id in self.power_apply_sources.values():
             GLib.source_remove(source_id)
         self.power_apply_sources.clear()
         self.pending_power_updates.clear()
         self.pending_power_release.clear()
+        try:
+            diagnostics.set_error_callback(None)
+            diagnostics.info("GTK window closing")
+        except Exception:
+            pass  # Broken diagnostics must never prevent GTK shutdown.
+
+    def show_debug_log_error(self, message):
+        if self.destroyed:
+            return
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.CLOSE,
+            text="GUI debug logging error",
+        )
+        dialog.format_secondary_text(message)
+        dialog.connect("response", lambda widget, response: widget.destroy())
+        dialog.show_all()
 
     def snap(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
@@ -868,17 +469,60 @@ class ToolWindow(Gtk.Window):
         self.add(box)
 
     def handle_update(self):
-        new_stdout = StringIO()
-        with redirect_stdout(new_stdout):
-            if not check_for_update(): return
-        captured_output = new_stdout.getvalue().splitlines()
-        dialog = UpdateDialog(self, captured_output[1], captured_output[2])
+        """Check for updates without blocking the GTK event loop."""
+        if self.destroyed or self._update_check_pending:
+            return False
+        self._update_check_pending = True
+        try:
+            Thread(
+                target=self._check_update_async,
+                daemon=True, name="gtk-update-check",
+            ).start()
+        except RuntimeError:
+            self._update_check_pending = False
+            raise
+        return False
+
+    def _check_update_async(self):
+        # No redirect_stdout here: stdout is process-global and redirecting
+        # it from a thread could interfere with concurrent debug output.
+        try:
+            available_tag = check_for_update()
+            error = None
+        except Exception as exc:
+            available_tag, error = None, exc
+        try:
+            GLib.idle_add(self._finish_update_check, available_tag, error)
+        except Exception as exc:
+            diagnostics.warning("Cannot deliver GTK update result: %s", exc)
+
+    def _finish_update_check(self, available_tag, error):
+        self._update_check_pending = False
+        if self.destroyed:
+            return False
+        if error is not None:
+            diagnostics.warning("Update check failed: %s", error)
+            return False
+        if not available_tag:
+            return False
+
+        try:
+            installed_version = package_version("auto-cpufreq")
+        except (PackageNotFoundError, ValueError):
+            installed_version = "unknown"
+
+        dialog = UpdateDialog(
+            self,
+            f"Current version: {installed_version}",
+            f"Latest version: {available_tag}",
+        )
         response = dialog.run()
         dialog.destroy()
-        if response != Gtk.ResponseType.YES: return
-
+        if self.destroyed or response != Gtk.ResponseType.YES:
+            return False
         self.set_sensitive(False)
         Thread(target=self._run_update, daemon=True).start()
+        return False
 
     def _run_update(self):
         try:
@@ -972,34 +616,27 @@ class ToolWindow(Gtk.Window):
         self.gtk_provider.load_from_file(Gio.File.new_for_path(CSS_FILE))
 
     def refresh_in_thread(self):
+        """Explicit refresh requests may queue one successor if busy.
+
+        Periodic ticks use GtkRefreshTimer and skip occupied collections.
+        """
         if self.destroyed:
             return False
-        if self.refresh_in_progress:
+        if self._refresh_coordinator.in_progress:
+            self.refresh_pending = True
+            diagnostics.debug("GTK refresh requested during active collection")
             return True
-
-        self.refresh_in_progress = True
-        Thread(target=self._refresh, daemon=True).start()
+        self._refresh_coordinator.request()
         return True
 
-    def _refresh(self):
-        try:
-            report = system_info.generate_system_report()
-        except Exception as error:
-            if not self.destroyed:
-                GLib.idle_add(
-                    self._finish_refresh_error,
-                    str(error),
-                )
-            return
-
-        if not self.destroyed:
-            GLib.idle_add(self._apply_refresh, report)
+    def _collect_report(self):
+        return system_info.generate_system_report()
 
     def _apply_refresh(self, report):
         if self.destroyed:
-            self.refresh_in_progress = False
             return False
 
+        started = time.monotonic()
         try:
             self.report_view.apply_report(
                 report,
@@ -1010,27 +647,31 @@ class ToolWindow(Gtk.Window):
             )
             self.refresh_error_label.hide()
         except Exception as error:
+            diagnostics.exception("GTK dashboard render failed")
             self.refresh_error_label.set_text(
                 "Unable to refresh system information: "
                 f"{error}"
             )
             self.refresh_error_label.show()
         finally:
-            self.refresh_in_progress = False
-            self._run_pending_refresh()
-
+            try:
+                diagnostics.record_duration(
+                    "GTK dashboard render",
+                    time.monotonic() - started,
+                    slow_after=1.0,
+                )
+            except Exception:
+                pass
         return False
 
     def _finish_refresh_error(self, message):
         if self.destroyed:
-            self.refresh_in_progress = False
             return False
 
+        diagnostics.warning("GTK dashboard collection error: %s", message)
         self.refresh_error_label.set_text(
             "Unable to refresh system information: "
             f"{message}"
         )
         self.refresh_error_label.show()
-        self.refresh_in_progress = False
-        self._run_pending_refresh()
         return False
