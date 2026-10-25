@@ -78,6 +78,7 @@ Example of `auto-cpufreq --stats` CLI output (v3.2.0)
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
   - [Ignoring power supplies](#Ignoring-power-supplies)
+  - [🌐 Community Projects](#-community-projects)
 - [Troubleshooting](#troubleshooting)
   - [AUR](#aur)
 - [Discussion](#discussion)
@@ -856,6 +857,12 @@ For example:
 [power_supply_ignore_list]
 peripheral = power_supply_name
 ```
+
+### 🌐 Community Projects 
+
+If you're using auto‑cpufreq in desktop environments, you may find these community integrations helpful and useful:
+
+- GNOME Extension: [auto-cpufreq-swticher](https://extensions.gnome.org/extension/8320/auto-cpufreq-switcher/) (tray icon + governor switcher in quick settings)
 
 ## Troubleshooting
 
