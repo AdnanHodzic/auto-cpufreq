@@ -57,10 +57,9 @@ collection. Avoid reintroducing a second sampling path.
 
 ## Configuration file watcher
 
-`config.py` uses `inotify-simple` 2.0.1 (BSD-2-Clause, maintained by
-Chris Billington) through a dedicated `ConfigFileWatcher`. The project
-retains its GPL-3.0-or-later license; the dependency is installed separately,
-not copied or relicensed. The observer is **lazy**: read-only GTK and Stats
+`config.py` uses the external `inotify-simple` 2.0.1 dependency
+(BSD-2-Clause) through a dedicated `ConfigFileWatcher`. The auto-cpufreq
+project remains GPL-3.0-or-later. The observer is **lazy**: read-only GTK and Stats
 initialize configuration data without starting an inotify thread or
 allocating watcher file descriptors. Daemon, Monitor, and Live modes call
 `config.notifier.start()` when needed and `config.stop_watching()`
