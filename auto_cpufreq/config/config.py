@@ -123,7 +123,9 @@ class _Config:
             # File deleted or moved away: restore default settings, which is
             # what the original IN_DELETE / IN_MOVED_FROM callbacks did.
             if not os.path.lexists(self.path):
-                self._config = replacement
+                # read_file() may already have populated replacement before
+                # the path disappeared at the final stat().
+                self._config = ConfigParser()
                 return True
             _LOG.warning(
                 "Cannot read configuration %s: missing target", self.path

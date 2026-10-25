@@ -297,6 +297,13 @@ class ConfigFileWatcher:
                             break
                         if event.wd == link_wd and link_wd is not None:
                             if event.mask & self._LOST:
+                                # MOVE_SELF does not release an inotify watch.
+                                # Drop our old watch before rearming its path.
+                                if not event.mask & flags.IGNORED:
+                                    try:
+                                        notifier.rm_watch(link_wd)
+                                    except OSError:
+                                        pass  # Already removed by the kernel.
                                 link_wd = None
                                 link_identity = None
                                 pending = time.monotonic()

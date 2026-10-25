@@ -171,7 +171,11 @@ class MonitorModeView(Gtk.Box):
 
     def refresh_in_thread(self):
         if self.running:
-            self._refresh_coordinator.request()
+            try:
+                self._refresh_coordinator.request()
+            except RuntimeError as error:
+                # Keep Monitor open and let the periodic timer retry.
+                self._show_error(str(error))
         return False
 
     def _collect_report(self):

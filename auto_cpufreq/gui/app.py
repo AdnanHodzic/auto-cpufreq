@@ -478,9 +478,13 @@ class ToolWindow(Gtk.Window):
                 target=self._check_update_async,
                 daemon=True, name="gtk-update-check",
             ).start()
-        except RuntimeError:
+        except RuntimeError as error:
             self._update_check_pending = False
-            raise
+            # An optional version check must not prevent GTK from starting.
+            try:
+                diagnostics.warning("Cannot start GTK update check: %s", error)
+            except Exception:
+                pass
         return False
 
     def _check_update_async(self):
@@ -521,7 +525,11 @@ class ToolWindow(Gtk.Window):
         if self.destroyed or response != Gtk.ResponseType.YES:
             return False
         self.set_sensitive(False)
-        Thread(target=self._run_update, daemon=True).start()
+        try:
+            Thread(target=self._run_update, daemon=True).start()
+        except RuntimeError as error:
+            # Restore the window even if the update worker cannot start.
+            return self._finish_update(None, error)
         return False
 
     def _run_update(self):
@@ -545,6 +553,8 @@ class ToolWindow(Gtk.Window):
             )
 
     def _finish_update(self, updater, error):
+        if self.destroyed:
+            return False
         self.set_sensitive(True)
 
         if error is not None:
@@ -626,7 +636,12 @@ class ToolWindow(Gtk.Window):
             self.refresh_pending = True
             diagnostics.debug("GTK refresh requested during active collection")
             return True
-        self._refresh_coordinator.request()
+        try:
+            self._refresh_coordinator.request()
+        except RuntimeError as error:
+            # The periodic timer can retry when worker creation recovers.
+            self._finish_refresh_error(str(error))
+            return False
         return True
 
     def _collect_report(self):
