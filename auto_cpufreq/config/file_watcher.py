@@ -76,25 +76,31 @@ class ConfigFileWatcher:
                     raise RuntimeError("Configuration watcher is still stopping")
                 return
             read_fd, write_fd = os.pipe()
-            os.set_blocking(write_fd, False)
-            self._stop_event = threading.Event()
-            self._ready = threading.Event()
-            self._stop_write = write_fd
-            self._state = "starting"
-            self._thread = threading.Thread(
-                target=self._run, args=(read_fd, self._stop_event, self._ready),
-                name="auto-cpufreq-config-watch", daemon=True,
-            )
             try:
-                self._thread.start()
+                # All setup steps after pipe creation can fail. Keep both
+                # descriptors owned here until the worker has started.
+                os.set_blocking(write_fd, False)
+                self._stop_event = threading.Event()
+                self._ready = threading.Event()
+                worker = threading.Thread(
+                    target=self._run, args=(read_fd, self._stop_event, self._ready),
+                    name="auto-cpufreq-config-watch", daemon=True,
+                )
+                self._stop_write = write_fd
+                self._state = "starting"
+                self._thread = worker
+                worker.start()
+                ready = self._ready
             except BaseException:
                 self._thread = None
                 self._stop_write = None
                 self._state = "stopped"
-                os.close(read_fd)
-                os.close(write_fd)
+                for fd in (read_fd, write_fd):
+                    try:
+                        os.close(fd)
+                    except OSError:
+                        pass  # Preserve the original startup exception.
                 raise
-            ready = self._ready
         # Reports the first watch attempt, not guaranteed successful coverage.
         # The 'state' property distinguishes a watched from a retrying path.
         ready.wait(timeout=3.0)

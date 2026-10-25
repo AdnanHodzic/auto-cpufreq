@@ -412,36 +412,6 @@ def deploy_daemon():
 
     return call("/usr/local/bin/auto-cpufreq-install", shell=True)
 
-def deploy_daemon_performance():
-    print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
-
-    # check that performance is in scaling_available_governors
-    if "performance" not in AVAILABLE_GOVERNORS_SORTED:
-        print("\"performance\" governor is unavailable on this system, run:\n"
-            "sudo sudo auto-cpufreq --install\n\n"
-            "to install auto-cpufreq using default \"balanced\" governor.\n")
-
-    cpufreqctl() # deploy cpufreqctl script func call
-
-    bluetooth_disable() # turn off bluetooth on boot
-
-    auto_cpufreq_stats_path.touch(exist_ok=True)
-
-    print("\n* Deploy auto-cpufreq install script")
-    copy(SCRIPTS_DIR / "auto-cpufreq-install.sh", "/usr/local/bin/auto-cpufreq-install")
-
-    print("\n* Deploy auto-cpufreq remove script")
-    copy(SCRIPTS_DIR / "auto-cpufreq-remove.sh", "/usr/local/bin/auto-cpufreq-remove")
-
-    # output warning if gnome power profile is running
-    gnome_power_detect_install()
-    #"gnome_power_svc_disable_performance" is not defined
-    #gnome_power_svc_disable_performance()
-   
-    tlp_service_detect() # output warning if TLP service is detected
-
-    call("/usr/local/bin/auto-cpufreq-install", shell=True)
-
 def remove_daemon():
     # check if auto-cpufreq is installed
     if not os.path.exists("/usr/local/bin/auto-cpufreq-remove"):

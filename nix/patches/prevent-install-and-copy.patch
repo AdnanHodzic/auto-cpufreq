@@ -1,8 +1,7 @@
 diff --git a/auto_cpufreq/core.py b/auto_cpufreq/core.py
-index f03e7de..2dff5fb 100755
 --- a/auto_cpufreq/core.py
 +++ b/auto_cpufreq/core.py
-@@ -277,19 +277,12 @@ def get_current_gov():
+@@ -356,19 +356,12 @@
      )
  
  def cpufreqctl():
@@ -26,7 +25,7 @@ index f03e7de..2dff5fb 100755
  
  def footer(l=79): print("\n" + "-" * l + "\n")
  
-@@ -307,31 +300,8 @@ def remove_complete_msg():
+@@ -386,68 +379,10 @@
      footer()
  
  def deploy_daemon():
@@ -58,13 +57,7 @@ index f03e7de..2dff5fb 100755
 +    # prevent needless copying and system changes
 +    return 0
  
- def deploy_daemon_performance():
-     print("\n" + "-" * 21 + " Deploying auto-cpufreq as a daemon (performance) " + "-" * 22 + "\n")
-@@ -363,43 +333,7 @@ def deploy_daemon_performance():
- 
-     call("/usr/local/bin/auto-cpufreq-install", shell=True)
- 
--def remove_daemon():
+ def remove_daemon():
 -    # check if auto-cpufreq is installed
 -    if not os.path.exists("/usr/local/bin/auto-cpufreq-remove"):
 -        print("\nauto-cpufreq daemon is not installed.\n")
@@ -100,8 +93,6 @@ index f03e7de..2dff5fb 100755
 -        auto_cpufreq_stats_path.unlink()
 -
 -    cpufreqctl_restore() # restore original cpufrectl script
--    return 0
-+def remove_daemon(): return 0
+     return 0
  
  def gov_check():
-     for gov in AVAILABLE_GOVERNORS:
