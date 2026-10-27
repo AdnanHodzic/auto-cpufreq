@@ -12,7 +12,7 @@ from queue import Empty, Full, Queue
 import re
 import secrets
 import sys
-from threading import Lock, Thread
+from threading import Lock, Thread, current_thread
 from auto_cpufreq.modules.process_health import ProcessHealthSampler
 import time
 import traceback
@@ -64,6 +64,7 @@ class _PrivateRotatingFileHandler(RotatingFileHandler):
 
     def __init__(self, *args, on_error=None, **kwargs):
         self._on_error = on_error
+        self._writer_thread = None
         super().__init__(*args, **kwargs)
 
     def _open(self):
@@ -81,6 +82,32 @@ class _PrivateRotatingFileHandler(RotatingFileHandler):
     def handleError(self, record):
         if self._on_error:
             self._on_error(sys.exc_info()[1] or OSError("Unknown log write failure"))
+
+    def set_writer(self, writer):
+        self._writer_thread = writer
+
+    def _writer_owns_sink(self):
+        return self._writer_thread is None or current_thread() is self._writer_thread
+
+    # logging.shutdown() visits every handler, including a detached sink.
+    # A stuck writer may still hold this handler's lock after our bounded join.
+    # Only the writer is allowed to flush or close it once started, so
+    # interpreter shutdown never waits for its potentially blocked file I/O.
+    def acquire(self):
+        if self._writer_owns_sink():
+            super().acquire()
+
+    def release(self):
+        if self._writer_owns_sink():
+            super().release()
+
+    def flush(self):
+        if self._writer_owns_sink():
+            super().flush()
+
+    def close(self):
+        if self._writer_owns_sink():
+            super().close()
 
 
 class _BoundedQueueHandler(QueueHandler):
@@ -330,6 +357,7 @@ class SessionDiagnostics:
             daemon=True, name=f"{self.component}-debug-writer",
         )
         session.handler, session.writer = handler, writer
+        output.set_writer(writer)
         with _ACTIVE_LOCK:
             _ACTIVE_LOGS.add(self.log_path)
         try:
@@ -337,6 +365,7 @@ class SessionDiagnostics:
         except RuntimeError:
             with _ACTIVE_LOCK:
                 _ACTIVE_LOGS.discard(self.log_path)
+            output.set_writer(None)
             output.close()
             raise
         self._session = session

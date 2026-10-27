@@ -25,12 +25,15 @@ class ConfigFileWatcher:
 
     _MASK = (
         flags.CLOSE_WRITE | flags.MOVED_TO | flags.MOVED_FROM
-        | flags.DELETE | flags.CREATE
+        | flags.DELETE | flags.CREATE | flags.MODIFY
         | flags.DELETE_SELF | flags.MOVE_SELF | flags.UNMOUNT
         | flags.ONLYDIR
     )
     _CHANGED = flags.CLOSE_WRITE | flags.MOVED_TO
-    _LINK_MASK = flags.CLOSE_WRITE | flags.DELETE_SELF | flags.MOVE_SELF | flags.UNMOUNT
+    _LINK_MASK = (
+        flags.CLOSE_WRITE | flags.MODIFY | flags.DELETE_SELF
+        | flags.MOVE_SELF | flags.UNMOUNT
+    )
     _REMOVED = flags.DELETE | flags.MOVED_FROM
     _LOST = flags.IGNORED | flags.DELETE_SELF | flags.MOVE_SELF | flags.UNMOUNT
 
@@ -137,7 +140,9 @@ class ConfigFileWatcher:
         link_wd = None
         link_target = None
         link_identity = None
+        link_replaced = False
         pending = None
+        pending_deletion = False
         parent = os.path.dirname(self.path)
         basename = os.path.basename(self.path)
         retry_delay = self._retry_interval
@@ -166,7 +171,7 @@ class ConfigFileWatcher:
 
         def close_notifier():
             nonlocal notifier, wd, watched_dir, watched_identity
-            nonlocal link_wd, link_target, link_identity
+            nonlocal link_wd, link_target, link_identity, link_replaced
             if notifier is not None:
                 try:
                     notifier.close()
@@ -177,6 +182,7 @@ class ConfigFileWatcher:
             watched_dir = None
             watched_identity = None
             link_wd = link_target = link_identity = None
+            link_replaced = False
 
         def nearest_existing_directory():
             candidate = parent
@@ -246,8 +252,19 @@ class ConfigFileWatcher:
                 try:
                     ensure_inotify()
                     changed_watch = reconcile()
-                    if changed_watch:
-                        notify()  # Catch files written before a parent watch existed.
+                    if link_replaced and link_wd is not None:
+                        # A watched symlink target was removed or moved. Its
+                        # replacement may arrive after the loss event: retain
+                        # the notice until its new inode can be observed.
+                        link_replaced = False
+                        pending = time.monotonic()
+                        pending_deletion = False
+                    if changed_watch and not os.path.lexists(self.path):
+                        # A recovered watch cannot establish that an existing
+                        # file was closed. Wait for CLOSE_WRITE or an atomic
+                        # MOVED_TO instead of trusting quiet file metadata.
+                        pending = time.monotonic() + self._delete_grace
+                        pending_deletion = True
                     change_state("watching" if watched_dir == parent else "recovering")
                 except OSError as error:
                     close_notifier()
@@ -267,6 +284,7 @@ class ConfigFileWatcher:
                 except (OSError, ValueError) as error:
                     report_problem("select: %s" % error)
                     close_notifier()
+                    pending = None
                     change_state("recovering")
                     stop_event.wait(retry_delay)
                     retry_delay = min(retry_delay * 2, self._max_retry_interval)
@@ -285,6 +303,7 @@ class ConfigFileWatcher:
                     except (OSError, BlockingIOError) as error:
                         report_problem("read: %s" % error)
                         close_notifier()
+                        pending = None
                         change_state("recovering")
                         stop_event.wait(retry_delay)
                         retry_delay = min(retry_delay * 2, self._max_retry_interval)
@@ -293,7 +312,8 @@ class ConfigFileWatcher:
                     for event in events:
                         if event.mask & flags.Q_OVERFLOW:
                             reset_stream = True
-                            pending = time.monotonic()
+                            # Lost events mean a writer may still be open.
+                            pending = None
                             break
                         if event.wd == link_wd and link_wd is not None:
                             if event.mask & self._LOST:
@@ -306,35 +326,54 @@ class ConfigFileWatcher:
                                         pass  # Already removed by the kernel.
                                 link_wd = None
                                 link_identity = None
-                                pending = time.monotonic()
+                                link_replaced = True
+                                # Reconcile the replacement before reloading.
+                                pending = None
                             elif event.mask & flags.CLOSE_WRITE:
                                 pending = time.monotonic()
+                                pending_deletion = False
+                            elif event.mask & flags.MODIFY:
+                                # Await the latest CLOSE_WRITE.
+                                pending = None
                             continue
                         if event.wd != wd:
                             continue
                         if event.mask & self._LOST:
                             reset_stream = True
-                            pending = time.monotonic()
+                            pending = None
                             break
                         if watched_dir == parent and event.name == basename:
                             if event.mask & self._CHANGED:
                                 pending = time.monotonic()
+                                pending_deletion = False
                             elif event.mask & flags.CREATE:
-                                # symlink(2) creates a complete name without
-                                # CLOSE_WRITE; regular writes must wait for close.
                                 if os.path.islink(self.path):
+                                    # Link creation itself is atomic; regular
+                                    # file creation does not imply write close.
                                     pending = time.monotonic()
-                            elif event.mask & self._REMOVED and pending is None:
+                                    pending_deletion = False
+                                else:
+                                    # Hard links are indistinguishable from
+                                    # newly opened files here: require a later
+                                    # CLOSE_WRITE or atomic MOVED_TO.
+                                    pending = None
+                            elif event.mask & flags.MODIFY:
+                                # New writes supersede any pending reload.
+                                pending = None
+                            elif event.mask & self._REMOVED:
                                 pending = time.monotonic() + self._delete_grace
+                                pending_deletion = True
                     if reset_stream:
                         # inotify(7) recommends rebuilding state and a fresh
                         # descriptor after lost events, not reusing queued IDs.
                         close_notifier()
+                        pending = None
                         change_state("recovering")
 
                 if pending is not None and time.monotonic() >= pending:
                     pending = None
-                    notify()
+                    if not pending_deletion or not os.path.lexists(self.path):
+                        notify()
                 if not healthy:
                     retry_delay = min(retry_delay * 2, self._max_retry_interval)
         finally:
