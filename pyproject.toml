@@ -31,8 +31,7 @@ requests = "^2.32.4"
 # runtime through the installer's --system-site-packages virtual environment.
 PyGObject = {version="^3.50.0", optional=true}
 urwid = ">=3.0.2,<5.0.0"
-pyinotify = {git = "https://github.com/shadeyg56/pyinotify-3.12"}
-pyasyncore = "^1.0.4"
+inotify-simple = "2.0.1"
 
 [tool.poetry.extras]
 gui = ["PyGObject"]

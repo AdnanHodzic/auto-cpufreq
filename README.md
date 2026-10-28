@@ -50,6 +50,7 @@ Example of `auto-cpufreq --stats` CLI output (v3.2.0)
   - [Debian repositories (.deb package)](#debian-repositories-deb-package)
   - [Snap Store](#snap-store)
   - [AUR package (Arch based distributions)](#aur-package-arch-based-distributions)
+  - [Gentoo Linux (GURU Repository)](#gentoo-linux-guru-repository)
   - [NixOS](#nixos)
   - [For developers](#installation-development-mode-only)
 - [Post-installation](#post-installation)
@@ -64,6 +65,9 @@ Example of `auto-cpufreq --stats` CLI output (v3.2.0)
   - [monitor](#monitor)
   - [live](#live)
   - [GUI](#gui)
+    - [GTK debug logging](#gtk-debug-logging)
+  - [Optional terminal diagnostics](#optional-terminal-diagnostics)
+  - [Collecting a complete troubleshooting report](#collecting-a-complete-troubleshooting-report)
   - [overriding governor](#overriding-governor)
   - [overriding turbo mode](#overriding-turbo-mode)
   - [Install - auto-cpufreq daemon](#install---auto-cpufreq-daemon)
@@ -77,7 +81,7 @@ Example of `auto-cpufreq --stats` CLI output (v3.2.0)
 - [Battery charging thresholds](#battery-charging-thresholds)
   - [Supported Devices](#supported-devices)
   - [Battery config](#battery-config)
-  - [Ignoring power supplies](#Ignoring-power-supplies)
+  - [Ignoring power supplies](#ignoring-power-supplies)
 - [Troubleshooting](#troubleshooting)
   - [AUR](#aur)
 - [Discussion](#discussion)
@@ -287,7 +291,7 @@ Then you can enable the program in your `configuration.nix` file:
 <summary>Nixpkgs</summary>
 <br>
 
-There is a nixpkg available, but it is more prone to being outdated, whereas the flake pulls from the latest commit. You can install it in your `configuration.nix` and enable the system service:
+There is a nixpkg available. Its version depends on the selected nixpkgs revision, while the flake input is pinned by `flake.lock`. You can install it in your `configuration.nix` and enable the system service:
 ```nix
 # configuration.nix
 
@@ -302,6 +306,9 @@ services.auto-cpufreq.enable = true;
 </details>
 
 ### Installation (development mode only)
+
+For development setup, the current module ownership map, and the
+frontend and diagnostic architecture, consult [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - If you have `poetry` installed:
   ```bash
@@ -325,7 +332,7 @@ services.auto-cpufreq.enable = true;
   pip3 install -e .
   auto-cpufreq
   ```
-- Regularly run `poetry update` if you get any inconsistent lock file issues.
+- If the lock file is inconsistent, check that `pyproject.toml` and `poetry.lock` match; use `poetry update` only when you intend to update dependencies.
 
 ## Post-installation
 
@@ -347,23 +354,20 @@ the repository:
 
 `git clone https://github.com/AdnanHodzic/auto-cpufreq`
 
-Make sure to have `psutil` & `pyinotify` Python library installed before next step:
+The helper requires the project's Python dependencies, including `psutil` and
+`inotify-simple`. Install them in an isolated development environment rather
+than modifying system Python with `--break-system-packages`. For example,
+from the cloned repository with Poetry installed:
 
-If you're using Debian based distro install them by running:
+```bash
+cd auto-cpufreq
+poetry install
+sudo "$(poetry env info --path)/bin/python" -m auto_cpufreq.power_helper --gnome_power_disable
+```
 
-`sudo apt install python3-psutil python3-pyinotify` 
-
-or manually using pip, e.g: 
-
-`sudo pip3 install psutil pyinotify --break-system-packages`
-
-Then disable the GNOME Power Profiles daemon:
-
-`sudo python3 -m auto_cpufreq.power_helper --gnome_power_disable`
-
-for full list of options run --help, e.g:
-
-`sudo python3 -m auto_cpufreq.power_helper --help`
+For the list of options, use the same interpreter with `--help`.
+`inotify-simple` 2.0.1 is a separate BSD-2-Clause-licensed dependency;
+the auto-cpufreq project remains GPL-3.0-or-later.
 
 ### 2: `--force` governor override
 
@@ -531,8 +535,8 @@ auto-cpufreq can be used through the following CLI modes and the GTK interface:
 - [update](#update---auto-cpufreq-update)
   - Update auto-cpufreq to the latest release
 
-- [install_performance](#1-power_helperpy-script)
-  - Install daemon in "performance" mode
+- [pp](#platform-profiles)
+  - Show Platform Profile information
 
 - [stats](#stats)
   - View live stats of CPU optimizations made by daemon
@@ -590,7 +594,50 @@ When the daemon is running, the GUI provides a live overview of system, CPU, bat
 
 The dashboard refresh interval can be changed from the menu between 1, 2 and 5 seconds.
 
-If the daemon is not running, the GUI allows you to either install it for persistent automatic optimization or open Monitor Mode to preview system state and auto-cpufreq recommendations without applying changes.
+If the daemon is not running, the GUI offers daemon installation or Monitor Mode for read-only system information and recommendations. The Monitor view is not a separate panel in the running-daemon dashboard.
+
+#### GTK debug logging
+
+Use **Enable debug logging** in the GTK menu to start recording a diagnostic session. Logging is disabled by default, but the GTK preference is remembered across launches. The **Debug log location** dialog displays the selected log filename, its directory, and whether the session is active or has already ended. **Copy full path** copies the absolute path of the log file (not just the filename or folder); **Open folder** opens its directory through the desktop's registered file manager. The folder icon beside the GTK configuration path opens the configuration file's parent directory.
+
+**No diagnostic directory or log file is created until debug logging is first enabled.** If the directory does not exist, the location dialog and the Open folder error explain that logging must be enabled first. Once created, the folder remains accessible even when logging is disabled. Each time logging is enabled, the program starts a new session log; opening the folder does not enable logging.
+
+Diagnostic preferences are stored in `$XDG_CONFIG_HOME/auto-cpufreq/gtk-debug.json` (default `~/.config/auto-cpufreq/gtk-debug.json`). Logs are stored under `$XDG_STATE_HOME/auto-cpufreq/` (default `~/.local/state/auto-cpufreq/`). The files have private permissions, bounded queues, 1 MiB rotation and up to three backups per session. Review logs before sharing: they may include local paths, system information and Python stack traces.
+
+When enabled, logging records errors and slow or stalled refreshes. It summarizes GTK queueing, data collection, delivery and rendering times approximately once a minute. The process-health sampler runs every 5 seconds and summarizes CPU usage (relative to one logical CPU), memory, thread count and open file descriptors approximately once a minute. It does **not** continuously log per-thread CPU usage or stacks. Sustained process CPU usage above 70% of one logical CPU for three consecutive samples can trigger a report of the hottest thread and its Python stack; an unresponsive GTK main loop may also produce a stack trace.
+
+This optional GTK logging does not alter the daemon's power policy. The CLI's existing `--debug` mode remains separate from persistent diagnostic logging.
+
+GTK diagnostic sessions now start only when the GTK entrypoint attaches its main loop; merely importing GTK modules will not launch diagnostic workers.
+
+### Optional terminal diagnostics
+
+To record an independent diagnostic session for a terminal screen, add `--diagnostic-log` to `--stats`, `--monitor` or `--live`:
+
+```bash
+auto-cpufreq --stats --diagnostic-log
+```
+
+The terminal option is **off by default** and does not share the GTK preference. It uses the same bounded rotating log writer and process-health sampling as GTK. On unprivileged runs, the log is stored under `$XDG_STATE_HOME/auto-cpufreq/` (or `~/.local/state/auto-cpufreq/`). For terminal modes run with `sudo`, logs go to the **root account's** `~/.local/state/auto-cpufreq/` rather than the invoking user's home; access requires appropriate permissions. Review log contents before sharing. The option is not valid for install, remove, daemon or other noninteractive operations. It does not enable logging for the built-in `--debug` command.
+
+`--stats` observes the running daemon without requesting power-policy changes. Unlike `--stats`, the existing `--monitor` and `--live` modes have service and privilege preconditions; do not use them as casual diagnostics of a production system.
+
+
+### Collecting a complete troubleshooting report
+
+For a snapshot of the machine **and** a short record of refresh timing, collect
+both sources close together, as two **separate commands**:
+
+1. Run `auto-cpufreq --stats --diagnostic-log` and observe the Stats screen. Press `Q` to close it, then keep the `stats-*.log` file in `~/.local/state/auto-cpufreq/` (or your `XDG_STATE_HOME` location).
+2. If a maintainer asks for the traditional hardware/system report, run `auto-cpufreq --debug` **separately** and save its terminal output. The historical `--debug` command requires root privileges and invokes `cpufreqctl()`, which can perform system setup; **do not run it on a working production installation merely to collect routine read-only monitoring data**. Review its implementation and effects before using it with `sudo`.
+3. Share the Stats log and, when explicitly collected, the Debug text with the relevant error description, auto-cpufreq version and approximate collection time. A Python stack trace is recorded by optional diagnostics only when its trigger conditions occur, not in every session. Review and redact private paths and other identifying information before sharing.
+
+The commands are complementary, not simultaneous: `--stats --debug` is
+rejected, and `--diagnostic-log` is only valid with exactly one of
+`--stats`, `--monitor` and `--live`. It cannot accompany update,
+installation, removal or power overrides. Do **not** use `--live` as a
+troubleshooting alternative to Stats: Live may change CPU power settings.
+
 
 ### Overriding governor
 
@@ -611,7 +658,7 @@ Please note that any set override will persist even after reboot.
 
 ### Install - auto-cpufreq daemon
 
-Necessary changes are made to the system over time and this process will continue across reboots. The daemon is deployed and started as a systemd service. Changes are made automatically and live stats are generated for monitoring purposes.
+Necessary changes are made to the system over time and this process will continue across reboots. The daemon is deployed and started through the supported init system. Changes are made automatically and live stats are generated for monitoring purposes.
 
 **Install the daemon using CLI ([after installing auto-cpufreq](#installing-auto-cpufreq)):**
 
@@ -625,9 +672,9 @@ The daemon can also be installed from the GTK interface. See [GUI](#gui).
 
 **auto-cpufreq daemon service**
 
-Installing the auto-cpufreq daemon also enables the associated service (equivalent to `systemctl enable auto-cpufreq`), causing it to start on boot, and immediately starts it (equivalent to `systemctl start auto-cpufreq`).
+Installing the auto-cpufreq daemon also enables the associated service at boot and starts it immediately (equivalent to `systemctl enable --now auto-cpufreq` on systemd).
 
-Since the daemon is running as a systemd service, its status can be seen by running:
+On systemd systems, the daemon's status can be seen by running:
 
 `systemctl status auto-cpufreq`
 
@@ -804,7 +851,7 @@ You will need to specify both `start_threshold` AND `stop_threshold` in most cas
 For these changes to have an effect, you will need to restart the daemon:
 
 ```shell
-systemctl restart auto-cpufreq.service
+sudo systemctl restart auto-cpufreq.service
 ```
 
 See more here on the kernel doc pages: [docs.kernel.org](https://docs.kernel.org/admin-guide/laptops/thinkpad-acpi.html#battery-charge-control)
@@ -814,8 +861,8 @@ See more here on the kernel doc pages: [docs.kernel.org](https://docs.kernel.org
 When you remove/uninstall the auto-cpufreq daemon, the last applied settings for battery thresholds will still apply. You might need to manually set these yourself to whatever default they were before. E.g. (as sudo):
 
 ```shell
-echo 0 > /sys/class/power_supply/BAT0/charge_start_threshold
-echo 100 > /sys/class/power_supply/BAT0/charge_stop_threshold
+printf '0\n' | sudo tee /sys/class/power_supply/BAT0/charge_start_threshold
+printf '100\n' | sudo tee /sys/class/power_supply/BAT0/charge_stop_threshold
 ```
 
 ### Ideapad conservation mode
@@ -865,9 +912,9 @@ peripheral = power_supply_name
 - suboptimal CPU performance
 - turbo mode not available
 
-**A:** If you're using the `intel_pstate/amd-pstate` CPU management driver, consider changing it to `acpi-cpufreq`.
+**A:** If you're using the `intel_pstate` or `amd-pstate` CPU management driver, consider `acpi-cpufreq` only if your hardware and kernel support it; switching drivers is not a universal fix.
 
-This can be done by editing the `GRUB_CMDLINE_LINUX_DEFAULT` params in `/etc/default/grub`. For instance:
+On systems using GRUB, the kernel parameters can be changed in `GRUB_CMDLINE_LINUX_DEFAULT` in `/etc/default/grub`. For instance:
 
 ```shell
     sudo nano /etc/default/grub
@@ -920,7 +967,7 @@ For AMD users:
 quiet splash initcall_blacklist=amd_pstate_init amd_pstate.enable=0
 ```
 
-Once you have made the necessary changes to the `cmdline` file, you can update it by running `sudo reinstall-kernels`.
+After editing the `cmdline` file, regenerate boot entries using your distribution's documented procedure (`sudo reinstall-kernels` on distributions that provide it).
 
 **Q:** If auto-cpufreq-gtk doesn't launch with exit code 1 (Workaround)
 

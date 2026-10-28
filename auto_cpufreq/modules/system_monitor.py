@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import sys
 from queue import Empty, SimpleQueue
-from threading import Thread
 from typing import Callable
 import urwid
 import time
@@ -14,6 +13,14 @@ from .system_info import (
     system_info,
 )
 from auto_cpufreq.config.config import config
+from auto_cpufreq.modules.report_presentation import (
+    present_report, configuration_file_text, offline_cpus_text,
+    frequency_limit_text, battery_present,
+)
+from auto_cpufreq.modules.report_refresh import ReportRefreshCoordinator
+from auto_cpufreq.modules.diagnostics import (
+    SessionDiagnostics, cli_state_directory,
+)
 from enum import Enum
 
 
@@ -27,8 +34,19 @@ class ViewType(str, Enum):
 
 
 class SystemMonitor:
-    def __init__(self, type: ViewType, suggestion: bool = False):
+    def __init__(
+        self, type: ViewType, suggestion: bool = False,
+        diagnostic_log: bool = False,
+        policy_status: Callable[[], str] | None = None,
+    ):
         self.type: ViewType = type
+        self._diagnostics = (
+            SessionDiagnostics(
+                component=type.name.lower(),
+                state_dir=cli_state_directory(),
+            )
+            if diagnostic_log else None
+        )
         self.title_header = urwid.Text(f"{type} Mode", align="center")
         self.header = urwid.Columns(
             [
@@ -58,13 +76,12 @@ class SystemMonitor:
             dividechars=0,
         )
 
-        self.footer = urwid.AttrMap(
-            urwid.Text(
-                "Press Q or Ctrl+C to quit | Use ↑↓ or PageUp/PageDown to scroll",
-                align="center",
-            ),
-            "footer",
+        self.footer_text = urwid.Text(
+            "Press Q or Ctrl+C to quit | Use ↑↓ or PageUp/PageDown to scroll",
+            align="center",
         )
+        self.footer = urwid.AttrMap(self.footer_text, "footer")
+        self._diagnostic_error_shown = 0
 
         self.frame = urwid.Frame(
             body=self.columns,
@@ -89,75 +106,187 @@ class SystemMonitor:
         self.last_focus_left = 0
         self.last_focus_right = 0
         self.on_quit: Callable[[], None] | None = None
+        self._policy_status = policy_status
         self.suggestion = suggestion
         self.running = False
         self._refresh_pipe_fd: int | None = None
         self._alarm_handle = None
         self._refresh_results = SimpleQueue()
+        self._pipe_delivery_error = None
+        self._stalled_refresh_reported = False
+        self._refresh_coordinator = ReportRefreshCoordinator(
+            self._collect_report_data,
+            self._dispatch_report_result,
+            thread_name="urwid-report-refresh",
+            on_dispatch_error=self._report_dispatch_error,
+        )
 
     def update(self, loop: urwid.MainLoop, user_data: dict) -> None:
         self._alarm_handle = None
-
         if not self.running:
             return
-
-        Thread(target=self._collect_report, daemon=True).start()
-
-    def _collect_report(self):
         try:
-            report = system_info.generate_system_report()
+            # A periodic tick also provides fallback delivery when the
+            # worker's watch_pipe notification could not be written.
+            self._refresh_ready(b"")
+            age = self._refresh_coordinator.request_age_seconds()
+            if age is None:
+                self._stalled_refresh_reported = False
+            elif age >= 20 and not self._stalled_refresh_reported:
+                self._stalled_refresh_reported = True
+                if self._diagnostics:
+                    self._diagnostics.warning(
+                        "Urwid collection/delivery pending for %.1fs; "
+                        "keeping single-flight worker", age,
+                    )
+            # The coordinator atomically skips busy periodic cycles.
+            self._refresh_coordinator.request_if_idle()
+        except Exception as error:
+            # An optional diagnostic backend or transient worker-start
+            # failure must not permanently stop the terminal refresh loop.
+            if self._diagnostics:
+                try:
+                    self._diagnostics.warning(
+                        "Urwid periodic refresh failed: %s", error
+                    )
+                except Exception:
+                    pass
+        finally:
+            if self.running and self._alarm_handle is None:
+                self._alarm_handle = self.loop.set_alarm_in(2, self.update)
 
-            if self.suggestion:
-                suggested_governor = system_info.governor_suggestion(report)
-                suggested_turbo = system_info.turbo_on_suggestion(report)
-            else:
-                suggested_governor = None
-                suggested_turbo = None
+    def _collect_report_data(self):
+        report = system_info.generate_system_report()
+        if self.suggestion:
+            recommendations = system_info.monitor_recommendations(report)
+            suggested_governor = recommendations.governor.suggested
+            suggested_turbo = recommendations.turbo.suggested
+        else:
+            suggested_governor = None
+            suggested_turbo = None
+        return report, suggested_governor, suggested_turbo
 
-            result = (
-                report,
-                suggested_governor,
-                suggested_turbo,
-                None,
-            )
-        except Exception as exc:
-            result = (None, None, None, exc)
-
-        if not self.running:
+    def _report_dispatch_error(self, error):
+        message = str(error)[:160]
+        # A broken pipe may persist; one error per episode suffices.
+        if message == self._pipe_delivery_error:
             return
+        self._pipe_delivery_error = message
+        if self._diagnostics:
+            self._diagnostics.warning("Urwid report dispatch error: %s", error)
 
-        self._refresh_results.put(result)
-
+    def _dispatch_report_result(self, result):
+        # Called in a worker. The Urwid watch_pipe callback owns UI updates.
+        if not self.running:
+            self._refresh_coordinator.acknowledge(result.generation)
+            return
         wakeup_fd = self._refresh_pipe_fd
         if wakeup_fd is None:
+            self._refresh_coordinator.acknowledge(result.generation)
             return
-
+        self._refresh_results.put(result)
         try:
             os.write(wakeup_fd, b"1")
-        except OSError:
-            # The monitor may have been closed while collection
-            # was still finishing.
-            pass
+            self._pipe_delivery_error = None
+        except OSError as error:
+            # Keep the result in the queue. The periodic Urwid alarm will
+            # deliver it even when the pipe's write end is unavailable.
+            self._report_dispatch_error(error)
+
+    def _surface_diagnostic_error(self):
+        if not self._diagnostics:
+            return
+        count, message = self._diagnostics.error_status()
+        if count <= self._diagnostic_error_shown or not message:
+            return
+        self._diagnostic_error_shown = count
+        self.footer_text.set_text(
+            "Diagnostic log write failure (check directory/permissions): "
+            f"{message[:120]} | Press Q to quit"
+        )
 
     def _refresh_ready(self, _data):
         try:
-            (
-                report,
-                suggested_governor,
-                suggested_turbo,
-                error,
-            ) = self._refresh_results.get_nowait()
+            result = self._refresh_results.get_nowait()
         except Empty:
             return True
 
-        if error is not None:
-            raise error
+        if not self._refresh_coordinator.is_current(result.generation):
+            return True
 
-        if report is None:
-            raise RuntimeError(
-                "System monitor refresh completed without a report"
-            )
+        try:
+            if self._pipe_delivery_error:
+                self.footer_text.set_text(
+                    "Report pipe unavailable; using periodic refresh: "
+                    f"{self._pipe_delivery_error[:100]} | Press Q to quit"
+                )
+            if self._diagnostics:
+                delivery_seconds = (
+                    max(0.0, time.monotonic() - result.completed_at)
+                    if result.completed_at else 0.0
+                )
+                self._diagnostics.info(
+                    "Urwid refresh generation=%d queue=%.3fs "
+                    "collect=%.3fs delivery=%.3fs",
+                    result.generation, result.queue_seconds,
+                    result.duration, delivery_seconds,
+                )
+            self._surface_diagnostic_error()
+            if result.error is not None or result.report is None:
+                message = str(
+                    result.error or RuntimeError("No system report returned")
+                )
+                self.title_header.set_text(
+                    f"{self.type} Mode - telemetry error: {message[:100]}"
+                )
+                if self._diagnostics:
+                    self._diagnostics.warning(
+                        "Telemetry collection error: %s", message
+                    )
+            else:
+                report, suggested_governor, suggested_turbo = result.report
+                self._display_report(
+                    report, suggested_governor, suggested_turbo
+                )
+        except Exception as error:
+            # Both display and diagnostic failures must preserve progress.
+            try:
+                self.title_header.set_text(
+                    f"{self.type} Mode - display error: {str(error)[:100]}"
+                )
+                if self._diagnostics:
+                    self._diagnostics.warning(
+                        "Urwid report presentation failed: %s", error
+                    )
+            except Exception:
+                # Logging or a broken widget must not crash the main loop.
+                pass
+        finally:
+            # This acknowledgement is unconditional: even the logging sink
+            # can fail while handling a successfully collected report.
+            try:
+                if self._diagnostics and result.requested_at:
+                    self._diagnostics.info(
+                        "Urwid end-to-end refresh generation=%d elapsed=%.3fs",
+                        result.generation,
+                        max(0.0, time.monotonic() - result.requested_at),
+                    )
+            except Exception:
+                pass
+            try:
+                self._refresh_coordinator.acknowledge(result.generation)
+                self._stalled_refresh_reported = False
+            finally:
+                try:
+                    self._surface_diagnostic_error()
+                except Exception:
+                    pass
 
+        if self.running and self._alarm_handle is None:
+            self._alarm_handle = self.loop.set_alarm_in(2, self.update)
+        return True
+
+    def _display_report(self, report, suggested_governor, suggested_turbo):
         # Capture focus only now. The user may have scrolled while
         # the worker was collecting telemetry.
         if len(self.left_content) > 0:
@@ -171,8 +300,16 @@ class SystemMonitor:
                 self.last_focus_right = 0
 
         current_time = time.strftime("%H:%M:%S")
+        status_suffix = ""
+        if self.type == ViewType.LIVE and self._policy_status is not None:
+            try:
+                policy_state = self._policy_status()
+            except Exception:
+                policy_state = "status unavailable"
+            if policy_state != "running":
+                status_suffix = " - POLICY " + policy_state
         self.title_header.set_text(
-            f"{self.type} Mode - {current_time}"
+            f"{self.type} Mode - {current_time}{status_suffix}"
         )
 
         self.format_system_info(
@@ -197,14 +334,6 @@ class SystemMonitor:
                 )
             )
 
-        if self.running:
-            self._alarm_handle = self.loop.set_alarm_in(
-                2,
-                self.update,
-            )
-
-        return True
-
     def handle_input(self, key):
         if key in ("q", "Q"):
             raise urwid.ExitMainLoop()
@@ -215,10 +344,11 @@ class SystemMonitor:
         suggested_governor: str | None = None,
         suggested_turbo: bool | None = None,
     ):
+        presentation = present_report(report)
         self.left_content.clear()
         self.right_content.clear()
 
-        # Helper function to create centered text
+        # Consistent left alignment in both independently scrollable columns.
         def aligned_text(text: str) -> urwid.Text:
             return urwid.Text(text, align="left")
 
@@ -241,11 +371,12 @@ class SystemMonitor:
             ]
         )
 
-        if config.has_config():
-            self.left_content.append(
-                aligned_text(f"Using settings defined in {config.path} file")
+        self.left_content.append(
+            aligned_text(
+                configuration_file_text(config.path, config.has_config())
             )
-            self.left_content.append(aligned_text(""))
+        )
+        self.left_content.append(aligned_text(""))
 
         # CPU Stats
         self.left_content.extend(
@@ -253,37 +384,40 @@ class SystemMonitor:
                 urwid.AttrMap(aligned_text("Current CPU Stats"), "header"),
                 aligned_text(""),
                 aligned_text(
-                    f"CPU max frequency: {report.cpu_max_freq:.0f} MHz"
-                    if report.cpu_max_freq is not None
-                    else "CPU max frequency: Unknown"
+                    "CPU max frequency: "
+                    + frequency_limit_text(report.cpu_max_freq)
                 ),
                 aligned_text(
-                    f"CPU min frequency: {report.cpu_min_freq:.0f} MHz"
-                    if report.cpu_min_freq is not None
-                    else "CPU min frequency: Unknown"
+                    "CPU min frequency: "
+                    + frequency_limit_text(report.cpu_min_freq)
                 ),
                 aligned_text(""),
-                aligned_text("Core    Usage   Temperature     Frequency"),
+                aligned_text("Core   Usage  Temp  Freq (MHz)"),
             ]
         )
 
         for core in report.cores_info:
             temperature = (
-                f"{core.temperature:>6.0f} °C"
+                f"{core.temperature:.0f}°C"
                 if core.temperature > 0
-                else "     —"
+                else "—"
             )
             frequency = (
-                f"{core.frequency:>6.0f} MHz"
+                f"{core.frequency:.0f}"
                 if core.frequency > 0
-                else "     —"
+                else "—"
             )
             self.left_content.append(
                 aligned_text(
-                    f"CPU{core.id:<2}    {core.usage:>4.1f}%    "
-                    f"{temperature}    {frequency}"
+                    f"CPU{core.id:<2} {core.usage:>5.1f}%  "
+                    f"{temperature:>4}  {frequency:>4}"
                 )
             )
+
+        offline_text = offline_cpus_text(report.offline_cpus)
+        if offline_text:
+            self.left_content.append(aligned_text(""))
+            self.left_content.append(aligned_text(offline_text))
 
         if report.cpu_fan_speed is not None:
             self.left_content.append(aligned_text(""))
@@ -292,30 +426,39 @@ class SystemMonitor:
             )
 
         # Right Column - Battery, Platform Profile, CPU Power State, and System Stats
-        if report.battery_info is not None:
+        if battery_present(report.battery_info):
             self.right_content.extend(
                 [
                     urwid.AttrMap(aligned_text("Battery Stats"), "header"),
-                    aligned_text(f"Battery status: {str(report.battery_info)}"),
+                    aligned_text(f"Battery status: {presentation.battery.status.text}"),
                     aligned_text(
-                        f"Battery percentage: {(str(report.battery_info.battery_level) + '%') if report.battery_info.battery_level is not None else 'Unknown'}"
+                        f"Battery percentage: {presentation.battery.level.text}"
                     ),
                     aligned_text(
-                        f'AC plugged: {("Yes" if report.battery_info.is_ac_plugged else "No") if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                        f"AC plugged: {presentation.battery.ac.text}"
                     ),
                     aligned_text(
-                        f'Charging start threshold: {report.battery_info.charging_start_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                        "Charging start threshold: "
+                        f"{presentation.battery.charge_start.text}"
                     ),
                     aligned_text(
-                        f'Charging stop threshold: {report.battery_info.charging_stop_threshold if report.battery_info.is_ac_plugged is not None else "Unknown"}'
+                        "Charging stop threshold: "
+                        f"{presentation.battery.charge_stop.text}"
                     ),
                     aligned_text(
                         f"{battery_power_label(report.battery_info)}: "
-                        + (
-                            f"{report.battery_info.power_watts:.2f} W"
-                            if report.battery_info.power_watts is not None
-                            else "Unavailable"
-                        )
+                        + presentation.battery.power_watts.text
+                    ),
+                    aligned_text(""),
+                ]
+            )
+
+        else:
+            self.right_content.extend(
+                [
+                    urwid.AttrMap(aligned_text("Battery Stats"), "header"),
+                    aligned_text(
+                        f"Battery status: {presentation.battery.status.text}"
                     ),
                     aligned_text(""),
                 ]
@@ -334,7 +477,7 @@ class SystemMonitor:
             [
                 urwid.AttrMap(aligned_text("CPU Power State"), "header"),
                 aligned_text(
-                    f"Governor: {report.current_gov or 'Unknown'}"
+                    f"Governor: {presentation.governor.text}"
                 ),
             ]
         )
@@ -353,30 +496,22 @@ class SystemMonitor:
             )
 
         self.right_content.append(
-            aligned_text(f"EPP: {report.current_epp or 'Unavailable'}")
+            aligned_text(f"EPP: {presentation.epp.text}")
         )
         self.right_content.append(
-            aligned_text(f"EPB: {report.current_epb or 'Unavailable'}")
+            aligned_text(f"EPB: {presentation.epb.text}")
         )
 
         if report.current_hwp_dynamic_boost is not None:
             self.right_content.append(
                 aligned_text(
-                    f"HWP Dynamic Boost: {'On' if report.current_hwp_dynamic_boost else 'Off'}"
+                    f"HWP Dynamic Boost: {presentation.hwp_dynamic_boost.text}"
                 )
             )
 
-        if report.is_turbo_on[0] is not None:
-            turbo_status = "On" if report.is_turbo_on[0] else "Off"
-        elif report.is_turbo_on[1] is not None:
-            turbo_status = (
-                "Driver managed"
-                if report.is_turbo_on[1]
-                else "Unavailable"
-            )
-        else:
-            turbo_status = "Unavailable"
-        self.right_content.append(aligned_text(f"Turbo Boost: {turbo_status}"))
+        self.right_content.append(
+            aligned_text(f"Turbo Boost: {presentation.turbo.text}")
+        )
 
         if (
             self.suggestion
@@ -414,60 +549,87 @@ class SystemMonitor:
                 )
             )
 
-        avg_temp = report.cpu_avg_temp
-        if avg_temp is None and report.cores_info:
-            temperatures = [
-                core.temperature
-                for core in report.cores_info
-                if core.temperature > 0
-            ]
-            if temperatures:
-                avg_temp = sum(temperatures) / len(temperatures)
-
-        if avg_temp is not None:
-            self.right_content.append(
-                aligned_text(f"Average CPU temperature: {avg_temp:.1f} °C")
+        self.right_content.append(
+            aligned_text(
+                "Average CPU temperature: "
+                f"{presentation.average_temperature.text}"
             )
+        )
 
     def run(self, on_quit: Callable[[], None] | None = None):
         self.on_quit = on_quit
         self.running = True
 
         try:
+            if self._diagnostics:
+                try:
+                    self._diagnostics._activate()
+                except (OSError, RuntimeError) as error:
+                    # Diagnostics are optional; a non-writable log
+                    # destination must not prevent telemetry display.
+                    self._diagnostics._report_error(error)
+                    self._surface_diagnostic_error()
+                else:
+                    self._diagnostics.info(
+                        "%s UI started; terminal PID=%d",
+                        self.type, os.getpid(),
+                    )
             self._refresh_pipe_fd = self.loop.watch_pipe(
                 self._refresh_ready
             )
+            # A full or orphaned watch pipe must never block the collector.
+            os.set_blocking(self._refresh_pipe_fd, False)
             self._alarm_handle = self.loop.set_alarm_in(
                 0,
                 self.update,
             )
             self.loop.run()
         except KeyboardInterrupt:
+            # Logging is optional, including during signal handling.
+            if self._diagnostics:
+                try:
+                    self._diagnostics.info("Terminal interrupted by Ctrl+C")
+                except Exception:
+                    pass
             sys.exit(0)
         finally:
             self.running = False
+            callback, self.on_quit = self.on_quit, None
 
-            callback = self.on_quit
-            self.on_quit = None
-
+            # Release each resource even when a different cleanup step
+            # fails. Diagnostics must not interfere with closing the
+            # coordinator, alarm or watched pipe.
             try:
-                alarm_handle = self._alarm_handle
-                self._alarm_handle = None
-
-                if alarm_handle is not None:
-                    self.loop.remove_alarm(alarm_handle)
-
-                wakeup_fd = self._refresh_pipe_fd
-                self._refresh_pipe_fd = None
-
-                if wakeup_fd is not None:
+                try:
+                    self._refresh_coordinator.close()
+                finally:
+                    alarm_handle, self._alarm_handle = self._alarm_handle, None
                     try:
-                        self.loop.remove_watch_pipe(wakeup_fd)
+                        if alarm_handle is not None:
+                            self.loop.remove_alarm(alarm_handle)
                     finally:
-                        try:
-                            os.close(wakeup_fd)
-                        except OSError:
-                            pass
+                        wakeup_fd, self._refresh_pipe_fd = (
+                            self._refresh_pipe_fd, None
+                        )
+                        if wakeup_fd is not None:
+                            try:
+                                self.loop.remove_watch_pipe(wakeup_fd)
+                            finally:
+                                try:
+                                    os.close(wakeup_fd)
+                                except OSError:
+                                    pass
             finally:
-                if callback:
-                    callback()
+                try:
+                    if callback:
+                        callback()
+                finally:
+                    if self._diagnostics:
+                        try:
+                            self._diagnostics.info("%s UI stopped", self.type)
+                        except Exception:
+                            pass
+                        try:
+                            self._diagnostics.shutdown()
+                        except Exception:
+                            pass

@@ -22,6 +22,14 @@ from auto_cpufreq.globals import (
     IS_INSTALLED_WITH_SNAP,
     POWER_SUPPLY_DIR,
 )
+from auto_cpufreq.modules.report_presentation import (
+    present_platform_profile, offline_cpus_text,
+)
+from auto_cpufreq.modules.report_recommendations import (
+    evaluate_recommendations,
+    governor_candidate,
+    turbo_candidate,
+)
 from auto_cpufreq.modules.platform_profile import (
     PlatformProfileSnapshot,
     platform_profile,
@@ -47,6 +55,9 @@ class BatteryInfo:
     charging_stop_threshold: int | None
     battery_level: int | None
     power_watts: float | None
+    # Keep power-source inference independent of physical battery presence.
+    # Default True preserves older BatteryInfo callers and test fixtures.
+    is_present: bool = True
 
     def __repr__(self) -> str:
         if self.is_charging:
@@ -730,7 +741,8 @@ class SystemInfo:
 
         if not battery_path:
 
-            # No battery detected
+            # Preserve the historical AC assumption used by the daemon,
+            # but tell read-only frontends that no battery was detected.
             return BatteryInfo(
                 is_charging=None,
                 is_ac_plugged=is_ac_plugged,
@@ -738,6 +750,7 @@ class SystemInfo:
                 charging_stop_threshold=None,
                 battery_level=None,
                 power_watts=None,
+                is_present=False,
             )
 
         # Reading battery information
@@ -774,8 +787,8 @@ class SystemInfo:
 
     @staticmethod
     def turbo_on_suggestion(report: SystemReport | None = None) -> bool:
+        """Legacy suggestion API; delegate the decision to the shared rule."""
         usage = report.cpu_usage if report is not None else SystemInfo.cpu_usage()
-
         if report is not None:
             if report.cpu_avg_temp is not None:
                 avg_temp = report.cpu_avg_temp
@@ -787,28 +800,27 @@ class SystemInfo:
                 ]
                 avg_temp = (
                     sum(temperatures) / len(temperatures)
-                    if temperatures
-                    else 0.0
+                    if temperatures else 0.0
                 )
         else:
             avg_temp = SystemInfo.avg_temp()
-
-        if usage >= 20.0:
-            return True
-        elif usage <= 25 and avg_temp >= 70:
-            return False
-        return False
+        return turbo_candidate(usage, avg_temp)
 
     @staticmethod
     def governor_suggestion(report: SystemReport | None = None) -> str:
+        """Legacy suggestion API; preserve its historical AC fallback."""
         battery_info = (
-            report.battery_info
-            if report is not None
+            report.battery_info if report is not None
             else SystemInfo.battery_info()
         )
-        if battery_info.is_ac_plugged is not False:
-            return AVAILABLE_GOVERNORS_SORTED[0]
-        return AVAILABLE_GOVERNORS_SORTED[-1]
+        return governor_candidate(
+            battery_info.is_ac_plugged, AVAILABLE_GOVERNORS_SORTED
+        )
+
+    @staticmethod
+    def monitor_recommendations(report: SystemReport):
+        """Read-only availability-aware suggestions from one snapshot."""
+        return evaluate_recommendations(report, AVAILABLE_GOVERNORS_SORTED)
 
     def generate_system_report(self) -> SystemReport:
         """Collect one reporting snapshot without changing system state."""
@@ -863,47 +875,31 @@ def format_platform_profile_choices(
     snapshot: PlatformProfileSnapshot,
     label: str = "Available profiles",
 ) -> tuple[str, str]:
-    """Format a Platform Profile choices label and value without conflating unknown with empty."""
-    if not snapshot.choices_known:
-        return label, "Could not be determined"
-
-    count = len(snapshot.available_profiles)
-    value = (
-        ", ".join(snapshot.available_profiles)
-        if snapshot.available_profiles
-        else "None available"
-    )
-    return f"{label} ({count})", value
+    """Compatibility wrapper for the shared profile interpretation."""
+    profile = present_platform_profile(snapshot)
+    display_label = profile.available_label
+    if label != "Available profiles":
+        display_label = display_label.replace(
+            "Available profiles", label, 1
+        )
+    return display_label, profile.available
 
 
 def format_platform_profile_summary(
     snapshot: PlatformProfileSnapshot,
 ) -> list[str]:
-    """Format compact, user-facing Platform Profile diagnostics."""
-    if snapshot.interface == "none":
-        return ["Interface: Not detected"]
+    """Compact terminal presentation using the shared profile semantics."""
+    profile = present_platform_profile(snapshot)
+    if not profile.detected:
+        return [f"Interface: {profile.interface}"]
 
-    interface = {
-        "modern": "Modern",
-        "legacy": "Legacy",
-    }.get(snapshot.interface, "Unknown")
-    control = "Available" if snapshot.control_available else "Unavailable"
-    lines = [f"Interface: {interface} · Control: {control}"]
-    lines.append(f"Current profile: {snapshot.current or 'Unknown'}")
-
-    available_label, available = format_platform_profile_choices(snapshot)
-    lines.append(f"{available_label}: {available}")
-
-    provider_states = snapshot.provider_states
-    if len(provider_states) > 1:
-        providers = "; ".join(
-            f"{provider}: {profile or 'Unknown'}"
-            for provider, profile in provider_states
-        )
-        lines.append(f"Providers: {providers}")
-    elif provider_states:
-        lines.append(f"Provider: {provider_states[0][0]}")
-
+    lines = [
+        f"Interface: {profile.interface}",
+        f"Current profile: {profile.current}",
+        f"{profile.available_label}: {profile.available}",
+    ]
+    if profile.provider_visible:
+        lines.append(f"{profile.provider_label}: {profile.provider}")
     return lines
 
 
@@ -939,41 +935,24 @@ def format_system_report(
     )
 
     platform_state = report.platform_profile
-    status_text = {
-        "available": "Available",
-        "partial": "Partially available",
-        "read-only": "Read-only",
-        "unavailable": "No interface detected",
-    }.get(platform_state.status, "Unknown")
-    lines.append(f"Platform profile status: {status_text}")
+    profile = present_platform_profile(platform_state)
+
+    # Keep the established legacy labels and missing-value spelling, while
+    # using the same status, choices, and provider interpretation as GTK/Stats.
+    lines.append(f"Platform profile status: {profile.status_text}")
+    current = (
+        platform_state.current
+        if platform_state.current is not None
+        else "Not available" if platform_state.status == "unavailable"
+        else profile.current
+    )
+    lines.append(f"Platform profile: {current}")
     lines.append(
-        "Platform profile: "
-        + (
-            platform_state.current
-            if platform_state.current is not None
-            else "Not available"
-            if platform_state.status == "unavailable"
-            else "Unknown"
-        )
+        f"{profile.available_label.replace('Available profiles', 'Available platform profiles', 1)}: "
+        f"{profile.available}"
     )
-    profiles_label, profiles_text = format_platform_profile_choices(
-        platform_state,
-        label="Available platform profiles",
-    )
-    lines.append(f"{profiles_label}: {profiles_text}")
-    provider_states = platform_state.provider_states
-    if len(provider_states) > 1:
-        provider_text = "; ".join(
-            f"{provider}: {profile or 'Unknown'}"
-            for provider, profile in provider_states
-        )
-        provider_label = "Platform profile providers"
-    elif provider_states:
-        provider_text = provider_states[0][0]
-        provider_label = "Platform profile provider"
-    else:
-        provider_text = "None reported"
-        provider_label = "Platform profile provider"
+    provider_label = f"Platform profile {profile.provider_label.lower()}"
+    provider_text = profile.provider if profile.provider_visible else "None reported"
     lines.append(f"{provider_label}: {provider_text}")
 
     if include_config:
@@ -1020,14 +999,9 @@ def format_system_report(
             f"{temperature}     {frequency}"
         )
 
-    if report.offline_cpus:
-        lines.extend(
-            [
-                "",
-                "Disabled CPUs: "
-                + ",".join(str(cpu) for cpu in report.offline_cpus),
-            ]
-        )
+    offline_text = offline_cpus_text(report.offline_cpus)
+    if offline_text:
+        lines.extend(["", offline_text])
 
     if report.cpu_fan_speed is not None:
         lines.extend(["", f"CPU fan speed: {report.cpu_fan_speed} RPM"])
