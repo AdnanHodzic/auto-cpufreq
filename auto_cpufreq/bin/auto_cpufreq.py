@@ -41,11 +41,12 @@ from threading import Thread
     "--diagnostic-log", is_flag=True,
     help="Record opt-in session diagnostics for --stats, --monitor or --live"
 )
+@click.option("--continue", "cont", is_flag=True, help="Automatically continue for --monitor, --live and --stats")
 @click.option("--debug", is_flag=True, help="Show debug info (include when submitting bugs)")
 @click.option("--version", is_flag=True, help="Show currently installed version")
 @click.option("--donate", is_flag=True, help="Support the project")
 def main(monitor, live, daemon, install, update, remove, force, turbo, config, stats, pp, get_state,
-          bluetooth_boot_off, bluetooth_boot_on, diagnostic_log, debug, version, donate):
+          bluetooth_boot_off, bluetooth_boot_on, diagnostic_log, cont, debug, version, donate):
     interactive_modes = sum(bool(value) for value in (stats, monitor, live))
     if debug and interactive_modes:
         raise click.UsageError(
@@ -111,7 +112,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 gnome_power_detect()
                 tlp_service_detect()
                 
-            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+            if not cont and (IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status))):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
@@ -137,7 +138,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 tuned_stop_live()
                 tlp_service_detect()
             
-            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+            if not cont (IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status))):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
@@ -294,7 +295,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 gnome_power_detect()
                 tlp_service_detect()
             
-            if IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status)):
+            if not cont and (IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status))):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
