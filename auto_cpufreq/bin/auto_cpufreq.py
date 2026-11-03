@@ -138,7 +138,7 @@ def main(monitor, live, daemon, install, update, remove, force, turbo, config, s
                 tuned_stop_live()
                 tlp_service_detect()
             
-            if not cont (IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status))):
+            if not cont and (IS_INSTALLED_WITH_SNAP or tlp_stat_exists or (systemctl_exists and not bool(gnome_power_status))):
                 try:
                     input("press Enter to continue or Ctrl + c to exit...")
                 except KeyboardInterrupt:
