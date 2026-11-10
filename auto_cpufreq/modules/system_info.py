@@ -31,12 +31,17 @@ from auto_cpufreq.modules.report_recommendations import (
     turbo_candidate,
 )
 from auto_cpufreq.modules.platform_profile import (
+    PlatformProfileManager,
     PlatformProfileSnapshot,
-    platform_profile,
 )
 
 CPU_SYSFS_ROOT = Path("/sys/devices/system/cpu")
 SNAP_HOST_ROOT = "/var/lib/snapd/hostfs"
+
+# The report is rebuilt on every daemon loop and Stats/GTK refresh, so a
+# provider that cannot report its profile is not asked again.
+# Setting the profile in core.py keeps using the uncached manager.
+report_platform_profile = PlatformProfileManager(remember_unreadable=True)
 
 
 @dataclass
@@ -864,7 +869,7 @@ class SystemInfo:
             battery_info=battery_info,
             cpu_avg_temp=avg_temp,
             offline_cpus=tuple(self.offline_cpu_ids()),
-            platform_profile=platform_profile.snapshot(),
+            platform_profile=report_platform_profile.snapshot(),
         )
 
 

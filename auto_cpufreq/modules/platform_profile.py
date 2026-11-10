@@ -101,16 +101,34 @@ class PlatformProfileManager:
         class_root: Path = PLATFORM_PROFILE_CLASS_ROOT,
         legacy_profile: Path = LEGACY_PLATFORM_PROFILE,
         legacy_choices: Path = LEGACY_PLATFORM_PROFILE_CHOICES,
+        remember_unreadable: bool = False,
     ):
         self.class_root = Path(class_root)
         self.legacy_profile = Path(legacy_profile)
         self.legacy_choices = Path(legacy_choices)
+        self.remember_unreadable = remember_unreadable
+        self._unreadable_profiles: set[Path] = set()
 
     @staticmethod
     def _read(path: Path) -> str | None:
         try:
             return path.read_text().strip()
         except OSError:
+            return None
+
+    def _read_profile(self, path: Path) -> str | None:
+        # Some providers (e.g. hp-wmi on certain HP boards) fail every
+        # profile read, and the kernel logs each failure. Periodic reports
+        # can skip those instead of retrying them on every refresh.
+        if path in self._unreadable_profiles:
+            return None
+        try:
+            return path.read_text().strip()
+        except FileNotFoundError:
+            return None
+        except OSError:
+            if self.remember_unreadable:
+                self._unreadable_profiles.add(path)
             return None
 
     @classmethod
@@ -165,7 +183,7 @@ class PlatformProfileManager:
                 devices.append(
                     PlatformProfileDevice(
                         provider=self._read(path / "name") or None,
-                        profile=self._read(path / "profile") or None,
+                        profile=self._read_profile(path / "profile") or None,
                         choices=choices,
                         profile_path=path / "profile",
                         choices_known=choices_known,
@@ -182,7 +200,7 @@ class PlatformProfileManager:
         return (
             PlatformProfileDevice(
                 provider=None,
-                profile=self._read(self.legacy_profile) or None,
+                profile=self._read_profile(self.legacy_profile) or None,
                 choices=choices,
                 profile_path=self.legacy_profile,
                 choices_known=choices_known,
@@ -195,7 +213,7 @@ class PlatformProfileManager:
         devices: tuple[PlatformProfileDevice, ...],
     ) -> str | None:
         if len(modern_paths) > 1 and self.legacy_profile.exists():
-            aggregate = self._read(self.legacy_profile)
+            aggregate = self._read_profile(self.legacy_profile)
             if aggregate:
                 return aggregate
 
@@ -303,7 +321,7 @@ class PlatformProfileManager:
         )
         control_path = self._control_path_for(modern_paths)
         control_current = (
-            self._read(control_path)
+            self._read_profile(control_path)
             if control_path is not None
             else None
         )
