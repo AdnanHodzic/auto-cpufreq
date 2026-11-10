@@ -36,6 +36,7 @@ class BatteryDevice:
             if (path := self._choose_threshold_file(bat, CHARGE_STOP_THRESHOLD_FILES))
             is not None
         }
+        self._warned_no_start: set[str] = set()
 
     def _get_batteries(self) -> list[str]:
         """
@@ -144,9 +145,19 @@ class BatteryDevice:
         Return true/false depending on if command is executed and fails (or succeeds)
         """
 
-        if bat not in self.start_paths or bat not in self.stop_paths:
+        if bat not in self.stop_paths:
             print(f"WARNING: battery {bat} has no threshold attributes")
             return False
+
+        # Some devices (e.g. ASUS) only expose the stop/end threshold
+        if bat not in self.start_paths:
+            if bat not in self._warned_no_start:
+                self._warned_no_start.add(bat)
+                print(
+                    f"INFO: battery {bat} has no start threshold attribute, "
+                    "only setting the stop threshold"
+                )
+            return self._write_value_to_file(self.stop_paths[bat], stop)
 
         # First set stop to 100 to avoid potential 'invalid argument'
         # errors when start >= stop
@@ -182,11 +193,15 @@ class BatteryDevice:
 
     def get_current_threshold(self, bat: str) -> tuple[int | None, int | None]:
 
-        if bat not in self.start_paths or bat not in self.stop_paths:
+        if bat not in self.stop_paths:
             print(f"WARNING: battery {bat} has no threshold attributes")
             return None, None
 
-        start = self._read_value_from_file(self.start_paths[bat])
+        start = (
+            self._read_value_from_file(self.start_paths[bat])
+            if bat in self.start_paths
+            else ""
+        )
         stop = self._read_value_from_file(self.stop_paths[bat])
         start = int(start) if start.isdigit() else None
         stop = int(stop) if stop.isdigit() else None
@@ -202,10 +217,12 @@ class BatteryDevice:
 
     def print_battery_info(self, bat: str):
         start_value, stop_value = self.get_current_threshold(bat)
-        if start_value is None or stop_value is None:
+        has_start = bat in self.start_paths
+        if stop_value is None or (has_start and start_value is None):
             print(f"ERROR: failed to read battery {bat} thresholds")
         else:
-            print(f"{bat} start threshold = {start_value}")
+            if has_start:
+                print(f"{bat} start threshold = {start_value}")
             print(f"{bat} stop threshold = {stop_value}")
 
     def apply_threshold_settings_to_bat(self, bat: str, config: dict[str, Any]):
